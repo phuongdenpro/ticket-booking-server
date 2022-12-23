@@ -1,7 +1,11 @@
 import { NestFactory } from '@nestjs/core';
 import { ConfigService } from '@nestjs/config';
 import { AppModule } from './app.module';
-import { utilities as nestWinstonModuleUtilities, utilities, WinstonModule } from 'nest-winston';
+import {
+  utilities as nestWinstonModuleUtilities,
+  utilities,
+  WinstonModule,
+} from 'nest-winston';
 import { ValidationPipe } from '@nestjs/common';
 import { Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -54,6 +58,8 @@ async function bootstrap() {
     .setTitle('Ticket book')
     .setDescription('The ticket API description')
     .setVersion('1.0')
+    .addBearerAuth({ type: 'http', bearerFormat: 'JWT' })
+    .addBearerAuth({ type: 'http', bearerFormat: 'JWT' }, 'refresh')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
