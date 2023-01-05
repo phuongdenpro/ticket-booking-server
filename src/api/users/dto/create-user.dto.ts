@@ -10,23 +10,6 @@ import {
   ValidateNested,
 } from 'class-validator';
 
-export class ProfileCreateDto {
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  gradeId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  schoolId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
-  className?: string;
-}
-
 export class CreateUserDto {
   @ApiProperty()
   @IsNotEmpty()
@@ -70,8 +53,4 @@ export class CreateUserDto {
   @IsEnum(UserStatusEnum)
   status?: UserStatusEnum;
 
-  @ValidateNested({ each: true })
-  @ApiPropertyOptional()
-  @IsOptional()
-  profile?: ProfileCreateDto;
 }

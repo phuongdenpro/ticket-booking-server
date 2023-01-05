@@ -90,7 +90,7 @@ export class UsersService {
   }
 
   async update(adminId: string, userId: string, dto: UpdateUserDto) {
-    const { profile, ...userUpdate } = dto;
+    const {  ...userUpdate } = dto;
 
     const adminExist = await this.dataSource.manager.findOne(AdminUser, { where: { id: adminId } });
     if (!adminExist) throw new UnauthorizedException();

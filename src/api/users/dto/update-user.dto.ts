@@ -3,7 +3,6 @@ import { UserStatusEnum } from 'src/enums';
 import { GenderEnum } from 'src/enums';
 import { IsDate, IsEnum, IsOptional, IsString, ValidateNested } from 'class-validator';
 import moment from 'moment';
-import { ProfileCreateDto } from './create-user.dto';
 
 export class UpdateUserDto {
   @ApiPropertyOptional({ example: 'superman' })
@@ -45,9 +44,4 @@ export class UpdateUserDto {
   @IsOptional()
   @IsEnum(UserStatusEnum)
   status?: UserStatusEnum;
-
-  @ValidateNested({ each: true })
-  @ApiPropertyOptional()
-  @IsOptional()
-  profile?: ProfileCreateDto;
 }
