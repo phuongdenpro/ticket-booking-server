@@ -1,6 +1,6 @@
-import { CurrentUser, GetPagination, Pagination,Roles } from 'src/decorator';
+import { CurrentUser, GetPagination, Pagination } from 'src/decorator';
 import { Roles } from 'src/decorator/roles.decorator';
-import { AdminUser } from 'src/database/entities';
+import { Staff } from 'src/database/entities';
 import {
   Body,
   Controller,
@@ -38,47 +38,22 @@ export class UsersController {
   constructor(private userService: UsersService) {}
 
   @Get()
-  @Roles(RoleEnum.ADMIN)
+  @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
   async findAll(@Query() dto: FilterUserDto, @GetPagination() pagination?: Pagination) {
     return this.userService.findAll(dto, pagination);
   }
 
   @Patch(':id/password')
-  @Roles(RoleEnum.ADMIN)
+  @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
   // @UseInterceptors(LoggingInterceptor)
-  async updatePassword(
-    @CurrentUser() admin: AdminUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdatePasswordDto
-  ) {
-    return this.userService.updatePassword(admin.id, id, dto);
-  }
-
-
-  @Post()
-  @Roles(RoleEnum.ADMIN)
-  @HttpCode(HttpStatus.OK)
-  async create(@CurrentUser() admin: AdminUser, @Body() dto: CreateUserDto) {
-    return this.userService.create(admin.id, dto);
-  }
-
+  
   @Get(':id')
-  @Roles(RoleEnum.ADMIN)
+  @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.userService.findOne(id);
   }
 
-  @Patch(':id')
-  @Roles(RoleEnum.ADMIN)
-  @HttpCode(HttpStatus.OK)
-  async update(
-    @CurrentUser() admin: AdminUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateUserDto
-  ) {
-    return this.userService.update(admin.id, id, dto);
-  }
 }

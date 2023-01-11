@@ -1,4 +1,4 @@
-import { User, UserCredential } from 'src/database/entities';
+import { Customer } from 'src/database/entities';
 import {
   BadRequestException,
   Injectable,
@@ -21,9 +21,7 @@ import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UserService {
   constructor(
-    @InjectRepository(User) private userRepository: Repository<User>,
-    @InjectRepository(UserCredential)
-    private userCredentialRepository: Repository<UserCredential>,
+    @InjectRepository(Customer) private userRepository: Repository<Customer>,
     private authService: AuthService,
     private dataSource: DataSource,
   ) {}
@@ -40,7 +38,7 @@ export class UserService {
   }
 
   async updateUserCredentialByUserId(userId: string, data: any) {
-    return this.userCredentialRepository.update({ user: { id: userId } }, data);
+    return this.userRepository.update({ id:userId }, data);
   }
 
   async register(dto: UserRegisterDto) {
@@ -61,19 +59,20 @@ export class UserService {
       await queryRunner.startTransaction();
       const passwordHashed = await this.authService.hashData(dto.password);
 
-      const userCred = new UserCredential();
-      userCred.password = passwordHashed;
-      await this.userCredentialRepository.save(userCred);
+      const user = new Customer();
+      user.password = passwordHashed;
 
-      const user = new User();
-      user.username = dto.username.toLowerCase();
-      user.name = dto.name;
+      // staffCred.username = dto.username.toLowerCase();
+      user.fullName = dto.name;
       user.phone = dto.phone;
       user.email = dto.email;
-      user.birthDate = dto.birthDate;
       user.gender = dto.gender;
-      // user.createdBy = adminExist ? adminExist.id : undefined;
-      user.userCredential = userCred;
+      const userCreated = await this.userRepository.save(user);
+
+      await queryRunner.commitTransaction();
+      delete userCreated.createdAt;
+      delete userCreated.updatedAt;
+      delete userCreated.deletedAt;
       await this.userRepository.save(user);
 
       await queryRunner.commitTransaction();
@@ -97,12 +96,12 @@ export class UserService {
     if (!userExist)
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
 
-    if (!userExist?.userCredential?.password)
+    if (!userExist?.password)
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
 
     const isPasswordMatches = await this.authService.comparePassword(
       dto?.password,
-      userExist?.userCredential?.password,
+      userExist?.password,
     );
     if (!isPasswordMatches)
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
@@ -136,10 +135,8 @@ export class UserService {
   }
 
   async refreshTokens(adminId: any) {
-    const userExist = await this.findOneById(adminId, {
-      relations: ['userCredential'],
-    });
-    if (!userExist || !userExist.userCredential.refresh_token)
+    const userExist = await this.findOneById(adminId);
+    if (!userExist || !userExist.refreshToken)
       throw new UnauthorizedException();
 
     const tokens = await this.authService.createTokens(
@@ -157,14 +154,12 @@ export class UserService {
   }
 
   async updatePassword(id: string, dto: UserUpdatePasswordDto) {
-    const userExist = await this.findOneById(id, {
-      relations: ['userCredential'],
-    });
+    const userExist = await this.findOneById(id);
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
 
     const isPasswordMatches = await bcrypt.compare(
       dto?.oldPassword,
-      userExist?.userCredential?.password,
+      userExist?.password,
     );
     if (!isPasswordMatches)
       throw new BadRequestException('OLD_PASSWORD_MISMATCH');
@@ -176,8 +171,8 @@ export class UserService {
       dto.newPassword,
       await bcrypt.genSalt(),
     );
-    return await this.userCredentialRepository.update(
-      { user: userExist },
+    return await this.userRepository.update(
+      { id: userExist.id },
       { password: passwordHash, updatedBy: userExist.id },
     );
   }

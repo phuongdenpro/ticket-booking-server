@@ -38,7 +38,8 @@ export class UserRegisterDto {
   @ApiProperty({ example: GenderEnum.FEMALE })
   @IsEnum(GenderEnum)
   @IsNotEmpty()
-  gender: number;
+  @IsEnum(GenderEnum)
+  gender: GenderEnum.FEMALE;
 
   @ApiProperty({ example: 'string' })
   @IsNotEmpty()

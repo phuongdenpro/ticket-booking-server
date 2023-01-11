@@ -107,19 +107,17 @@ export class AdminService {
     });
   }
 
-  async refreshTokens(adminId: any) {
-    const adminExist = await this.findOneById(adminId, { relations: ['adminUserCredential'] });
-    if (!adminExist || !adminExist.adminUserCredential.refresh_token)
+  async refreshTokens(staffId: any) {
+    const staffExist = await this.findOneById(staffId);
+    if (!staffExist || !staffExist.refreshToken)
       throw new UnauthorizedException();
 
-    const tokens = await this.authService.createTokens(adminExist, RoleEnum.ADMIN);
+    const tokens = await this.authService.createTokens(staffExist, RoleEnum.STAFF);
 
-    await this.updateAdminCredentialByAdminId(adminExist.id, {
+    await this.updateStaffByAdminId(staffExist.id, {
       refresh_token: tokens.refresh_token,
       access_token: tokens.access_token,
     });
-
-    console.log(adminExist);
     return tokens;
   }
 }

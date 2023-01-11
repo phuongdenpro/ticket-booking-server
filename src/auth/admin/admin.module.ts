@@ -1,4 +1,4 @@
-import { AdminUser, AdminUserCredential } from 'src/database/entities';
+import { Staff } from 'src/database/entities';
 import { Module } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,7 +7,7 @@ import { AdminController } from './admin.controller';
 import { AdminService } from './admin.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AdminUser, AdminUserCredential])],
+  imports: [TypeOrmModule.forFeature([Staff])],
   controllers: [AdminController],
   providers: [AdminService, AuthService],
   exports: [AdminService],
