@@ -10,7 +10,7 @@ import {
   JoinColumn,
   OneToOne,
 } from 'typeorm';
-import { District } from './district.entities';
+import { District } from './vi-address-district.entities';
 import { Station } from './station.entities';
 
 @Entity({ name: 'vi_address_ward' })

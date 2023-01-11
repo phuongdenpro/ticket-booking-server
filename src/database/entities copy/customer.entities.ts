@@ -10,7 +10,7 @@ import {
 } from 'typeorm';
 import { CustomerGroup } from './customer-group.entities';
 import { Order } from './order.entities';
-import { Ward } from './ward.entities';
+import { Ward } from './vi-address-ward.entities';
 import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
@@ -54,6 +54,12 @@ export class Customer {
   @Column({ name: 'birthday', type: 'timestamp', nullable: true })
   birthDay?: Date;
 
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy:string;
+  
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy:string;
+
   @Column({ name: 'refresh_token', type: 'varchar', nullable: true })
   refreshToken?: string;
 
@@ -63,6 +69,7 @@ export class Customer {
   // Relationships
   // Relationships
   @ManyToOne(() => Ward, (ward) => ward.customers)
+  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
   ward: Ward;
 
   @ManyToMany(

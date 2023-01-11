@@ -21,7 +21,7 @@ export class ApplicableTicketGroup {
     () => PromotionDetail,
     (promotionDetail) => promotionDetail.applicableTicket,
   )
-  @JoinColumn([{ name: 'promotion_id', referencedColumnName: 'id' }])
+  @JoinColumn([{ name: 'promotion_detail_id', referencedColumnName: 'id' }])
   promotionDetail: Promotion;
 
   @ManyToOne(

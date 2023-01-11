@@ -6,8 +6,8 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Province } from './province.entities';
-import { Ward } from './ward.entities';
+import { Province } from './vi-address-provide.entities';
+import { Ward } from './vi-address-ward.entities';
 
 @Entity({ name: 'vi_address_district' })
 export class District {

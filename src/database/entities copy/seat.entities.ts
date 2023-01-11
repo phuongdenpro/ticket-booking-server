@@ -9,6 +9,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity({ name: 'seat' })
@@ -26,7 +27,14 @@ export class Seat {
   floor: number;
 
   @ManyToOne(() => Vehicle, (vehicle) => vehicle.seats)
+  @JoinColumn({ name: 'vehicle_id', referencedColumnName: 'id' })
   vehicle: Vehicle;
+
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
 
   @OneToMany(() => TicketDetail, (ticketDetail) => ticketDetail.seat)
   ticketDetails: TicketDetail[];

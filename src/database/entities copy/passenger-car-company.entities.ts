@@ -11,7 +11,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Vehicle } from './vehicle.entities';
-import { Ward } from './ward.entities';
+import { Ward } from './vi-address-ward.entities';
 
 @Entity({ name: 'passenger_car_company' })
 export class PassengerCarCompany {

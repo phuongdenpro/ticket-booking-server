@@ -75,6 +75,12 @@ export class PromotionLine {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy:string;
+  
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy:string;
+
   @OneToOne(
     () => PromotionDetail,
     (promotionDetail) => promotionDetail.promotionLine,

@@ -14,7 +14,7 @@ export class TicketDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'create_date', type: 'datetime', nullable: true })
+  @Column({ name: 'create_date', type: 'timestamp', nullable: true })
   createDate: Date;
 
   @OneToOne(() => Ticket, (ticket) => ticket.ticketDetail)

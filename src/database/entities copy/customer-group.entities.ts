@@ -27,6 +27,12 @@ export class CustomerGroup {
   @Column({ name: 'note', type: 'text', nullable: true })
   note: string;
 
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy:string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy:string;
+
   // Relations
   @ManyToMany(
     () => CustomerGroupDetail,

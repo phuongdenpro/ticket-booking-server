@@ -1,5 +1,5 @@
 import { Trip } from './trip.entities';
-import { Ward } from './ward.entities';
+import { Ward } from './vi-address-ward.entities';
 import {
   Column,
   Entity,
@@ -32,6 +32,12 @@ export class Station {
 
   @OneToMany(() => Trip, (trip) => trip.toStation)
   toTrips: Trip[];
+
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy:string;
+  
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy:string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

@@ -34,6 +34,12 @@ export class PriceList {
   })
   status: boolean;
 
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy:string;
+  
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy:string;
+
   @OneToMany(() => PriceDetail, (priceDetail) => priceDetail.priceList)
   priceDetails: PriceDetail[];
 

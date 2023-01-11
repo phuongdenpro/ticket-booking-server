@@ -71,6 +71,12 @@ export class Ticket {
   )
   orderRefundDetail: OrderRefundDetail;
 
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy:string;
+  
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy:string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
