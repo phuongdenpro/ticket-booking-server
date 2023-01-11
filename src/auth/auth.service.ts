@@ -1,4 +1,3 @@
-import { AdminUser,User } from 'src/database/entities';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -6,6 +5,8 @@ import { RoleEnum } from 'src/enums';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 import { JwtPayload } from './interfaces';
+import { Customer } from '../database/entities/customer.entities';
+import { Staff } from '../database/entities/staff.entities';
 
 @Injectable()
 export class AuthService {
@@ -14,30 +15,30 @@ export class AuthService {
   constructor(private dataSource: DataSource) {}
 
   // validate User
-  async validateUser(username: string, password: string) {
-    let user: User | AdminUser;
+  async validateUser(email: string, password: string) {
+    let user: Customer | Staff;
 
     // check userExist by username
-    const admin = await this.dataSource
-      .getRepository(AdminUser)
-      .findOne({ where: { username, deletedAt: null }, relations: ['adminUserCredential'] });
+    const staff = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { email, deletedAt: null }});
 
-    if (!admin) {
+    if (!staff) {
       user = await this.dataSource
-        .getRepository(User)
-        .findOne({ where: { username, deletedAt: null }, relations: ['userCredential'] });
+        .getRepository(Customer)
+        .findOne({ where: { email, deletedAt: null }});
     }
 
-    if (!admin && !user) throw new UnauthorizedException('WRONG_CREDENTIALS');
+    if (!staff && !user) throw new UnauthorizedException('WRONG_CREDENTIALS');
 
     const isMatch = await this.comparePassword(
       password,
-      admin ? admin['adminUserCredential']['password'] : user['userCredential']['password']
+      staff ? staff['password'] : user['password']
     );
 
     if (!isMatch) throw new UnauthorizedException('WRONG_CREDENTIALS');
 
-    return admin ? admin : user;
+    return staff ? staff : user;
   }
 
   // Compare password input and password user
@@ -51,28 +52,27 @@ export class AuthService {
   }
 
   async validateUserByJwt(payload: JwtPayload) {
-    let user: User | AdminUser;
+    let user: Customer | Staff;
     let access_token: string;
 
-    if (payload.type === RoleEnum.ADMIN) {
-      user = await this.dataSource.getRepository(AdminUser).findOne({
+    if (payload.type === RoleEnum.STAFF) {
+      user = await this.dataSource.getRepository(Staff).findOne({
         where: { id: payload.id, deletedAt: null },
-        relations: ['adminUserCredential'],
       });
-      access_token = user.adminUserCredential.access_token;
+      access_token = user.accessToken;
     }
 
     if (payload.type === RoleEnum.CUSTOMER) {
       user = await this.dataSource
-        .getRepository(User)
-        .findOne({ where: { id: payload.id, deletedAt: null }, relations: ['userCredential'] });
-      access_token = user.userCredential.access_token;
+        .getRepository(Customer)
+        .findOne({ where: { id: payload.id, deletedAt: null }});
+      access_token = user.accessToken;
     }
 
     if (!user) throw new UnauthorizedException('WRONG_CREDENTIALS');
     return {
       id: user.id,
-      username: user.username,
+      email: user.email,
       access_token,
     };
   }
@@ -81,10 +81,10 @@ export class AuthService {
     return bcrypt.hashSync(data, await bcrypt.genSalt());
   }
 
-  async createTokens(user: User | AdminUser, type: RoleEnum) {
+  async createTokens(user: Customer | Staff, type: RoleEnum) {
     const data: JwtPayload = {
       id: user.id,
-      username: user.username,
+      email: user.email,
       type: type,
     };
 

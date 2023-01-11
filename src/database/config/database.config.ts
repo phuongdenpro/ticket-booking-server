@@ -12,5 +12,5 @@ export default new DataSource({
   database: configService.get<string>('DB_DATABASE'),
   username: configService.get<string>('DB_USERNAME'),
   password: configService.get<string>('DB_PASSWORD'),
-  entities: ['dist/database/entities/*.entity.{.js,.ts}'],
+  entities: ['dist/database/entities/*.entities.{.js,.ts}'],
 });

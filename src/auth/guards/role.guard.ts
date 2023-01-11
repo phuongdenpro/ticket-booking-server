@@ -1,5 +1,4 @@
 import { ROLES_KEY } from 'src/decorator/roles.decorator';
-import { AdminUser } from 'src/database/entities/admin-user.entity';
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { RoleEnum } from 'src/enums';
@@ -17,7 +16,7 @@ export class RolesGuard implements CanActivate {
       context.getHandler(),
     ]);
 
-    if (role === RoleEnum.ADMIN) {
+    if (role === RoleEnum.STAFF) {
       if (type === RoleEnum.CUSTOMER) {
         return false;
       }

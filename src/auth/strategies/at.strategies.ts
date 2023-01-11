@@ -29,6 +29,6 @@ export class AtStrategy extends PassportStrategy(Strategy, 'jwt') {
       if (tokenRequest !== user.access_token) throw new UnauthorizedException('WRONG_CREDENTIALS');
     }
 
-    return { id: user.id, username: user.username, type: payload.type };
+    return { id: user.id, email: user.email, type: payload.type };
   }
 }

@@ -3,11 +3,10 @@ import { GenderEnum } from 'src/enums';
 import { IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
 
 export class AdminRegisterDto {
-  @ApiProperty({ example: 'phuongadmin' })
+  @ApiProperty({ example: 'admin@gmail.com' })
   @IsNotEmpty()
   @IsString()
-  @MinLength(6)
-  username: string;
+  email: string;
 
   @ApiProperty({ example: '12345678' })
   @IsNotEmpty()
@@ -25,13 +24,9 @@ export class AdminRegisterDto {
   @IsString()
   phone: string;
 
-  @ApiProperty({ example: 'admin@gmail.com' })
-  @IsNotEmpty()
-  @IsString()
-  email: string;
-
   @ApiProperty({ example: 1 })
   @IsEnum(GenderEnum)
   @IsNotEmpty()
-  gender: number;
+  @IsEnum(GenderEnum)
+  gender: GenderEnum.FEMALE;
 }
