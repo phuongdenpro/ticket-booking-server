@@ -1,5 +1,14 @@
 import { CurrentUser } from 'src/decorator';
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, JwtRefreshAuthGuard } from '../guards';
 import { UserLoginDto } from './dto/user-login.dto';
@@ -39,7 +48,7 @@ export class UserController {
   async profile(@CurrentUser() user) {
     return this.userService.profile(user?.['id']);
   }
-  
+
   @Post('refresh')
   @UseGuards(JwtRefreshAuthGuard)
   @ApiBearerAuth()
@@ -52,7 +61,10 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  async updatePassword(@CurrentUser() user, @Body() dto: UserUpdatePasswordDto){
+  async updatePassword(
+    @CurrentUser() user,
+    @Body() dto: UserUpdatePasswordDto,
+  ) {
     return this.userService.updatePassword(user.id, dto);
   }
 }

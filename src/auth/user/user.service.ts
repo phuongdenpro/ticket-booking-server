@@ -32,24 +32,24 @@ export class UserService {
 
   async findOneByUsername(username: string, options?: any) {
     return this.userRepository.findOne({
-      where: { username: username.toLowerCase() },
+      where: { email: username.toLowerCase() },
       ...options,
     });
   }
 
   async updateUserCredentialByUserId(userId: string, data: any) {
-    return this.userRepository.update({ id:userId }, data);
+    return this.userRepository.update({ id: userId }, data);
   }
 
   async register(dto: UserRegisterDto) {
-    if (!dto.username.match(USERNAME_REGEX))
-      throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    // if (!dto.username.match(USERNAME_REGEX))
+    //   throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     if (!dto.phone.match(PHONE_REGEX))
       throw new BadRequestException('INVALID_PHONE_NUMBER');
     if (dto.email && !dto.email.match(EMAIL_REGEX))
       throw new BadRequestException('INVALID_EMAIL');
 
-    const userExist = await this.findOneByUsername(dto.username);
+    const userExist = await this.findOneByUsername(dto.email);
 
     if (userExist) throw new BadRequestException('USERNAME_ALREADY_EXIST');
 
@@ -90,21 +90,24 @@ export class UserService {
     return userExist;
   }
   async login(dto: UserLoginDto) {
-    const userExist = await this.findOneByUsername(dto.username, {
+    const userExist = await this.findOneByUsername(dto.email, {
       relations: ['userCredential'],
     });
-    if (!userExist)
+    if (!userExist) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    }
 
-    if (!userExist?.password)
+    if (!userExist?.password) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    }
 
     const isPasswordMatches = await this.authService.comparePassword(
       dto?.password,
       userExist?.password,
     );
-    if (!isPasswordMatches)
+    if (!isPasswordMatches) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    }
     const queryRunner = await this.dataSource.createQueryRunner();
     try {
       await queryRunner.connect();

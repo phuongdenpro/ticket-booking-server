@@ -7,16 +7,9 @@ import {
   IsOptional,
   IsString,
   MinLength,
-  ValidateNested,
 } from 'class-validator';
 
 export class CreateUserDto {
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  @MinLength(6)
-  username: string;
-
   @ApiProperty()
   @IsNotEmpty()
   @IsString()
@@ -41,7 +34,7 @@ export class CreateUserDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  email?: string;
+  email: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -52,5 +45,4 @@ export class CreateUserDto {
   @IsOptional()
   @IsEnum(UserStatusEnum)
   status?: UserStatusEnum;
-
 }

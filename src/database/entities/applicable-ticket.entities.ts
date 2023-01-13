@@ -1,13 +1,4 @@
-import { CustomerGroup } from './customer-group.entities';
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
-  ManyToMany,
-} from 'typeorm';
-import { Customer } from './customer.entities';
-import { Promotion } from './promotion.entities';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { PromotionDetail } from './promotion-detail.entities';
 import { Ticket } from './ticket.entities';
 import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
@@ -24,9 +15,9 @@ export class ApplicableTicket {
   @JoinColumn([{ name: 'promotion_detail_id', referencedColumnName: 'id' }])
   promotionDetail: PromotionDetail;
 
-  @ManyToMany(() => Ticket, (ticket) => ticket.applicableTicket)
+  @ManyToOne(() => Ticket, (ticket) => ticket.applicableTicket)
   @JoinColumn({ name: 'ticket_id', referencedColumnName: 'id' })
-  ticket: Ticket[];
+  ticket: Ticket;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

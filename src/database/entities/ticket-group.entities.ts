@@ -1,16 +1,13 @@
-import { PromotionDetail } from './promotion-detail.entities';
 import {
   Column,
   Entity,
-  JoinTable,
   ManyToMany,
-  ManyToOne,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToMany,
 } from 'typeorm';
-import { Ticket } from './ticket.entities';
 import { ApplicableTicketGroup } from './applicable-ticket-group.entities';
 import { PriceDetail } from './price-detail.entities';
 import { TicketGroupDetail } from './ticket-group-detail.entities';
@@ -29,7 +26,7 @@ export class TicketGroup {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @ManyToMany(
+  @OneToMany(
     () => ApplicableTicketGroup,
     (applicableTicketGroup) => applicableTicketGroup.ticketGroup,
   )
@@ -41,14 +38,14 @@ export class TicketGroup {
   )
   ticketGroupDetail: TicketGroupDetail[];
 
-  @ManyToOne(() => PriceDetail, (priceDetail) => priceDetail.ticketGroup)
-  priceDetail: PriceDetail;
+  @OneToMany(() => PriceDetail, (priceDetail) => priceDetail.ticketGroup)
+  priceDetail: PriceDetail[];
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

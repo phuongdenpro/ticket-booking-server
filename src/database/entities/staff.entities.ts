@@ -57,16 +57,17 @@ export class Staff {
 
   // Relationships
   @ManyToOne(() => Ward, (ward) => ward.staffs)
+  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
   ward: Ward;
 
   @Column({ name: 'code', type: 'varchar', length: 30, nullable: true })
   code: string;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

@@ -40,7 +40,10 @@ export class UsersController {
   @Get()
   @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
-  async findAll(@Query() dto: FilterUserDto, @GetPagination() pagination?: Pagination) {
+  async findAll(
+    @Query() dto: FilterUserDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
     return this.userService.findAll(dto, pagination);
   }
 
@@ -48,12 +51,10 @@ export class UsersController {
   @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
   // @UseInterceptors(LoggingInterceptor)
-  
   @Get(':id')
   @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
   async findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.userService.findOne(id);
   }
-
 }

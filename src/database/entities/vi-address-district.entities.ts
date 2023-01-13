@@ -31,9 +31,12 @@ export class District {
   @Column({ name: 'code', type: 'int', nullable: true })
   code: number;
 
+  @Column({ name: 'province_code', type: 'int', nullable: true })
+  provinceCode: number;
+
   @ManyToOne(() => Province, (province) => province.districts)
   @JoinColumn({ name: 'parent_code_id', referencedColumnName: 'id' })
-  parentCode: number;
+  parentCode: string;
 
   @OneToMany(() => Ward, (ward) => ward.parentCode)
   wards: Ward[];

@@ -1,8 +1,12 @@
 import { Staff } from 'src/database/entities';
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoleEnum } from 'src/enums';
-import { EMAIL_REGEX, PHONE_REGEX, USERNAME_REGEX } from 'src/utils/regex.util';
+import { EMAIL_REGEX, PHONE_REGEX } from 'src/utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { AdminLoginDto, AdminRegisterDto } from './dto';
@@ -12,7 +16,7 @@ export class AdminService {
   constructor(
     @InjectRepository(Staff) private staffRepository: Repository<Staff>,
     private authService: AuthService,
-    private dataSource: DataSource
+    private dataSource: DataSource,
   ) {}
 
   async findOneById(id: string, options?: any) {
@@ -27,17 +31,23 @@ export class AdminService {
   }
 
   async updateStaffByAdminId(staffId: string, data: any) {
-    return this.staffRepository.update({id: staffId}, data);
+    return this.staffRepository.update({ id: staffId }, data);
   }
 
   async register(userId: string, dto: AdminRegisterDto) {
     // if (!dto.username.match(USERNAME_REGEX))
     //   throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
-    if (!dto.phone.match(PHONE_REGEX)) throw new BadRequestException('INVALID_PHONE_NUMBER');
-    if (dto.email && !dto.email.match(EMAIL_REGEX)) throw new BadRequestException('INVALID_EMAIL');
+    if (!dto.phone.match(PHONE_REGEX)) {
+      throw new BadRequestException('INVALID_PHONE_NUMBER');
+    }
+    if (dto.email && !dto.email.match(EMAIL_REGEX)) {
+      throw new BadRequestException('INVALID_EMAIL');
+    }
 
-    const staffExist  = await this.findOneByEmail(dto.email);
-    if (staffExist) throw new BadRequestException('STAFF_ALREADY_EXIST');
+    const staffExist = await this.findOneByEmail(dto.email);
+    if (staffExist) {
+      throw new BadRequestException('STAFF_ALREADY_EXIST');
+    }
 
     const queryRunner = await this.dataSource.createQueryRunner();
     try {
@@ -67,25 +77,36 @@ export class AdminService {
       await queryRunner.release();
     }
   }
+
   async profile(id: string) {
     const staffExist = this.findOneById(id);
-    if (!staffExist) throw new BadRequestException('USER_NOT_FOUND');
+    if (!staffExist) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
     return staffExist;
   }
+
   async login(dto: AdminLoginDto) {
     const staffExist = await this.findOneByEmail(dto.email);
-    if (!staffExist) throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    if (!staffExist) {
+      throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    }
 
     const isPasswordMatches = await this.authService.comparePassword(
       dto.password,
-      staffExist.password
+      staffExist.password,
     );
-    if (!isPasswordMatches) throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    if (!isPasswordMatches) {
+      throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    }
     const queryRunner = this.dataSource.createQueryRunner();
     try {
       await queryRunner.startTransaction();
 
-      const tokens = await this.authService.createTokens(staffExist, RoleEnum.STAFF);
+      const tokens = await this.authService.createTokens(
+        staffExist,
+        RoleEnum.STAFF,
+      );
       await this.updateStaffByAdminId(staffExist.id, {
         ...tokens,
       });
@@ -112,7 +133,10 @@ export class AdminService {
     if (!staffExist || !staffExist.refreshToken)
       throw new UnauthorizedException();
 
-    const tokens = await this.authService.createTokens(staffExist, RoleEnum.STAFF);
+    const tokens = await this.authService.createTokens(
+      staffExist,
+      RoleEnum.STAFF,
+    );
 
     await this.updateStaffByAdminId(staffExist.id, {
       refresh_token: tokens.refresh_token,
