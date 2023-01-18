@@ -3,12 +3,10 @@ import {
   Entity,
   OneToMany,
   ManyToMany,
-  JoinTable,
   Column,
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { CustomerGroup } from './customer-group.entities';
 import { Order } from './order.entities';
 import { Ward } from './vi-address-ward.entities';
 import {
@@ -24,41 +22,47 @@ export class Customer {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'password', type: 'varchar', default: null, nullable: true })
+  @Column({ name: 'password', type: 'varchar', default: null, nullable: false })
   password?: string;
 
-  @Column({ name: 'last_login', type: 'timestamp' })
+  @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLogin?: Date;
 
-  @Column({ name: 'is_active', type: 'bool', default: false, select: false })
+  @Column({
+    name: 'is_active',
+    type: 'bool',
+    default: false,
+    select: true,
+    nullable: true,
+  })
   isActive?: boolean;
 
   @Column({ name: 'phone', type: 'varchar', nullable: true })
   phone?: string;
 
-  @Column({ name: 'email', type: 'varchar', nullable: true })
+  @Column({ name: 'email', type: 'varchar', nullable: false })
   email?: string;
 
-  @Column({ name: 'fullname', type: 'varchar', nullable: true })
+  @Column({ name: 'fullname', type: 'varchar', nullable: false })
   fullName?: string;
 
-  @Column({ name: 'gender', type: 'varchar', default: 'N' })
+  @Column({ name: 'gender', type: 'varchar', default: 'N', nullable: false })
   gender?: GenderEnum = GenderEnum.NONE;
 
   @Column({ name: 'address', type: 'varchar', nullable: true })
   address?: string;
 
-  @Column({ name: 'note', type: 'text' })
+  @Column({ name: 'note', type: 'text', nullable: true })
   note?: string;
 
   @Column({ name: 'birthday', type: 'timestamp', nullable: true })
-  birthDay?: Date;
+  birthday?: Date;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
 
   @Column({ name: 'refresh_token', type: 'varchar', nullable: true })
   refreshToken?: string;

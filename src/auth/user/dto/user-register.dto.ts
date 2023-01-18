@@ -29,21 +29,15 @@ export class UserRegisterDto {
   @ApiProperty({ example: new Date() })
   @IsNotEmpty()
   @IsDate()
-  birthDate: Date;
+  birthday?: Date;
 
   @ApiProperty({ example: '0354043344' })
   @IsNotEmpty()
   @IsString()
   phone?: string;
 
-  @ApiProperty({ example: GenderEnum.FEMALE })
+  @ApiProperty({ example: GenderEnum.NONE })
   @IsEnum(GenderEnum)
   @IsNotEmpty()
-  @IsEnum(GenderEnum)
-  gender: GenderEnum.FEMALE;
-
-  @ApiProperty({ example: 'string' })
-  @IsNotEmpty()
-  @IsString()
-  token: string;
+  gender: GenderEnum.NONE;
 }

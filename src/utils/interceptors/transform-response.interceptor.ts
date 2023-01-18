@@ -42,7 +42,9 @@ const transform = <T>(data?: T): Response<T> => {
         ? data?.['pagination']['take']
         : data?.['pagination']['pageSize']);
     const lastPage =
-      Math.floor(totalPage) < totalPage ? Math.floor(totalPage) + 1 : Math.floor(totalPage);
+      Math.floor(totalPage) < totalPage
+        ? Math.floor(totalPage) + 1
+        : Math.floor(totalPage);
     pagination = {
       page: data?.['pagination']['page'],
       pageSize: data?.['pagination']['pageSize'],
@@ -61,8 +63,13 @@ const transform = <T>(data?: T): Response<T> => {
 };
 
 @Injectable()
-export class TransformResponseInterceptor<T> implements NestInterceptor<T, Response<T>> {
-  intercept(_context: ExecutionContext, next: CallHandler): Observable<Response<T>> {
+export class TransformResponseInterceptor<T>
+  implements NestInterceptor<T, Response<T>>
+{
+  intercept(
+    _context: ExecutionContext,
+    next: CallHandler,
+  ): Observable<Response<T>> {
     return next.handle().pipe(map(transform));
   }
 }

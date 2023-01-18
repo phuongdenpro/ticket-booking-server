@@ -6,20 +6,14 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RoleEnum } from 'src/enums';
-import {
-  EMAIL_REGEX,
-  PHONE_REGEX,
-  USERNAME_REGEX,
-} from '../../utils/regex.util';
+import { EMAIL_REGEX, PHONE_REGEX } from '../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
-import { UserUpdatePasswordDto } from './dto/user-update-password.dto';
-import { UserLoginDto } from './dto/user-login.dto';
-import { UserRegisterDto } from './dto/user-register.dto';
+import { UserUpdatePasswordDto, UserLoginDto, UserRegisterDto } from './dto';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
-export class UserService {
+export class AuthUserService {
   constructor(
     @InjectRepository(Customer) private userRepository: Repository<Customer>,
     private authService: AuthService,
@@ -30,9 +24,9 @@ export class UserService {
     return this.userRepository.findOne({ where: { id }, ...options });
   }
 
-  async findOneByUsername(username: string, options?: any) {
+  async findOneByEmail(username: string, options?: any) {
     return this.userRepository.findOne({
-      where: { email: username.toLowerCase() },
+      where: { email: username },
       ...options,
     });
   }
@@ -44,14 +38,17 @@ export class UserService {
   async register(dto: UserRegisterDto) {
     // if (!dto.username.match(USERNAME_REGEX))
     //   throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
-    if (!dto.phone.match(PHONE_REGEX))
+    if (!dto.phone.match(PHONE_REGEX)) {
       throw new BadRequestException('INVALID_PHONE_NUMBER');
-    if (dto.email && !dto.email.match(EMAIL_REGEX))
+    }
+    if (dto.email && !dto.email.match(EMAIL_REGEX)) {
       throw new BadRequestException('INVALID_EMAIL');
+    }
 
-    const userExist = await this.findOneByUsername(dto.email);
-
-    if (userExist) throw new BadRequestException('USERNAME_ALREADY_EXIST');
+    const userExist = await this.findOneByEmail(dto.email);
+    if (userExist) {
+      throw new BadRequestException('USERNAME_ALREADY_EXIST');
+    }
 
     const queryRunner = await this.dataSource.createQueryRunner();
     try {
@@ -61,22 +58,22 @@ export class UserService {
 
       const user = new Customer();
       user.password = passwordHashed;
-
-      // staffCred.username = dto.username.toLowerCase();
       user.fullName = dto.name;
       user.phone = dto.phone;
       user.email = dto.email;
       user.gender = dto.gender;
-      const userCreated = await this.userRepository.save(user);
+      user.birthday = dto.birthday;
 
       await queryRunner.commitTransaction();
+      const userCreated = await this.userRepository.save(user);
       delete userCreated.createdAt;
       delete userCreated.updatedAt;
       delete userCreated.deletedAt;
-      await this.userRepository.save(user);
+      delete userCreated.createdBy;
+      delete userCreated.updatedBy;
+      delete userCreated.password;
 
-      await queryRunner.commitTransaction();
-      return;
+      return userCreated;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;
@@ -84,15 +81,16 @@ export class UserService {
       await queryRunner.release();
     }
   }
+
   async profile(id: string) {
     const userExist = this.findOneById(id);
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
     return userExist;
   }
+
   async login(dto: UserLoginDto) {
-    const userExist = await this.findOneByUsername(dto.email, {
-      relations: ['userCredential'],
-    });
+    const userExist = await this.findOneByEmail(dto.email);
+
     if (!userExist) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
@@ -112,16 +110,19 @@ export class UserService {
     try {
       await queryRunner.connect();
       await queryRunner.startTransaction();
+
       const tokens = await this.authService.createTokens(
         userExist,
         RoleEnum.CUSTOMER,
       );
-      // const tokenHash = await this.authService.hashData(tokens.refresh_token);
+
       await this.updateUserCredentialByUserId(userExist.id, {
-        ...tokens,
+        refreshToken: tokens.refresh_token,
+        accessToken: tokens.access_token,
+        lastLogin: new Date(),
       });
       await queryRunner.commitTransaction();
-      console.log(userExist);
+
       return tokens;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -131,9 +132,10 @@ export class UserService {
     }
   }
 
-  async logout(adminId: any) {
-    return await this.updateUserCredentialByUserId(adminId, {
-      refresh_token: null,
+  async logout(userId: any) {
+    return await this.updateUserCredentialByUserId(userId, {
+      refreshToken: null,
+      accessToken: null,
     });
   }
 

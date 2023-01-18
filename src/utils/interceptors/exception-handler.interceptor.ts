@@ -38,6 +38,8 @@ const transform = (err): HttpException => {
 @Injectable()
 export class ExceptionHandlerInterceptor implements NestInterceptor {
   intercept(_context: ExecutionContext, next: CallHandler): Observable<any> {
-    return next.handle().pipe(catchError((err) => throwError(() => transform(err))));
+    return next
+      .handle()
+      .pipe(catchError((err) => throwError(() => transform(err))));
   }
 }

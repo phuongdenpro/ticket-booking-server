@@ -47,9 +47,9 @@ export class UsersController {
     return this.userService.findAll(dto, pagination);
   }
 
-  @Patch(':id/password')
-  @Roles(RoleEnum.STAFF)
-  @HttpCode(HttpStatus.OK)
+  // @Patch(':id/password')
+  // @Roles(RoleEnum.STAFF)
+  // @HttpCode(HttpStatus.OK)
   // @UseInterceptors(LoggingInterceptor)
   @Get(':id')
   @Roles(RoleEnum.STAFF)

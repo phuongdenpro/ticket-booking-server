@@ -24,7 +24,7 @@ export class CreateUserDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsDate()
-  birthDate: Date;
+  birthDay?: Date;
 
   @ApiProperty()
   @IsNotEmpty()

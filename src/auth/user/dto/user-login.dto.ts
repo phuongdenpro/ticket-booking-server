@@ -13,8 +13,8 @@ export class UserLoginDto {
   @MinLength(6)
   password: string;
 
-  @ApiProperty()
-  @IsNotEmpty()
-  @IsString()
-  token: string;
+  // @ApiProperty()
+  // @IsNotEmpty()
+  // @IsString()
+  // token: string;
 }

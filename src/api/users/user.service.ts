@@ -1,5 +1,5 @@
 import { Pagination } from 'src/decorator';
-import { Staff, Customer } from 'src/database/entities';
+import { Customer } from 'src/database/entities';
 import {
   BadRequestException,
   Injectable,
@@ -29,8 +29,6 @@ export class UsersService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-    @InjectRepository(Staff)
-    private readonly staffRepository: Repository<Staff>,
     private dataSource: DataSource,
   ) {}
 

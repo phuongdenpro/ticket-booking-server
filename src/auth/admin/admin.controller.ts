@@ -18,7 +18,7 @@ import { AdminLoginDto, AdminRegisterDto } from './dto';
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
-  @Post()
+  @Post('register')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.CREATED)
@@ -26,13 +26,13 @@ export class AdminController {
     return this.adminService.register(user?.['id'], dto);
   }
 
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  async profile(@CurrentUser() user) {
-    return this.adminService.profile(user?.['id']);
-  }
+  // @Get('profile')
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @HttpCode(HttpStatus.OK)
+  // async profile(@CurrentUser() user) {
+  //   return this.adminService.profile(user?.['id']);
+  // }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -45,15 +45,14 @@ export class AdminController {
   @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
   async logout(@CurrentUser() user) {
-    console.log(user);
     return this.adminService.logout(user.id);
   }
 
-  @Post('refresh')
-  @UseGuards(JwtRefreshAuthGuard)
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  async refreshTokens(@CurrentUser() user) {
-    return this.adminService.refreshTokens(user.id);
-  }
+  // @Post('refresh')
+  // @UseGuards(JwtRefreshAuthGuard)
+  // @ApiBearerAuth()
+  // @HttpCode(HttpStatus.OK)
+  // async refreshTokens(@CurrentUser() user) {
+  //   return this.adminService.refreshTokens(user.id);
+  // }
 }

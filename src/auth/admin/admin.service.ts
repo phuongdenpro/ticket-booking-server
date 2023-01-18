@@ -37,8 +37,10 @@ export class AdminService {
   async register(userId: string, dto: AdminRegisterDto) {
     // if (!dto.username.match(USERNAME_REGEX))
     //   throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
-    if (!dto.phone.match(PHONE_REGEX)) {
-      throw new BadRequestException('INVALID_PHONE_NUMBER');
+    if (dto.phone.length > 0) {
+      if (!dto.phone.match(PHONE_REGEX)) {
+        throw new BadRequestException('INVALID_PHONE_NUMBER');
+      }
     }
     if (dto.email && !dto.email.match(EMAIL_REGEX)) {
       throw new BadRequestException('INVALID_EMAIL');
@@ -57,8 +59,6 @@ export class AdminService {
 
       const staffCred = new Staff();
       staffCred.password = passwordHashed;
-
-      // staffCred.username = dto.username.toLowerCase();
       staffCred.fullName = dto.name;
       staffCred.phone = dto.phone;
       staffCred.email = dto.email;
@@ -69,6 +69,9 @@ export class AdminService {
       delete staffCreated.createdAt;
       delete staffCreated.updatedAt;
       delete staffCreated.deletedAt;
+      delete staffCreated.createdBy;
+      delete staffCreated.updatedBy;
+      delete staffCreated.password;
       return staffCreated;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -99,6 +102,7 @@ export class AdminService {
     if (!isPasswordMatches) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
+
     const queryRunner = this.dataSource.createQueryRunner();
     try {
       await queryRunner.startTransaction();
@@ -107,11 +111,15 @@ export class AdminService {
         staffExist,
         RoleEnum.STAFF,
       );
+
       await this.updateStaffByAdminId(staffExist.id, {
-        ...tokens,
+        refreshToken: tokens.refresh_token,
+        accessToken: tokens.access_token,
+        lastLogin: new Date(),
       });
 
       await queryRunner.commitTransaction();
+
       return tokens;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -123,8 +131,8 @@ export class AdminService {
 
   async logout(staffId: any) {
     return await this.updateStaffByAdminId(staffId, {
-      refresh_token: null,
-      access_token: null,
+      refreshToken: null,
+      accessToken: null,
     });
   }
 

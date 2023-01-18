@@ -26,7 +26,8 @@ export class AtStrategy extends PassportStrategy(Strategy, 'jwt') {
     // user just login one device
 
     if (payload.type === RoleEnum.CUSTOMER) {
-      if (tokenRequest !== user.access_token) throw new UnauthorizedException('WRONG_CREDENTIALS');
+      if (tokenRequest !== user.access_token)
+        throw new UnauthorizedException('WRONG_CREDENTIALS');
     }
 
     return { id: user.id, email: user.email, type: payload.type };
