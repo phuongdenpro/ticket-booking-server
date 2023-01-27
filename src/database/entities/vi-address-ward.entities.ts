@@ -35,8 +35,8 @@ export class Ward {
   @Column({ name: 'code', type: 'int', nullable: true })
   code: number;
 
-  @Column({ name: 'province_code', type: 'int', nullable: true })
-  provinceCode: number;
+  @Column({ name: 'district_code', type: 'int', nullable: true })
+  districtCode: number;
 
   // Relationships
   @ManyToOne(() => District, (district) => district.wards)

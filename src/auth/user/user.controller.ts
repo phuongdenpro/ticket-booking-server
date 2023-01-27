@@ -1,3 +1,4 @@
+import { UserRefreshTokenDto } from './dto/user-refresh-token.dto';
 import { CurrentUser } from 'src/decorator';
 import {
   Body,
@@ -49,13 +50,11 @@ export class AuthUserController {
   //   return this.userService.profile(user?.['id']);
   // }
 
-  // @Post('refresh')
-  // @UseGuards(JwtRefreshAuthGuard)
-  // @ApiBearerAuth()
-  // @HttpCode(HttpStatus.OK)
-  // async refreshTokens(@CurrentUser() user) {
-  //   return this.userService.refreshTokens(user.id);
-  // }
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refreshTokens(@Body() dto: UserRefreshTokenDto) {
+    return this.userService.refreshTokens(dto.refreshToken);
+  }
 
   // @Patch('password')
   // @UseGuards(JwtAuthGuard)

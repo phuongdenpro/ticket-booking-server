@@ -41,7 +41,6 @@ export class UsersService {
 
   async findAll(dto: FilterUserDto, pagination: Pagination) {
     const { keywords } = dto;
-    const breadcrumb = [];
     const query = this.customerRepository.createQueryBuilder('u');
     if (keywords) {
       query
@@ -60,10 +59,6 @@ export class UsersService {
       .orderBy('u.updatedAt', 'DESC')
       .getMany();
 
-    // const dataResult = {
-    //   breadcrumb,
-    //   data,
-    // };
     return { dataResult, pagination, total };
   }
 

@@ -23,6 +23,13 @@ export class AdminService {
     return this.staffRepository.findOne({ where: { id }, ...options });
   }
 
+  async findOneByRefreshToken(refreshToken: string, options?: any) {
+    return this.staffRepository.findOne({
+      where: { refreshToken },
+      ...options,
+    });
+  }
+
   async findOneByEmail(email: string, options?: any) {
     return this.staffRepository.findOne({
       where: { email: email.toLowerCase() },
@@ -136,10 +143,12 @@ export class AdminService {
     });
   }
 
-  async refreshTokens(staffId: any) {
-    const staffExist = await this.findOneById(staffId);
-    if (!staffExist || !staffExist.refreshToken)
+  async refreshToken(refreshToken: string) {
+    const staffExist = await this.findOneByRefreshToken(refreshToken);
+    if (!staffExist || !staffExist.refreshToken) {
       throw new UnauthorizedException();
+    }
+    console.log(staffExist);
 
     const tokens = await this.authService.createTokens(
       staffExist,
@@ -147,8 +156,8 @@ export class AdminService {
     );
 
     await this.updateStaffByAdminId(staffExist.id, {
-      refresh_token: tokens.refresh_token,
-      access_token: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      accessToken: tokens.access_token,
     });
     return tokens;
   }

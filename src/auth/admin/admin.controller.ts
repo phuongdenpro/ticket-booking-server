@@ -1,3 +1,4 @@
+import { AdminRefreshTokenDto } from './dto/admin-refresh-token.dto';
 import { CurrentUser } from 'src/decorator';
 import {
   Body,
@@ -48,11 +49,9 @@ export class AdminController {
     return this.adminService.logout(user.id);
   }
 
-  // @Post('refresh')
-  // @UseGuards(JwtRefreshAuthGuard)
-  // @ApiBearerAuth()
-  // @HttpCode(HttpStatus.OK)
-  // async refreshTokens(@CurrentUser() user) {
-  //   return this.adminService.refreshTokens(user.id);
-  // }
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(@Body() dto: AdminRefreshTokenDto) {
+    return this.adminService.refreshToken(dto.refreshToken);
+  }
 }

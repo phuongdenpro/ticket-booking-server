@@ -1,18 +1,56 @@
-import { ProvinceService } from './../province/province.service';
-import { District } from './../../../database/entities/vi-address-district.entities';
+import { FilterDistrictDto } from './dto/filter-district.dto';
 import { DistrictService } from './district.service';
-import { Controller, Get, HttpCode, HttpStatus } from '@nestjs/common';
-import axios from 'axios';
+import {
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Query,
+} from '@nestjs/common';
 import { GetPagination, Pagination } from 'src/decorator';
-import { DataSource } from 'typeorm';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('district')
+@ApiTags('District')
 export class DistrictController {
-  constructor(
-    private districtService: DistrictService,
-    private provinceService: ProvinceService,
-    private dataSource: DataSource,
-  ) {}
+  constructor(private districtService: DistrictService) {}
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async findAll(
+    @Query() dto: FilterDistrictDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return this.districtService.findAll(dto, pagination);
+  }
+
+  @Get('id/:id')
+  @HttpCode(HttpStatus.OK)
+  async findOneById(
+    @Param('id') id: string,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return this.districtService.findOneById(id, pagination);
+  }
+
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
+  async findOneByCode(
+    @Param('code') code: number,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return this.districtService.findOneByCode(code, pagination);
+  }
+
+  @Get('district-code/:districtCode')
+  @HttpCode(HttpStatus.OK)
+  async findOneByProvinceCode(
+    @Param('districtCode') districtCode: number,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return this.districtService.findOneByProvinceCode(districtCode, pagination);
+  }
 
   // // crawl data
   // @Get('crawl')

@@ -31,6 +31,13 @@ export class AuthUserService {
     });
   }
 
+  async findOneByRefreshToken(refreshToken: string, options?: any) {
+    return this.userRepository.findOne({
+      where: { refreshToken },
+      ...options,
+    });
+  }
+
   async updateUserCredentialByUserId(userId: string, data: any) {
     return this.userRepository.update({ id: userId }, data);
   }
@@ -139,8 +146,8 @@ export class AuthUserService {
     });
   }
 
-  async refreshTokens(adminId: any) {
-    const userExist = await this.findOneById(adminId);
+  async refreshTokens(refreshToken: string) {
+    const userExist = await this.findOneByRefreshToken(refreshToken);
     if (!userExist || !userExist.refreshToken)
       throw new UnauthorizedException();
 
@@ -148,13 +155,12 @@ export class AuthUserService {
       userExist,
       RoleEnum.CUSTOMER,
     );
-    // const tokenHash = await this.authService.hashData(tokens.refresh_token);
+
     await this.updateUserCredentialByUserId(userExist.id, {
-      refresh_token: tokens.refresh_token,
-      access_token: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      accessToken: tokens.access_token,
     });
 
-    console.log(userExist);
     return tokens;
   }
 
