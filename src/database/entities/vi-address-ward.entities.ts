@@ -32,8 +32,14 @@ export class Ward {
   })
   nameWithType: string;
 
-  @Column({ name: 'code', type: 'int', nullable: true })
+  @Column({ name: 'code', type: 'int', nullable: true, unique: true })
   code: number;
+
+  @Column({ name: 'district_code', type: 'int', nullable: true })
+  districtCode: number;
+
+  @Column({ name: 'id_deleted', type: 'tinyint', default: 0 })
+  isDeleted: boolean;
 
   // Relationships
   @ManyToOne(() => District, (district) => district.wards)

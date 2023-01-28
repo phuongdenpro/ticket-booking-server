@@ -1,12 +1,4 @@
-import { CustomerGroup } from './customer-group.entities';
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
-  ManyToMany,
-} from 'typeorm';
-import { Customer } from './customer.entities';
+import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Promotion } from './promotion.entities';
 import { PromotionDetail } from './promotion-detail.entities';
 import { TicketGroup } from './ticket-group.entities';

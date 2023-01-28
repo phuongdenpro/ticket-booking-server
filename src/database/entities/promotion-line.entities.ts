@@ -76,10 +76,10 @@ export class PromotionLine {
   note: string;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
 
   @OneToOne(
     () => PromotionDetail,

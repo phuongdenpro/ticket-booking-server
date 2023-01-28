@@ -7,7 +7,6 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { PriceList } from './price-list.entities';
-import { Ticket } from './ticket.entities';
 import { OrderDetail } from './order-detail.entities';
 import { TicketGroup } from './ticket-group.entities';
 import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';

@@ -1,6 +1,12 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { GenderEnum } from 'src/enums';
-import { IsEnum, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import {
+  IsEmpty,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class AdminRegisterDto {
   @ApiProperty({ example: 'admin@gmail.com' })
@@ -20,13 +26,12 @@ export class AdminRegisterDto {
   name: string;
 
   @ApiProperty({ example: '0354043344' })
-  @IsNotEmpty()
   @IsString()
-  phone: string;
+  @IsEmpty()
+  phone?: string;
 
   @ApiProperty({ example: 1 })
-  @IsEnum(GenderEnum)
   @IsNotEmpty()
   @IsEnum(GenderEnum)
-  gender: GenderEnum.FEMALE;
+  gender: GenderEnum.NONE;
 }

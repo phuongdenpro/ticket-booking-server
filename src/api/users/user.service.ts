@@ -1,8 +1,10 @@
 import { Pagination } from 'src/decorator';
+import { Customer } from 'src/database/entities';
 import {
-  Staff, Customer
-} from 'src/database/entities';
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserStatusEnum } from 'src/enums';
@@ -25,9 +27,9 @@ import {
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectRepository(Customer) private readonly customerRepository: Repository<Customer>,
-    @InjectRepository(Staff) private readonly staffRepository: Repository<Staff>,
-    private dataSource: DataSource
+    @InjectRepository(Customer)
+    private readonly customerRepository: Repository<Customer>,
+    private dataSource: DataSource,
   ) {}
 
   async findOneById(userId: string, options?: any) {
@@ -37,14 +39,9 @@ export class UsersService {
     });
   }
 
-
   async findAll(dto: FilterUserDto, pagination: Pagination) {
-    const {
-      keywords,
-    } = dto;
-    const breadcrumb = [];
-    const query = this.customerRepository
-      .createQueryBuilder('u')
+    const { keywords } = dto;
+    const query = this.customerRepository.createQueryBuilder('u');
     if (keywords) {
       query
         .orWhere('u.username like :query')
@@ -62,10 +59,6 @@ export class UsersService {
       .orderBy('u.updatedAt', 'DESC')
       .getMany();
 
-    // const dataResult = {
-    //   breadcrumb,
-    //   data,
-    // };
     return { dataResult, pagination, total };
   }
 
@@ -78,5 +71,4 @@ export class UsersService {
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
     return userExist;
   }
-
 }

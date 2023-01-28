@@ -19,54 +19,86 @@ export class Staff {
   @Column({ name: 'password', type: 'varchar', default: null, nullable: true })
   password?: string;
 
-  @Column({ name: 'last_login', type: 'timestamp' })
-  lastLogin?: Date;
+  @Column({
+    name: 'last_login',
+    type: 'timestamp',
+    default: null,
+  })
+  lastLogin?: Date = null;
 
   @Column({ name: 'is_active', type: 'bool', default: false, select: false })
-  isActive?: boolean;
+  isActive?: boolean = false;
 
   @Column({ name: 'phone', type: 'varchar', nullable: true })
   phone?: string;
 
-  @Column({ name: 'email', type: 'varchar', nullable: true })
+  @Column({ name: 'email', type: 'varchar' })
   email?: string;
 
-  @Column({ name: 'fullname', type: 'varchar', nullable: true })
+  @Column({ name: 'fullname', type: 'varchar', nullable: false })
   fullName?: string;
 
-  @Column({ name: 'gender', type: 'varchar', default: 'N' })
+  @Column({ name: 'gender', type: 'varchar', length: 1, default: 'N' })
   gender?: GenderEnum = GenderEnum.NONE;
 
-  @Column({ name: 'address', type: 'varchar', nullable: true })
+  @Column({
+    name: 'address',
+    type: 'varchar',
+    length: 255,
+    default: '',
+    nullable: true,
+  })
   address?: string;
 
-  @Column({ name: 'note', type: 'text' })
+  @Column({ name: 'note', type: 'text', nullable: true })
   note?: string;
 
-  @Column({ name: 'birthday', type: 'timestamp', nullable: true })
+  @Column({
+    name: 'birthday',
+    type: 'timestamp',
+    default: null,
+    nullable: true,
+  })
   birthDay?: Date;
 
   @Column({ name: 'is_manage', type: 'bool', default: false, select: false })
   isManage?: boolean;
 
-  @Column({ name: 'refresh_token', type: 'varchar', nullable: true })
+  @Column({
+    name: 'refresh_token',
+    type: 'varchar',
+    nullable: true,
+    default: null,
+  })
   refreshToken?: string;
 
-  @Column({ name: 'access_token', type: 'varchar', nullable: true })
+  @Column({
+    name: 'access_token',
+    type: 'varchar',
+    nullable: true,
+    default: null,
+  })
   accessToken?: string;
 
   // Relationships
   @ManyToOne(() => Ward, (ward) => ward.staffs)
+  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
   ward: Ward;
 
-  @Column({ name: 'code', type: 'varchar', length: 30, nullable: true })
-  code: string;
+  @Column({
+    name: 'code',
+    type: 'int',
+    unique: true,
+    nullable: false,
+    generated: 'increment',
+  })
+  code: number;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

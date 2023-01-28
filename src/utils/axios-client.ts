@@ -9,9 +9,12 @@ const api = (baseUrl: string, token?: string): AxiosInstance => {
   api.interceptors.response.use(
     (res) => res,
     (err) => {
-      if (err.code === 'ECONNREFUSED') return Promise.reject(new ServiceUnavailableException());
-      return Promise.reject(new HttpException(err.response?.data, err.response?.status));
-    }
+      if (err.code === 'ECONNREFUSED')
+        return Promise.reject(new ServiceUnavailableException());
+      return Promise.reject(
+        new HttpException(err.response?.data, err.response?.status),
+      );
+    },
   );
   return api;
 };

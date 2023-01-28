@@ -1,15 +1,15 @@
-import { TicketGroup } from './ticket-group.entities';
 import { Ticket } from './ticket.entities';
 import {
   Column,
   PrimaryGeneratedColumn,
   ManyToMany,
-  JoinTable,
   OneToOne,
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { ApplicableTicket } from './applicable-ticket.entities';
 import { ApplicableTicketGroup } from './applicable-ticket-group.entities';
@@ -42,9 +42,10 @@ export class PromotionDetail {
     () => PromotionLine,
     (promotionLine) => promotionLine.promotionDetail,
   )
+  @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
   promotionLine: PromotionLine;
 
-  @ManyToMany(
+  @OneToMany(
     () => ApplicableTicket,
     (applicableTicket) => applicableTicket.promotionDetail,
   )

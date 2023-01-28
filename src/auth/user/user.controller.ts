@@ -1,16 +1,26 @@
+import { UserRefreshTokenDto } from './dto/user-refresh-token.dto';
 import { CurrentUser } from 'src/decorator';
-import { Body, Controller, Get, HttpCode, HttpStatus, Patch, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard, JwtRefreshAuthGuard } from '../guards';
 import { UserLoginDto } from './dto/user-login.dto';
 import { UserRegisterDto } from './dto/user-register.dto';
-import { UserService } from './user.service';
+import { AuthUserService } from './user.service';
 import { UserUpdatePasswordDto } from './dto/user-update-password.dto';
 
 @Controller('auth/user')
 @ApiTags('Auth')
-export class UserController {
-  constructor(private userService: UserService) {}
+export class AuthUserController {
+  constructor(private userService: AuthUserService) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -32,27 +42,28 @@ export class UserController {
     return this.userService.logout(user.id);
   }
 
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  async profile(@CurrentUser() user) {
-    return this.userService.profile(user?.['id']);
-  }
-  
+  // @Get('profile')
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @HttpCode(HttpStatus.OK)
+  // async profile(@CurrentUser() user) {
+  //   return this.userService.profile(user?.['id']);
+  // }
+
   @Post('refresh')
-  @UseGuards(JwtRefreshAuthGuard)
-  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  async refreshTokens(@CurrentUser() user) {
-    return this.userService.refreshTokens(user.id);
+  async refreshTokens(@Body() dto: UserRefreshTokenDto) {
+    return this.userService.refreshTokens(dto.refreshToken);
   }
 
-  @Patch('password')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  async updatePassword(@CurrentUser() user, @Body() dto: UserUpdatePasswordDto){
-    return this.userService.updatePassword(user.id, dto);
-  }
+  // @Patch('password')
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @HttpCode(HttpStatus.OK)
+  // async updatePassword(
+  //   @CurrentUser() user,
+  //   @Body() dto: UserUpdatePasswordDto,
+  // ) {
+  //   return this.userService.updatePassword(user.id, dto);
+  // }
 }

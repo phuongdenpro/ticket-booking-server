@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   PrimaryGeneratedColumn,
+  JoinColumn,
 } from 'typeorm';
 import { Seat } from './seat.entities';
 
@@ -47,6 +48,7 @@ export class Vehicle {
     () => PassengerCarCompany,
     (passengerCarCompany) => passengerCarCompany.vehicles,
   )
+  @JoinColumn({ name: 'passenger_car_company_id', referencedColumnName: 'id' })
   passengerCarCompany: PassengerCarCompany;
 
   @OneToMany(() => Seat, (seat) => seat.vehicle)
@@ -56,10 +58,10 @@ export class Vehicle {
   tripDetails: TripDetail[];
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

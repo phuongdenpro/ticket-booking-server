@@ -1,6 +1,5 @@
 import { Staff } from 'src/database/entities';
 import { Module } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from '../auth.service';
 import { AdminController } from './admin.controller';

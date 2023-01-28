@@ -1,13 +1,19 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GenderEnum } from 'src/enums';
-import { IsDate, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class UserRegisterDto {
-  @ApiProperty({ example: 'phuonguser' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: 'superman@gmail.com' })
   @IsString()
-  @MinLength(6)
-  username: string;
+  @IsOptional()
+  email: string;
 
   @ApiProperty({ example: '12345678' })
   @IsNotEmpty()
@@ -23,26 +29,15 @@ export class UserRegisterDto {
   @ApiProperty({ example: new Date() })
   @IsNotEmpty()
   @IsDate()
-  birthDate: Date;
+  birthday?: Date;
 
   @ApiProperty({ example: '0354043344' })
   @IsNotEmpty()
   @IsString()
-  phone: string;
+  phone?: string;
 
-  @ApiPropertyOptional({ example: 'superman@gmail.com' })
-  @IsString()
-  @IsOptional()
-  email?: string;
-
-  @ApiProperty({ example: GenderEnum.FEMALE })
+  @ApiProperty({ example: GenderEnum.NONE })
   @IsEnum(GenderEnum)
   @IsNotEmpty()
-  @IsEnum(GenderEnum)
-  gender: GenderEnum.FEMALE;
-
-  @ApiProperty({ example: 'string' })
-  @IsNotEmpty()
-  @IsString()
-  token: string;
+  gender: GenderEnum.NONE;
 }

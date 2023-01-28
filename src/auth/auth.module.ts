@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from './admin/admin.module';
 import { AuthService } from './auth.service';
 import { AtStrategy, LocalStrategy, RtStrategy } from './strategies';
-import { UserModule } from './user/user.module';
+import { AuthUserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { UserModule } from './user/user.module';
     JwtModule.register({}),
     TypeOrmModule.forFeature([]),
     AdminModule,
-    UserModule,
+    AuthUserModule,
     HttpModule,
   ],
   controllers: [],
