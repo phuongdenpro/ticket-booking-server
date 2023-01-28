@@ -1,16 +1,25 @@
+import { HiddenWardDto } from './dto/hidden-ward.dto';
+import { SaveWardDto } from './dto/save-ward.dto';
 import { FilterWardDto } from './dto/filter-ward.dto';
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
+  Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { WardService } from './ward.service';
 import { DataSource } from 'typeorm';
-import { GetPagination, Pagination } from 'src/decorator';
-import { ApiTags } from '@nestjs/swagger';
+import { GetPagination, Pagination, Roles } from 'src/decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { RoleEnum } from 'src/enums';
+import { JwtAuthGuard } from 'src/auth/guards';
 
 @Controller('ward')
 @ApiTags('Ward')
@@ -54,6 +63,51 @@ export class WardController {
     @GetPagination() pagination?: Pagination,
   ) {
     return this.wardService.findOneByDistrictCode(districtCode, pagination);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.OK)
+  // @Roles(RoleEnum.STAFF)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  async create(@Body() dto: SaveWardDto) {
+    return this.wardService.save(dto);
+  }
+
+  @Patch('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateById(@Param('id') id: number, @Body() dto: SaveWardDto) {
+    return this.wardService.updateById(id, dto);
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateByCode(@Param('code') code: number, @Body() dto: SaveWardDto) {
+    return this.wardService.updateByCode(code, dto);
+  }
+
+  @Delete('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async hiddenByCode(@Param('code') code: number, @Body() dto: HiddenWardDto) {
+    return this.wardService.hiddenByCode(code, dto);
+  }
+
+  @Delete('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async hiddenById(@Param('id') id: string, @Body() dto: HiddenWardDto) {
+    return this.wardService.hiddenById(id, dto);
   }
 
   // crawl data

@@ -1,4 +1,3 @@
-import { ProvinceService } from './../province/province.service';
 import { Province, District } from 'src/database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -8,7 +7,7 @@ import { DistrictController } from './district.controller';
 @Module({
   imports: [TypeOrmModule.forFeature([District, Province])],
   controllers: [DistrictController],
-  providers: [DistrictService, ProvinceService],
-  exports: [DistrictService, ProvinceService],
+  providers: [DistrictService],
+  exports: [DistrictService],
 })
 export class DistrictModule {}

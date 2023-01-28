@@ -1,7 +1,9 @@
-import { SaveProvinceDto } from './dto/create-province.dto';
+import { HiddenProvinceDto } from './dto/hidden-province.dto';
+import { SaveProvinceDto } from './dto/save-province.dto';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -80,23 +82,26 @@ export class ProvinceController {
     return this.provinceService.updateByCode(code, dto);
   }
 
-  // @Post('code/:code')
-  // @HttpCode(HttpStatus.OK)
-  // @Roles(RoleEnum.STAFF)
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
-  // async hiddenByCode(@Param('code') code: number) {
-  //   return this.provinceService.hiddenByCode(code);
-  // }
+  @Delete('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async hiddenByCode(
+    @Param('code') code: number,
+    @Body() dto: HiddenProvinceDto,
+  ) {
+    return this.provinceService.hiddenByCode(code, dto);
+  }
 
-  // @Post('id/:id')
-  // @HttpCode(HttpStatus.OK)
-  // @Roles(RoleEnum.STAFF)
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
-  // async hiddenById(@Param('id') id: string) {
-  //   return this.provinceService.updateByCode(id);
-  // }
+  @Delete('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async hiddenById(@Param('id') id: string, @Body() dto: HiddenProvinceDto) {
+    return this.provinceService.hiddenById(id, dto);
+  }
 
   // @Get('/crawl')
   // @HttpCode(HttpStatus.OK)

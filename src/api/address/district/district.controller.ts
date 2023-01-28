@@ -1,15 +1,24 @@
 import { FilterDistrictDto } from './dto/filter-district.dto';
 import { DistrictService } from './district.service';
 import {
+  Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
+  Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
-import { GetPagination, Pagination } from 'src/decorator';
-import { ApiTags } from '@nestjs/swagger';
+import { GetPagination, Pagination, Roles } from 'src/decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { RoleEnum } from 'src/enums';
+import { JwtAuthGuard } from 'src/auth/guards';
+import { SaveDistrictDto } from './dto/save-district.dto';
+import { HiddenDistrictDto } from './dto';
 
 @Controller('district')
 @ApiTags('District')
@@ -49,7 +58,58 @@ export class DistrictController {
     @Param('districtCode') districtCode: number,
     @GetPagination() pagination?: Pagination,
   ) {
-    return this.districtService.findOneByProvinceCode(districtCode, pagination);
+    return this.districtService.findByProvinceCode(districtCode, pagination);
+  }
+
+  @Post()
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async create(@Body() dto: SaveDistrictDto) {
+    return this.districtService.save(dto);
+  }
+
+  @Patch('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateById(@Param('id') id: string, @Body() dto: SaveDistrictDto) {
+    return this.districtService.updateById(id, dto);
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateByCode(
+    @Param('code') code: number,
+    @Body() dto: SaveDistrictDto,
+  ) {
+    return this.districtService.updateByCode(code, dto);
+  }
+
+  @Delete('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async hiddenByCode(
+    @Param('code') code: number,
+    @Body() dto: HiddenDistrictDto,
+  ) {
+    return this.districtService.hiddenByCode(code, dto);
+  }
+
+  @Delete('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async hiddenById(@Param('id') id: string, @Body() dto: HiddenDistrictDto) {
+    return this.districtService.hiddenById(id, dto);
   }
 
   // // crawl data

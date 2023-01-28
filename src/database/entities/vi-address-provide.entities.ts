@@ -12,7 +12,7 @@ export class Province {
   @Column({ name: 'type', type: 'varchar', length: 50, nullable: true })
   type: string;
 
-  @Column({ name: 'code', type: 'int', nullable: true })
+  @Column({ name: 'code', type: 'int', nullable: true, unique: true })
   code: number;
 
   @Column({
@@ -20,8 +20,12 @@ export class Province {
     type: 'varchar',
     length: 255,
     nullable: true,
+    unique: true,
   })
   nameWithType: string;
+
+  @Column({ name: 'id_deleted', type: 'tinyint', default: 0 })
+  isDeleted: boolean;
 
   @OneToMany(() => District, (district) => district.parentCode)
   districts: District[];

@@ -1,9 +1,11 @@
+import { HiddenWardDto } from './dto/hidden-ward.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable } from '@nestjs/common';
-import { Ward } from 'src/database/entities';
+import { Ward, District } from 'src/database/entities';
 import { DataSource, Repository } from 'typeorm';
 import { Pagination } from 'src/decorator';
 import { FilterWardDto } from './dto/filter-ward.dto';
+import { SaveWardDto } from './dto';
 
 @Injectable()
 export class WardService {
@@ -19,6 +21,7 @@ export class WardService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
+      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -31,6 +34,7 @@ export class WardService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
+      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -43,6 +47,8 @@ export class WardService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
+      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy('w.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -137,13 +143,80 @@ export class WardService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
+      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy('w.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
     return { dataResult, pagination, total };
   }
 
-  async create(ward: Ward) {
+  async save(dto: SaveWardDto) {
+    const district = await this.dataSource.getRepository(District).findOne({
+      where: { code: dto.districtCode },
+    });
+    const ward = new Ward();
+    ward.name = dto.name;
+    ward.type = dto.type;
+    ward.code = dto.code;
+    ward.nameWithType = dto.nameWithType;
+    ward.districtCode = dto.districtCode;
+    ward.parentCode = district.id;
+
     return await this.wardRepository.save(ward);
+  }
+
+  // update a record by id
+  async updateById(id: number, dto: SaveWardDto) {
+    const query = this.wardRepository.createQueryBuilder('w');
+    const district = await query
+      .where('w.id = :id', { id })
+      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
+      .getOne();
+    if (!district) return null;
+    district.name = dto.name;
+    district.type = dto.type;
+    district.code = dto.code;
+    district.nameWithType = dto.nameWithType;
+    district.districtCode = dto.districtCode;
+
+    return await this.wardRepository.save(district);
+  }
+
+  // update a record by code
+  async updateByCode(code: number, dto: SaveWardDto) {
+    const query = this.wardRepository.createQueryBuilder('w');
+    const district = await query
+      .where('w.code = :code', { code })
+      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
+      .getOne();
+    if (!district) return null;
+    district.name = dto.name;
+    district.type = dto.type;
+    district.code = code;
+    district.nameWithType = dto.nameWithType;
+    district.districtCode = dto.districtCode;
+
+    return await this.wardRepository.save(district);
+  }
+
+  // delete a record by id
+  async hiddenById(id: string, dto: HiddenWardDto) {
+    const query = this.wardRepository.createQueryBuilder('w');
+    const province = await query.where('w.id = :id', { id }).getOne();
+    if (!province) return null;
+    province.isDeleted = dto.status === 1 ? true : false;
+
+    return await this.wardRepository.save(province);
+  }
+
+  // delete a record by code
+  async hiddenByCode(code: number, dto: HiddenWardDto) {
+    const query = this.wardRepository.createQueryBuilder('w');
+    const province = await query.where('w.code = :code', { code }).getOne();
+    if (!province) return null;
+    province.isDeleted = dto.status === 1 ? true : false;
+
+    return await this.wardRepository.save(province);
   }
 }

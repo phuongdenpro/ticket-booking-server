@@ -28,11 +28,14 @@ export class District {
   })
   nameWithType: string;
 
-  @Column({ name: 'code', type: 'int', nullable: true })
+  @Column({ name: 'code', type: 'int', nullable: true, unique: true })
   code: number;
 
   @Column({ name: 'province_code', type: 'int', nullable: true })
   provinceCode: number;
+
+  @Column({ name: 'id_deleted', type: 'tinyint', default: 0 })
+  isDeleted: boolean;
 
   @ManyToOne(() => Province, (province) => province.districts)
   @JoinColumn({ name: 'parent_code_id', referencedColumnName: 'id' })
