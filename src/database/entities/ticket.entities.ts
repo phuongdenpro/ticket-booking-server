@@ -1,15 +1,14 @@
 import { OrderRefundDetail } from './order-refund-detail.entities';
-import { TicketGroup } from './ticket-group.entities';
 import { PromotionDetail } from './promotion-detail.entities';
 import {
   Column,
   Entity,
-  JoinTable,
+  JoinColumn,
   ManyToMany,
   ManyToOne,
+  OneToMany,
   OneToOne,
 } from 'typeorm';
-import { PriceDetail } from './price-detail.entities';
 import { TicketDetail } from './ticket-detail.entities';
 import { OrderDetail } from './order-detail.entities';
 import { TicketGroupDetail } from './ticket-group-detail.entities';
@@ -41,7 +40,7 @@ export class Ticket {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @ManyToMany(
+  @OneToMany(
     () => ApplicableTicket,
     (applicableTicket) => applicableTicket.ticket,
   )
@@ -53,7 +52,7 @@ export class Ticket {
   )
   promotionDetails: PromotionDetail[];
 
-  @ManyToOne(
+  @OneToMany(
     () => TicketGroupDetail,
     (ticketGroupDetail) => ticketGroupDetail.ticket,
   )
@@ -69,13 +68,14 @@ export class Ticket {
     () => OrderRefundDetail,
     (orderRefundDetail) => orderRefundDetail.ticket,
   )
+  @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
   orderRefundDetail: OrderRefundDetail;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

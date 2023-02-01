@@ -33,8 +33,14 @@ export class PassengerCarCompany {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({ name: 'code', type: 'varchar', length: 30, nullable: true })
-  code: string;
+  @Column({
+    name: 'code',
+    type: 'int',
+    unique: true,
+    nullable: false,
+    generated: 'increment',
+  })
+  code: number;
 
   // relationship
   @ManyToOne(() => Ward, (ward) => ward.passengerCarCompanies)

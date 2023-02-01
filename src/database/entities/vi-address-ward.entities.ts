@@ -8,7 +8,6 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
-  OneToOne,
 } from 'typeorm';
 import { District } from './vi-address-district.entities';
 import { Station } from './station.entities';
@@ -32,8 +31,14 @@ export class Ward {
   })
   nameWithType: string;
 
-  @Column({ name: 'code', type: 'int', nullable: true })
+  @Column({ name: 'code', type: 'int', nullable: true, unique: true })
   code: number;
+
+  @Column({ name: 'district_code', type: 'int', nullable: true })
+  districtCode: number;
+
+  @Column({ name: 'id_deleted', type: 'tinyint', default: 0 })
+  isDeleted: boolean;
 
   // Relationships
   @ManyToOne(() => District, (district) => district.wards)
@@ -52,6 +57,6 @@ export class Ward {
   )
   passengerCarCompanies: PassengerCarCompany[];
 
-  @OneToOne(() => Station, (station) => station.ward)
-  station: Station;
+  @OneToMany(() => Station, (station) => station.ward)
+  stations?: Station[];
 }

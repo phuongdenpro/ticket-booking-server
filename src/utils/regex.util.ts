@@ -1,7 +1,9 @@
 export const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/;
 export const TIME_REGEX = /^\d{2}:\d{2}$/;
-export const SPECIAL_CHARACTER_WITH_NUMBER_REGEX = /[0-9!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?~]+$/g;
-export const SPECIAL_CHARACTER_WITHOUT_NUMBER_REGEX = /[`!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?~]/;
+export const SPECIAL_CHARACTER_WITH_NUMBER_REGEX =
+  /[0-9!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?~]+$/g;
+export const SPECIAL_CHARACTER_WITHOUT_NUMBER_REGEX =
+  /[`!@#$%^&*()_+=\[\]{};':"\\|,.<>\/?~]/;
 export const NUMBER_REGEX = /^[0-9]+$/g;
 export const CODE_REGEX = /^[a-zA-Z0-9_-]+$/g;
 export const USERNAME_REGEX = /^[a-zA-Z0-9.-_]+$/g;
@@ -15,4 +17,3 @@ export const ID_CARD_NUMBER_REGEX = /^[0-9]+$/g;
 export const PASSWORD_REGEX = /^[a-zA-Z0-9@$!%*#?&_-]{6,255}$/;
 export const IMAGE_REGEX = /[\/.](gif|jpg|jpeg|tiff|png|webp)$/i;
 export const VIDEO_REGEX = /[\/.](mp4)$/i;
-

@@ -21,22 +21,26 @@ export class AuthService {
     // check userExist by username
     const staff = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { email, deletedAt: null }});
+      .findOne({ where: { email, deletedAt: null } });
 
     if (!staff) {
       user = await this.dataSource
         .getRepository(Customer)
-        .findOne({ where: { email, deletedAt: null }});
+        .findOne({ where: { email, deletedAt: null } });
     }
 
-    if (!staff && !user) throw new UnauthorizedException('WRONG_CREDENTIALS');
+    if (!staff && !user) {
+      throw new UnauthorizedException('WRONG_CREDENTIALS');
+    }
 
     const isMatch = await this.comparePassword(
       password,
-      staff ? staff['password'] : user['password']
+      staff ? staff['password'] : user['password'],
     );
 
-    if (!isMatch) throw new UnauthorizedException('WRONG_CREDENTIALS');
+    if (!isMatch) {
+      throw new UnauthorizedException('WRONG_CREDENTIALS');
+    }
 
     return staff ? staff : user;
   }
@@ -65,11 +69,13 @@ export class AuthService {
     if (payload.type === RoleEnum.CUSTOMER) {
       user = await this.dataSource
         .getRepository(Customer)
-        .findOne({ where: { id: payload.id, deletedAt: null }});
+        .findOne({ where: { id: payload.id, deletedAt: null } });
       access_token = user.accessToken;
     }
 
-    if (!user) throw new UnauthorizedException('WRONG_CREDENTIALS');
+    if (!user) {
+      throw new UnauthorizedException('WRONG_CREDENTIALS');
+    }
     return {
       id: user.id,
       email: user.email,

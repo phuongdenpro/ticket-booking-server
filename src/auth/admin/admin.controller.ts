@@ -1,7 +1,15 @@
+import { AdminRefreshTokenDto } from './dto/admin-refresh-token.dto';
 import { CurrentUser } from 'src/decorator';
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard, JwtRefreshAuthGuard } from '../guards';
+import { JwtAuthGuard } from '../guards';
 import { AdminService } from './admin.service';
 import { AdminLoginDto, AdminRegisterDto } from './dto';
 
@@ -10,21 +18,21 @@ import { AdminLoginDto, AdminRegisterDto } from './dto';
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
-  @Post()
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.CREATED)
   async register(@CurrentUser() user, @Body() dto: AdminRegisterDto) {
     return this.adminService.register(user?.['id'], dto);
   }
 
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  async profile(@CurrentUser() user) {
-    return this.adminService.profile(user?.['id']);
-  }
+  // @Get('profile')
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // @HttpCode(HttpStatus.OK)
+  // async profile(@CurrentUser() user) {
+  //   return this.adminService.profile(user?.['id']);
+  // }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -33,19 +41,16 @@ export class AdminController {
   }
 
   @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
   async logout(@CurrentUser() user) {
-    console.log(user);
     return this.adminService.logout(user.id);
   }
 
   @Post('refresh')
-  @UseGuards(JwtRefreshAuthGuard)
-  @ApiBearerAuth()
   @HttpCode(HttpStatus.OK)
-  async refreshTokens(@CurrentUser() user) {
-    return this.adminService.refreshTokens(user.id);
+  async refreshToken(@Body() dto: AdminRefreshTokenDto) {
+    return this.adminService.refreshToken(dto.refreshToken);
   }
 }
