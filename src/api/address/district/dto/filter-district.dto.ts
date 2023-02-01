@@ -2,22 +2,22 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class FilterDistrictDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'ha' })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'huyen' })
   @IsOptional()
   @IsString()
   type?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'thanh' })
   @IsOptional()
   @IsString()
   nameWithType?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @IsNumber()
   provinceCode?: number;

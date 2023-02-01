@@ -13,79 +13,44 @@ export class ProvinceService {
     private readonly provinceRepository: Repository<Province>,
   ) {}
 
-  async findOneById(id: string, pagination?: Pagination) {
+  async findOneById(id: string) {
     const query = this.provinceRepository.createQueryBuilder('p');
     query.where('p.id = :id', { id });
 
-    const total = await query.clone().getCount();
-
     const dataResult = await query
       .andWhere('p.isDeleted = :isDeleted', { isDeleted: false })
-      .offset(pagination.skip)
-      .limit(pagination.take)
-      .getMany();
-    return { dataResult, pagination, total };
+      .getOne();
+    return { dataResult };
   }
 
-  async findOneByCode(code: number, pagination?: Pagination) {
+  async findOneByCode(code: number) {
     const query = this.provinceRepository.createQueryBuilder('p');
     query.where('p.code = :code', { code });
 
-    const total = await query.clone().getCount();
-
     const dataResult = await query
       .andWhere('p.isDeleted = :isDeleted', { isDeleted: false })
-      .offset(pagination.skip)
-      .limit(pagination.take)
-      .getMany();
-    return { dataResult, pagination, total };
+      .getOne();
+    return { dataResult };
   }
 
   // find all
   async findAll(dto: FilterProvinceDto, pagination?: Pagination) {
-    const { name, type, name_with_type } = dto;
+    const { name, type, nameWithType } = dto;
 
     const query = this.provinceRepository.createQueryBuilder('p');
 
-    if (name || type || name_with_type) {
-      if (name && !type && !name_with_type)
-        query.where('p.name like :name', { name: `%${name}%` });
-
-      if (!name && type && !name_with_type)
-        query.where('p.type like :type', { type: `%${type}%` });
-
-      if (!name && !type && name_with_type)
-        query.where('p.name_with_type like :name_with_type', {
-          name_with_type: `%${name_with_type}%`,
-        });
-
-      if (name && type && !name_with_type)
-        query
-          .where('p.name like :name', { name: `%${name}%` })
-          .andWhere('p.type like :type', { type: `%${type}%` });
-
-      if (name && !type && name_with_type)
-        query
-          .where('p.name like :name', { name: `%${name}%` })
-          .andWhere('p.name_with_type like :name_with_type', {
-            name_with_type: `%${name_with_type}%`,
-          });
-
-      if (!name && type && name_with_type)
-        query
-          .where('p.type like :type', { type: `%${type}%` })
-          .andWhere('p.name_with_type like :name_with_type', {
-            name_with_type: `%${name_with_type}%`,
-          });
-
-      if (name && type && name_with_type)
-        query
-          .andWhere('p.name like :name', { name: `%${name}%` })
-          .andWhere('p.type like :type', { type: `%${type}%` })
-          .andWhere('p.name_with_type like :name_with_type', {
-            name_with_type: `%${name_with_type}%`,
-          });
+    if (name) {
+      query.andWhere('p.name like :name', { name: `%${name}%` });
     }
+    if (type) {
+      query.andWhere('p.type like :type', { type: `%${type}%` });
+    }
+    if (nameWithType) {
+      query.andWhere('p.name_with_type like :name_with_type', {
+        name_with_type: `%${nameWithType}%`,
+      });
+    }
+
     const total = await query.clone().getCount();
 
     const dataResult = await query

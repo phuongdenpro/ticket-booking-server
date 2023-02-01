@@ -12,34 +12,27 @@ export class DistrictService {
   constructor(
     @InjectRepository(District)
     private readonly districtRepository: Repository<District>,
-    // private readonly provinceRepository: Repository<Province>,
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string, pagination?: Pagination) {
+  async findOneById(id: string) {
     const query = this.districtRepository.createQueryBuilder('d');
     query.where('d.id = :id', { id });
-    const total = await query.clone().getCount();
 
     const dataResult = await query
       .andWhere('d.isDeleted = :isDeleted', { isDeleted: false })
-      .offset(pagination.skip)
-      .limit(pagination.take)
-      .getMany();
-    return { dataResult, pagination, total };
+      .getOne();
+    return { dataResult };
   }
 
-  async findOneByCode(code: number, pagination?: Pagination) {
+  async findOneByCode(code: number) {
     const query = this.districtRepository.createQueryBuilder('d');
     query.where('d.code = :code', { code });
-    const total = await query.clone().getCount();
 
     const dataResult = await query
       .andWhere('d.isDeleted = :isDeleted', { isDeleted: false })
-      .offset(pagination.skip)
-      .limit(pagination.take)
-      .getMany();
-    return { dataResult, pagination, total };
+      .getOne();
+    return { dataResult };
   }
 
   async findByProvinceCode(provinceCode: number, pagination?: Pagination) {
@@ -62,84 +55,20 @@ export class DistrictService {
 
     const query = this.districtRepository.createQueryBuilder('d');
 
-    if (name && !type && !nameWithType && !provinceCode)
-      query.where('d.name like :name', { name: `%${name}%` });
-    if (!name && type && !nameWithType && !provinceCode)
-      query.where('d.type like :type', { type: `%${type}%` });
-    if (!name && !type && nameWithType && !provinceCode)
-      query.where('d.name_with_type like :name_with_type', {
+    if (name) {
+      query.andWhere('d.name like :name', { name: `%${name}%` });
+    }
+    if (type) {
+      query.andWhere('d.type like :type', { type: `%${type}%` });
+    }
+    if (nameWithType) {
+      query.andWhere('d.name_with_type like :name_with_type', {
         name_with_type: `%${nameWithType}%`,
       });
-    if (!name && !type && !nameWithType && provinceCode)
-      query.where('d.provinceCode = :provinceCode', { provinceCode });
-
-    if (name && type && !nameWithType && !provinceCode)
-      query
-        .where('d.name like :name', { name: `%${name}%` })
-        .andWhere('d.type like :type', { type: `%${type}%` });
-    if (name && !type && nameWithType && !provinceCode)
-      query
-        .where('d.name like :name', { name: `%${name}%` })
-        .andWhere('d.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        });
-    if (name && !type && !nameWithType && provinceCode)
-      query
-        .where('d.name like :name', { name: `%${name}%` })
-        .andWhere('d.provinceCode = :provinceCode', { provinceCode });
-
-    if (!name && type && nameWithType && !provinceCode)
-      query
-        .where('d.type like :type', { type: `%${type}%` })
-        .andWhere('d.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        });
-    if (!name && type && !nameWithType && provinceCode)
-      query
-        .where('d.type like :type', { type: `%${type}%` })
-        .andWhere('d.provinceCode = :provinceCode', { provinceCode });
-    if (!name && !type && nameWithType && provinceCode)
-      query
-        .where('d.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        })
-        .andWhere('d.provinceCode = :provinceCode', { provinceCode });
-
-    if (name && type && nameWithType && !provinceCode)
-      query
-        .where('d.name like :name', { name: `%${name}%` })
-        .andWhere('d.type like :type', { type: `%${type}%` })
-        .andWhere('d.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        });
-    if (name && type && !nameWithType && provinceCode)
-      query
-        .where('d.name like :name', { name: `%${name}%` })
-        .andWhere('d.type like :type', { type: `%${type}%` })
-        .andWhere('d.provinceCode = :provinceCode', { provinceCode });
-    if (name && !type && nameWithType && provinceCode)
-      query
-        .where('d.name like :name', { name: `%${name}%` })
-        .andWhere('d.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        })
-        .andWhere('d.provinceCode = :provinceCode', { provinceCode });
-    if (!name && type && nameWithType && provinceCode)
-      query
-        .where('d.type like :type', { type: `%${type}%` })
-        .andWhere('d.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        })
-        .andWhere('d.provinceCode = :provinceCode', { provinceCode });
-
-    if (name && type && nameWithType && provinceCode)
-      query
-        .andWhere('d.name like :name', { name: `%${name}%` })
-        .andWhere('d.type like :type', { type: `%${type}%` })
-        .andWhere('d.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        })
-        .andWhere('d.provinceCode like :provinceCode', { provinceCode });
+    }
+    if (provinceCode) {
+      query.andWhere('d.provinceCode = :provinceCode', { provinceCode });
+    }
 
     const total = await query.clone().getCount();
 

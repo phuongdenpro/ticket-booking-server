@@ -2,18 +2,18 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
 export class FilterProvinceDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'ha' })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'tinh' })
   @IsOptional()
   @IsString()
   type?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'khanh' })
   @IsOptional()
   @IsString()
-  name_with_type?: string;
+  nameWithType?: string;
 }

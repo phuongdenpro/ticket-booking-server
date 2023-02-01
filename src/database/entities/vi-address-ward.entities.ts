@@ -8,7 +8,6 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
-  OneToOne,
 } from 'typeorm';
 import { District } from './vi-address-district.entities';
 import { Station } from './station.entities';
@@ -58,6 +57,6 @@ export class Ward {
   )
   passengerCarCompanies: PassengerCarCompany[];
 
-  @OneToOne(() => Station, (station) => station.ward)
-  station: Station;
+  @OneToMany(() => Station, (station) => station.ward)
+  stations?: Station[];
 }

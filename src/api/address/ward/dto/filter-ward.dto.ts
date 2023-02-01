@@ -2,22 +2,22 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class FilterWardDto {
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'phuc' })
   @IsOptional()
   @IsString()
   name?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'phuong' })
   @IsOptional()
   @IsString()
   type?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'phuc' })
   @IsOptional()
   @IsString()
   nameWithType?: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @IsNumber()
   districtCode?: number;
