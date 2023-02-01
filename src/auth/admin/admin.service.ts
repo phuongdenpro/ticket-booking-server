@@ -44,7 +44,7 @@ export class AdminService {
   async register(userId: string, dto: AdminRegisterDto) {
     // if (!dto.username.match(USERNAME_REGEX))
     //   throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
-    if (dto.phone.length > 0) {
+    if (dto.phone) {
       if (!dto.phone.match(PHONE_REGEX)) {
         throw new BadRequestException('INVALID_PHONE_NUMBER');
       }
@@ -70,6 +70,8 @@ export class AdminService {
       staffCred.phone = dto.phone;
       staffCred.email = dto.email;
       staffCred.gender = dto.gender;
+      staffCred.createdBy = userId;
+      staffCred.updatedBy = userId;
       const staffCreated = await this.staffRepository.save(staffCred);
 
       await queryRunner.commitTransaction();

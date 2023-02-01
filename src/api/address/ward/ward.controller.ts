@@ -35,43 +35,37 @@ export class WardController {
     @Query() dto: FilterWardDto,
     @GetPagination() pagination?: Pagination,
   ) {
-    return this.wardService.findAll(dto, pagination);
+    return await this.wardService.findAll(dto, pagination);
   }
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
-  async findOneById(
-    @Param('id') id: string,
-    @GetPagination() pagination?: Pagination,
-  ) {
-    return this.wardService.findOneById(id, pagination);
+  async findOneById(@Param('id') id: string) {
+    return await this.wardService.findOneById(id);
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
-  async findOneByCode(
-    @Param('code') code: number,
-    @GetPagination() pagination?: Pagination,
-  ) {
-    return this.wardService.findOneByCode(code, pagination);
+  async findOneByCode(@Param('code') code: number) {
+    return await this.wardService.findOneByCode(code);
   }
 
   @Get('district-code/:districtCode')
   @HttpCode(HttpStatus.OK)
-  async findOneByDistrictCode(
+  async findByDistrictCode(
     @Param('districtCode') districtCode: number,
     @GetPagination() pagination?: Pagination,
   ) {
-    return this.wardService.findOneByDistrictCode(districtCode, pagination);
+    return await this.wardService.findByDistrictCode(districtCode, pagination);
   }
 
   @Post()
-  @HttpCode(HttpStatus.OK)
-  // @Roles(RoleEnum.STAFF)
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async create(@Body() dto: SaveWardDto) {
-    return this.wardService.save(dto);
+    return await this.wardService.save(dto);
   }
 
   @Patch('id/:id')
@@ -80,7 +74,7 @@ export class WardController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async updateById(@Param('id') id: number, @Body() dto: SaveWardDto) {
-    return this.wardService.updateById(id, dto);
+    return await this.wardService.updateById(id, dto);
   }
 
   @Patch('code/:code')
@@ -89,7 +83,7 @@ export class WardController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async updateByCode(@Param('code') code: number, @Body() dto: SaveWardDto) {
-    return this.wardService.updateByCode(code, dto);
+    return await this.wardService.updateByCode(code, dto);
   }
 
   @Delete('code/:code')
@@ -98,16 +92,16 @@ export class WardController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async hiddenByCode(@Param('code') code: number, @Body() dto: HiddenWardDto) {
-    return this.wardService.hiddenByCode(code, dto);
+    return await this.wardService.hiddenByCode(code, dto);
   }
 
   @Delete('id/:id')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenById(@Param('id') id: string, @Body() dto: HiddenWardDto) {
-    return this.wardService.hiddenById(id, dto);
+  async hiddenById(@Param('id') id: number, @Body() dto: HiddenWardDto) {
+    return await this.wardService.hiddenById(id, dto);
   }
 
   // crawl data

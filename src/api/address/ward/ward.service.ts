@@ -15,33 +15,27 @@ export class WardService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string, pagination?: Pagination) {
+  async findOneById(id: string) {
     const query = this.wardRepository.createQueryBuilder('w');
     query.where('w.id = :id', { id });
-    const total = await query.clone().getCount();
 
     const dataResult = await query
       .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
-      .offset(pagination.skip)
-      .limit(pagination.take)
-      .getMany();
-    return { dataResult, pagination, total };
+      .getOne();
+    return { dataResult };
   }
 
-  async findOneByCode(code: number, pagination?: Pagination) {
+  async findOneByCode(code: number) {
     const query = this.wardRepository.createQueryBuilder('w');
     query.where('w.code = :code', { code });
-    const total = await query.clone().getCount();
 
     const dataResult = await query
       .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
-      .offset(pagination.skip)
-      .limit(pagination.take)
-      .getMany();
-    return { dataResult, pagination, total };
+      .getOne();
+    return { dataResult };
   }
 
-  async findOneByDistrictCode(districtCode: number, pagination?: Pagination) {
+  async findByDistrictCode(districtCode: number, pagination?: Pagination) {
     const query = this.wardRepository.createQueryBuilder('w');
     query.where('w.districtCode = :districtCode', { districtCode });
     const total = await query.clone().getCount();
@@ -61,84 +55,20 @@ export class WardService {
 
     const query = this.wardRepository.createQueryBuilder('w');
 
-    if (name && !type && !nameWithType && !districtCode)
-      query.where('w.name like :name', { name: `%${name}%` });
-    if (!name && type && !nameWithType && !districtCode)
-      query.where('w.type like :type', { type: `%${type}%` });
-    if (!name && !type && nameWithType && !districtCode)
-      query.where('w.name_with_type like :name_with_type', {
+    if (name) {
+      query.andWhere('w.name like :name', { name: `%${name}%` });
+    }
+    if (type) {
+      query.andWhere('w.type like :type', { type: `%${type}%` });
+    }
+    if (nameWithType) {
+      query.andWhere('w.name_with_type like :name_with_type', {
         name_with_type: `%${nameWithType}%`,
       });
-    if (!name && !type && !nameWithType && districtCode)
-      query.where('w.districtCode = :districtCode', { districtCode });
-
-    if (name && type && !nameWithType && !districtCode)
-      query
-        .where('w.name like :name', { name: `%${name}%` })
-        .andWhere('w.type like :type', { type: `%${type}%` });
-    if (name && !type && nameWithType && !districtCode)
-      query
-        .where('w.name like :name', { name: `%${name}%` })
-        .andWhere('w.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        });
-    if (name && !type && !nameWithType && districtCode)
-      query
-        .where('w.name like :name', { name: `%${name}%` })
-        .andWhere('w.districtCode = :districtCode', { districtCode });
-
-    if (!name && type && nameWithType && !districtCode)
-      query
-        .where('w.type like :type', { type: `%${type}%` })
-        .andWhere('w.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        });
-    if (!name && type && !nameWithType && districtCode)
-      query
-        .where('w.type like :type', { type: `%${type}%` })
-        .andWhere('w.districtCode = :districtCode', { districtCode });
-    if (!name && !type && nameWithType && districtCode)
-      query
-        .where('w.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        })
-        .andWhere('w.districtCode = :districtCode', { districtCode });
-
-    if (name && type && nameWithType && !districtCode)
-      query
-        .where('w.name like :name', { name: `%${name}%` })
-        .andWhere('w.type like :type', { type: `%${type}%` })
-        .andWhere('w.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        });
-    if (name && type && !nameWithType && districtCode)
-      query
-        .where('w.name like :name', { name: `%${name}%` })
-        .andWhere('w.type like :type', { type: `%${type}%` })
-        .andWhere('w.districtCode = :districtCode', { districtCode });
-    if (name && !type && nameWithType && districtCode)
-      query
-        .where('w.name like :name', { name: `%${name}%` })
-        .andWhere('w.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        })
-        .andWhere('w.districtCode = :districtCode', { districtCode });
-    if (!name && type && nameWithType && districtCode)
-      query
-        .where('w.type like :type', { type: `%${type}%` })
-        .andWhere('w.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        })
-        .andWhere('w.districtCode = :districtCode', { districtCode });
-
-    if (name && type && nameWithType && districtCode)
-      query
-        .andWhere('w.name like :name', { name: `%${name}%` })
-        .andWhere('w.type like :type', { type: `%${type}%` })
-        .andWhere('w.name_with_type like :name_with_type', {
-          name_with_type: `%${nameWithType}%`,
-        })
-        .andWhere('w.districtCode like :districtCode', { districtCode });
+    }
+    if (districtCode) {
+      query.andWhere('w.districtCode = :districtCode', { districtCode });
+    }
 
     const total = await query.clone().getCount();
 
@@ -168,11 +98,8 @@ export class WardService {
 
   // update a record by id
   async updateById(id: number, dto: SaveWardDto) {
-    const query = this.wardRepository.createQueryBuilder('w');
-    const district = await query
-      .where('w.id = :id', { id })
-      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const district = await this.wardRepository.findOne({ where: { id } });
+
     if (!district) return null;
     district.name = dto.name;
     district.type = dto.type;
@@ -201,9 +128,8 @@ export class WardService {
   }
 
   // delete a record by id
-  async hiddenById(id: string, dto: HiddenWardDto) {
-    const query = this.wardRepository.createQueryBuilder('w');
-    const province = await query.where('w.id = :id', { id }).getOne();
+  async hiddenById(id: number, dto: HiddenWardDto) {
+    const province = await this.wardRepository.findOne({ where: { id } });
     if (!province) return null;
     province.isDeleted = dto.status === 1 ? true : false;
 

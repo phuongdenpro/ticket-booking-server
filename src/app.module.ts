@@ -13,6 +13,7 @@ import { UsersModule } from './api/users/user.module';
 import { ProvinceModule } from './api/address/province/province.module';
 import { DistrictModule } from './api/address/district/district.module';
 import { WardModule } from './api/address/ward/ward.module';
+import { StationModule } from './api/station/station.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -23,6 +24,7 @@ import { WardModule } from './api/address/ward/ward.module';
     ProvinceModule,
     DistrictModule,
     WardModule,
+    StationModule,
   ],
   providers: [
     {

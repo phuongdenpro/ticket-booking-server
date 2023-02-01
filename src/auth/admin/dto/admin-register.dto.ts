@@ -4,34 +4,37 @@ import {
   IsEmpty,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
 
 export class AdminRegisterDto {
-  @ApiProperty({ example: 'admin@gmail.com' })
+  @ApiProperty({ example: 'dangdan2807+1@gmail.com' })
   @IsNotEmpty()
   @IsString()
   email: string;
 
-  @ApiProperty({ example: '12345678' })
+  @ApiProperty({ example: '123456' })
   @IsNotEmpty()
   @IsString()
   @MinLength(6)
   password: string;
 
-  @ApiProperty({ example: 'admin' })
+  @ApiProperty({ example: 'Dan 2' })
   @IsNotEmpty()
   @IsString()
   name: string;
 
   @ApiProperty({ example: '0354043344' })
-  @IsString()
+  @IsOptional()
   @IsEmpty()
+  @IsString()
   phone?: string;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: 'F' })
+  @IsOptional()
   @IsNotEmpty()
   @IsEnum(GenderEnum)
-  gender: GenderEnum.NONE;
+  gender?: GenderEnum.NONE;
 }

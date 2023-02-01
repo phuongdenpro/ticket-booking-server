@@ -80,11 +80,6 @@ export class Staff {
   })
   accessToken?: string;
 
-  // Relationships
-  @ManyToOne(() => Ward, (ward) => ward.staffs)
-  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
-  ward: Ward;
-
   @Column({
     name: 'code',
     type: 'int',
@@ -118,4 +113,9 @@ export class Staff {
     select: false,
   })
   public deletedAt?: Date;
+
+  // Relationships
+  @ManyToOne(() => Ward, (ward) => ward.staffs)
+  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
+  ward: Ward;
 }

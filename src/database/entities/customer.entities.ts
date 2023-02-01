@@ -58,9 +58,6 @@ export class Customer {
   @Column({ name: 'birthday', type: 'timestamp', nullable: true })
   birthday?: Date;
 
-  @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy: string;
-
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
 
@@ -69,21 +66,6 @@ export class Customer {
 
   @Column({ name: 'access_token', type: 'varchar', nullable: true })
   accessToken?: string;
-
-  // Relationships
-  // Relationships
-  @ManyToOne(() => Ward, (ward) => ward.customers)
-  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
-  ward: Ward;
-
-  @ManyToMany(
-    () => CustomerGroupDetail,
-    (customerGroupDetail) => customerGroupDetail.customers,
-  )
-  customerGroupDetail?: CustomerGroupDetail[];
-
-  @OneToMany(() => Order, (order) => order.customer)
-  orders?: Order[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
@@ -103,4 +85,18 @@ export class Customer {
     select: false,
   })
   public deletedAt?: Date;
+
+  // Relationships
+  @ManyToOne(() => Ward, (ward) => ward.customers)
+  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
+  ward: Ward;
+
+  @ManyToMany(
+    () => CustomerGroupDetail,
+    (customerGroupDetail) => customerGroupDetail.customers,
+  )
+  customerGroupDetail?: CustomerGroupDetail[];
+
+  @OneToMany(() => Order, (order) => order.customer)
+  orders?: Order[];
 }

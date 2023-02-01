@@ -3,13 +3,13 @@ import { Ward } from './vi-address-ward.entities';
 import {
   Column,
   Entity,
-  OneToOne,
   JoinColumn,
   OneToMany,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  ManyToOne,
 } from 'typeorm';
 
 @Entity({ name: 'station' })
@@ -23,21 +23,14 @@ export class Station {
   @Column({ name: 'address', type: 'varchar', length: 255, nullable: true })
   address: string;
 
-  @OneToOne(() => Ward, (ward) => ward.station)
-  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
-  ward: Ward;
-
-  @OneToMany(() => Trip, (trip) => trip.fromStation)
-  fromTrips: Trip[];
-
-  @OneToMany(() => Trip, (trip) => trip.toStation)
-  toTrips: Trip[];
-
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
+
+  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
+  isDeleted: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
@@ -46,7 +39,6 @@ export class Station {
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
   public updatedAt?: Date;
 
@@ -57,4 +49,15 @@ export class Station {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relationship
+  @ManyToOne(() => Ward, (ward) => ward.stations)
+  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
+  ward: Ward;
+
+  @OneToMany(() => Trip, (trip) => trip.fromStation)
+  fromTrips?: Trip[];
+
+  @OneToMany(() => Trip, (trip) => trip.toStation)
+  toTrips?: Trip[];
 }

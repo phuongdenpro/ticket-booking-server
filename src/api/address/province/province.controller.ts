@@ -36,24 +36,18 @@ export class ProvinceController {
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
-  async findOneById(
-    @Param('id') id: string,
-    @GetPagination() pagination?: Pagination,
-  ) {
-    return this.provinceService.findOneById(id, pagination);
+  async findOneById(@Param('id') id: string) {
+    return this.provinceService.findOneById(id);
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
-  async findOneByCode(
-    @Param('code') code: number,
-    @GetPagination() pagination?: Pagination,
-  ) {
-    return this.provinceService.findOneByCode(code, pagination);
+  async findOneByCode(@Param('code') code: number) {
+    return this.provinceService.findOneByCode(code);
   }
 
   @Post()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

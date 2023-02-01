@@ -36,25 +36,19 @@ export class DistrictController {
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
-  async findOneById(
-    @Param('id') id: string,
-    @GetPagination() pagination?: Pagination,
-  ) {
-    return this.districtService.findOneById(id, pagination);
+  async findOneById(@Param('id') id: string) {
+    return this.districtService.findOneById(id);
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
-  async findOneByCode(
-    @Param('code') code: number,
-    @GetPagination() pagination?: Pagination,
-  ) {
-    return this.districtService.findOneByCode(code, pagination);
+  async findOneByCode(@Param('code') code: number) {
+    return this.districtService.findOneByCode(code);
   }
 
   @Get('district-code/:districtCode')
   @HttpCode(HttpStatus.OK)
-  async findOneByProvinceCode(
+  async findByProvinceCode(
     @Param('districtCode') districtCode: number,
     @GetPagination() pagination?: Pagination,
   ) {
@@ -62,7 +56,7 @@ export class DistrictController {
   }
 
   @Post()
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

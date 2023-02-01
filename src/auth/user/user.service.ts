@@ -76,7 +76,6 @@ export class AuthUserService {
       delete userCreated.createdAt;
       delete userCreated.updatedAt;
       delete userCreated.deletedAt;
-      delete userCreated.createdBy;
       delete userCreated.updatedBy;
       delete userCreated.password;
 
