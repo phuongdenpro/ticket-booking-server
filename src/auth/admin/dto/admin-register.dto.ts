@@ -28,13 +28,12 @@ export class AdminRegisterDto {
 
   @ApiProperty({ example: '0354043344' })
   @IsOptional()
-  @IsEmpty()
   @IsString()
   phone?: string;
 
-  @ApiProperty({ example: 'F' })
+  @ApiProperty({ example: GenderEnum.FEMALE })
   @IsOptional()
   @IsNotEmpty()
   @IsEnum(GenderEnum)
-  gender?: GenderEnum.NONE;
+  gender?: GenderEnum;
 }

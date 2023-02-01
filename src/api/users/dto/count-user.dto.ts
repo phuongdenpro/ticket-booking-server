@@ -18,7 +18,7 @@ export class CountUserDto {
   @IsString()
   orderBy?: string;
 
-  @ApiPropertyOptional({ example: 'ASC' })
+  @ApiPropertyOptional({ example: SortEnum.ASC })
   @IsOptional()
   @IsEnum(SortEnum)
   sort?: SortEnum;

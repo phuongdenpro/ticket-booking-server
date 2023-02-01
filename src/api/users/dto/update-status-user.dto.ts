@@ -6,5 +6,5 @@ export class UpdateStatusUserDto {
   @IsEnum(UserStatusEnum)
   @ApiProperty({ example: UserStatusEnum.INACTIVATE })
   @IsNotEmpty()
-  status: number;
+  status: UserStatusEnum;
 }

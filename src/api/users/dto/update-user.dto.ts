@@ -34,7 +34,7 @@ export class UpdateUserDto {
   @IsString()
   email: string;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({example: GenderEnum.FEMALE})
   @IsOptional()
   @IsEnum(GenderEnum)
   gender: GenderEnum;
