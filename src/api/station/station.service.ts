@@ -34,9 +34,10 @@ export class StationService {
 
   async findOneById(id: string) {
     const query = this.stationService.createQueryBuilder('r');
-    query.where('r.id = :id', { id }).leftJoinAndSelect('r.ward', 'w');
+    query.where('r.id = :id', { id });
 
     const dataResult = await query
+      .leftJoinAndSelect('r.ward', 'w')
       .select(['r', 'w.id', 'w.code'])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
       .getOne();
@@ -47,7 +48,6 @@ export class StationService {
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
     const { name, address, wardId } = dto;
     const query = this.stationService.createQueryBuilder('r');
-    console.log(dto);
 
     if (name) {
       query.andWhere('r.name like :name', { name: `%${name}%` });
@@ -56,14 +56,13 @@ export class StationService {
       query.andWhere('r.address like :address', { address: `%${address}%` });
     }
     if (wardId) {
-      query
-        .andWhere('r.ward_id = :wardId', { wardId })
-        .leftJoinAndSelect('r.ward', 'w');
+      query.andWhere('r.ward_id = :wardId', { wardId });
     }
 
     const total = await query.clone().getCount();
 
     const dataResult = await query
+      .leftJoinAndSelect('r.ward', 'w')
       .select(['r', 'w.id', 'w.code'])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('r.id', 'ASC')

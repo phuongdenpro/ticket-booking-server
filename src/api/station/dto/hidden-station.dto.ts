@@ -1,10 +1,14 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber } from 'class-validator';
+import { IsEnum, IsNotEmpty } from 'class-validator';
+import { DeleteStatusEnum } from 'src/enums/delete-status.enum';
 
 export class HiddenStationDto {
-  @ApiPropertyOptional({ example: 0, description: '1: hidden, 0: show' })
+  @ApiPropertyOptional({
+    example: DeleteStatusEnum.NOT_DELETED,
+    description: '1: hidden, 0: show',
+  })
   @ApiProperty()
   @IsNotEmpty()
-  @IsNumber()
-  status: number;
+  @IsEnum(DeleteStatusEnum)
+  status: DeleteStatusEnum;
 }
