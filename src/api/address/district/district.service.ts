@@ -51,7 +51,7 @@ export class DistrictService {
 
   // find all
   async findAll(dto: FilterDistrictDto, pagination?: Pagination) {
-    const { name, type, nameWithType, provinceCode } = dto;
+    const { name, type, codename: nameWithType, provinceCode } = dto;
 
     const query = this.districtRepository.createQueryBuilder('d');
 
@@ -90,7 +90,7 @@ export class DistrictService {
     district.name = dto.name;
     district.type = dto.type;
     district.code = dto.code;
-    district.nameWithType = dto.nameWithType;
+    district.codename = dto.nameWithType;
     district.provinceCode = dto.provinceCode;
     district.parentCode = province.id;
 
@@ -108,7 +108,7 @@ export class DistrictService {
     district.name = dto.name;
     district.type = dto.type;
     district.code = dto.code;
-    district.nameWithType = dto.nameWithType;
+    district.codename = dto.nameWithType;
     district.provinceCode = dto.provinceCode;
 
     return await this.districtRepository.save(district);
@@ -125,7 +125,7 @@ export class DistrictService {
     district.name = dto.name;
     district.type = dto.type;
     district.code = code;
-    district.nameWithType = dto.nameWithType;
+    district.codename = dto.nameWithType;
     district.provinceCode = dto.provinceCode;
 
     return await this.districtRepository.save(district);

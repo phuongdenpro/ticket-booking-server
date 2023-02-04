@@ -38,9 +38,26 @@ export class StationService {
 
     const dataResult = await query
       .leftJoinAndSelect('r.ward', 'w')
-      .select(['r', 'w.id', 'w.code'])
+      .leftJoinAndSelect('r.images', 'i')
+      .select([
+        'r',
+        'w.id',
+        'w.code',
+        'i.id',
+        'i.url',
+        'i.updatedAt',
+        'i.isDeleted',
+      ])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
       .getOne();
+
+    // const images = this.dataSource
+    //   .getRepository(ImageResource)
+    //   .createQueryBuilder('a')
+    //   .where('a.station_id = :id', { id })
+    //   .select(['a.id', 'a.url', 'a.isDeleted', 'a.createdAt', 'a.updatedAt'])
+    //   .getMany();
+    // dataResult.images = await images;
 
     return { dataResult };
   }
@@ -63,7 +80,16 @@ export class StationService {
 
     const dataResult = await query
       .leftJoinAndSelect('r.ward', 'w')
-      .select(['r', 'w.id', 'w.code'])
+      .leftJoinAndSelect('r.images', 'i')
+      .select([
+        'r',
+        'w.id',
+        'w.code',
+        'i.id',
+        'i.url',
+        'i.updatedAt',
+        'i.isDeleted',
+      ])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('r.id', 'ASC')
       .offset(pagination.skip)

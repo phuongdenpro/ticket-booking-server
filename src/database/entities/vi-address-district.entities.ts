@@ -21,12 +21,12 @@ export class District {
   type: string;
 
   @Column({
-    name: 'name_with_type',
+    name: 'codename',
     type: 'varchar',
     length: 255,
     nullable: true,
   })
-  nameWithType: string;
+  codename: string;
 
   @Column({ name: 'code', type: 'int', nullable: true, unique: true })
   code: number;

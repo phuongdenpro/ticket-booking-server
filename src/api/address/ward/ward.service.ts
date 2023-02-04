@@ -51,7 +51,7 @@ export class WardService {
 
   // find all
   async findAll(dto: FilterWardDto, pagination?: Pagination) {
-    const { name, type, nameWithType, districtCode } = dto;
+    const { name, type, codename: nameWithType, districtCode } = dto;
 
     const query = this.wardRepository.createQueryBuilder('w');
 
@@ -89,7 +89,7 @@ export class WardService {
     ward.name = dto.name;
     ward.type = dto.type;
     ward.code = dto.code;
-    ward.nameWithType = dto.nameWithType;
+    ward.codename = dto.codename;
     ward.districtCode = dto.districtCode;
     ward.parentCode = district.id;
 
@@ -104,7 +104,7 @@ export class WardService {
     district.name = dto.name;
     district.type = dto.type;
     district.code = dto.code;
-    district.nameWithType = dto.nameWithType;
+    district.codename = dto.codename;
     district.districtCode = dto.districtCode;
 
     return await this.wardRepository.save(district);
@@ -121,7 +121,7 @@ export class WardService {
     district.name = dto.name;
     district.type = dto.type;
     district.code = code;
-    district.nameWithType = dto.nameWithType;
+    district.codename = dto.codename;
     district.districtCode = dto.districtCode;
 
     return await this.wardRepository.save(district);

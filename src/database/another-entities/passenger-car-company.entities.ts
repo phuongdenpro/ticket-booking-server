@@ -1,4 +1,3 @@
-import { TripDetail } from './trip-detail.entities';
 import {
   Column,
   Entity,
@@ -10,10 +9,11 @@ import {
   DeleteDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Vehicle } from './vehicle.entities';
-import { Ward } from './vi-address-ward.entities';
+import { TripDetail } from '../entities/trip-detail.entities';
+import { Vehicle } from '../entities/vehicle.entities';
+import { Ward } from '../entities/vi-address-ward.entities';
 
-@Entity({ name: 'passenger_car_company' })
+// @Entity({ name: 'passenger_car_company' })
 export class PassengerCarCompany {
   @PrimaryGeneratedColumn('uuid')
   id: string;
@@ -42,17 +42,6 @@ export class PassengerCarCompany {
   })
   code: number;
 
-  // relationship
-  @ManyToOne(() => Ward, (ward) => ward.passengerCarCompanies)
-  @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
-  ward: Ward;
-
-  @OneToMany(() => Vehicle, (vehicle) => vehicle.passengerCarCompany)
-  vehicles: Vehicle[];
-
-  @OneToMany(() => TripDetail, (tripDetail) => tripDetail.passengerCarCompany)
-  tripDetails: TripDetail[];
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -71,4 +60,15 @@ export class PassengerCarCompany {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relationship
+  // @ManyToOne(() => Ward, (ward) => ward.passengerCarCompanies)
+  // @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
+  // ward: Ward;
+
+  // @OneToMany(() => Vehicle, (vehicle) => vehicle.passengerCarCompany)
+  // vehicles: Vehicle[];
+
+  // @OneToMany(() => TripDetail, (tripDetail) => tripDetail.passengerCarCompany)
+  // tripDetails: TripDetail[];
 }

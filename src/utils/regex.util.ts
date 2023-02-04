@@ -17,3 +17,5 @@ export const ID_CARD_NUMBER_REGEX = /^[0-9]+$/g;
 export const PASSWORD_REGEX = /^[a-zA-Z0-9@$!%*#?&_-]{6,255}$/;
 export const IMAGE_REGEX = /[\/.](gif|jpg|jpeg|tiff|png|webp)$/i;
 export const VIDEO_REGEX = /[\/.](mp4)$/i;
+export const LICENSE_PLATE_REGEX = /\d{2}\w-\d{4,5}$/i;
+export const IMAGE_FILES_REGEX = /\.(jpg|jpeg|tiff)/;
