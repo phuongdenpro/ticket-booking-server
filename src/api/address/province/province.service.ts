@@ -35,7 +35,7 @@ export class ProvinceService {
 
   // find all
   async findAll(dto: FilterProvinceDto, pagination?: Pagination) {
-    const { name, type, nameWithType } = dto;
+    const { name, type, codename: nameWithType } = dto;
 
     const query = this.provinceRepository.createQueryBuilder('p');
 
@@ -68,7 +68,7 @@ export class ProvinceService {
     province.name = dto.name;
     province.type = dto.type;
     province.code = dto.code;
-    province.nameWithType = dto.nameWithType;
+    province.codename = dto.codename;
 
     return await this.provinceRepository.save(province);
   }
@@ -84,7 +84,7 @@ export class ProvinceService {
     province.name = dto.name;
     province.type = dto.type;
     province.code = dto.code;
-    province.nameWithType = dto.nameWithType;
+    province.codename = dto.codename;
 
     return await this.provinceRepository.save(province);
   }
@@ -100,7 +100,7 @@ export class ProvinceService {
     province.name = dto.name;
     province.type = dto.type;
     province.code = code;
-    province.nameWithType = dto.nameWithType;
+    province.codename = dto.codename;
 
     return await this.provinceRepository.save(province);
   }
