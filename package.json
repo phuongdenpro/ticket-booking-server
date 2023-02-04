@@ -32,6 +32,7 @@
     "@nestjs/swagger": "^6.1.4",
     "@nestjs/typeorm": "^9.0.1",
     "@types/multer": "^1.4.7",
+    "aws-sdk": "^2.1309.0",
     "axios": "^1.2.1",
     "bcrypt": "^5.1.0",
     "class-transformer": "^0.5.1",

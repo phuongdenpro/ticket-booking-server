@@ -17,6 +17,7 @@ import { StationModule } from './api/station/station.module';
 import { VehicleModule } from './api/vehicle/vehicle.module';
 import { SeatModule } from './api/seat/seat.module';
 import { ImageResourceModule } from './api/image-resource/image-resource.module';
+import { UploadModule } from './api/upload/upload.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -31,6 +32,7 @@ import { ImageResourceModule } from './api/image-resource/image-resource.module'
     VehicleModule,
     SeatModule,
     ImageResourceModule,
+    UploadModule
   ],
   providers: [
     {
