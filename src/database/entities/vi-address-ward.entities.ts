@@ -1,6 +1,5 @@
 import { Staff } from './staff.entities';
 import { Customer } from './customer.entities';
-import { PassengerCarCompany } from './passenger-car-company.entities';
 import {
   Column,
   Entity,
@@ -24,12 +23,12 @@ export class Ward {
   type: string;
 
   @Column({
-    name: 'name_with_type',
+    name: 'codename',
     type: 'varchar',
     length: 255,
     nullable: true,
   })
-  nameWithType: string;
+  codename: string;
 
   @Column({ name: 'code', type: 'int', nullable: true, unique: true })
   code: number;
@@ -51,11 +50,11 @@ export class Ward {
   @OneToMany(() => Staff, (staff) => staff.ward)
   staffs?: Staff[];
 
-  @OneToMany(
-    () => PassengerCarCompany,
-    (passengerCarCompany) => passengerCarCompany.ward,
-  )
-  passengerCarCompanies: PassengerCarCompany[];
+  // @OneToMany(
+  //   () => PassengerCarCompany,
+  //   (passengerCarCompany) => passengerCarCompany.ward,
+  // )
+  // passengerCarCompanies: PassengerCarCompany[];
 
   @OneToMany(() => Station, (station) => station.ward)
   stations?: Station[];

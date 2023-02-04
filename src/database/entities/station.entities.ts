@@ -1,3 +1,4 @@
+import { ImageResource } from './image-resource.entities';
 import { Trip } from './trip.entities';
 import { Ward } from './vi-address-ward.entities';
 import {
@@ -60,4 +61,7 @@ export class Station {
 
   @OneToMany(() => Trip, (trip) => trip.toStation)
   toTrips?: Trip[];
+
+  @OneToMany(() => ImageResource, (imageResource) => imageResource.station)
+  images?: ImageResource[];
 }

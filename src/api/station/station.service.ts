@@ -34,12 +34,30 @@ export class StationService {
 
   async findOneById(id: string) {
     const query = this.stationService.createQueryBuilder('r');
-    query.where('r.id = :id', { id }).leftJoinAndSelect('r.ward', 'w');
+    query.where('r.id = :id', { id });
 
     const dataResult = await query
-      .select(['r', 'w.id', 'w.code'])
+      .leftJoinAndSelect('r.ward', 'w')
+      .leftJoinAndSelect('r.images', 'i')
+      .select([
+        'r',
+        'w.id',
+        'w.code',
+        'i.id',
+        'i.url',
+        'i.updatedAt',
+        'i.isDeleted',
+      ])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
       .getOne();
+
+    // const images = this.dataSource
+    //   .getRepository(ImageResource)
+    //   .createQueryBuilder('a')
+    //   .where('a.station_id = :id', { id })
+    //   .select(['a.id', 'a.url', 'a.isDeleted', 'a.createdAt', 'a.updatedAt'])
+    //   .getMany();
+    // dataResult.images = await images;
 
     return { dataResult };
   }
@@ -47,7 +65,6 @@ export class StationService {
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
     const { name, address, wardId } = dto;
     const query = this.stationService.createQueryBuilder('r');
-    console.log(dto);
 
     if (name) {
       query.andWhere('r.name like :name', { name: `%${name}%` });
@@ -56,15 +73,23 @@ export class StationService {
       query.andWhere('r.address like :address', { address: `%${address}%` });
     }
     if (wardId) {
-      query
-        .andWhere('r.ward_id = :wardId', { wardId })
-        .leftJoinAndSelect('r.ward', 'w');
+      query.andWhere('r.ward_id = :wardId', { wardId });
     }
 
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .select(['r', 'w.id', 'w.code'])
+      .leftJoinAndSelect('r.ward', 'w')
+      .leftJoinAndSelect('r.images', 'i')
+      .select([
+        'r',
+        'w.id',
+        'w.code',
+        'i.id',
+        'i.url',
+        'i.updatedAt',
+        'i.isDeleted',
+      ])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('r.id', 'ASC')
       .offset(pagination.skip)

@@ -1,5 +1,5 @@
 import { Vehicle } from './vehicle.entities';
-import { PassengerCarCompany } from './passenger-car-company.entities';
+// import { PassengerCarCompany } from './passenger-car-company.entities';
 import {
   Column,
   Entity,
@@ -24,22 +24,6 @@ export class TripDetail {
   @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })
   status: string;
 
-  // relations
-  @ManyToOne(() => Trip, (trip) => trip.tripDetails)
-  @JoinColumn({ name: 'trip_id', referencedColumnName: 'id' })
-  trip: Trip;
-
-  @ManyToOne(() => Vehicle, (vehicle) => vehicle.tripDetails)
-  @JoinColumn({ name: 'vehicle_id', referencedColumnName: 'id' })
-  vehicle: Vehicle;
-
-  @ManyToOne(
-    () => PassengerCarCompany,
-    (passengerCarCompany) => passengerCarCompany.tripDetails,
-  )
-  @JoinColumn({ name: 'passenger_car_id', referencedColumnName: 'id' })
-  passengerCarCompany: PassengerCarCompany;
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -58,4 +42,20 @@ export class TripDetail {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relations
+  @ManyToOne(() => Trip, (trip) => trip.tripDetails)
+  @JoinColumn({ name: 'trip_id', referencedColumnName: 'id' })
+  trip: Trip;
+
+  @ManyToOne(() => Vehicle, (vehicle) => vehicle.tripDetails)
+  @JoinColumn({ name: 'vehicle_id', referencedColumnName: 'id' })
+  vehicle: Vehicle;
+
+  // @ManyToOne(
+  //   () => PassengerCarCompany,
+  //   (passengerCarCompany) => passengerCarCompany.tripDetails,
+  // )
+  // @JoinColumn({ name: 'passenger_car_id', referencedColumnName: 'id' })
+  // passengerCarCompany: PassengerCarCompany;
 }

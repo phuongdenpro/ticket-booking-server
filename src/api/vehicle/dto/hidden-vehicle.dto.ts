@@ -1,8 +1,8 @@
+import { DeleteStatusEnum } from 'src/enums/delete-status.enum';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty } from 'class-validator';
-import { DeleteStatusEnum } from 'src/enums/delete-status.enum';
 
-export class HiddenStationDto {
+export class HiddenVehicleDto {
   @ApiPropertyOptional({
     example: DeleteStatusEnum.NOT_DELETED,
     description: '1: hidden, 0: show',

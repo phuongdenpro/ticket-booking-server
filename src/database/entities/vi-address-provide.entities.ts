@@ -16,13 +16,12 @@ export class Province {
   code: number;
 
   @Column({
-    name: 'name_with_type',
+    name: 'codename',
     type: 'varchar',
     length: 255,
     nullable: true,
-    unique: true,
   })
-  nameWithType: string;
+  codename: string;
 
   @Column({ name: 'id_deleted', type: 'tinyint', default: 0 })
   isDeleted: boolean;

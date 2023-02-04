@@ -14,6 +14,10 @@ import { ProvinceModule } from './api/address/province/province.module';
 import { DistrictModule } from './api/address/district/district.module';
 import { WardModule } from './api/address/ward/ward.module';
 import { StationModule } from './api/station/station.module';
+import { VehicleModule } from './api/vehicle/vehicle.module';
+import { SeatModule } from './api/seat/seat.module';
+import { ImageResourceModule } from './api/image-resource/image-resource.module';
+import { UploadModule } from './api/upload/upload.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -25,6 +29,10 @@ import { StationModule } from './api/station/station.module';
     DistrictModule,
     WardModule,
     StationModule,
+    VehicleModule,
+    SeatModule,
+    ImageResourceModule,
+    UploadModule
   ],
   providers: [
     {
