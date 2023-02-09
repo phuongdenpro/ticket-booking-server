@@ -43,7 +43,7 @@ export class TripDetail {
   })
   public deletedAt?: Date;
 
-  // relations
+  // relationships
   @ManyToOne(() => Trip, (trip) => trip.tripDetails)
   @JoinColumn({ name: 'trip_id', referencedColumnName: 'id' })
   trip: Trip;

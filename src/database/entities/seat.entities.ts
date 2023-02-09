@@ -1,3 +1,4 @@
+import { SeatTypeEnum } from 'src/enums';
 import { TicketDetail } from './ticket-detail.entities';
 import { Vehicle } from './vehicle.entities';
 import {
@@ -8,7 +9,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
   JoinColumn,
 } from 'typeorm';
 
@@ -21,23 +21,19 @@ export class Seat {
   name: string;
 
   @Column({ name: 'type', type: 'varchar', length: 255, nullable: true })
-  type: string;
+  type: SeatTypeEnum;
 
   @Column({ name: 'floor', type: 'int', nullable: true, default: 1 })
   floor: number;
 
-  @ManyToOne(() => Vehicle, (vehicle) => vehicle.seats)
-  @JoinColumn({ name: 'vehicle_id', referencedColumnName: 'id' })
-  vehicle: Vehicle;
+  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
+  isDeleted: boolean;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
-
-  @OneToMany(() => TicketDetail, (ticketDetail) => ticketDetail.seat)
-  ticketDetails: TicketDetail[];
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
@@ -46,15 +42,14 @@ export class Seat {
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
   public updatedAt?: Date;
 
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
+  // relationship
+  @ManyToOne(() => Vehicle, (vehicle) => vehicle.seats)
+  @JoinColumn({ name: 'vehicle_id', referencedColumnName: 'id' })
+  vehicle: Vehicle;
+
+  @OneToMany(() => TicketDetail, (ticketDetail) => ticketDetail.seat)
+  ticketDetails: TicketDetail[];
 }

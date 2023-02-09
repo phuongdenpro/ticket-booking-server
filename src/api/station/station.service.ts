@@ -1,23 +1,23 @@
-import { HiddenStationDto } from './dto/hidden-station.dto';
-import { FilterStationDto } from './dto/filter-station.dto';
 import { Ward } from './../../database/entities/vi-address-ward.entities';
 import { DataSource, Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { Station } from 'src/database/entities';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SaveStationDto } from './dto/save-station.dto';
 import { Pagination } from 'src/decorator';
+import { FilterStationDto, HiddenStationDto, SaveStationDto } from './dto';
+import { ImageResourceService } from '../image-resource/image-resource.service';
 
 @Injectable()
 export class StationService {
   constructor(
     @InjectRepository(Station)
     private readonly stationService: Repository<Station>,
+    private imageResourceService: ImageResourceService,
     private dataSource: DataSource,
   ) {}
 
-  async save(dto: SaveStationDto, userId: string) {
-    const { name, address, wardId } = dto;
+  async saveStation(dto: SaveStationDto, userId: string) {
+    const { name, address, wardId, images } = dto;
     const ward = await this.dataSource
       .getRepository(Ward)
       .findOne({ where: { code: wardId } });
@@ -28,8 +28,28 @@ export class StationService {
     station.ward = ward;
     station.createdBy = userId;
     station.updatedBy = userId;
+    // return station;
+    const newStation = await this.stationService.save(station);
 
-    return await this.stationService.save(station);
+    const newImages = await images.map(async (image) => {
+      image.createdBy = userId;
+      image.updatedBy = userId;
+      const newImage = await this.imageResourceService.saveImageResource(
+        image,
+        userId,
+        null,
+        newStation.id,
+      );
+      delete newImage.station;
+      delete newImage.createdBy;
+      delete newImage.updatedBy;
+      delete newImage.deletedAt;
+      delete newImage.isDeleted;
+
+      return newImage;
+    });
+    newStation.images = await Promise.all(newImages);
+    return newStation;
   }
 
   async findOneById(id: string) {
@@ -49,15 +69,8 @@ export class StationService {
         'i.isDeleted',
       ])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
       .getOne();
-
-    // const images = this.dataSource
-    //   .getRepository(ImageResource)
-    //   .createQueryBuilder('a')
-    //   .where('a.station_id = :id', { id })
-    //   .select(['a.id', 'a.url', 'a.isDeleted', 'a.createdAt', 'a.updatedAt'])
-    //   .getMany();
-    // dataResult.images = await images;
 
     return { dataResult };
   }
@@ -91,6 +104,7 @@ export class StationService {
         'i.isDeleted',
       ])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('r.id', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -100,27 +114,48 @@ export class StationService {
   }
 
   async updateById(userId: string, id: string, dto: SaveStationDto) {
-    const { name, address, wardId } = dto;
+    const { name, address, wardId, images } = dto;
     const ward = await this.dataSource
       .getRepository(Ward)
       .findOne({ where: { code: wardId } });
 
     const station = await this.stationService.findOne({ where: { id } });
 
-    if (!station) return null;
+    if (!station) {
+      throw new NotFoundException('Station not found');
+    }
     station.name = name;
     station.address = address;
     station.ward = ward;
     station.updatedBy = userId;
 
-    return await this.stationService.save(station);
+    const newStation = await this.stationService.save(station);
+
+    const newImages = await images.map(async (image) => {
+      image.createdBy = userId;
+      image.updatedBy = userId;
+      const newImage = await this.imageResourceService.saveImageResource(
+        image,
+        userId,
+        null,
+        newStation.id,
+      );
+      delete newImage.station;
+      delete newImage.createdBy;
+
+      return newImage;
+    });
+    newStation.images = await Promise.all(newImages);
+    return newStation;
   }
 
   // delete a record by id
   async hiddenById(userId: string, id: string, dto: HiddenStationDto) {
     const station = await this.stationService.findOne({ where: { id } });
 
-    if (!station) return null;
+    if (!station) {
+      throw new NotFoundException('Station not found');
+    }
     station.isDeleted = dto.status === 1 ? true : false;
     station.updatedBy = userId;
 

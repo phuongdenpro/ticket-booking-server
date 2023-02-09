@@ -1,6 +1,6 @@
 import { SaveDistrictDto } from './dto/save-district.dto';
 import { FilterDistrictDto } from './dto/filter-district.dto';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { District, Province } from 'src/database/entities';
 import { Pagination } from 'src/decorator';
@@ -145,7 +145,9 @@ export class DistrictService {
   async hiddenByCode(code: number, dto: HiddenDistrictDto) {
     const query = this.districtRepository.createQueryBuilder('d');
     const province = await query.where('d.code = :code', { code }).getOne();
-    if (!province) return null;
+    if (!province) {
+      throw new BadRequestException('province not found');
+    }
     province.isDeleted = dto.status === 1 ? true : false;
 
     return await this.districtRepository.save(province);

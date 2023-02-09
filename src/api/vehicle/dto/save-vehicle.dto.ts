@@ -1,4 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsString,
@@ -8,8 +9,10 @@ import {
   IsOptional,
   IsEnum,
   Length,
+  IsArray,
 } from 'class-validator';
-import { VehicleType } from 'src/enums/vehicle-type.enum';
+import { ImageResource } from 'src/database/entities';
+import { VehicleTypeEnum, VehicleSeatsEnum } from 'src/enums';
 
 export class SaveVehicleDto {
   @ApiProperty({ example: 'Xe giường nằm Limousine số 1' })
@@ -18,42 +21,55 @@ export class SaveVehicleDto {
   @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
   name: string;
 
-  @ApiProperty({ example: 'Xe giường nằm Limousine số 1, 22 chỗ, phòng đôi' })
+  @ApiProperty({ example: 'Xe giường nằm Limousine số 1, 34 chỗ, phòng đôi' })
   @IsNotEmpty()
   @IsString()
-  @Length(1, 1000, { message: 'Name must be between 1 and 1000 characters' })
+  @Length(1, 1000, {
+    message: 'description must be between 1 and 1000 characters',
+  })
   description: string;
 
-  @ApiProperty({ example: VehicleType.SLEEPER_BUS })
+  @ApiProperty({ example: VehicleTypeEnum.SLEEPER_BUS })
   @IsOptional()
   @IsString()
-  @IsEnum(VehicleType)
+  @IsEnum(VehicleTypeEnum)
   type: string;
-
-  @ApiProperty({
-    example: 'https://static.vexere.com/production/images/1582630998582.jpeg',
-  })
-  @IsOptional()
-  @IsString()
-  images: string[];
 
   @ApiProperty({ example: '51A-111.11' })
   @IsNotEmpty()
   @IsString()
-  @Length(1, 20, { message: 'Name must be between 1 and 20 characters' })
+  @Length(1, 20, {
+    message: 'License Plate must be between 1 and 20 characters',
+  })
   licensePlate: string;
 
-  @ApiProperty({ example: 1 })
+  @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(2)
   floorNumber: number;
 
-  @ApiProperty({ example: 22 })
+  @ApiProperty({ example: VehicleSeatsEnum.LIMOUSINE })
   @IsNotEmpty()
   @IsNumber()
-  @Min(1)
-  @Max(50)
+  @IsEnum(VehicleSeatsEnum)
   totalSeat: number;
+
+  @ApiProperty({
+    example: [
+      {
+        id: '1',
+        url: 'https://res.cloudinary.com/dangdan2807/image/upload/v1668737017/ee0ygsbjvymvyfrugrtp.jpg',
+        isDeleted: true,
+      },
+      {
+        url: 'https://res.cloudinary.com/dangdan2807/image/upload/v1668737015/tb7fssdjfjuvn6qcrajy.png',
+      },
+    ],
+  })
+  @IsOptional()
+  @IsArray()
+  @Type(() => ImageResource)
+  images?: ImageResource[];
 }

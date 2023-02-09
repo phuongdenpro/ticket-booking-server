@@ -9,7 +9,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
   ManyToOne,
 } from 'typeorm';
 
@@ -42,14 +41,6 @@ export class Station {
     nullable: true,
   })
   public updatedAt?: Date;
-
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
 
   // relationship
   @ManyToOne(() => Ward, (ward) => ward.stations)

@@ -14,24 +14,16 @@ export class TicketDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'create_date', type: 'timestamp', nullable: true })
+  @Column({ name: 'create_date', type: 'timestamp', nullable: false })
   createDate: Date;
 
-  @OneToOne(() => Ticket, (ticket) => ticket.ticketDetail)
-  @JoinColumn({ name: 'ticket_id', referencedColumnName: 'id' })
-  ticket: Ticket;
-
-  @ManyToOne(() => Seat, (seat) => seat.ticketDetails)
-  @JoinColumn({ name: 'seat_id', referencedColumnName: 'id' })
-  seat: Seat;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
-    nullable: true,
+    nullable: false,
     select: false,
   })
   public updatedAt?: Date;
@@ -43,4 +35,13 @@ export class TicketDetail {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relationships
+  @OneToOne(() => Ticket, (ticket) => ticket.ticketDetail)
+  @JoinColumn({ name: 'ticket_id', referencedColumnName: 'id' })
+  ticket: Ticket;
+
+  @ManyToOne(() => Seat, (seat) => seat.ticketDetails)
+  @JoinColumn({ name: 'seat_id', referencedColumnName: 'id' })
+  seat: Seat;
 }
