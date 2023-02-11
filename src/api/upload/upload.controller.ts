@@ -38,6 +38,7 @@ export class UploadController {
   @UseInterceptors(FileInterceptor('file', { limits: { files: 1 } }))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
     return this.uploadService.uploadFileWithAWS(file);
+    // return this.uploadService.uploadFileWithCloudinary(file);
   }
 
   @Post('image')
@@ -57,6 +58,7 @@ export class UploadController {
   @UseInterceptors(FileInterceptor('file', { limits: { files: 1 } }))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
     return this.uploadService.uploadImageWithAWS(file);
+    return this.uploadService.uploadImageWithCloudinary(file);
   }
 
   @Post('video')
@@ -76,6 +78,7 @@ export class UploadController {
   @UseInterceptors(FileInterceptor('file', { limits: { fields: 1 } }))
   async uploadVideo(@UploadedFile() file: Express.Multer.File) {
     return this.uploadService.uploadVideoWithAWS(file);
+    // return this.uploadService.uploadVideoWithCloudinary(file);
   }
 
   @Post('path')
@@ -88,5 +91,6 @@ export class UploadController {
   @HttpCode(HttpStatus.OK)
   async deleteFile(@Body() path: string) {
     return this.uploadService.deleteFileWithAWS(path);
+    // return this.uploadService.deleteFileWithCloudinary(path);
   }
 }

@@ -31,6 +31,14 @@ export class UploadService {
   private cloudinary_base_url: string = this.configService.get<string>(
     'CLOUDINARY_BASE_URL',
   );
+  private cloudinary_name: string = this.configService.get<string>(
+    'CLOUDINARY_CLOUD_NAME',
+  );
+  private cloudinary_api_key: string =
+    this.configService.get<string>('CLOUDINARY_API_KEY');
+  private cloudinary_api_secret: string = this.configService.get<string>(
+    'CLOUDINARY_API_SECRET',
+  );
 
   private s3 = new S3({
     apiVersion: '2006-03-01',
@@ -124,6 +132,7 @@ export class UploadService {
       throw new BadRequestException(err.message);
     }
   }
+
   // Cloudinary
   async uploadFileWithCloudinary(
     file: Express.Multer.File,
@@ -132,7 +141,11 @@ export class UploadService {
     if (file.size > this.MAX_FILE_SIZE) {
       throw new BadRequestException('MAX_SIZE_WARNING');
     }
-
+    v2.config({
+      cloud_name: this.cloudinary_name,
+      api_key: this.cloudinary_api_key,
+      api_secret: this.cloudinary_api_secret,
+    });
     return new Promise((resolve, reject) => {
       const upload = v2.uploader.upload_stream((error, result) => {
         if (error) return reject(error);
@@ -174,6 +187,11 @@ export class UploadService {
     // delete file in cloudinary with url
     const imageName = path.replace(this.cloudinary_base_url, '');
     try {
+      v2.config({
+        cloud_name: this.cloudinary_name,
+        api_key: this.cloudinary_api_key,
+        api_secret: this.cloudinary_api_secret,
+      });
       await v2.uploader.destroy(imageName);
     } catch (err) {
       throw new BadRequestException(err.message);

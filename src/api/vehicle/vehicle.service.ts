@@ -1,3 +1,4 @@
+import { SortEnum } from './../../enums/sort.enum';
 import {
   Injectable,
   BadRequestException,
@@ -96,9 +97,7 @@ export class VehicleService {
     const query = this.vehicleService.createQueryBuilder('q');
     query.where('q.id = :id', { id });
 
-    const dataResult = await query
-      .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const dataResult = await query.getOne();
 
     if (dataResult) {
       const queryImage = this.dataSource
@@ -106,8 +105,7 @@ export class VehicleService {
         .createQueryBuilder('i');
       queryImage.where('i.vehicle_id = :id', { id });
       const images = await queryImage
-        .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
-        .select(['i.id', 'i.url', 'i.createdAt', 'i.updatedAt', 'i.isDeleted'])
+        .select(['i.id', 'i.url', 'i.createdAt', 'i.updatedAt'])
         .getMany();
       dataResult.images = images;
     }
@@ -143,8 +141,7 @@ export class VehicleService {
 
     const total = await query.getCount();
     const dataResult = await query
-      .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
-      .orderBy('q.createdAt', 'ASC')
+      .orderBy('q.createdAt', SortEnum.ASC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -155,12 +152,11 @@ export class VehicleService {
         .getRepository(ImageResource)
         .createQueryBuilder('i');
       const images = await queryImage
-        .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
         .andWhere('i.vehicle_id IN (:...ids)', {
           ids: dataResult.map((station) => station.id),
         })
         .leftJoinAndSelect('i.vehicle', 'v')
-        .select(['i.id', 'i.url', 'i.updatedAt', 'i.isDeleted', 'v.id'])
+        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt', 'v.id'])
         .getMany();
 
       // add image to vehicle
@@ -186,7 +182,13 @@ export class VehicleService {
 
     const vehicle = await this.vehicleService.findOne({ where: { id } });
     if (!vehicle) {
-      throw new BadRequestException('Vehicle not found');
+      throw new BadRequestException('VEHICLE_NOT_FOUND');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
     }
     vehicle.name = name;
     vehicle.description = description;
@@ -194,16 +196,16 @@ export class VehicleService {
     vehicle.type = type;
     vehicle.floorNumber = floorNumber;
     vehicle.totalSeat = totalSeat;
-    vehicle.updatedBy = userId;
+    vehicle.updatedBy = adminExist.id;
 
     const updateVehicle = await this.vehicleService.save(vehicle);
 
     const newImages = await images.map(async (image) => {
-      image.createdBy = userId;
-      image.updatedBy = userId;
+      image.createdBy = adminExist.id;
+      image.updatedBy = adminExist.id;
       const newImage = await this.imageResourceService.saveImageResource(
         image,
-        userId,
+        adminExist.id,
         updateVehicle.id,
       );
       delete newImage.vehicle;

@@ -1,3 +1,4 @@
+import { SortEnum } from './../../enums/sort.enum';
 import { Ward } from './../../database/entities/vi-address-ward.entities';
 import { DataSource, Repository } from 'typeorm';
 import {
@@ -64,7 +65,6 @@ export class StationService {
 
     const dataResult = await query
       .leftJoinAndSelect('q.ward', 'w')
-      .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
       .select(['q', 'w.id', 'w.code'])
       .getOne();
 
@@ -74,8 +74,7 @@ export class StationService {
         .createQueryBuilder('i');
       queryImage.where('i.station_id = :id', { id });
       const images = await queryImage
-        .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
-        .select(['i.id', 'i.url', 'i.updatedAt', 'i.isDeleted'])
+        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt'])
         .getMany();
       dataResult.images = images;
     }
@@ -86,7 +85,6 @@ export class StationService {
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
     const { name, address, wardId } = dto;
     const query = this.stationRepository.createQueryBuilder('r');
-    console.log(dto);
 
     if (name) {
       query.andWhere('r.name like :name', { name: `%${name}%` });
@@ -103,8 +101,7 @@ export class StationService {
     const dataResult = await query
       .leftJoinAndSelect('r.ward', 'w')
       .select(['r', 'w.id', 'w.code'])
-      .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
-      .orderBy('r.id', 'ASC')
+      .orderBy('r.createdAt', SortEnum.ASC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -115,12 +112,11 @@ export class StationService {
         .getRepository(ImageResource)
         .createQueryBuilder('i');
       const images = await queryImage
-        .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
         .andWhere('i.station_id IN (:...ids)', {
           ids: dataResult.map((station) => station.id),
         })
         .leftJoinAndSelect('i.station', 's')
-        .select(['i.id', 'i.url', 'i.updatedAt', 'i.isDeleted', 's.id'])
+        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt', 's.id'])
         .getMany();
 
       // add image to station
