@@ -1,15 +1,12 @@
 import { TripDetail } from './trip-detail.entities';
-// import { PassengerCarCompany } from './passenger-car-company.entities';
 import {
   Column,
   Entity,
-  // ManyToOne,
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   PrimaryGeneratedColumn,
-  // JoinColumn,
 } from 'typeorm';
 import { Seat } from './seat.entities';
 import { ImageResource } from './image-resource.entities';
@@ -33,6 +30,7 @@ export class Vehicle {
     type: 'varchar',
     length: 20,
     nullable: true,
+    unique: true,
   })
   licensePlate: string;
 
@@ -49,15 +47,14 @@ export class Vehicle {
   updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  public createdAt?: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
-  public updatedAt?: Date;
+  updatedAt?: Date;
 
   @DeleteDateColumn({
     name: 'deleted_at',
@@ -65,7 +62,7 @@ export class Vehicle {
     nullable: true,
     select: false,
   })
-  public deletedAt?: Date;
+  deletedAt?: Date;
 
   // @ManyToOne(
   //   () => PassengerCarCompany,

@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Trip } from './trip.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 @Entity({ name: 'trip_detail' })
 export class TripDetail {
@@ -24,6 +24,9 @@ export class TripDetail {
   @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })
   status: string;
 
+  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
+  isDeleted: boolean;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -35,15 +38,7 @@ export class TripDetail {
   })
   public updatedAt?: Date;
 
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
-
-  // relations
+  // relationships
   @ManyToOne(() => Trip, (trip) => trip.tripDetails)
   @JoinColumn({ name: 'trip_id', referencedColumnName: 'id' })
   trip: Trip;

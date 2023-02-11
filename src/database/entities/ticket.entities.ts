@@ -2,6 +2,7 @@ import { OrderRefundDetail } from './order-refund-detail.entities';
 import { PromotionDetail } from './promotion-detail.entities';
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToMany,
@@ -17,7 +18,6 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
 } from 'typeorm';
 
 @Entity({ name: 'ticket' })
@@ -40,6 +40,32 @@ export class Ticket {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  public createdAt?: Date;
+
+  @UpdateDateColumn({
+    name: 'updated_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  public updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  public deletedAt?: Date;
+
+  // relationship
   @OneToMany(
     () => ApplicableTicket,
     (applicableTicket) => applicableTicket.ticket,
@@ -70,29 +96,4 @@ export class Ticket {
   )
   @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
   orderRefundDetail: OrderRefundDetail;
-
-  @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy: string;
-
-  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy: string;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  public createdAt?: Date;
-
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public updatedAt?: Date;
-
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
 }

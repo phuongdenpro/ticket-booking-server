@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ImageResource, Vehicle, Station } from 'src/database/entities';
 import { DataSource, Repository } from 'typeorm';
-import { SaveImageResourceDto } from './dto/save-image.dto';
 import { IMAGE_REGEX } from 'src/utils';
 
 @Injectable()
@@ -13,9 +12,13 @@ export class ImageResourceService {
     private dataSource: DataSource,
   ) {}
 
-  async create(dto: SaveImageResourceDto, userId: string) {
-    const { url, vehicleId, stationId } = dto;
-    const imageResource = new ImageResource();
+  async saveImageResource(
+    imageResource: ImageResource,
+    userId: string,
+    vehicleId?: string,
+    stationId?: string,
+  ) {
+    const { url } = imageResource;
 
     if (url.match(IMAGE_REGEX)) {
       imageResource.url = url;
@@ -37,8 +40,15 @@ export class ImageResourceService {
     if (!vehicleId && !stationId) {
       throw new Error('Invalid image resource');
     }
-    imageResource.createdBy = userId;
+    if (!imageResource.id) {
+      imageResource.createdBy = userId;
+    }
     imageResource.updatedBy = userId;
+    if (imageResource.isDeleted) {
+      imageResource.deletedAt = new Date();
+    } else {
+      imageResource.deletedAt = null;
+    }
     return await this.imageResourceService.save(imageResource);
   }
 }

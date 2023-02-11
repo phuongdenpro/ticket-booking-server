@@ -1,70 +1,92 @@
-import { HiddenStationDto } from './dto/hidden-station.dto';
-import { FilterStationDto } from './dto/filter-station.dto';
 import { Ward } from './../../database/entities/vi-address-ward.entities';
 import { DataSource, Repository } from 'typeorm';
-import { Injectable } from '@nestjs/common';
-import { Station } from 'src/database/entities';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ImageResource, Staff, Station } from 'src/database/entities';
 import { InjectRepository } from '@nestjs/typeorm';
-import { SaveStationDto } from './dto/save-station.dto';
 import { Pagination } from 'src/decorator';
+import { FilterStationDto, SaveStationDto } from './dto';
+import { ImageResourceService } from '../image-resource/image-resource.service';
 
 @Injectable()
 export class StationService {
   constructor(
     @InjectRepository(Station)
-    private readonly stationService: Repository<Station>,
+    private readonly stationRepository: Repository<Station>,
+    private imageResourceService: ImageResourceService,
     private dataSource: DataSource,
   ) {}
 
-  async save(dto: SaveStationDto, userId: string) {
-    const { name, address, wardId } = dto;
+  async saveStation(dto: SaveStationDto, userId: string) {
+    const { name, address, wardId, images } = dto;
     const ward = await this.dataSource
       .getRepository(Ward)
       .findOne({ where: { code: wardId } });
-
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
     const station = new Station();
     station.name = name;
     station.address = address;
     station.ward = ward;
-    station.createdBy = userId;
-    station.updatedBy = userId;
+    station.createdBy = adminExist.id;
+    const newStation = await this.stationRepository.save(station);
 
-    return await this.stationService.save(station);
+    const newImages = await images.map(async (image) => {
+      image.createdBy = adminExist.id;
+      const newImage = await this.imageResourceService.saveImageResource(
+        image,
+        adminExist.id,
+        null,
+        newStation.id,
+      );
+      delete newImage.station;
+      delete newImage.createdBy;
+      delete newImage.updatedBy;
+      delete newImage.deletedAt;
+      delete newImage.isDeleted;
+
+      return newImage;
+    });
+    newStation.images = await Promise.all(newImages);
+    return newStation;
   }
 
   async findOneById(id: string) {
-    const query = this.stationService.createQueryBuilder('r');
-    query.where('r.id = :id', { id });
+    const query = this.stationRepository.createQueryBuilder('q');
+    query.where('q.id = :id', { id });
 
     const dataResult = await query
-      .leftJoinAndSelect('r.ward', 'w')
-      .leftJoinAndSelect('r.images', 'i')
-      .select([
-        'r',
-        'w.id',
-        'w.code',
-        'i.id',
-        'i.url',
-        'i.updatedAt',
-        'i.isDeleted',
-      ])
-      .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
+      .leftJoinAndSelect('q.ward', 'w')
+      .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
+      .select(['q', 'w.id', 'w.code'])
       .getOne();
 
-    // const images = this.dataSource
-    //   .getRepository(ImageResource)
-    //   .createQueryBuilder('a')
-    //   .where('a.station_id = :id', { id })
-    //   .select(['a.id', 'a.url', 'a.isDeleted', 'a.createdAt', 'a.updatedAt'])
-    //   .getMany();
-    // dataResult.images = await images;
+    if (dataResult) {
+      const queryImage = this.dataSource
+        .getRepository(ImageResource)
+        .createQueryBuilder('i');
+      queryImage.where('i.station_id = :id', { id });
+      const images = await queryImage
+        .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
+        .select(['i.id', 'i.url', 'i.updatedAt', 'i.isDeleted'])
+        .getMany();
+      dataResult.images = images;
+    }
 
     return { dataResult };
   }
 
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
     const { name, address, wardId } = dto;
-    const query = this.stationService.createQueryBuilder('r');
+    const query = this.stationRepository.createQueryBuilder('r');
+    console.log(dto);
 
     if (name) {
       query.andWhere('r.name like :name', { name: `%${name}%` });
@@ -80,50 +102,95 @@ export class StationService {
 
     const dataResult = await query
       .leftJoinAndSelect('r.ward', 'w')
-      .leftJoinAndSelect('r.images', 'i')
-      .select([
-        'r',
-        'w.id',
-        'w.code',
-        'i.id',
-        'i.url',
-        'i.updatedAt',
-        'i.isDeleted',
-      ])
+      .select(['r', 'w.id', 'w.code'])
       .andWhere('r.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('r.id', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
 
+    if (dataResult) {
+      // query image for each station
+      const queryImage = this.dataSource
+        .getRepository(ImageResource)
+        .createQueryBuilder('i');
+      const images = await queryImage
+        .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
+        .andWhere('i.station_id IN (:...ids)', {
+          ids: dataResult.map((station) => station.id),
+        })
+        .leftJoinAndSelect('i.station', 's')
+        .select(['i.id', 'i.url', 'i.updatedAt', 'i.isDeleted', 's.id'])
+        .getMany();
+
+      // add image to station
+      dataResult.forEach((station) => {
+        station.images = images.filter(
+          (image) => image.station.id === station.id,
+        );
+      });
+    }
+
     return { dataResult, pagination, total };
   }
 
   async updateById(userId: string, id: string, dto: SaveStationDto) {
-    const { name, address, wardId } = dto;
+    const { name, address, wardId, images } = dto;
     const ward = await this.dataSource
       .getRepository(Ward)
       .findOne({ where: { code: wardId } });
 
-    const station = await this.stationService.findOne({ where: { id } });
+    const station = await this.stationRepository.findOne({ where: { id } });
 
-    if (!station) return null;
+    if (!station) {
+      throw new NotFoundException('Station not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
     station.name = name;
     station.address = address;
     station.ward = ward;
-    station.updatedBy = userId;
+    station.updatedBy = adminExist.id;
 
-    return await this.stationService.save(station);
+    const newStation = await this.stationRepository.save(station);
+
+    const newImages = await images.map(async (image) => {
+      image.createdBy = adminExist.id;
+      const newImage = await this.imageResourceService.saveImageResource(
+        image,
+        adminExist.id,
+        null,
+        newStation.id,
+      );
+      delete newImage.station;
+      delete newImage.createdBy;
+
+      return newImage;
+    });
+    newStation.images = await Promise.all(newImages);
+    return newStation;
   }
 
   // delete a record by id
-  async hiddenById(userId: string, id: string, dto: HiddenStationDto) {
-    const station = await this.stationService.findOne({ where: { id } });
+  async hiddenById(userId: string, id: string) {
+    const station = await this.stationRepository.findOne({ where: { id } });
 
-    if (!station) return null;
-    station.isDeleted = dto.status === 1 ? true : false;
-    station.updatedBy = userId;
+    if (!station) {
+      throw new NotFoundException('Station not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
+    station.deletedAt = new Date();
+    station.updatedBy = adminExist.id;
 
-    return await this.stationService.save(station);
+    return await this.stationRepository.save(station);
   }
 }
