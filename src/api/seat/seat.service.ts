@@ -1,3 +1,4 @@
+import { SortEnum } from './../../enums/sort.enum';
 import {
   BadRequestException,
   Injectable,
@@ -25,7 +26,7 @@ export class SeatService {
       .getRepository(Vehicle)
       .findOne({ where: { id: vehicleId } });
     if (!vehicle) {
-      throw new BadRequestException('Vehicle not found');
+      throw new BadRequestException('VEHICLE_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -49,7 +50,7 @@ export class SeatService {
     seat.createdBy = adminExist.id;
     seat.vehicle = vehicle;
     delete seat.vehicle;
-    delete seat.updatedAt;
+    delete seat.deletedAt;
 
     return await this.seatRepository.save(seat);
   }
@@ -75,13 +76,12 @@ export class SeatService {
         'q.name',
         'q.type',
         'q.floor',
-        'q.isDeleted',
         'q.createdBy',
         'q.updatedBy',
         'q.createdAt',
         'q.updatedAt',
       ])
-      .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy('q.createdAt', SortEnum.ASC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -115,13 +115,12 @@ export class SeatService {
         'q.name',
         'q.type',
         'q.floor',
-        'q.isDeleted',
         'q.createdBy',
         'q.updatedBy',
         'q.createdAt',
         'q.updatedAt',
       ])
-      .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy('q.createdAt', SortEnum.ASC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -139,13 +138,11 @@ export class SeatService {
         'q.name',
         'q.type',
         'q.floor',
-        'q.isDeleted',
         'q.createdBy',
         'q.updatedBy',
         'q.createdAt',
         'q.updatedAt',
       ])
-      .andWhere('q.isDeleted = :isDeleted', { isDeleted: true })
       .getOne();
 
     return { dataResult };
@@ -162,13 +159,12 @@ export class SeatService {
         'q.name',
         'q.type',
         'q.floor',
-        'q.isDeleted',
         'q.createdBy',
         'q.updatedBy',
         'q.createdAt',
         'q.updatedAt',
       ])
-      .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
+      .orderBy('q.createdAt', SortEnum.ASC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -225,6 +221,8 @@ export class SeatService {
     if (!adminExist) {
       throw new UnauthorizedException();
     }
+    seat.updatedBy = adminExist.id;
+    seat.deletedAt = new Date();
 
     return await this.seatRepository.save(seat);
   }
