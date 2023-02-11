@@ -40,9 +40,6 @@ export class Vehicle {
   @Column({ name: 'total_seat', type: 'int', nullable: true, default: 1 })
   totalSeat: number;
 
-  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
-  isDeleted: boolean;
-
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
 
@@ -50,15 +47,22 @@ export class Vehicle {
   updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  public createdAt?: Date;
+  createdAt?: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
+  })
+  updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
     select: false,
   })
-  public updatedAt?: Date;
+  deletedAt?: Date;
 
   // @ManyToOne(
   //   () => PassengerCarCompany,

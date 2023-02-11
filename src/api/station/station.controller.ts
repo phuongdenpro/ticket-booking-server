@@ -15,7 +15,7 @@ import {
 import { RoleEnum } from 'src/enums';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { FilterStationDto, HiddenStationDto, SaveStationDto } from './dto';
+import { FilterStationDto, SaveStationDto } from './dto';
 import { Patch } from '@nestjs/common/decorators';
 
 @Controller('station')
@@ -65,11 +65,7 @@ export class StationController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenStationById(
-    @CurrentUser() user,
-    @Param('id') id: string,
-    @Body() dto: HiddenStationDto,
-  ) {
-    return await this.stationService.hiddenById(user.id, id, dto);
+  async hiddenStationById(@CurrentUser() user, @Param('id') id: string) {
+    return await this.stationService.hiddenById(user.id, id);
   }
 }

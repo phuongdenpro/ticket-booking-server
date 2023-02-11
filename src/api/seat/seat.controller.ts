@@ -1,7 +1,3 @@
-import { HiddenSeatDto } from './dto/hidden-vehicle.dto';
-import { UpdateSeatDto } from './dto/update-seat.dto';
-import { FilterSeatDto } from './dto/filter-seat.dto';
-import { SaveSeatDto } from './dto/save-seat.dto';
 import {
   Body,
   Controller,
@@ -20,6 +16,7 @@ import { SeatService } from './seat.service';
 import { RoleEnum } from 'src/enums';
 import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
 import { JwtAuthGuard } from 'src/auth/guards';
+import { FilterSeatDto, SaveSeatDto, UpdateSeatDto } from './dto';
 
 @Controller('seat')
 @ApiTags('Seat')
@@ -91,11 +88,7 @@ export class SeatController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenStationById(
-    @CurrentUser() user,
-    @Param('id') id: string,
-    @Body() dto: HiddenSeatDto,
-  ) {
-    return await this.seatService.hiddenSeatById(id, dto, user.id);
+  async hiddenStationById(@CurrentUser() user, @Param('id') id: string) {
+    return await this.seatService.hiddenSeatById(id, user.id);
   }
 }

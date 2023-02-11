@@ -6,7 +6,6 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Station } from './station.entities';
@@ -23,22 +22,14 @@ export class Trip {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @ManyToOne(() => Station, (station) => station.fromTrips)
-  @JoinColumn({ name: 'from_station_id', referencedColumnName: 'id' })
-  fromStation: Station;
-
-  @ManyToOne(() => Station, (station) => station.toTrips)
-  @JoinColumn({ name: 'to_station_id', referencedColumnName: 'id' })
-  toStation: Station;
-
-  @OneToMany(() => TripDetail, (tripDetail) => tripDetail.trip)
-  tripDetails: TripDetail[];
+  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
+  isDeleted: boolean;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
-  
+  createdBy: string;
+
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
@@ -51,11 +42,15 @@ export class Trip {
   })
   public updatedAt?: Date;
 
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
+  // relationship
+  @ManyToOne(() => Station, (station) => station.fromTrips)
+  @JoinColumn({ name: 'from_station_id', referencedColumnName: 'id' })
+  fromStation: Station;
+
+  @ManyToOne(() => Station, (station) => station.toTrips)
+  @JoinColumn({ name: 'to_station_id', referencedColumnName: 'id' })
+  toStation: Station;
+
+  @OneToMany(() => TripDetail, (tripDetail) => tripDetail.trip)
+  tripDetails: TripDetail[];
 }

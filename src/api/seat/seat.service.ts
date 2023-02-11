@@ -1,14 +1,13 @@
-import { UpdateSeatDto } from './dto/update-seat.dto';
-import { HiddenSeatDto } from './dto/hidden-vehicle.dto';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Seat, Vehicle } from 'src/database/entities';
+import { Seat, Staff, Vehicle } from 'src/database/entities';
 import { DataSource, Repository } from 'typeorm';
-import { FilterSeatDto, SaveSeatDto } from './dto';
+import { FilterSeatDto, SaveSeatDto, UpdateSeatDto } from './dto';
 import { Pagination } from 'src/decorator';
 import { SeatTypeEnum } from 'src/enums';
 
@@ -16,7 +15,7 @@ import { SeatTypeEnum } from 'src/enums';
 export class SeatService {
   constructor(
     @InjectRepository(Seat)
-    private readonly seatService: Repository<Seat>,
+    private readonly seatRepository: Repository<Seat>,
     private dataSource: DataSource,
   ) {}
 
@@ -25,9 +24,14 @@ export class SeatService {
     const vehicle = await this.dataSource
       .getRepository(Vehicle)
       .findOne({ where: { id: vehicleId } });
-
     if (!vehicle) {
       throw new BadRequestException('Vehicle not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
     }
 
     const seat = new Seat();
@@ -42,18 +46,17 @@ export class SeatService {
     } else {
       seat.floor = floor;
     }
-    seat.createdBy = userId;
-    seat.updatedBy = userId;
+    seat.createdBy = adminExist.id;
     seat.vehicle = vehicle;
     delete seat.vehicle;
     delete seat.updatedAt;
 
-    return await this.seatService.save(seat);
+    return await this.seatRepository.save(seat);
   }
 
   async searchSeat(dto: FilterSeatDto, pagination?: Pagination) {
     const { name, type, floor } = dto;
-    const query = this.seatService.createQueryBuilder('q');
+    const query = this.seatRepository.createQueryBuilder('q');
 
     if (name) {
       query.andWhere('q.name like :name', { name: `%${name}%` });
@@ -92,7 +95,7 @@ export class SeatService {
     pagination?: Pagination,
   ) {
     const { name, type, floor } = dto;
-    const query = this.seatService.createQueryBuilder('q');
+    const query = this.seatRepository.createQueryBuilder('q');
     query.where('q.vehicle = :vehicleId', { vehicleId });
 
     if (name) {
@@ -127,7 +130,7 @@ export class SeatService {
   }
 
   async findOneSeatById(id: string) {
-    const query = this.seatService.createQueryBuilder('q');
+    const query = this.seatRepository.createQueryBuilder('q');
     query.where('q.id = :id', { id });
 
     const dataResult = await query
@@ -149,7 +152,7 @@ export class SeatService {
   }
 
   async findAllSeatByVehicleId(vehicleId: string, pagination?: Pagination) {
-    const query = this.seatService.createQueryBuilder('q');
+    const query = this.seatRepository.createQueryBuilder('q');
     query.where('q.vehicle = :vehicleId', { vehicleId });
 
     const total = await query.clone().getCount();
@@ -175,10 +178,15 @@ export class SeatService {
 
   async updateSeatById(id: string, dto: UpdateSeatDto, userId: string) {
     const { name, type, floor, vehicleId } = dto;
-    const seat = await this.seatService.findOne({ where: { id } });
-
+    const seat = await this.seatRepository.findOne({ where: { id } });
     if (!seat) {
       throw new NotFoundException('Seat not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
     }
 
     if (name) {
@@ -200,21 +208,24 @@ export class SeatService {
         .findOne({ where: { id: vehicleId } });
       seat.vehicle = vehicle;
     }
-    seat.updatedBy = userId;
+    seat.updatedBy = adminExist.id;
     delete seat.vehicle;
 
-    return await this.seatService.save(seat);
+    return await this.seatRepository.save(seat);
   }
 
-  async hiddenSeatById(id: string, dto: HiddenSeatDto, userId: string) {
-    const { status } = dto;
-    const seat = await this.seatService.findOne({ where: { id } });
+  async hiddenSeatById(id: string, userId: string) {
+    const seat = await this.seatRepository.findOne({ where: { id } });
     if (!seat) {
-      throw new NotFoundException('Seat not found');
+      throw new BadRequestException('SEAT_NOT_FOUND');
     }
-    seat.isDeleted = status === 1 ? true : false;
-    seat.updatedBy = userId;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
 
-    return await this.seatService.save(seat);
+    return await this.seatRepository.save(seat);
   }
 }

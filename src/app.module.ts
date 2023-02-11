@@ -18,6 +18,7 @@ import { VehicleModule } from './api/vehicle/vehicle.module';
 import { SeatModule } from './api/seat/seat.module';
 import { ImageResourceModule } from './api/image-resource/image-resource.module';
 import { UploadModule } from './api/upload/upload.module';
+import { TripModule } from './api/trip/trip.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
@@ -32,7 +33,8 @@ import { UploadModule } from './api/upload/upload.module';
     VehicleModule,
     SeatModule,
     ImageResourceModule,
-    UploadModule
+    UploadModule,
+    TripModule
   ],
   providers: [
     {

@@ -10,6 +10,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 
 @Entity({ name: 'seat' })
@@ -26,24 +27,29 @@ export class Seat {
   @Column({ name: 'floor', type: 'int', nullable: true, default: 1 })
   floor: number;
 
-  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
-  isDeleted: boolean;
-
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  public createdAt?: Date;
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
+  createdAt?: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
   })
-  public updatedAt?: Date;
+  updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  deletedAt?: Date;
 
   // relationship
   @ManyToOne(() => Vehicle, (vehicle) => vehicle.seats)

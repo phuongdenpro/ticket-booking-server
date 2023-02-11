@@ -16,7 +16,7 @@ import { JwtAuthGuard } from 'src/auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Patch } from '@nestjs/common/decorators';
 import { VehicleService } from './vehicle.service';
-import { FilterVehicleDto, HiddenVehicleDto, SaveVehicleDto } from './dto';
+import { FilterVehicleDto, SaveVehicleDto } from './dto';
 
 @Controller('vehicle')
 @ApiTags('Vehicle')
@@ -71,11 +71,7 @@ export class VehicleController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenStationById(
-    @CurrentUser() user,
-    @Param('id') id: string,
-    @Body() dto: HiddenVehicleDto,
-  ) {
-    return await this.vehicleService.hiddenById(dto, user.id, id);
+  async hiddenStationById(@CurrentUser() user, @Param('id') id: string) {
+    return await this.vehicleService.hiddenById(user.id, id);
   }
 }

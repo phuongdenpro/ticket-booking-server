@@ -1,9 +1,13 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Vehicle } from 'src/database/entities';
+import { ImageResource, Staff, Vehicle } from 'src/database/entities';
 import { LICENSE_PLATE_REGEX } from 'src/utils';
 import { DataSource, Repository } from 'typeorm';
-import { FilterVehicleDto, HiddenVehicleDto, SaveVehicleDto } from './dto';
+import { FilterVehicleDto, SaveVehicleDto } from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
 import { Pagination } from 'src/decorator';
 import { VehicleTypeEnum, VehicleSeatsEnum } from 'src/enums';
@@ -37,8 +41,14 @@ export class VehicleService {
       floorNumber,
       totalSeat,
     } = dto;
-    const vehicle = new Vehicle();
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
 
+    const vehicle = new Vehicle();
     vehicle.name = name;
     vehicle.description = description;
 
@@ -59,17 +69,15 @@ export class VehicleService {
     }
 
     vehicle.totalSeat = totalSeat;
-    vehicle.createdBy = userId;
-    vehicle.updatedBy = userId;
+    vehicle.createdBy = adminExist.id;
 
     const newVehicle = await this.vehicleService.save(vehicle);
 
     const newImages = await images.map(async (image) => {
-      image.createdBy = userId;
-      image.updatedBy = userId;
+      image.createdBy = adminExist.id;
       const newImage = await this.imageResourceService.saveImageResource(
         image,
-        userId,
+        adminExist.id,
         newVehicle.id,
       );
       delete newImage.vehicle;
@@ -89,18 +97,20 @@ export class VehicleService {
     query.where('q.id = :id', { id });
 
     const dataResult = await query
-      .leftJoinAndSelect('q.images', 'i')
-      .select([
-        'q',
-        'i.id',
-        'i.url',
-        'i.createdAt',
-        'i.updatedAt',
-        'i.isDeleted',
-      ])
-      .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
       .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
       .getOne();
+
+    if (dataResult) {
+      const queryImage = this.dataSource
+        .getRepository(ImageResource)
+        .createQueryBuilder('i');
+      queryImage.where('i.vehicle_id = :id', { id });
+      const images = await queryImage
+        .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
+        .select(['i.id', 'i.url', 'i.createdAt', 'i.updatedAt', 'i.isDeleted'])
+        .getMany();
+      dataResult.images = images;
+    }
 
     return { dataResult };
   }
@@ -133,15 +143,33 @@ export class VehicleService {
 
     const total = await query.getCount();
     const dataResult = await query
-      .leftJoinAndSelect('q.images', 'i')
-      .select(['q', 'i.id', 'i.url', 'i.updatedAt', 'i.isDeleted'])
-      .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
       .andWhere('q.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('q.createdAt', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
 
+    if (dataResult) {
+      // query image for each vehicle
+      const queryImage = this.dataSource
+        .getRepository(ImageResource)
+        .createQueryBuilder('i');
+      const images = await queryImage
+        .andWhere('i.isDeleted = :isDeleted', { isDeleted: false })
+        .andWhere('i.vehicle_id IN (:...ids)', {
+          ids: dataResult.map((station) => station.id),
+        })
+        .leftJoinAndSelect('i.vehicle', 'v')
+        .select(['i.id', 'i.url', 'i.updatedAt', 'i.isDeleted', 'v.id'])
+        .getMany();
+
+      // add image to vehicle
+      dataResult.forEach((vehicle) => {
+        vehicle.images = images.filter(
+          (image) => image.vehicle.id === vehicle.id,
+        );
+      });
+    }
     return { dataResult, pagination, total };
   }
 
@@ -190,14 +218,20 @@ export class VehicleService {
     return updateVehicle;
   }
 
-  async hiddenById(dto: HiddenVehicleDto, userId: string, id: string) {
+  async hiddenById(userId: string, id: string) {
     const hiddenVehicle = await this.vehicleService.findOne({ where: { id } });
     if (!hiddenVehicle) {
       throw new BadRequestException('Vehicle not found');
     }
-    const { status } = dto;
-    hiddenVehicle.isDeleted = status === 1 ? true : false;
-    hiddenVehicle.updatedBy = userId;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOneBy({ id: userId });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
+
+    hiddenVehicle.deletedAt = new Date();
+    hiddenVehicle.updatedBy = adminExist.id;
 
     const updateVehicle = await this.vehicleService.save(hiddenVehicle);
     return updateVehicle;

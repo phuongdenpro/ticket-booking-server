@@ -10,6 +10,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   ManyToOne,
+  DeleteDateColumn,
 } from 'typeorm';
 
 @Entity({ name: 'station' })
@@ -17,30 +18,35 @@ export class Station {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'name', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'name', type: 'varchar', length: 255, nullable: false })
   name: string;
 
-  @Column({ name: 'address', type: 'varchar', length: 255, nullable: true })
+  @Column({ name: 'address', type: 'varchar', length: 255, nullable: false })
   address: string;
 
-  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
 
-  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
-  isDeleted: boolean;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  public createdAt?: Date;
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
+  createdAt?: Date;
 
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
   })
-  public updatedAt?: Date;
+  updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  deletedAt?: Date;
 
   // relationship
   @ManyToOne(() => Ward, (ward) => ward.stations)
