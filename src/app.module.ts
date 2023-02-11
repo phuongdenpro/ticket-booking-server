@@ -21,7 +21,7 @@ import { UploadModule } from './api/upload/upload.module';
 import { TripModule } from './api/trip/trip.module';
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.local' }),
     ScheduleModule.forRoot(),
     DatabaseModule,
     AuthModule,
@@ -34,7 +34,7 @@ import { TripModule } from './api/trip/trip.module';
     SeatModule,
     ImageResourceModule,
     UploadModule,
-    TripModule
+    TripModule,
   ],
   providers: [
     {
