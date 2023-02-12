@@ -17,6 +17,7 @@ import { JwtAuthGuard } from 'src/auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FilterStationDto, SaveStationDto } from './dto';
 import { Patch } from '@nestjs/common/decorators';
+import { StationDeleteInput } from './dto/delete-station.dto';
 
 @Controller('station')
 @ApiTags('Station')
@@ -67,5 +68,14 @@ export class StationController {
   @ApiBearerAuth()
   async hiddenStationById(@CurrentUser() user, @Param('id') id: string) {
     return await this.stationService.hiddenById(user.id, id);
+  }
+
+  @Delete('multiple')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiple(@CurrentUser() user, @Body() dto: StationDeleteInput) {
+    return await this.stationService.deleteMultiple(user.id, dto);
   }
 }
