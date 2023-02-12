@@ -11,6 +11,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Pagination } from 'src/decorator';
 import { FilterStationDto, SaveStationDto } from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
+import { StationDeleteInput } from './dto/delete-station.dto';
+import { BadRequestException } from '@nestjs/common';
 
 @Injectable()
 export class StationService {
@@ -83,19 +85,13 @@ export class StationService {
   }
 
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
-    const { name, address, wardId } = dto;
     const query = this.stationRepository.createQueryBuilder('r');
-
-    if (name) {
-      query.andWhere('r.name like :name', { name: `%${name}%` });
+    if (dto?.keywords) {
+      query
+        .orWhere('r.name like :query')
+        .orWhere('r.address like :query')
+        .setParameter('query', `%${dto?.keywords}%`);
     }
-    if (address) {
-      query.andWhere('r.address like :address', { address: `%${address}%` });
-    }
-    if (wardId) {
-      query.andWhere('r.ward_id = :wardId', { wardId });
-    }
-
     const total = await query.clone().getCount();
 
     const dataResult = await query
@@ -188,5 +184,21 @@ export class StationService {
     station.updatedBy = adminExist.id;
 
     return await this.stationRepository.save(station);
+  }
+
+  async deleteMultiple(userId: string, dto: StationDeleteInput) {
+    try {
+      const { ids } = dto;
+      console.log(ids);
+      
+      const list = await Promise.all(
+        ids.map(async (id) => {
+          await this.hiddenById(userId, id);
+        }),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 }
