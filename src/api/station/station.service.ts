@@ -85,14 +85,17 @@ export class StationService {
   }
 
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
+    const { name, address, wardId } = dto;
     const query = this.stationRepository.createQueryBuilder('r');
-    if (dto?.keywords) {
-      query
-        .orWhere('r.name like :query')
-        .orWhere('r.address like :query')
-        .setParameter('query', `%${dto?.keywords}%`);
+    if (name) {
+      query.andWhere('r.name like :name', { name: `%${name}%` });
     }
-    const total = await query.clone().getCount();
+    if (address) {
+      query.andWhere('r.address like :address', { address: `%${address}%` });
+    }
+    if (wardId) {
+      query.andWhere('r.ward_id = :wardId', { wardId });
+    }
 
     const dataResult = await query
       .leftJoinAndSelect('r.ward', 'w')
@@ -102,7 +105,9 @@ export class StationService {
       .limit(pagination.take)
       .getMany();
 
-    if (dataResult) {
+    const total = await query.clone().getCount();
+
+    if (dataResult.length > 0) {
       // query image for each station
       const queryImage = this.dataSource
         .getRepository(ImageResource)
@@ -189,8 +194,7 @@ export class StationService {
   async deleteMultiple(userId: string, dto: StationDeleteInput) {
     try {
       const { ids } = dto;
-      console.log(ids);
-      
+
       const list = await Promise.all(
         ids.map(async (id) => {
           await this.hiddenById(userId, id);
