@@ -7,7 +7,8 @@ import { ConfigService } from '@nestjs/config';
 
 import { IMAGE_REGEX, VIDEO_REGEX } from 'src/utils';
 import { UploadApiErrorResponse, UploadApiResponse, v2 } from 'cloudinary';
-import toStream from 'buffer-to-stream';
+import { Readable } from 'stream';
+import { DeleteFileUploadDto, UploadWithPathUploadDto } from './dto';
 
 @Injectable()
 export class UploadService {
@@ -146,14 +147,19 @@ export class UploadService {
       api_key: this.cloudinary_api_key,
       api_secret: this.cloudinary_api_secret,
     });
-    return new Promise((resolve, reject) => {
+    const fileUpload = new Promise((resolve, reject) => {
       const upload = v2.uploader.upload_stream((error, result) => {
         if (error) return reject(error);
-        resolve(result);
+        resolve({
+          url: result.secure_url,
+          public_id: result.public_id,
+          version: result.version,
+          created_at: result.created_at,
+        });
       });
-
-      toStream(file.buffer).pipe(upload);
+      Readable.from(file.buffer).pipe(upload);
     });
+    return fileUpload.then();
   }
 
   async uploadImageWithCloudinary(file: Express.Multer.File) {
@@ -169,6 +175,25 @@ export class UploadService {
     return await this.uploadFileWithCloudinary(file);
   }
 
+  async uploadFileWithPathCloudinary(dto: UploadWithPathUploadDto) {
+    try {
+      v2.config({
+        cloud_name: this.cloudinary_name,
+        api_key: this.cloudinary_api_key,
+        api_secret: this.cloudinary_api_secret,
+      });
+      const uploadFile = await v2.uploader.upload(dto.path);
+      return {
+        url: uploadFile.secure_url,
+        public_id: uploadFile.public_id,
+        version: uploadFile.version,
+        created_at: uploadFile.created_at,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async uploadVideoWithCloudinary(file: Express.Multer.File) {
     if (!file) throw new BadRequestException('FILE_NOT_FOUND');
 
@@ -180,12 +205,16 @@ export class UploadService {
       throw new BadRequestException('MAX_SIZE_WARNING');
     }
 
-    return await this.uploadFileWithAWS(file);
+    return await this.uploadFileWithCloudinary(file);
   }
 
-  async deleteFileWithCloudinary(path: string) {
+  async deleteFileWithCloudinary(dto: DeleteFileUploadDto) {
     // delete file in cloudinary with url
-    const imageName = path.replace(this.cloudinary_base_url, '');
+    const imageName = dto.path
+      .replace(this.cloudinary_base_url, '')
+      .replace(/[\w]*\//i, '')
+      .replace(/\.[^/.]+$/, '');
+
     try {
       v2.config({
         cloud_name: this.cloudinary_name,

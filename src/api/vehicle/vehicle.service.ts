@@ -146,7 +146,7 @@ export class VehicleService {
       .limit(pagination.take)
       .getMany();
 
-    if (dataResult) {
+    if (dataResult.length > 0) {
       // query image for each vehicle
       const queryImage = this.dataSource
         .getRepository(ImageResource)

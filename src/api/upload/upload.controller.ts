@@ -1,3 +1,4 @@
+import { DeleteFileUploadDto, UploadWithPathUploadDto } from './dto';
 import { JwtAuthGuard } from 'src/auth/guards';
 import {
   Body,
@@ -37,8 +38,8 @@ export class UploadController {
   })
   @UseInterceptors(FileInterceptor('file', { limits: { files: 1 } }))
   async uploadFile(@UploadedFile() file: Express.Multer.File) {
-    return this.uploadService.uploadFileWithAWS(file);
-    // return this.uploadService.uploadFileWithCloudinary(file);
+    // return this.uploadService.uploadFileWithAWS(file);
+    return this.uploadService.uploadFileWithCloudinary(file);
   }
 
   @Post('image')
@@ -57,7 +58,7 @@ export class UploadController {
   })
   @UseInterceptors(FileInterceptor('file', { limits: { files: 1 } }))
   async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    return this.uploadService.uploadImageWithAWS(file);
+    // return this.uploadService.uploadImageWithAWS(file);
     return this.uploadService.uploadImageWithCloudinary(file);
   }
 
@@ -77,20 +78,21 @@ export class UploadController {
   })
   @UseInterceptors(FileInterceptor('file', { limits: { fields: 1 } }))
   async uploadVideo(@UploadedFile() file: Express.Multer.File) {
-    return this.uploadService.uploadVideoWithAWS(file);
-    // return this.uploadService.uploadVideoWithCloudinary(file);
+    // return this.uploadService.uploadVideoWithAWS(file);
+    return this.uploadService.uploadVideoWithCloudinary(file);
   }
 
   @Post('path')
   @HttpCode(HttpStatus.OK)
-  async uploadFileWithPath(@Body() path: string) {
-    return this.uploadService.uploadFileWithPathAWS(path);
+  async uploadFileWithPath(@Body() dto: UploadWithPathUploadDto) {
+    // return this.uploadService.uploadFileWithPathAWS(path);
+    return this.uploadService.uploadFileWithPathCloudinary(dto);
   }
 
   @Delete('location')
   @HttpCode(HttpStatus.OK)
-  async deleteFile(@Body() path: string) {
-    return this.uploadService.deleteFileWithAWS(path);
-    // return this.uploadService.deleteFileWithCloudinary(path);
+  async deleteFile(@Body() dto: DeleteFileUploadDto) {
+    // return this.uploadService.deleteFileWithAWS(path);
+    return this.uploadService.deleteFileWithCloudinary(dto);
   }
 }
