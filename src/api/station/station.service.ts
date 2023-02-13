@@ -85,16 +85,12 @@ export class StationService {
   }
 
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
-    const { name, address, wardId } = dto;
     const query = this.stationRepository.createQueryBuilder('r');
-    if (name) {
-      query.andWhere('r.name like :name', { name: `%${name}%` });
-    }
-    if (address) {
-      query.andWhere('r.address like :address', { address: `%${address}%` });
-    }
-    if (wardId) {
-      query.andWhere('r.ward_id = :wardId', { wardId });
+    if (dto?.keywords) {
+      query
+        .orWhere('r.name like :query')
+        .orWhere('r.address like :query')
+        .setParameter('query', `%${dto?.keywords}%`);
     }
 
     const dataResult = await query
