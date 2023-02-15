@@ -14,7 +14,6 @@ import { ImageResourceService } from '../image-resource/image-resource.service';
 import { StationDeleteInput } from './dto/delete-station.dto';
 import { BadRequestException } from '@nestjs/common';
 import * as excel from 'exceljs';
-import { Res } from '@nestjs/common/decorators';
 import { Response } from 'express';
 import { Readable } from 'stream';
 
@@ -206,7 +205,7 @@ export class StationService {
     }
   }
 
-  async exportStation(dto: FilterStationDto, @Res() res: Response) {
+  async exportStation(dto: FilterStationDto,res: Response) {
     try {
       const query = this.stationRepository.createQueryBuilder('r');
       if (dto?.keywords) {
@@ -269,7 +268,7 @@ export class StationService {
       stream.push(null);
       res.set({
         'Content-Type':
-          'application/vnd.openxmlformats-officedocument.spreadsheetml.xlsx',
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'Content-Length': buffer.byteLength,
       });
       stream.pipe(res);
