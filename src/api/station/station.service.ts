@@ -13,6 +13,7 @@ import { FilterStationDto, SaveStationDto } from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
 import { StationDeleteInput } from './dto/delete-station.dto';
 import { BadRequestException } from '@nestjs/common';
+import * as excel from 'xlsx';
 
 @Injectable()
 export class StationService {
@@ -200,5 +201,72 @@ export class StationService {
     } catch (err) {
       throw new BadRequestException(err.message);
     }
+  }
+
+  async exportStation(dto: FilterStationDto) {
+    const query = this.stationRepository.createQueryBuilder('r');
+    if (dto?.keywords) {
+      query
+        .orWhere('r.name like :query')
+        .orWhere('r.address like :query')
+        .setParameter('query', `%${dto?.keywords}%`);
+    }
+
+    const dataResult = await query
+      .leftJoinAndSelect('r.ward', 'w')
+      .select(['r', 'w.id', 'w.code'])
+      .orderBy('r.createdAt', SortEnum.ASC)
+      .getMany();
+
+    const total = await query.clone().getCount();
+
+    if (dataResult.length > 0) {
+      // query image for each station
+      const queryImage = this.dataSource
+        .getRepository(ImageResource)
+        .createQueryBuilder('i');
+      const images = await queryImage
+        .andWhere('i.station_id IN (:...ids)', {
+          ids: dataResult.map((station) => station.id),
+        })
+        .leftJoinAndSelect('i.station', 's')
+        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt', 's.id'])
+        .getMany();
+
+      // add image to station
+      dataResult.forEach((station) => {
+        station.images = images.filter(
+          (image) => image.station.id === station.id,
+        );
+      });
+    }
+    const data = await Promise.all(
+      dataResult.map((item) => {
+        return {
+          'Mã bến xe': item.id,
+          'Tên bến xe': item.name,
+          'Địa chỉ bến xe': item.address,
+          'Ngày tạo': item.createdAt,
+        };
+      }),
+    );
+    if (!data.length)
+      data.push({
+        'Mã bến xe': null,
+        'Tên bến xe': null,
+        'Địa chỉ bến xe': null,
+        'Ngày tạo': null,
+      });
+
+    const workbook = excel.utils.book_new();
+    const fileName = 'Thông tin bến xe';
+    const dataSheet = excel.utils.json_to_sheet(data);
+    excel.utils.book_append_sheet(
+      workbook,
+      dataSheet,
+      fileName.replace('/', ''),
+    );
+
+    return await excel.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   }
 }
