@@ -1,10 +1,13 @@
 import {
   Column,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  CreateDateColumn,
 } from 'typeorm';
 import { Province } from './vi-address-provide.entities';
 import { Ward } from './vi-address-ward.entities';
@@ -14,10 +17,10 @@ export class District {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'name', type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'name', type: 'varchar', length: 100, nullable: false })
   name: string;
 
-  @Column({ name: 'type', type: 'varchar', length: 50, nullable: true })
+  @Column({ name: 'type', type: 'varchar', length: 50, nullable: false })
   type: string;
 
   @Column({
@@ -28,14 +31,31 @@ export class District {
   })
   codename: string;
 
-  @Column({ name: 'code', type: 'int', nullable: true, unique: true })
+  @Column({ name: 'code', type: 'int', nullable: false, unique: true })
   code: number;
 
-  @Column({ name: 'province_code', type: 'int', nullable: true })
+  @Column({ name: 'province_code', type: 'int', nullable: false })
   provinceCode: number;
 
-  @Column({ name: 'id_deleted', type: 'tinyint', default: 0 })
-  isDeleted: boolean;
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
+  public createdAt?: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
+  public updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  public deletedAt?: Date;
 
   @ManyToOne(() => Province, (province) => province.districts)
   @JoinColumn({ name: 'parent_code_id', referencedColumnName: 'id' })

@@ -1,11 +1,19 @@
-import { HiddenWardDto } from './dto/hidden-ward.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Injectable } from '@nestjs/common';
-import { Ward, District } from 'src/database/entities';
+import {
+  Injectable,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Ward, District, Staff } from 'src/database/entities';
 import { DataSource, Repository } from 'typeorm';
 import { Pagination } from 'src/decorator';
-import { FilterWardDto } from './dto/filter-ward.dto';
-import { SaveWardDto } from './dto';
+import {
+  SaveWardDto,
+  FilterWardDto,
+  UpdateWardDto,
+  WardDeleteMultiId,
+  WardDeleteMultiCode,
+} from './dto';
 
 @Injectable()
 export class WardService {
@@ -81,10 +89,14 @@ export class WardService {
     return { dataResult, pagination, total };
   }
 
-  async save(dto: SaveWardDto) {
+  async save(dto: SaveWardDto, userId: string) {
     const district = await this.dataSource.getRepository(District).findOne({
       where: { code: dto.districtCode },
     });
+    if (!district) {
+      throw new BadRequestException('district code is not exist');
+    }
+
     const ward = new Ward();
     ward.name = dto.name;
     ward.type = dto.type;
@@ -92,57 +104,144 @@ export class WardService {
     ward.codename = dto.codename;
     ward.districtCode = dto.districtCode;
     ward.parentCode = district.id;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    ward.createdBy = adminExist.id;
 
     return await this.wardRepository.save(ward);
   }
 
   // update a record by id
-  async updateById(id: number, dto: SaveWardDto) {
+  async updateById(id: number, dto: UpdateWardDto, userId: string) {
     const district = await this.wardRepository.findOne({ where: { id } });
 
-    if (!district) return null;
-    district.name = dto.name;
-    district.type = dto.type;
-    district.code = dto.code;
-    district.codename = dto.codename;
-    district.districtCode = dto.districtCode;
+    if (!district) {
+      throw new BadRequestException('ward not found');
+    }
+    if (dto.name) {
+      district.name = dto.name;
+    }
+    if (dto.type) {
+      district.type = dto.type;
+    }
+    if (dto.code) {
+      district.code = dto.code;
+    }
+    if (dto.codename) {
+      district.codename = dto.codename;
+    }
+    if (dto.districtCode) {
+      district.districtCode = dto.districtCode;
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    district.updatedBy = adminExist.id;
 
     return await this.wardRepository.save(district);
   }
 
   // update a record by code
-  async updateByCode(code: number, dto: SaveWardDto) {
+  async updateByCode(code: number, dto: UpdateWardDto, userId: string) {
     const query = this.wardRepository.createQueryBuilder('w');
-    const district = await query
-      .where('w.code = :code', { code })
-      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
-    if (!district) return null;
-    district.name = dto.name;
-    district.type = dto.type;
-    district.code = code;
-    district.codename = dto.codename;
-    district.districtCode = dto.districtCode;
+    const district = await query.where('w.code = :code', { code }).getOne();
+    if (!district) {
+      throw new BadRequestException('ward not found');
+    }
+
+    if (dto.name) {
+      district.name = dto.name;
+    }
+    if (dto.type) {
+      district.type = dto.type;
+    }
+    if (dto.code) {
+      district.code = code;
+    }
+    if (dto.codename) {
+      district.codename = dto.codename;
+    }
+    if (dto.districtCode) {
+      district.districtCode = dto.districtCode;
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    district.updatedBy = adminExist.id;
 
     return await this.wardRepository.save(district);
   }
 
   // delete a record by id
-  async hiddenById(id: number, dto: HiddenWardDto) {
+  async deleteById(id: number, userId: string) {
     const province = await this.wardRepository.findOne({ where: { id } });
-    if (!province) return null;
-    province.isDeleted = dto.status === 1 ? true : false;
+    if (!province) {
+      throw new BadRequestException('ward not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    province.updatedBy = adminExist.id;
+    province.deletedAt = new Date();
 
     return await this.wardRepository.save(province);
   }
 
   // delete a record by code
-  async hiddenByCode(code: number, dto: HiddenWardDto) {
+  async deleteByCode(code: number, userId: string) {
     const query = this.wardRepository.createQueryBuilder('w');
     const province = await query.where('w.code = :code', { code }).getOne();
-    if (!province) return null;
-    province.isDeleted = dto.status === 1 ? true : false;
+    if (!province) {
+      throw new BadRequestException('ward not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    province.updatedBy = adminExist.id;
+    province.deletedAt = new Date();
 
     return await this.wardRepository.save(province);
+  }
+
+  async deleteMultipleWardById(userId: string, dto: WardDeleteMultiId) {
+    try {
+      const { ids } = dto;
+
+      const list = await Promise.all(
+        ids.map(async (id) => await this.deleteById(id, userId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultipleWardByCode(userId: string, dto: WardDeleteMultiCode) {
+    try {
+      const { codes } = dto;
+
+      const list = await Promise.all(
+        codes.map(async (code) => await this.deleteByCode(code, userId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 }

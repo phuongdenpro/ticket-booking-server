@@ -1,35 +1,31 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsNumber, Length } from 'class-validator';
 
 export class SaveDistrictDto {
-  @ApiPropertyOptional({ example: 'Huyện Đông Anh' })
-  @ApiProperty()
+  @ApiProperty({ example: 'Huyện Đông Anh' })
+  @IsNotEmpty()
   @IsString()
   @Length(1, 100)
   name: string;
 
-  @ApiPropertyOptional({ example: 'huyện' })
-  @ApiProperty()
+  @ApiProperty({ example: 'huyện' })
   @IsNotEmpty()
   @IsString()
   @Length(1, 50)
   type: string;
 
-  @ApiPropertyOptional({ example: 17 })
-  @ApiProperty()
+  @ApiProperty({ example: 17 })
   @IsNotEmpty()
   @IsNumber()
   code: number;
 
-  @ApiPropertyOptional({ example: 'huyen_dong_anh' })
-  @ApiProperty()
+  @ApiProperty({ example: 'huyen_dong_anh' })
   @IsNotEmpty()
   @IsString()
   @Length(1, 255)
   nameWithType: string;
 
-  @ApiPropertyOptional({ example: 1 })
-  @ApiProperty()
+  @ApiProperty({ example: 1 })
   @IsNotEmpty()
   @IsNumber()
   provinceCode: number;

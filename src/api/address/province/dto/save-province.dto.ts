@@ -1,20 +1,20 @@
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsNumber, Length } from 'class-validator';
 
 export class SaveProvinceDto {
-  @ApiPropertyOptional({ example: 'Thành phố Hà Nội' })
+  @ApiProperty({ example: 'Thành phố Hà Nội' })
   @IsNotEmpty({ message: 'Name is required' })
   @IsString({ message: 'Name is string' })
   @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
   name: string;
 
-  @ApiPropertyOptional({ example: 'thành phố trung ương' })
+  @ApiProperty({ example: 'thành phố trung ương' })
   @IsNotEmpty({ message: 'Type is required' })
   @IsString()
   @Length(1, 50, { message: 'Type must be between 1 and 50 characters' })
   type: string;
 
-  @ApiPropertyOptional({ example: 1 })
+  @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'code is number' })
   @IsNumber(
     { allowNaN: false, allowInfinity: false },
@@ -22,7 +22,7 @@ export class SaveProvinceDto {
   )
   code: number;
 
-  @ApiPropertyOptional({ example: 'thanh_pho_ha_noi' })
+  @ApiProperty({ example: 'thanh_pho_ha_noi' })
   @IsNotEmpty({ message: 'code name is require' })
   @IsString({ message: 'code name is string' })
   @Length(1, 255, { message: 'code name must be between 1 and 255 characters' })

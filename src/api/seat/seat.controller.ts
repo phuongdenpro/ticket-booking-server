@@ -16,7 +16,12 @@ import { SeatService } from './seat.service';
 import { RoleEnum } from 'src/enums';
 import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
 import { JwtAuthGuard } from 'src/auth/guards';
-import { FilterSeatDto, SaveSeatDto, UpdateSeatDto } from './dto';
+import {
+  FilterSeatDto,
+  SaveSeatDto,
+  SeatDeleteMultiInput,
+  UpdateSeatDto,
+} from './dto';
 
 @Controller('seat')
 @ApiTags('Seat')
@@ -88,7 +93,16 @@ export class SeatController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenStationById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.seatService.hiddenSeatById(id, user.id);
+  async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
+    return await this.seatService.deleteSeatById(id, user.id);
+  }
+
+  @Delete('multiple')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiple(@CurrentUser() user, @Body() dto: SeatDeleteMultiInput) {
+    return await this.seatService.deleteMultipleTrip(user.id, dto);
   }
 }

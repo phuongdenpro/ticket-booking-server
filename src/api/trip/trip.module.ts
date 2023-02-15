@@ -5,20 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { TripService } from './trip.service';
 import { TripController } from './trip.controller';
-import { ImageResource, Trip } from 'src/database/entities';
-import { ImageResourceService } from '../image-resource/image-resource.service';
+import { Trip } from 'src/database/entities';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([
-      Trip,
-      TripDetail,
-      Vehicle,
-      Ticket,
-      ImageResource,
-    ]),
-  ],
-  providers: [TripService, ImageResourceService],
+  imports: [TypeOrmModule.forFeature([Trip, TripDetail, Vehicle, Ticket])],
+  providers: [TripService],
   controllers: [TripController],
   exports: [TripService],
 })

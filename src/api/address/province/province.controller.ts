@@ -1,5 +1,4 @@
-import { HiddenProvinceDto } from './dto/hidden-province.dto';
-import { SaveProvinceDto } from './dto/save-province.dto';
+import { ProvinceDeleteMultiId } from './dto/delete-multiple-province-code.dto';
 import {
   Body,
   Controller,
@@ -15,10 +14,15 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ProvinceService } from './province.service';
-import { GetPagination, Pagination, Roles } from 'src/decorator';
-import { FilterProvinceDto } from './dto/filter-province.dto';
+import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
 import { RoleEnum } from 'src/enums';
 import { JwtAuthGuard } from 'src/auth/guards';
+import {
+  FilterProvinceDto,
+  ProvinceDeleteMultiCode,
+  SaveProvinceDto,
+  UpdateProvinceDto,
+} from './dto';
 
 @Controller('province')
 @ApiTags('Province')
@@ -51,8 +55,8 @@ export class ProvinceController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async create(@Body() dto: SaveProvinceDto) {
-    return this.provinceService.save(dto);
+  async create(@Body() dto: SaveProvinceDto, @CurrentUser() user) {
+    return this.provinceService.save(dto, user.id);
   }
 
   @Patch('id/:id')
@@ -60,8 +64,12 @@ export class ProvinceController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateById(@Param('id') id: string, @Body() dto: SaveProvinceDto) {
-    return this.provinceService.updateById(id, dto);
+  async updateById(
+    @Param('id') id: string,
+    @Body() dto: UpdateProvinceDto,
+    @CurrentUser() user,
+  ) {
+    return this.provinceService.updateById(id, dto, user.id);
   }
 
   @Patch('code/:code')
@@ -71,9 +79,10 @@ export class ProvinceController {
   @ApiBearerAuth()
   async updateByCode(
     @Param('code') code: number,
-    @Body() dto: SaveProvinceDto,
+    @Body() dto: UpdateProvinceDto,
+    @CurrentUser() user,
   ) {
-    return this.provinceService.updateByCode(code, dto);
+    return this.provinceService.updateByCode(code, dto, user.id);
   }
 
   @Delete('code/:code')
@@ -81,11 +90,8 @@ export class ProvinceController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenByCode(
-    @Param('code') code: number,
-    @Body() dto: HiddenProvinceDto,
-  ) {
-    return this.provinceService.hiddenByCode(code, dto);
+  async deleteByCode(@Param('code') code: number, @CurrentUser() user) {
+    return this.provinceService.deleteByCode(code, user.id);
   }
 
   @Delete('id/:id')
@@ -93,8 +99,35 @@ export class ProvinceController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenById(@Param('id') id: string, @Body() dto: HiddenProvinceDto) {
-    return this.provinceService.hiddenById(id, dto);
+  async deleteById(@Param('id') id: string, @CurrentUser() user) {
+    return this.provinceService.deleteById(id, user.id);
+  }
+
+  @Delete('multiple/id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleId(
+    @CurrentUser() user,
+    @Body() dto: ProvinceDeleteMultiId,
+  ) {
+    return await this.provinceService.deleteMultipleProvinceById(user.id, dto);
+  }
+
+  @Delete('multiple/code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleCode(
+    @CurrentUser() user,
+    @Body() dto: ProvinceDeleteMultiCode,
+  ) {
+    return await this.provinceService.deleteMultipleProvinceByCode(
+      user.id,
+      dto,
+    );
   }
 
   // @Get('/crawl')
@@ -103,12 +136,20 @@ export class ProvinceController {
   //   const url = 'https://provinces.open-api.vn/api/p/';
   //   const data = await axios.get(url);
   //   data.data.forEach(async (element) => {
-  //     const province = new Province();
-  //     province.name = element.name;
-  //     province.code = element.code;
-  //     province.type = element.division_type;
-  //     province.nameWithType = element.codename;
-  //     this.provinceService.create(province);
+  //     const { codename, code, division_type, name } = element;
+  //     console.log(codename, code);
+
+  //     const dto: UpdateProvinceDto = {
+  //       codename: codename,
+  //       name: name,
+  //       type: division_type,
+  //       code: code,
+  //     };
+  //     await this.updateByCode(
+  //       code,
+  //       dto,
+  //       '08926136-26d8-4176-827e-060cc7e6285d',
+  //     );
   //   });
 
   //   return { demo: 'hello' };

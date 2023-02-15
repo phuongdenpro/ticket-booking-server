@@ -1,3 +1,4 @@
+import { UpdateVehicleDto } from './dto/update-vehicle.dto';
 import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
 import {
   Body,
@@ -16,7 +17,11 @@ import { JwtAuthGuard } from 'src/auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Patch } from '@nestjs/common/decorators';
 import { VehicleService } from './vehicle.service';
-import { FilterVehicleDto, SaveVehicleDto } from './dto';
+import {
+  FilterVehicleDto,
+  SaveVehicleDto,
+  VehicleDeleteMultiInput,
+} from './dto';
 
 @Controller('vehicle')
 @ApiTags('Vehicle')
@@ -50,7 +55,7 @@ export class VehicleController {
     @Query() dto: FilterVehicleDto,
     @GetPagination() pagination?: Pagination,
   ) {
-    return await this.vehicleService.findAll(dto, pagination);
+    return await this.vehicleService.findAllVehicle(dto, pagination);
   }
 
   @Patch('id/:id')
@@ -61,7 +66,7 @@ export class VehicleController {
   async updateStationById(
     @CurrentUser() user,
     @Param('id') id: string,
-    @Body() dto: SaveVehicleDto,
+    @Body() dto: UpdateVehicleDto,
   ) {
     return await this.vehicleService.updateById(dto, user.id, id);
   }
@@ -71,7 +76,19 @@ export class VehicleController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenStationById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.vehicleService.hiddenById(user.id, id);
+  async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
+    return await this.vehicleService.deleteById(user.id, id);
+  }
+
+  @Delete('multiple')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiple(
+    @CurrentUser() user,
+    @Body() dto: VehicleDeleteMultiInput,
+  ) {
+    return await this.vehicleService.deleteMultipleVehicle(user.id, dto);
   }
 }

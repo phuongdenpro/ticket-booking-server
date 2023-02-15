@@ -1,11 +1,19 @@
-import { SaveDistrictDto } from './dto/save-district.dto';
-import { FilterDistrictDto } from './dto/filter-district.dto';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { District, Province } from 'src/database/entities';
+import { District, Province, Staff } from 'src/database/entities';
 import { Pagination } from 'src/decorator';
 import { DataSource, Repository } from 'typeorm';
-import { HiddenDistrictDto } from './dto';
+import {
+  UpdateDistrictDto,
+  FilterDistrictDto,
+  SaveDistrictDto,
+  DistrictDeleteMultiId,
+  DistrictDeleteMultiCode,
+} from './dto';
 
 @Injectable()
 export class DistrictService {
@@ -19,9 +27,7 @@ export class DistrictService {
     const query = this.districtRepository.createQueryBuilder('d');
     query.where('d.id = :id', { id });
 
-    const dataResult = await query
-      .andWhere('d.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const dataResult = await query.getOne();
     return { dataResult };
   }
 
@@ -29,9 +35,7 @@ export class DistrictService {
     const query = this.districtRepository.createQueryBuilder('d');
     query.where('d.code = :code', { code });
 
-    const dataResult = await query
-      .andWhere('d.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const dataResult = await query.getOne();
     return { dataResult };
   }
 
@@ -41,7 +45,7 @@ export class DistrictService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .andWhere('d.isDeleted = :isDeleted', { isDeleted: false })
+
       .orderBy('d.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -73,7 +77,7 @@ export class DistrictService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .andWhere('d.isDeleted = :isDeleted', { isDeleted: false })
+      .andWhere('d.codename is null')
       .orderBy('d.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -81,7 +85,7 @@ export class DistrictService {
     return { dataResult, pagination, total };
   }
 
-  async save(dto: SaveDistrictDto) {
+  async save(dto: SaveDistrictDto, userId: string) {
     const province = await this.dataSource.getRepository(Province).findOne({
       where: { code: dto.provinceCode },
     });
@@ -93,63 +97,136 @@ export class DistrictService {
     district.codename = dto.nameWithType;
     district.provinceCode = dto.provinceCode;
     district.parentCode = province.id;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
+    district.createdBy = adminExist.id;
 
     return await this.districtRepository.save(district);
   }
 
   // update a record by id
-  async updateById(id: string, dto: SaveDistrictDto) {
+  async updateById(id: string, dto: UpdateDistrictDto, userId: string) {
     const query = this.districtRepository.createQueryBuilder('d');
-    const district = await query
-      .where('d.id = :id', { id })
-      .andWhere('d.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
-    if (!district) return null;
-    district.name = dto.name;
-    district.type = dto.type;
-    district.code = dto.code;
-    district.codename = dto.nameWithType;
-    district.provinceCode = dto.provinceCode;
+    const district = await query.where('d.id = :id', { id }).getOne();
+    if (!district) {
+      throw new BadRequestException('District not found');
+    }
+    if (district.name) {
+      district.name = dto.name;
+    }
+    if (dto.type) {
+      district.type = dto.type;
+    }
+    if (dto.code) {
+      district.code = dto.code;
+    }
+    if (dto.codename) {
+      district.codename = dto.codename;
+    }
+    if (dto.provinceCode) {
+      district.provinceCode = dto.provinceCode;
+    }
+
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
+    district.updatedBy = adminExist.id;
 
     return await this.districtRepository.save(district);
   }
 
   // update a record by code
-  async updateByCode(code: number, dto: SaveDistrictDto) {
+  async updateByCode(code: number, dto: UpdateDistrictDto, userId: string) {
     const query = this.districtRepository.createQueryBuilder('d');
-    const district = await query
-      .where('d.code = :code', { code })
-      .andWhere('d.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const district = await query.where('d.code = :code', { code }).getOne();
     if (!district) return null;
     district.name = dto.name;
     district.type = dto.type;
     district.code = code;
-    district.codename = dto.nameWithType;
+    district.codename = dto.codename;
     district.provinceCode = dto.provinceCode;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
+    district.updatedBy = adminExist.id;
 
     return await this.districtRepository.save(district);
   }
 
   // delete a record by id
-  async hiddenById(id: string, dto: HiddenDistrictDto) {
+  async deleteById(id: string, userId: string) {
     const query = this.districtRepository.createQueryBuilder('d');
-    const province = await query.where('d.id = :id', { id }).getOne();
-    if (!province) return null;
-    province.isDeleted = dto.status === 1 ? true : false;
+    const district = await query.where('d.id = :id', { id }).getOne();
+    if (!district) {
+      throw new BadRequestException('province not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
+    district.updatedBy = adminExist.id;
+    district.deletedAt = new Date();
 
-    return await this.districtRepository.save(province);
+    return await this.districtRepository.save(district);
   }
 
   // delete a record by code
-  async hiddenByCode(code: number, dto: HiddenDistrictDto) {
+  async deleteByCode(code: number, userId: string) {
     const query = this.districtRepository.createQueryBuilder('d');
-    const province = await query.where('d.code = :code', { code }).getOne();
-    if (!province) {
+    const district = await query.where('d.code = :code', { code }).getOne();
+    if (!district) {
       throw new BadRequestException('province not found');
     }
-    province.isDeleted = dto.status === 1 ? true : false;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
+    district.updatedBy = adminExist.id;
+    district.deletedAt = new Date();
 
-    return await this.districtRepository.save(province);
+    return await this.districtRepository.save(district);
+  }
+
+  async deleteMultipleDistrictById(userId: string, dto: DistrictDeleteMultiId) {
+    try {
+      const { ids } = dto;
+
+      const list = await Promise.all(
+        ids.map(async (id) => await this.deleteById(id, userId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultipleDistrictByCode(
+    userId: string,
+    dto: DistrictDeleteMultiCode,
+  ) {
+    try {
+      const { codes } = dto;
+
+      const list = await Promise.all(
+        codes.map(async (code) => await this.deleteByCode(code, userId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 }

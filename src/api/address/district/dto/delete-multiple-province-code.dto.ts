@@ -1,12 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray } from 'class-validator';
 
-export class StationDeleteInput {
+export class DistrictDeleteMultiId {
   @ApiProperty({
-    example: [
-      '8d453086-e6a2-4a2e-a407-5ce2be3b0b01',
-      '902c3808-afdb-4285-9de7-c47e4ce5d19c',
-    ],
+    example: ['34b03a8c-76b5-4053-b1af-571e5dece90a'],
     description: 'list id',
     type: Array<string>,
   })
