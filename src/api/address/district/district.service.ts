@@ -45,7 +45,6 @@ export class DistrictService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-
       .orderBy('d.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -55,7 +54,7 @@ export class DistrictService {
 
   // find all
   async findAll(dto: FilterDistrictDto, pagination?: Pagination) {
-    const { name, type, codename: nameWithType, provinceCode } = dto;
+    const { name, type, codename, provinceCode } = dto;
 
     const query = this.districtRepository.createQueryBuilder('d');
 
@@ -65,9 +64,9 @@ export class DistrictService {
     if (type) {
       query.andWhere('d.type like :type', { type: `%${type}%` });
     }
-    if (nameWithType) {
-      query.andWhere('d.name_with_type like :name_with_type', {
-        name_with_type: `%${nameWithType}%`,
+    if (codename) {
+      query.andWhere('d.codename like :codename', {
+        codename: `%${codename}%`,
       });
     }
     if (provinceCode) {
@@ -77,7 +76,6 @@ export class DistrictService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .andWhere('d.codename is null')
       .orderBy('d.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -89,13 +87,16 @@ export class DistrictService {
     const province = await this.dataSource.getRepository(Province).findOne({
       where: { code: dto.provinceCode },
     });
+    if (!province) {
+      throw new BadRequestException('Province not found');
+    }
 
     const district = new District();
     district.name = dto.name;
     district.type = dto.type;
     district.code = dto.code;
     district.codename = dto.nameWithType;
-    district.provinceCode = dto.provinceCode;
+    district.provinceCode = province.code;
     district.parentCode = province.id;
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -128,7 +129,14 @@ export class DistrictService {
       district.codename = dto.codename;
     }
     if (dto.provinceCode) {
-      district.provinceCode = dto.provinceCode;
+      const province = await this.dataSource.getRepository(Province).findOne({
+        where: { code: dto.provinceCode },
+      });
+      if (!province) {
+        throw new BadRequestException('Province not found');
+      }
+      district.provinceCode = province.code;
+      district.parentCode = province.id;
     }
 
     const adminExist = await this.dataSource
@@ -146,12 +154,31 @@ export class DistrictService {
   async updateByCode(code: number, dto: UpdateDistrictDto, userId: string) {
     const query = this.districtRepository.createQueryBuilder('d');
     const district = await query.where('d.code = :code', { code }).getOne();
-    if (!district) return null;
-    district.name = dto.name;
-    district.type = dto.type;
-    district.code = code;
-    district.codename = dto.codename;
-    district.provinceCode = dto.provinceCode;
+    if (!district) {
+      throw new BadRequestException('District not found');
+    }
+    if (district.name) {
+      district.name = dto.name;
+    }
+    if (dto.type) {
+      district.type = dto.type;
+    }
+    if (dto.code) {
+      district.code = dto.code;
+    }
+    if (dto.codename) {
+      district.codename = dto.codename;
+    }
+    if (dto.provinceCode) {
+      const province = await this.dataSource.getRepository(Province).findOne({
+        where: { code: dto.provinceCode },
+      });
+      if (!province) {
+        throw new BadRequestException('Province not found');
+      }
+      district.provinceCode = province.code;
+      district.parentCode = province.id;
+    }
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });

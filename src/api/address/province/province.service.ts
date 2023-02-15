@@ -26,9 +26,7 @@ export class ProvinceService {
     const query = this.provinceRepository.createQueryBuilder('p');
     query.where('p.id = :id', { id });
 
-    const dataResult = await query
-      .andWhere('p.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const dataResult = await query.getOne();
     return { dataResult };
   }
 
@@ -42,7 +40,7 @@ export class ProvinceService {
 
   // find all
   async findAll(dto: FilterProvinceDto, pagination?: Pagination) {
-    const { name, type, codename: nameWithType } = dto;
+    const { name, type, codename } = dto;
 
     const query = this.provinceRepository.createQueryBuilder('p');
 
@@ -52,16 +50,15 @@ export class ProvinceService {
     if (type) {
       query.andWhere('p.type like :type', { type: `%${type}%` });
     }
-    if (nameWithType) {
-      query.andWhere('p.name_with_type like :name_with_type', {
-        name_with_type: `%${nameWithType}%`,
+    if (codename) {
+      query.andWhere('p.codename like :codename', {
+        codename: `%${codename}%`,
       });
     }
 
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .andWhere('p.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('p.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -89,15 +86,20 @@ export class ProvinceService {
   // update a record by id
   async updateById(id: string, dto: SaveProvinceDto, userId: string) {
     const query = this.provinceRepository.createQueryBuilder('p');
-    const province = await query
-      .where('p.id = :id', { id })
-      .andWhere('p.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const province = await query.where('p.id = :id', { id }).getOne();
     if (!province) return null;
-    province.name = dto.name;
-    province.type = dto.type;
-    province.code = dto.code;
-    province.codename = dto.codename;
+    if (dto.name) {
+      province.name = dto.name;
+    }
+    if (dto.type) {
+      province.type = dto.type;
+    }
+    if (dto.code) {
+      province.code = dto.code;
+    }
+    if (dto.codename) {
+      province.codename = dto.codename;
+    }
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });

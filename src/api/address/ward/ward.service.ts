@@ -27,9 +27,7 @@ export class WardService {
     const query = this.wardRepository.createQueryBuilder('w');
     query.where('w.id = :id', { id });
 
-    const dataResult = await query
-      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const dataResult = await query.getOne();
     return { dataResult };
   }
 
@@ -37,9 +35,7 @@ export class WardService {
     const query = this.wardRepository.createQueryBuilder('w');
     query.where('w.code = :code', { code });
 
-    const dataResult = await query
-      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const dataResult = await query.getOne();
     return { dataResult };
   }
 
@@ -49,7 +45,6 @@ export class WardService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('w.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -59,7 +54,7 @@ export class WardService {
 
   // find all
   async findAll(dto: FilterWardDto, pagination?: Pagination) {
-    const { name, type, codename: nameWithType, districtCode } = dto;
+    const { name, type, codename, districtCode } = dto;
 
     const query = this.wardRepository.createQueryBuilder('w');
 
@@ -69,9 +64,9 @@ export class WardService {
     if (type) {
       query.andWhere('w.type like :type', { type: `%${type}%` });
     }
-    if (nameWithType) {
-      query.andWhere('w.name_with_type like :name_with_type', {
-        name_with_type: `%${nameWithType}%`,
+    if (codename) {
+      query.andWhere('w.codename like :codename', {
+        codename: `%${codename}%`,
       });
     }
     if (districtCode) {
@@ -81,7 +76,6 @@ export class WardService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .andWhere('w.isDeleted = :isDeleted', { isDeleted: false })
       .orderBy('w.code', 'ASC')
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -98,12 +92,21 @@ export class WardService {
     }
 
     const ward = new Ward();
-    ward.name = dto.name;
-    ward.type = dto.type;
-    ward.code = dto.code;
-    ward.codename = dto.codename;
-    ward.districtCode = dto.districtCode;
+    if (dto.name) {
+      ward.name = dto.name;
+    }
+    if (dto.type) {
+      ward.type = dto.type;
+    }
+    if (dto.code) {
+      ward.code = dto.code;
+    }
+    if (dto.codename) {
+      ward.codename = dto.codename;
+    }
     ward.parentCode = district.id;
+    ward.districtCode = district.code;
+
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
@@ -117,25 +120,32 @@ export class WardService {
 
   // update a record by id
   async updateById(id: number, dto: UpdateWardDto, userId: string) {
-    const district = await this.wardRepository.findOne({ where: { id } });
+    const ward = await this.wardRepository.findOne({ where: { id } });
 
-    if (!district) {
+    if (!ward) {
       throw new BadRequestException('ward not found');
     }
     if (dto.name) {
-      district.name = dto.name;
+      ward.name = dto.name;
     }
     if (dto.type) {
-      district.type = dto.type;
+      ward.type = dto.type;
     }
     if (dto.code) {
-      district.code = dto.code;
+      ward.code = dto.code;
     }
     if (dto.codename) {
-      district.codename = dto.codename;
+      ward.codename = dto.codename;
     }
     if (dto.districtCode) {
-      district.districtCode = dto.districtCode;
+      const dist = await this.dataSource
+        .getRepository(District)
+        .findOne({ where: { code: dto.districtCode } });
+      if (!dist) {
+        throw new BadRequestException('district is not exist');
+      }
+      ward.districtCode = dist.code;
+      ward.parentCode = dist.id;
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -143,33 +153,40 @@ export class WardService {
     if (!adminExist) {
       throw new UnauthorizedException('admin is not authorized');
     }
-    district.updatedBy = adminExist.id;
+    ward.updatedBy = adminExist.id;
 
-    return await this.wardRepository.save(district);
+    return await this.wardRepository.save(ward);
   }
 
   // update a record by code
   async updateByCode(code: number, dto: UpdateWardDto, userId: string) {
     const query = this.wardRepository.createQueryBuilder('w');
-    const district = await query.where('w.code = :code', { code }).getOne();
-    if (!district) {
+    const ward = await query.where('w.code = :code', { code }).getOne();
+    if (!ward) {
       throw new BadRequestException('ward not found');
     }
 
     if (dto.name) {
-      district.name = dto.name;
+      ward.name = dto.name;
     }
     if (dto.type) {
-      district.type = dto.type;
+      ward.type = dto.type;
     }
     if (dto.code) {
-      district.code = code;
+      ward.code = code;
     }
     if (dto.codename) {
-      district.codename = dto.codename;
+      ward.codename = dto.codename;
     }
     if (dto.districtCode) {
-      district.districtCode = dto.districtCode;
+      const dist = await this.dataSource
+        .getRepository(District)
+        .findOne({ where: { code: dto.districtCode } });
+      if (!dist) {
+        throw new BadRequestException('district is not exist');
+      }
+      ward.districtCode = dist.code;
+      ward.parentCode = dist.id;
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -177,15 +194,15 @@ export class WardService {
     if (!adminExist) {
       throw new UnauthorizedException('admin is not authorized');
     }
-    district.updatedBy = adminExist.id;
+    ward.updatedBy = adminExist.id;
 
-    return await this.wardRepository.save(district);
+    return await this.wardRepository.save(ward);
   }
 
   // delete a record by id
   async deleteById(id: number, userId: string) {
-    const province = await this.wardRepository.findOne({ where: { id } });
-    if (!province) {
+    const ward = await this.wardRepository.findOne({ where: { id } });
+    if (!ward) {
       throw new BadRequestException('ward not found');
     }
     const adminExist = await this.dataSource
@@ -194,17 +211,17 @@ export class WardService {
     if (!adminExist) {
       throw new UnauthorizedException('admin is not authorized');
     }
-    province.updatedBy = adminExist.id;
-    province.deletedAt = new Date();
+    ward.updatedBy = adminExist.id;
+    ward.deletedAt = new Date();
 
-    return await this.wardRepository.save(province);
+    return await this.wardRepository.save(ward);
   }
 
   // delete a record by code
   async deleteByCode(code: number, userId: string) {
     const query = this.wardRepository.createQueryBuilder('w');
-    const province = await query.where('w.code = :code', { code }).getOne();
-    if (!province) {
+    const ward = await query.where('w.code = :code', { code }).getOne();
+    if (!ward) {
       throw new BadRequestException('ward not found');
     }
     const adminExist = await this.dataSource
@@ -213,10 +230,10 @@ export class WardService {
     if (!adminExist) {
       throw new UnauthorizedException('admin is not authorized');
     }
-    province.updatedBy = adminExist.id;
-    province.deletedAt = new Date();
+    ward.updatedBy = adminExist.id;
+    ward.deletedAt = new Date();
 
-    return await this.wardRepository.save(province);
+    return await this.wardRepository.save(ward);
   }
 
   async deleteMultipleWardById(userId: string, dto: WardDeleteMultiId) {
