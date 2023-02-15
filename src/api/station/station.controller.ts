@@ -16,8 +16,10 @@ import { RoleEnum } from 'src/enums';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { FilterStationDto, SaveStationDto } from './dto';
-import { Patch } from '@nestjs/common/decorators';
+import { Patch, Res } from '@nestjs/common/decorators';
 import { StationDeleteInput } from './dto/delete-station.dto';
+import { Readable } from 'stream';
+import { Response } from 'express';
 
 @Controller('station')
 @ApiTags('Station')
@@ -77,5 +79,28 @@ export class StationController {
   @ApiBearerAuth()
   async deleteMultiple(@CurrentUser() user, @Body() dto: StationDeleteInput) {
     return await this.stationService.deleteMultiple(user.id, dto);
+  }
+
+  @Post('export')
+  @Roles(RoleEnum.STAFF)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async export(
+    @CurrentUser() user,
+    @Query() dto: FilterStationDto,
+    @Res() res: Response,
+  ) {
+    const buffer = await this.stationService.exportStation(dto);
+    const stream = new Readable();
+    stream.push(buffer);
+    stream.push(null);
+    res.set({
+      'Content-Disposition': 'attachment; filename=ThongTinBenXe.xlsx',
+      'Content-Type':
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'Content-Length': buffer.length,
+    });
+    stream.pipe(res);
   }
 }
