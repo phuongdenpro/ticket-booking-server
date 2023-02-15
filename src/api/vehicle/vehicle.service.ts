@@ -1,3 +1,4 @@
+import { SaveSeatDto } from './../seat/dto/save-seat.dto';
 import { SortEnum } from './../../enums/sort.enum';
 import {
   Injectable,
@@ -8,10 +9,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ImageResource, Staff, Vehicle } from 'src/database/entities';
 import { LICENSE_PLATE_REGEX } from 'src/utils';
 import { DataSource, Repository } from 'typeorm';
-import { FilterVehicleDto, SaveVehicleDto } from './dto';
+import {
+  FilterVehicleDto,
+  SaveVehicleDto,
+  UpdateVehicleDto,
+  VehicleDeleteMultiInput,
+} from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
 import { Pagination } from 'src/decorator';
-import { VehicleTypeEnum, VehicleSeatsEnum } from 'src/enums';
+import { VehicleTypeEnum, VehicleSeatsEnum, SeatTypeEnum } from 'src/enums';
+import { SeatService } from '../seat/seat.service';
 
 @Injectable()
 export class VehicleService {
@@ -19,6 +26,7 @@ export class VehicleService {
     @InjectRepository(Vehicle)
     private readonly vehicleService: Repository<Vehicle>,
     private imageResourceService: ImageResourceService,
+    private seatService: SeatService,
     private dataSource: DataSource,
   ) {}
 
@@ -42,13 +50,6 @@ export class VehicleService {
       floorNumber,
       totalSeat,
     } = dto;
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOneBy({ id: userId });
-    if (!adminExist) {
-      throw new UnauthorizedException();
-    }
-
     const vehicle = new Vehicle();
     vehicle.name = name;
     vehicle.description = description;
@@ -68,28 +69,61 @@ export class VehicleService {
     } else {
       throw new BadRequestException('FLOOR_NUMBER_INVALID');
     }
-
     vehicle.totalSeat = totalSeat;
+
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException();
+    }
     vehicle.createdBy = adminExist.id;
 
     const newVehicle = await this.vehicleService.save(vehicle);
+    if (images.length > 0) {
+      const newImages = await images.map(async (image) => {
+        image.createdBy = adminExist.id;
+        const newImage = await this.imageResourceService.saveImageResource(
+          image,
+          adminExist.id,
+          newVehicle.id,
+        );
+        delete newImage.vehicle;
+        delete newImage.createdBy;
+        delete newImage.updatedBy;
+        delete newImage.deletedAt;
+        delete newImage.isDeleted;
 
-    const newImages = await images.map(async (image) => {
-      image.createdBy = adminExist.id;
-      const newImage = await this.imageResourceService.saveImageResource(
-        image,
-        adminExist.id,
-        newVehicle.id,
-      );
-      delete newImage.vehicle;
-      delete newImage.createdBy;
-      delete newImage.updatedBy;
-      delete newImage.deletedAt;
-      delete newImage.isDeleted;
+        return newImage;
+      });
+      newVehicle.images = await Promise.all(newImages);
+    }
 
-      return newImage;
-    });
-    newVehicle.images = await Promise.all(newImages);
+    const numOfSeat = Math.round(totalSeat / 2);
+    for (let i = 1; i <= totalSeat; i++) {
+      const dto = new SaveSeatDto();
+      if (numOfSeat % 2 == 0) {
+        if (numOfSeat >= i) {
+          dto.name = `A${i}`;
+          dto.floor = 1;
+        } else {
+          dto.name = `B${i - numOfSeat}`;
+          dto.floor = 2;
+        }
+      } else {
+        if (numOfSeat > i) {
+          dto.name = `A${i}`;
+          dto.floor = 1;
+        } else {
+          dto.name = `B${i - numOfSeat}`;
+          dto.floor = 2;
+        }
+      }
+      dto.type = SeatTypeEnum.NON_SALES;
+      dto.vehicleId = newVehicle.id;
+      await this.seatService.saveSeat(dto, userId);
+    }
+    delete newVehicle.deletedAt;
     return newVehicle;
   }
 
@@ -97,7 +131,10 @@ export class VehicleService {
     const query = this.vehicleService.createQueryBuilder('q');
     query.where('q.id = :id', { id });
 
-    const dataResult = await query.getOne();
+    const dataResult = await query
+      .leftJoinAndSelect('q.seats', 's')
+      .select(['q', 's'])
+      .getOne();
 
     if (dataResult) {
       const queryImage = this.dataSource
@@ -113,7 +150,7 @@ export class VehicleService {
     return { dataResult };
   }
 
-  async findAll(dto: FilterVehicleDto, pagination?: Pagination) {
+  async findAllVehicle(dto: FilterVehicleDto, pagination?: Pagination) {
     const { name, type, licensePlate, floorNumber } = dto;
     const query = this.vehicleService.createQueryBuilder('q');
 
@@ -128,12 +165,10 @@ export class VehicleService {
     ) {
       query.andWhere('q.type = :type', { type });
     }
-    if (licensePlate) {
-      if (licensePlate.match(LICENSE_PLATE_REGEX)) {
-        query.andWhere('q.licensePlate like :licensePlate', {
-          licensePlate: `%${licensePlate}%`,
-        });
-      }
+    if (licensePlate && licensePlate.match(LICENSE_PLATE_REGEX)) {
+      query.andWhere('q.licensePlate like :licensePlate', {
+        licensePlate: `%${licensePlate}%`,
+      });
     }
     if (floorNumber == 1 || floorNumber == 2) {
       query.andWhere('q.floorNumber = :floorNumber', { floorNumber });
@@ -169,7 +204,7 @@ export class VehicleService {
     return { dataResult, pagination, total };
   }
 
-  async updateById(dto: SaveVehicleDto, userId: string, id: string) {
+  async updateById(dto: UpdateVehicleDto, userId: string, id: string) {
     const {
       name,
       description,
@@ -186,16 +221,28 @@ export class VehicleService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOneBy({ id: userId });
+      .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException();
     }
-    vehicle.name = name;
-    vehicle.description = description;
-    vehicle.licensePlate = licensePlate;
-    vehicle.type = type;
-    vehicle.floorNumber = floorNumber;
-    vehicle.totalSeat = totalSeat;
+    if (name) {
+      vehicle.name = name;
+    }
+    if (description) {
+      vehicle.description = description;
+    }
+    if (licensePlate && licensePlate.match(LICENSE_PLATE_REGEX)) {
+      vehicle.licensePlate = licensePlate;
+    }
+    if (type) {
+      vehicle.type = type;
+    }
+    if (floorNumber && (floorNumber == 1 || floorNumber == 2)) {
+      vehicle.floorNumber = floorNumber;
+    }
+    if (totalSeat) {
+      vehicle.totalSeat = totalSeat;
+    }
     vehicle.updatedBy = adminExist.id;
 
     const updateVehicle = await this.vehicleService.save(vehicle);
@@ -220,14 +267,14 @@ export class VehicleService {
     return updateVehicle;
   }
 
-  async hiddenById(userId: string, id: string) {
+  async deleteById(userId: string, id: string) {
     const hiddenVehicle = await this.vehicleService.findOne({ where: { id } });
     if (!hiddenVehicle) {
       throw new BadRequestException('Vehicle not found');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOneBy({ id: userId });
+      .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException();
     }
@@ -235,7 +282,19 @@ export class VehicleService {
     hiddenVehicle.deletedAt = new Date();
     hiddenVehicle.updatedBy = adminExist.id;
 
-    const updateVehicle = await this.vehicleService.save(hiddenVehicle);
-    return updateVehicle;
+    return await this.vehicleService.save(hiddenVehicle);
+  }
+
+  async deleteMultipleVehicle(userId: string, dto: VehicleDeleteMultiInput) {
+    try {
+      const { ids } = dto;
+
+      const list = await Promise.all(
+        ids.map(async (id) => await (await this.deleteById(userId, id)).id),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 }

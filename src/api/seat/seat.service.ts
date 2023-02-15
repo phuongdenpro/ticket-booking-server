@@ -8,7 +8,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Seat, Staff, Vehicle } from 'src/database/entities';
 import { DataSource, Repository } from 'typeorm';
-import { FilterSeatDto, SaveSeatDto, UpdateSeatDto } from './dto';
+import {
+  FilterSeatDto,
+  SaveSeatDto,
+  SeatDeleteMultiInput,
+  UpdateSeatDto,
+} from './dto';
 import { Pagination } from 'src/decorator';
 import { SeatTypeEnum } from 'src/enums';
 
@@ -30,7 +35,7 @@ export class SeatService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOneBy({ id: userId });
+      .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException();
     }
@@ -49,10 +54,11 @@ export class SeatService {
     }
     seat.createdBy = adminExist.id;
     seat.vehicle = vehicle;
+    const saveSeat = await this.seatRepository.save(seat);
     delete seat.vehicle;
     delete seat.deletedAt;
 
-    return await this.seatRepository.save(seat);
+    return saveSeat;
   }
 
   async searchSeat(dto: FilterSeatDto, pagination?: Pagination) {
@@ -180,7 +186,7 @@ export class SeatService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOneBy({ id: userId });
+      .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException();
     }
@@ -210,14 +216,14 @@ export class SeatService {
     return await this.seatRepository.save(seat);
   }
 
-  async hiddenSeatById(id: string, userId: string) {
+  async deleteSeatById(id: string, userId: string) {
     const seat = await this.seatRepository.findOne({ where: { id } });
     if (!seat) {
       throw new BadRequestException('SEAT_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOneBy({ id: userId });
+      .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException();
     }
@@ -225,5 +231,18 @@ export class SeatService {
     seat.deletedAt = new Date();
 
     return await this.seatRepository.save(seat);
+  }
+
+  async deleteMultipleTrip(userId: string, dto: SeatDeleteMultiInput) {
+    try {
+      const { ids } = dto;
+
+      const list = await Promise.all(
+        ids.map(async (id) => await this.deleteSeatById(id, userId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 }

@@ -1,4 +1,12 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 import { District } from './vi-address-district.entities';
 
 @Entity({ name: 'vi_address_provide' })
@@ -19,12 +27,33 @@ export class Province {
     name: 'codename',
     type: 'varchar',
     length: 255,
-    nullable: true,
+    nullable: false,
   })
   codename: string;
 
-  @Column({ name: 'id_deleted', type: 'tinyint', default: 0 })
-  isDeleted: boolean;
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  public createdAt?: Date;
+
+  @UpdateDateColumn({
+    name: 'updated_at',
+    type: 'timestamp',
+    nullable: true,
+  })
+  public updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  public deletedAt?: Date;
 
   @OneToMany(() => District, (district) => district.parentCode)
   districts: District[];

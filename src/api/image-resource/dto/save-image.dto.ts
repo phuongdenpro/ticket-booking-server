@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class SaveImageResourceDto {
@@ -9,12 +9,12 @@ export class SaveImageResourceDto {
   @IsString()
   url: string;
 
-  @ApiProperty({ example: 'c1d47ef4-4310-4d1c-ab82-eb417af04bb1' })
+  @ApiPropertyOptional({ example: 'c1d47ef4-4310-4d1c-ab82-eb417af04bb1' })
   @IsOptional()
   @IsString()
   stationId: string;
 
-  @ApiProperty({ example: '' })
+  @ApiPropertyOptional({ example: '' })
   @IsOptional()
   @IsString()
   vehicleId: string;

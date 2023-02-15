@@ -40,10 +40,6 @@ export class ImageResourceService {
     if (!vehicleId && !stationId) {
       throw new Error('Invalid image resource');
     }
-    if (!imageResource.id) {
-      imageResource.createdBy = userId;
-    }
-    imageResource.updatedBy = userId;
     if (imageResource.isDeleted) {
       imageResource.deletedAt = new Date();
     } else {

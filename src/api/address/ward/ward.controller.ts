@@ -1,6 +1,3 @@
-import { HiddenWardDto } from './dto/hidden-ward.dto';
-import { SaveWardDto } from './dto/save-ward.dto';
-import { FilterWardDto } from './dto/filter-ward.dto';
 import {
   Body,
   Controller,
@@ -16,10 +13,17 @@ import {
 } from '@nestjs/common';
 import { WardService } from './ward.service';
 import { DataSource } from 'typeorm';
-import { GetPagination, Pagination, Roles } from 'src/decorator';
+import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RoleEnum } from 'src/enums';
 import { JwtAuthGuard } from 'src/auth/guards';
+import {
+  UpdateWardDto,
+  FilterWardDto,
+  SaveWardDto,
+  WardDeleteMultiId,
+  WardDeleteMultiCode,
+} from './dto';
 
 @Controller('ward')
 @ApiTags('Ward')
@@ -64,8 +68,8 @@ export class WardController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async create(@Body() dto: SaveWardDto) {
-    return await this.wardService.save(dto);
+  async create(@Body() dto: SaveWardDto, @CurrentUser() user) {
+    return await this.wardService.save(dto, user.id);
   }
 
   @Patch('id/:id')
@@ -73,8 +77,12 @@ export class WardController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateById(@Param('id') id: number, @Body() dto: SaveWardDto) {
-    return await this.wardService.updateById(id, dto);
+  async updateById(
+    @Param('id') id: number,
+    @Body() dto: UpdateWardDto,
+    @CurrentUser() user,
+  ) {
+    return await this.wardService.updateById(id, dto, user.id);
   }
 
   @Patch('code/:code')
@@ -82,8 +90,12 @@ export class WardController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateByCode(@Param('code') code: number, @Body() dto: SaveWardDto) {
-    return await this.wardService.updateByCode(code, dto);
+  async updateByCode(
+    @Param('code') code: number,
+    @Body() dto: UpdateWardDto,
+    @CurrentUser() user,
+  ) {
+    return await this.wardService.updateByCode(code, dto, user.id);
   }
 
   @Delete('code/:code')
@@ -91,8 +103,8 @@ export class WardController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenByCode(@Param('code') code: number, @Body() dto: HiddenWardDto) {
-    return await this.wardService.hiddenByCode(code, dto);
+  async deleteByCode(@Param('code') code: number, @CurrentUser() user) {
+    return await this.wardService.deleteByCode(code, user.id);
   }
 
   @Delete('id/:id')
@@ -100,8 +112,29 @@ export class WardController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenById(@Param('id') id: number, @Body() dto: HiddenWardDto) {
-    return await this.wardService.hiddenById(id, dto);
+  async deleteById(@Param('id') id: number, @CurrentUser() user) {
+    return await this.wardService.deleteById(id, user.id);
+  }
+
+  @Delete('multiple/id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleId(@CurrentUser() user, @Body() dto: WardDeleteMultiId) {
+    return await this.wardService.deleteMultipleWardById(user.id, dto);
+  }
+
+  @Delete('multiple/code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleCode(
+    @CurrentUser() user,
+    @Body() dto: WardDeleteMultiCode,
+  ) {
+    return await this.wardService.deleteMultipleWardByCode(user.id, dto);
   }
 
   // crawl data

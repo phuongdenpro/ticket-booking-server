@@ -7,6 +7,9 @@ import {
   ManyToOne,
   OneToMany,
   JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { District } from './vi-address-district.entities';
 import { Station } from './station.entities';
@@ -36,8 +39,29 @@ export class Ward {
   @Column({ name: 'district_code', type: 'int', nullable: true })
   districtCode: number;
 
-  @Column({ name: 'id_deleted', type: 'tinyint', default: 0 })
-  isDeleted: boolean;
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
+
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  public createdAt?: Date;
+
+  @UpdateDateColumn({
+    name: 'updated_at',
+    type: 'timestamp',
+    nullable: true,
+  })
+  public updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  public deletedAt?: Date;
 
   // Relationships
   @ManyToOne(() => District, (district) => district.wards)

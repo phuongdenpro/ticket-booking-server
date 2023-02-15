@@ -15,17 +15,17 @@ export class TripDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'start_date', type: 'timestamp', nullable: true })
-  startDate: Date;
+  @Column({ name: 'departure_time', type: 'timestamp', nullable: false })
+  departureTime: Date;
 
-  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
-  endDate: Date;
+  @Column({ name: 'expected_time', type: 'timestamp', nullable: false })
+  expectedTime: Date;
 
   @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })
   status: string;
 
-  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
-  isDeleted: boolean;
+  @Column({ name: 'is_active', type: 'tinyint', default: false })
+  isActive: boolean;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

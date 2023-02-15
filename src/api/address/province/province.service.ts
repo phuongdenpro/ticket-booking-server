@@ -1,16 +1,25 @@
 import { SaveProvinceDto } from './dto/save-province.dto';
-import { Province } from 'src/database/entities';
-import { Injectable } from '@nestjs/common';
+import { Province, Staff } from 'src/database/entities';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pagination } from 'src/decorator';
-import { Repository } from 'typeorm';
-import { FilterProvinceDto, HiddenProvinceDto } from './dto';
+import { DataSource, Repository } from 'typeorm';
+import {
+  FilterProvinceDto,
+  ProvinceDeleteMultiCode,
+  ProvinceDeleteMultiId,
+} from './dto';
 
 @Injectable()
 export class ProvinceService {
   constructor(
     @InjectRepository(Province)
     private readonly provinceRepository: Repository<Province>,
+    private dataSource: DataSource,
   ) {}
 
   async findOneById(id: string) {
@@ -27,9 +36,7 @@ export class ProvinceService {
     const query = this.provinceRepository.createQueryBuilder('p');
     query.where('p.code = :code', { code });
 
-    const dataResult = await query
-      .andWhere('p.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
+    const dataResult = await query.getOne();
     return { dataResult };
   }
 
@@ -63,18 +70,24 @@ export class ProvinceService {
   }
 
   // insert a new record
-  async save(dto: SaveProvinceDto) {
+  async save(dto: SaveProvinceDto, userId: string) {
     const province = new Province();
     province.name = dto.name;
     province.type = dto.type;
     province.code = dto.code;
     province.codename = dto.codename;
-
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    province.createdBy = adminExist.id;
     return await this.provinceRepository.save(province);
   }
 
   // update a record by id
-  async updateById(id: string, dto: SaveProvinceDto) {
+  async updateById(id: string, dto: SaveProvinceDto, userId: string) {
     const query = this.provinceRepository.createQueryBuilder('p');
     const province = await query
       .where('p.id = :id', { id })
@@ -85,43 +98,109 @@ export class ProvinceService {
     province.type = dto.type;
     province.code = dto.code;
     province.codename = dto.codename;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    province.updatedBy = adminExist.id;
 
     return await this.provinceRepository.save(province);
   }
 
   // update a record by code
-  async updateByCode(code: number, dto: SaveProvinceDto) {
+  async updateByCode(code: number, dto: SaveProvinceDto, userId: string) {
     const query = this.provinceRepository.createQueryBuilder('p');
-    const province = await query
-      .where('p.code = :code', { code })
-      .andWhere('p.isDeleted = :isDeleted', { isDeleted: false })
-      .getOne();
-    if (!province) return null;
-    province.name = dto.name;
-    province.type = dto.type;
-    province.code = code;
-    province.codename = dto.codename;
+    const province = await query.where('p.code = :code', { code }).getOne();
+    if (!province) {
+      throw new BadRequestException('Province not found');
+    }
+    if (dto.name) {
+      province.name = dto.name;
+    }
+    if (dto.type) {
+      province.type = dto.type;
+    }
+    if (dto.code) {
+      province.code = code;
+    }
+    if (dto.codename) {
+      province.codename = dto.codename;
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    province.updatedBy = adminExist.id;
 
     return await this.provinceRepository.save(province);
   }
 
   // delete a record by id
-  async hiddenById(id: string, dto: HiddenProvinceDto) {
+  async deleteById(id: string, userId: string) {
     const query = this.provinceRepository.createQueryBuilder('p');
     const province = await query.where('p.id = :id', { id }).getOne();
-    if (!province) return null;
-    province.isDeleted = dto.status === 1 ? true : false;
-
+    if (!province) {
+      throw new BadRequestException('Province not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    province.updatedBy = adminExist.id;
+    province.deletedAt = new Date();
     return await this.provinceRepository.save(province);
   }
 
   // delete a record by code
-  async hiddenByCode(code: number, dto: HiddenProvinceDto) {
+  async deleteByCode(code: number, userId: string) {
     const query = this.provinceRepository.createQueryBuilder('p');
     const province = await query.where('p.code = :code', { code }).getOne();
-    if (!province) return null;
-    province.isDeleted = dto.status === 1 ? true : false;
-
+    if (!province) {
+      throw new BadRequestException('Province not found');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('admin is not authorized');
+    }
+    province.updatedBy = adminExist.id;
+    province.deletedAt = new Date();
     return await this.provinceRepository.save(province);
+  }
+
+  async deleteMultipleProvinceById(userId: string, dto: ProvinceDeleteMultiId) {
+    try {
+      const { ids } = dto;
+
+      const list = await Promise.all(
+        ids.map(async (id) => await this.deleteById(id, userId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultipleProvinceByCode(
+    userId: string,
+    dto: ProvinceDeleteMultiCode,
+  ) {
+    try {
+      const { codes } = dto;
+
+      const list = await Promise.all(
+        codes.map(async (code) => await this.deleteByCode(code, userId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 }

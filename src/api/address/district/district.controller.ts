@@ -1,3 +1,4 @@
+import { UpdateDistrictDto } from './dto/update-district.dto';
 import { FilterDistrictDto } from './dto/filter-district.dto';
 import { DistrictService } from './district.service';
 import {
@@ -13,12 +14,12 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { GetPagination, Pagination, Roles } from 'src/decorator';
+import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RoleEnum } from 'src/enums';
 import { JwtAuthGuard } from 'src/auth/guards';
 import { SaveDistrictDto } from './dto/save-district.dto';
-import { HiddenDistrictDto } from './dto';
+import { DistrictDeleteMultiCode, DistrictDeleteMultiId } from './dto';
 
 @Controller('district')
 @ApiTags('District')
@@ -46,13 +47,13 @@ export class DistrictController {
     return this.districtService.findOneByCode(code);
   }
 
-  @Get('district-code/:districtCode')
+  @Get('province-code/:provinceCode')
   @HttpCode(HttpStatus.OK)
   async findByProvinceCode(
-    @Param('districtCode') districtCode: number,
+    @Param('provinceCode') provinceCode: number,
     @GetPagination() pagination?: Pagination,
   ) {
-    return this.districtService.findByProvinceCode(districtCode, pagination);
+    return this.districtService.findByProvinceCode(provinceCode, pagination);
   }
 
   @Post()
@@ -60,8 +61,8 @@ export class DistrictController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async create(@Body() dto: SaveDistrictDto) {
-    return this.districtService.save(dto);
+  async create(@Body() dto: SaveDistrictDto, @CurrentUser() user) {
+    return this.districtService.save(dto, user.id);
   }
 
   @Patch('id/:id')
@@ -69,8 +70,12 @@ export class DistrictController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateById(@Param('id') id: string, @Body() dto: SaveDistrictDto) {
-    return this.districtService.updateById(id, dto);
+  async updateById(
+    @Param('id') id: string,
+    @Body() dto: UpdateDistrictDto,
+    @CurrentUser() user,
+  ) {
+    return this.districtService.updateById(id, dto, user.id);
   }
 
   @Patch('code/:code')
@@ -80,9 +85,10 @@ export class DistrictController {
   @ApiBearerAuth()
   async updateByCode(
     @Param('code') code: number,
-    @Body() dto: SaveDistrictDto,
+    @Body() dto: UpdateDistrictDto,
+    @CurrentUser() user,
   ) {
-    return this.districtService.updateByCode(code, dto);
+    return this.districtService.updateByCode(code, dto, user.id);
   }
 
   @Delete('code/:code')
@@ -90,11 +96,8 @@ export class DistrictController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenByCode(
-    @Param('code') code: number,
-    @Body() dto: HiddenDistrictDto,
-  ) {
-    return this.districtService.hiddenByCode(code, dto);
+  async hiddenByCode(@Param('code') code: number, @CurrentUser() user) {
+    return this.districtService.deleteByCode(code, user.id);
   }
 
   @Delete('id/:id')
@@ -102,31 +105,54 @@ export class DistrictController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenById(@Param('id') id: string, @Body() dto: HiddenDistrictDto) {
-    return this.districtService.hiddenById(id, dto);
+  async hiddenById(@Param('id') id: string, @CurrentUser() user) {
+    return this.districtService.deleteById(id, user.id);
   }
 
-  // // crawl data
+  @Delete('multiple/id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleId(
+    @CurrentUser() user,
+    @Body() dto: DistrictDeleteMultiId,
+  ) {
+    return await this.districtService.deleteMultipleDistrictById(user.id, dto);
+  }
+
+  @Delete('multiple/code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleCode(
+    @CurrentUser() user,
+    @Body() dto: DistrictDeleteMultiCode,
+  ) {
+    return await this.districtService.deleteMultipleDistrictByCode(
+      user.id,
+      dto,
+    );
+  }
+
+  // crawl data
   // @Get('crawl')
   // @HttpCode(HttpStatus.OK)
   // async crawlData(@GetPagination() pagination?: Pagination) {
-  //   pagination.pageSize = 63;
-  //   const provinces = await this.provinceService.findAll(pagination);
-  //   provinces.dataResult.forEach(async (element) => {
-  //     const url = `https://provinces.open-api.vn/api/p/${element.code}?depth=2`;
-  //     const data = await axios.get(url);
+  //   const districts = await this.districtService.findAll({}, pagination);
+  //   console.log(districts.dataResult);
+  //   districts.dataResult.forEach(async (district) => {
+  //     const url = `https://provinces.open-api.vn/api/d/${district.code}`;
+  //     const response = await axios.get(url);
 
-  //     data.data.districts.forEach(async (e) => {
-  //       const district = new District();
-  //       district.name = e.name;
-  //       district.code = e.code;
-  //       district.type = e.division_type;
-  //       district.nameWithType = e.codename;
-  //       district.provinceCode = element.code;
-  //       district.parentCode = element.id;
-  //       await this.districtService.create(district);
-  //     });
+  //     const dto = new UpdateDistrictDto();
+  //     dto.codename = response.data.codename;
+  //     await this.districtService.updateByCode(
+  //       district.code,
+  //       dto,
+  //       '08926136-26d8-4176-827e-060cc7e6285d',
+  //     );
   //   });
-  //   return provinces;
   // }
 }

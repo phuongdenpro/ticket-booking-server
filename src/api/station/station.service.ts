@@ -30,7 +30,7 @@ export class StationService {
       .findOne({ where: { code: wardId } });
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOneBy({ id: userId });
+      .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException();
     }
@@ -140,7 +140,7 @@ export class StationService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOneBy({ id: userId });
+      .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException();
     }
@@ -177,7 +177,7 @@ export class StationService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOneBy({ id: userId });
+      .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException();
     }

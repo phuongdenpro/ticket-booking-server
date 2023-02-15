@@ -1,32 +1,28 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
-  IsNotEmpty,
   IsString,
   IsNumber,
   Min,
   Max,
   IsOptional,
   IsEnum,
-  Length,
   IsArray,
 } from 'class-validator';
 import { ImageResource } from 'src/database/entities';
 import { VehicleTypeEnum, VehicleSeatsEnum } from 'src/enums';
 
-export class SaveVehicleDto {
-  @ApiProperty({ example: 'Xe giường nằm Limousine số 1' })
-  @IsNotEmpty({ message: 'Name is required' })
+export class UpdateVehicleDto {
+  @ApiPropertyOptional({ example: 'Xe giường nằm Limousine số 1' })
   @IsString({ message: 'Name is string' })
-  @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
+  @IsOptional()
   name: string;
 
-  @ApiProperty({ example: 'Xe giường nằm Limousine số 1, 34 chỗ, phòng đôi' })
-  @IsNotEmpty()
-  @IsString()
-  @Length(1, 1000, {
-    message: 'description must be between 1 and 1000 characters',
+  @ApiPropertyOptional({
+    example: 'Xe giường nằm Limousine số 1, 34 chỗ, phòng đôi',
   })
+  @IsString()
+  @IsOptional()
   description: string;
 
   @ApiPropertyOptional({ example: VehicleTypeEnum.SLEEPER_BUS })
@@ -35,12 +31,9 @@ export class SaveVehicleDto {
   @IsEnum(VehicleTypeEnum)
   type: string;
 
-  @ApiProperty({ example: '51A-111.11' })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: '51A-111.11' })
+  @IsOptional()
   @IsString()
-  @Length(1, 20, {
-    message: 'License Plate must be between 1 and 20 characters',
-  })
   licensePlate: string;
 
   @ApiPropertyOptional({ example: 1 })
@@ -50,8 +43,8 @@ export class SaveVehicleDto {
   @Max(2)
   floorNumber: number;
 
-  @ApiProperty({ example: VehicleSeatsEnum.LIMOUSINE })
-  @IsNotEmpty()
+  @ApiPropertyOptional({ example: VehicleSeatsEnum.LIMOUSINE })
+  @IsOptional()
   @IsNumber()
   @IsEnum(VehicleSeatsEnum)
   totalSeat: number;
