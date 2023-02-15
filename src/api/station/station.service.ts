@@ -13,7 +13,10 @@ import { FilterStationDto, SaveStationDto } from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
 import { StationDeleteInput } from './dto/delete-station.dto';
 import { BadRequestException } from '@nestjs/common';
-import * as excel from 'xlsx';
+import * as excel from 'exceljs';
+import { Res } from '@nestjs/common/decorators';
+import { Response } from 'express';
+import { Readable } from 'stream';
 
 @Injectable()
 export class StationService {
@@ -203,70 +206,75 @@ export class StationService {
     }
   }
 
-  async exportStation(dto: FilterStationDto) {
-    const query = this.stationRepository.createQueryBuilder('r');
-    if (dto?.keywords) {
-      query
-        .orWhere('r.name like :query')
-        .orWhere('r.address like :query')
-        .setParameter('query', `%${dto?.keywords}%`);
-    }
+  async exportStation(dto: FilterStationDto, @Res() res: Response) {
+    try {
+      const query = this.stationRepository.createQueryBuilder('r');
+      if (dto?.keywords) {
+        query
+          .orWhere('r.name like :query')
+          .orWhere('r.address like :query')
+          .setParameter('query', `%${dto?.keywords}%`);
+      }
 
-    const dataResult = await query
-      .leftJoinAndSelect('r.ward', 'w')
-      .select(['r', 'w.id', 'w.code'])
-      .orderBy('r.createdAt', SortEnum.ASC)
-      .getMany();
-
-    const total = await query.clone().getCount();
-
-    if (dataResult.length > 0) {
-      // query image for each station
-      const queryImage = this.dataSource
-        .getRepository(ImageResource)
-        .createQueryBuilder('i');
-      const images = await queryImage
-        .andWhere('i.station_id IN (:...ids)', {
-          ids: dataResult.map((station) => station.id),
-        })
-        .leftJoinAndSelect('i.station', 's')
-        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt', 's.id'])
+      const dataResult = await query
+        .leftJoinAndSelect('r.ward', 'w')
+        .select(['r', 'w.id', 'w.code'])
+        .orderBy('r.createdAt', SortEnum.ASC)
         .getMany();
 
-      // add image to station
-      dataResult.forEach((station) => {
-        station.images = images.filter(
-          (image) => image.station.id === station.id,
-        );
+      const total = await query.clone().getCount();
+
+      if (dataResult.length > 0) {
+        // query image for each station
+        const queryImage = this.dataSource
+          .getRepository(ImageResource)
+          .createQueryBuilder('i');
+        const images = await queryImage
+          .andWhere('i.station_id IN (:...ids)', {
+            ids: dataResult.map((station) => station.id),
+          })
+          .leftJoinAndSelect('i.station', 's')
+          .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt', 's.id'])
+          .getMany();
+
+        // add image to station
+        dataResult.forEach((station) => {
+          station.images = images.filter(
+            (image) => image.station.id === station.id,
+          );
+        });
+      }
+      // create excel
+      const workBook = new excel.Workbook();
+      const workSheet = workBook.addWorksheet('Thông tin bến xe');
+      const header = workSheet.addRow([
+        'STT',
+        'Mã bến xe',
+        'Tên bến xe',
+        'Địa chỉ bến xe',
+        'Ngày tạo',
+      ]);
+      dataResult.map((item, index) => {
+        workSheet.addRow([
+          index + 1,
+          item.id,
+          item.name,
+          item.address,
+          item.createdAt,
+        ]);
       });
+      const buffer = await workBook.xlsx.writeBuffer();
+      const stream = new Readable();
+      stream.push(buffer);
+      stream.push(null);
+      res.set({
+        'Content-Type':
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.xlsx',
+        'Content-Length': buffer.byteLength,
+      });
+      stream.pipe(res);
+    } catch (error) {
+      throw new BadRequestException(error.message);
     }
-    const data = await Promise.all(
-      dataResult.map((item) => {
-        return {
-          'Mã bến xe': item.id,
-          'Tên bến xe': item.name,
-          'Địa chỉ bến xe': item.address,
-          'Ngày tạo': item.createdAt,
-        };
-      }),
-    );
-    if (!data.length)
-      data.push({
-        'Mã bến xe': null,
-        'Tên bến xe': null,
-        'Địa chỉ bến xe': null,
-        'Ngày tạo': null,
-      });
-
-    const workbook = excel.utils.book_new();
-    const fileName = 'Thông tin bến xe';
-    const dataSheet = excel.utils.json_to_sheet(data);
-    excel.utils.book_append_sheet(
-      workbook,
-      dataSheet,
-      fileName.replace('/', ''),
-    );
-
-    return await excel.write(workbook, { type: 'buffer', bookType: 'xlsx' });
   }
 }

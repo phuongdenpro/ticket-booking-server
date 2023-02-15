@@ -91,16 +91,6 @@ export class StationController {
     @Query() dto: FilterStationDto,
     @Res() res: Response,
   ) {
-    const buffer = await this.stationService.exportStation(dto);
-    const stream = new Readable();
-    stream.push(buffer);
-    stream.push(null);
-    res.set({
-      'Content-Disposition': 'attachment; filename=ThongTinBenXe.xlsx',
-      'Content-Type':
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'Content-Length': buffer.length,
-    });
-    stream.pipe(res);
+    return await this.stationService.exportStation(dto,res);
   }
 }
