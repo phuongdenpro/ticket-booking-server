@@ -28,6 +28,8 @@ export class StationService {
 
   async saveStation(dto: SaveStationDto, userId: string) {
     const { name, address, wardId, images } = dto;
+    console.log(images);
+    
     const ward = await this.dataSource
       .getRepository(Ward)
       .findOne({ where: { code: wardId } });
@@ -99,7 +101,7 @@ export class StationService {
     const dataResult = await query
       .leftJoinAndSelect('r.ward', 'w')
       .select(['r', 'w.id', 'w.code'])
-      .orderBy('r.createdAt', SortEnum.ASC)
+      .orderBy('r.createdAt', SortEnum.DESC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();

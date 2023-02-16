@@ -226,4 +226,70 @@ export class UploadService {
       throw new BadRequestException(err.message);
     }
   }
+
+  async uploadMutiFile(files: {
+    files?: Express.Multer.File[];
+    images?: Express.Multer.File[];
+  }) {
+
+    // validate
+
+    // function
+    let listFile = [];
+    let listImages = [];
+
+    if (files?.images) {
+      listImages = await this.uploadV2(files?.images, {
+        folderName: 'images',
+      });
+    }
+    if (files?.files) {
+      listFile = await this.uploadV2(files?.files, {
+        folderName: 'files',
+      });
+    }
+    return { files: listFile, images: listImages };
+  }
+
+  async uploadV2(
+    filesIn: Array<Express.Multer.File>,
+    options?: { folderName: string },
+  ) {
+    const filesS3 = [];
+    for (const file of filesIn) {
+      const fileS3 = await this.uploadFileS3Ver2(
+        file.buffer,
+        file.originalname,
+        options,
+      );
+      filesS3.push(fileS3);
+    }
+    return filesS3;
+  }
+
+  async uploadFileS3Ver2(
+    dataBuffer: Buffer,
+    filename: string,
+    options?: { folderName: string },
+  ) {
+    let path = `${new Date().getTime()}-${filename}`;
+
+    if (options?.folderName) {
+      let newPath = options?.folderName.trim();
+      if (path.slice(-1) != '/') {
+        newPath = newPath + '/';
+      }
+      path = newPath + path;
+    }
+
+    const uploadResult = await this.s3
+      .upload({
+        Bucket: this.bucket_name,
+        Body: dataBuffer,
+        ACL: 'public-read',
+        Key: path,
+      })
+      .promise();
+    return uploadResult;
+  }
 }
