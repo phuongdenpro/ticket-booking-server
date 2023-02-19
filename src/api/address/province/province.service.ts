@@ -77,7 +77,7 @@ export class ProvinceService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     province.createdBy = adminExist.id;
     return await this.provinceRepository.save(province);
@@ -104,7 +104,7 @@ export class ProvinceService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     province.updatedBy = adminExist.id;
 
@@ -134,7 +134,7 @@ export class ProvinceService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     province.updatedBy = adminExist.id;
 
@@ -152,7 +152,7 @@ export class ProvinceService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     province.updatedBy = adminExist.id;
     province.deletedAt = new Date();
@@ -170,7 +170,7 @@ export class ProvinceService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     province.updatedBy = adminExist.id;
     province.deletedAt = new Date();

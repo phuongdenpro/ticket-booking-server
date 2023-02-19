@@ -8,7 +8,8 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Trip } from './trip.entities';
-import { CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Province } from './vi-address-provide.entities';
 
 @Entity({ name: 'trip_detail' })
 export class TripDetail {
@@ -27,6 +28,12 @@ export class TripDetail {
   @Column({ name: 'is_active', type: 'tinyint', default: false })
   isActive: boolean;
 
+  @Column({ name: 'created_by', type: 'varchar', nullable: false })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -34,9 +41,16 @@ export class TripDetail {
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
   public updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  deletedAt?: Date;
 
   // relationships
   @ManyToOne(() => Trip, (trip) => trip.tripDetails)
@@ -46,6 +60,14 @@ export class TripDetail {
   @ManyToOne(() => Vehicle, (vehicle) => vehicle.tripDetails)
   @JoinColumn({ name: 'vehicle_id', referencedColumnName: 'id' })
   vehicle: Vehicle;
+
+  @ManyToOne(() => Province, (province) => province.fromTripDetails)
+  @JoinColumn({ name: 'from_province_id', referencedColumnName: 'id' })
+  fromProvince: Province;
+
+  @ManyToOne(() => Province, (province) => province.toTripDetails)
+  @JoinColumn({ name: 'to_province_id', referencedColumnName: 'id' })
+  toProvince: Province;
 
   // @ManyToOne(
   //   () => PassengerCarCompany,

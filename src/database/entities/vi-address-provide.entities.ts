@@ -1,3 +1,4 @@
+import { TripDetail } from './trip-detail.entities';
 import {
   Column,
   CreateDateColumn,
@@ -57,4 +58,10 @@ export class Province {
 
   @OneToMany(() => District, (district) => district.parentCode)
   districts: District[];
+
+  @OneToMany(() => TripDetail, (tripDetail) => tripDetail.fromProvince)
+  fromTripDetails: TripDetail[];
+
+  @OneToMany(() => TripDetail, (tripDetail) => tripDetail.toProvince)
+  toTripDetails: TripDetail[];
 }

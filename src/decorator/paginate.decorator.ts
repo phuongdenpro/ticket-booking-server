@@ -45,5 +45,5 @@ export const GetPagination = createParamDecorator(
         required: false,
       })(target, key, Object.getOwnPropertyDescriptor(target, key));
     },
-  ]
+  ],
 );

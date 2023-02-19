@@ -16,6 +16,8 @@ const transform = (err): HttpException => {
   Logger.error(err);
 
   if (err instanceof HttpException) {
+    err['response']['error'] =
+      mappingTranslate[err.getResponse()['message'][0]];
     err['response']['code'] = MESS_CODE[err.message];
     err['response']['message'] = mappingTranslate[err.message];
     return err;
