@@ -1,4 +1,3 @@
-import { TripDeleteMultiInput } from './dto/delete-multiple-input-trip.dto';
 import {
   Body,
   Controller,
@@ -13,39 +12,44 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { TripService } from './trip.service';
+import { JwtAuthGuard } from 'src/auth/guards';
 import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
 import { RoleEnum } from 'src/enums';
-import { JwtAuthGuard } from 'src/auth/guards';
-import { FilterTripDto, SaveTripDto, UpdateTripDto } from './dto';
+import { TripDetailService } from './trip-detail.service';
+import {
+  FilterTripDetailDto,
+  SaveTripDetailDto,
+  TripDetailDeleteMultiInput,
+  UpdateTripDetailDto,
+} from './dto';
 
-@Controller('trip')
-@ApiTags('Trip')
-export class TripController {
-  constructor(private tripService: TripService) {}
+@Controller('trip-detail')
+@ApiTags('Trip Detail')
+export class TripDetailController {
+  constructor(private tripDetailService: TripDetailService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createNewVehicle(@Body() dto: SaveTripDto, @CurrentUser() user) {
-    return await this.tripService.saveTrip(dto, user.id);
+  async createNewVehicle(@Body() dto: SaveTripDetailDto, @CurrentUser() user) {
+    return await this.tripDetailService.saveTripDetail(dto, user.id);
   }
 
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
-    @Query() dto: FilterTripDto,
+    @Query() dto: FilterTripDetailDto,
     @GetPagination() pagination?: Pagination,
   ) {
-    return await this.tripService.findAllTrip(dto, pagination);
+    return await this.tripDetailService.findAll(dto, pagination);
   }
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
   async getTripById(@Param('id') id: string) {
-    return await this.tripService.findOneTripById(id);
+    return await this.tripDetailService.findOneTripDetailById(id);
   }
 
   @Patch('id/:id')
@@ -56,9 +60,9 @@ export class TripController {
   async updateStationById(
     @CurrentUser() user,
     @Param('id') id: string,
-    @Body() dto: UpdateTripDto,
+    @Body() dto: UpdateTripDetailDto,
   ) {
-    return await this.tripService.updateTripById(id, dto, user.id);
+    return await this.tripDetailService.updateTripDetailById(dto, id, user.id);
   }
 
   @Delete('id/:id')
@@ -67,7 +71,7 @@ export class TripController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.tripService.deleteTripById(id, user.id);
+    return await this.tripDetailService.deleteTripDetailById(id, user.id);
   }
 
   @Delete('multiple')
@@ -75,7 +79,13 @@ export class TripController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteMultiple(@CurrentUser() user, @Body() dto: TripDeleteMultiInput) {
-    return await this.tripService.deleteMultipleTrip(user.id, dto);
+  async deleteMultiple(
+    @CurrentUser() user,
+    @Body() dto: TripDetailDeleteMultiInput,
+  ) {
+    return await this.tripDetailService.deleteMultipleTripDetailByIds(
+      user.id,
+      dto,
+    );
   }
 }

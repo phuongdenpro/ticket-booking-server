@@ -4,14 +4,14 @@ import { IsNumber, IsOptional, IsString, Length } from 'class-validator';
 export class FilterDistrictDto {
   @ApiPropertyOptional({ example: 'ha' })
   @IsOptional()
-  @IsString({ message: 'Name is string' })
-  @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
+  @IsString({ message: 'NAME_IS_STRING' })
+  @Length(1, 100, { message: 'NAME_LENGTH' })
   name?: string;
 
   @ApiPropertyOptional({ example: 'huyen' })
   @IsOptional()
-  @IsString({ message: 'type is string' })
-  @Length(1, 50, { message: 'type must be between 1 and 50 characters' })
+  @IsString({ message: 'DISTRICT_TYPE_IS_STRING' })
+  @Length(1, 50, { message: 'DISTRICT_TYPE_LENGTH' })
   type?: string;
 
   @ApiPropertyOptional({ example: 'thanh' })

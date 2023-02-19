@@ -111,7 +111,7 @@ export class WardService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     ward.createdBy = adminExist.id;
 
@@ -151,7 +151,7 @@ export class WardService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     ward.updatedBy = adminExist.id;
 
@@ -192,7 +192,7 @@ export class WardService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     ward.updatedBy = adminExist.id;
 
@@ -209,7 +209,7 @@ export class WardService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     ward.updatedBy = adminExist.id;
     ward.deletedAt = new Date();
@@ -228,7 +228,7 @@ export class WardService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     ward.updatedBy = adminExist.id;
     ward.deletedAt = new Date();

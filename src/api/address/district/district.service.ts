@@ -88,7 +88,7 @@ export class DistrictService {
       where: { code: dto.provinceCode },
     });
     if (!province) {
-      throw new BadRequestException('Province not found');
+      throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
 
     const district = new District();

@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray } from 'class-validator';
+import { IsArray, IsNotEmpty } from 'class-validator';
 
 export class DistrictDeleteMultiCode {
   @ApiProperty({
@@ -8,5 +8,6 @@ export class DistrictDeleteMultiCode {
     type: Array<number>,
   })
   @IsArray()
+  @IsNotEmpty({ message: 'CODES_REQUIRED' })
   public codes: number[];
 }

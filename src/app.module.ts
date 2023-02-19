@@ -19,6 +19,7 @@ import { SeatModule } from './api/seat/seat.module';
 import { ImageResourceModule } from './api/image-resource/image-resource.module';
 import { UploadModule } from './api/upload/upload.module';
 import { TripModule } from './api/trip/trip.module';
+import { TripDetailModule } from './api/trip-detail/trip-detail.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.local' }),
@@ -35,6 +36,7 @@ import { TripModule } from './api/trip/trip.module';
     ImageResourceModule,
     UploadModule,
     TripModule,
+    TripDetailModule,
   ],
   providers: [
     {

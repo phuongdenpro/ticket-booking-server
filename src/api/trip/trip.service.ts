@@ -1,5 +1,4 @@
-import { FilterTripDto } from './dto/filter-trip.dto';
-import { SaveTripDto } from './dto/save-trip.dto';
+import { SaveTripDto, FilterTripDto, UpdateTripDto } from './dto';
 import {
   BadRequestException,
   Injectable,
@@ -10,7 +9,6 @@ import { Staff, Station, Trip } from 'src/database/entities';
 import { DataSource, Repository } from 'typeorm';
 import { SortEnum, TripStatusEnum } from 'src/enums';
 import { Pagination } from 'src/decorator';
-import { UpdateTripDto } from './dto';
 import { TripDeleteMultiInput } from './dto/delete-multiple-input-trip.dto';
 
 @Injectable()
@@ -18,8 +16,25 @@ export class TripService {
   constructor(
     @InjectRepository(Trip)
     private readonly tripService: Repository<Trip>,
+    // private tripDetailService: TripDetailService,
     private dataSource: DataSource,
   ) {}
+  private tripSelect = [
+    'q.id',
+    'q.name',
+    'q.note',
+    'q.startDate',
+    'q.endDate',
+    'q.createdBy',
+    'q.updatedBy',
+    'q.isActive',
+    'q.createdAt',
+    'q.updatedAt',
+    'fs.id',
+    'fs.name',
+    'to.id',
+    'to.name',
+  ];
 
   async saveTrip(dto: SaveTripDto, userId: string) {
     const {
@@ -111,7 +126,7 @@ export class TripService {
 
   async findAllTrip(dto: FilterTripDto, pagination?: Pagination) {
     const { name, fromStationId, toStationId } = dto;
-    let { departureTime, startDate, endDate } = dto;
+    let { startDate, endDate } = dto;
     const query = this.tripService.createQueryBuilder('q');
 
     if (name) {
@@ -123,7 +138,7 @@ export class TripService {
       startDate = new Date(startDate);
       query.andWhere('q.startDate >= :startDate', { startDate });
     }
-    if (endDate && endDate >= currentDate) {
+    if (endDate && endDate >= currentDate && endDate >= startDate) {
       endDate = new Date(endDate);
       query.andWhere('q.endDate >= :endDate', { endDate });
     }
@@ -136,30 +151,36 @@ export class TripService {
 
     const total = await query.getCount();
     const dataResult = await query
-      // .leftJoinAndSelect('q.fromStation', 'fs')
       .andWhere('q.isActive = :isActive', { isActive: true })
       .leftJoinAndSelect('q.fromStation', 'fs')
       .leftJoinAndSelect('q.toStation', 'to')
-      .select([
-        'q.id',
-        'q.name',
-        'q.note',
-        'q.startDate',
-        'q.endDate',
-        'q.createdBy',
-        'q.updatedBy',
-        'q.isActive',
-        'q.createdAt',
-        'q.updatedAt',
-        'fs.id',
-        'fs.name',
-        'to.id',
-        'to.name',
-      ])
+      .select(this.tripSelect)
       .orderBy('q.createdAt', SortEnum.ASC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
+
+    // const newDataResult = [];
+    // if (departureTime) {
+    //   departureTime = new Date(departureTime);
+    //   // find trip detail and add to trip list
+    //   await Promise.all(
+    //     dataResult.map(async (trip) => {
+    //       const dto = new FilterTripDetailDto();
+    //       dto.departureTime = departureTime;
+    //       dto.tripId = trip.id;
+    //       const tripDetailDataResult = await this.tripDetailService.findAll(
+    //         dto,
+    //         {
+    //           page: 1,
+    //           pageSize: 100,
+    //         },
+    //       );
+    //       trip.tripDetails = tripDetailDataResult.dataResult;
+    //       newDataResult.push(trip);
+    //     }),
+    //   );
+    // }
 
     return { dataResult, pagination, total };
   }
@@ -172,22 +193,7 @@ export class TripService {
       .andWhere('q.isActive = :isActive', { isActive: true })
       .leftJoinAndSelect('q.fromStation', 'fs')
       .leftJoinAndSelect('q.toStation', 'to')
-      .select([
-        'q.id',
-        'q.name',
-        'q.note',
-        'q.startDate',
-        'q.endDate',
-        'q.createdBy',
-        'q.updatedBy',
-        'q.isActive',
-        'q.createdAt',
-        'q.updatedAt',
-        'fs.id',
-        'fs.name',
-        'to.id',
-        'to.name',
-      ])
+      .select(this.tripSelect)
       .getOne();
 
     return { dataResult };
@@ -291,7 +297,7 @@ export class TripService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException('admin is not authorized');
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
 
     const trip = await this.tripService.findOne({ where: { id } });

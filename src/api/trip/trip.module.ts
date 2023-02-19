@@ -1,4 +1,4 @@
-import { Ticket } from './../../database/entities/ticket.entities';
+import { TripDetailService } from './../trip-detail/trip-detail.service';
 import { Vehicle } from './../../database/entities/vehicle.entities';
 import { TripDetail } from './../../database/entities/trip-detail.entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,8 +8,8 @@ import { TripController } from './trip.controller';
 import { Trip } from 'src/database/entities';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Trip, TripDetail, Vehicle, Ticket])],
-  providers: [TripService],
+  imports: [TypeOrmModule.forFeature([Trip, TripDetail, Vehicle])],
+  providers: [TripService, TripDetailService],
   controllers: [TripController],
   exports: [TripService],
 })

@@ -30,7 +30,6 @@ export class ApplicableTicketGroup {
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
   public updatedAt?: Date;
 
