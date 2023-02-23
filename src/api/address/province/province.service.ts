@@ -116,7 +116,7 @@ export class ProvinceService {
     const query = this.provinceRepository.createQueryBuilder('p');
     const province = await query.where('p.code = :code', { code }).getOne();
     if (!province) {
-      throw new BadRequestException('Province not found');
+      throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
     if (dto.name) {
       province.name = dto.name;
@@ -146,7 +146,7 @@ export class ProvinceService {
     const query = this.provinceRepository.createQueryBuilder('p');
     const province = await query.where('p.id = :id', { id }).getOne();
     if (!province) {
-      throw new BadRequestException('Province not found');
+      throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -164,7 +164,7 @@ export class ProvinceService {
     const query = this.provinceRepository.createQueryBuilder('p');
     const province = await query.where('p.code = :code', { code }).getOne();
     if (!province) {
-      throw new BadRequestException('Province not found');
+      throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)

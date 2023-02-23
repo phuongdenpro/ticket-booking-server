@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ImageResource, Vehicle, Station } from 'src/database/entities';
 import { DataSource, Repository } from 'typeorm';
@@ -23,7 +23,7 @@ export class ImageResourceService {
     if (url.match(IMAGE_REGEX)) {
       imageResource.url = url;
     } else {
-      throw new Error('Invalid image url');
+      throw new BadRequestException('INVALID_IMAGE_URL');
     }
     if (vehicleId) {
       const vehicle = await this.dataSource
@@ -38,7 +38,7 @@ export class ImageResourceService {
       imageResource.station = station;
     }
     if (!vehicleId && !stationId) {
-      throw new Error('Invalid image resource');
+      throw new BadRequestException('INVALID_IMAGE_RESOURCE');
     }
     if (imageResource.isDeleted) {
       imageResource.deletedAt = new Date();

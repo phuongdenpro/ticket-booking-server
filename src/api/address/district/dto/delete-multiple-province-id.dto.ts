@@ -8,6 +8,6 @@ export class DistrictDeleteMultiCode {
     type: Array<number>,
   })
   @IsArray()
-  @IsNotEmpty({ message: 'CODES_REQUIRED' })
+  @IsNotEmpty({ message: 'CODES_IS_REQUIRED' })
   public codes: number[];
 }

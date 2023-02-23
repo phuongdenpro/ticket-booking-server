@@ -148,7 +148,7 @@ export class AdminService {
   async refreshToken(refreshToken: string) {
     const staffExist = await this.findOneByRefreshToken(refreshToken);
     if (!staffExist || !staffExist.refreshToken) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     console.log(staffExist);
 

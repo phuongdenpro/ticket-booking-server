@@ -49,7 +49,7 @@ export class TripDetailService {
       throw new BadRequestException('DEPARTURE_DATE_REQUIRED');
     }
     if (expectedTime) {
-      if (expectedTime > departureTime) {
+      if (expectedTime >= departureTime) {
         tripDetail.expectedTime = expectedTime;
       } else {
         throw new BadRequestException(
@@ -80,11 +80,20 @@ export class TripDetailService {
       throw new BadRequestException('TRIP_DETAIL_STATUS_REQUIRED');
     }
     if (tripId) {
-      const trip = await this.dataSource
-        .getRepository(Trip)
-        .findOne({ where: { id: tripId } });
+      const trip = await this.dataSource.getRepository(Trip).findOne({
+        where: { id: tripId },
+        relations: [
+          'fromStation.ward.parentCode.parentCode',
+          'toStation.ward.parentCode.parentCode',
+        ],
+      });
       if (trip) {
+        const fromProvince = trip.fromStation.ward.parentCode['parentCode'];
+        const toProvince = trip.toStation.ward.parentCode['parentCode'];
+
         tripDetail.trip = trip;
+        tripDetail.fromProvince = fromProvince;
+        tripDetail.toProvince = toProvince;
       } else {
         throw new BadRequestException('TRIP_NOT_FOUND');
       }

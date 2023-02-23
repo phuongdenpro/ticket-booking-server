@@ -1,12 +1,5 @@
 import { GenderEnum } from './../../enums/gender.enum';
-import {
-  Entity,
-  OneToMany,
-  ManyToMany,
-  Column,
-  ManyToOne,
-  JoinColumn,
-} from 'typeorm';
+import { Entity, OneToMany, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Order } from './order.entities';
 import { Ward } from './vi-address-ward.entities';
 import {
@@ -47,7 +40,7 @@ export class Customer {
   fullName?: string;
 
   @Column({ name: 'gender', type: 'varchar', default: 'N', nullable: false })
-  gender?: GenderEnum = GenderEnum.NONE;
+  gender?: GenderEnum;
 
   @Column({ name: 'address', type: 'varchar', nullable: true })
   address?: string;
@@ -73,7 +66,6 @@ export class Customer {
   @UpdateDateColumn({
     name: 'updated_at',
     type: 'timestamp',
-    nullable: true,
     select: false,
   })
   public updatedAt?: Date;
@@ -91,9 +83,9 @@ export class Customer {
   @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
   ward: Ward;
 
-  @ManyToMany(
+  @OneToMany(
     () => CustomerGroupDetail,
-    (customerGroupDetail) => customerGroupDetail.customers,
+    (customerGroupDetail) => customerGroupDetail.customer,
   )
   customerGroupDetail?: CustomerGroupDetail[];
 

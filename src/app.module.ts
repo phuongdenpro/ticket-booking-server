@@ -20,23 +20,25 @@ import { ImageResourceModule } from './api/image-resource/image-resource.module'
 import { UploadModule } from './api/upload/upload.module';
 import { TripModule } from './api/trip/trip.module';
 import { TripDetailModule } from './api/trip-detail/trip-detail.module';
+import { CustomerGroupModule } from './api/customer-group/customer-group.module';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.local' }),
     ScheduleModule.forRoot(),
     DatabaseModule,
     AuthModule,
-    UsersModule,
-    ProvinceModule,
+    CustomerGroupModule,
     DistrictModule,
-    WardModule,
-    StationModule,
-    VehicleModule,
-    SeatModule,
     ImageResourceModule,
-    UploadModule,
+    ProvinceModule,
+    SeatModule,
+    StationModule,
     TripModule,
     TripDetailModule,
+    UsersModule,
+    UploadModule,
+    VehicleModule,
+    WardModule,
   ],
   providers: [
     {
