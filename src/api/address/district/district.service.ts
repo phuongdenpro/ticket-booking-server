@@ -102,7 +102,7 @@ export class DistrictService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     district.createdBy = adminExist.id;
 
@@ -114,7 +114,7 @@ export class DistrictService {
     const query = this.districtRepository.createQueryBuilder('d');
     const district = await query.where('d.id = :id', { id }).getOne();
     if (!district) {
-      throw new BadRequestException('District not found');
+      throw new BadRequestException('DISTRICT_NOT_FOUND');
     }
     if (district.name) {
       district.name = dto.name;
@@ -133,7 +133,7 @@ export class DistrictService {
         where: { code: dto.provinceCode },
       });
       if (!province) {
-        throw new BadRequestException('Province not found');
+        throw new BadRequestException('PROVINCE_NOT_FOUND');
       }
       district.provinceCode = province.code;
       district.parentCode = province.id;
@@ -143,7 +143,7 @@ export class DistrictService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     district.updatedBy = adminExist.id;
 
@@ -155,7 +155,7 @@ export class DistrictService {
     const query = this.districtRepository.createQueryBuilder('d');
     const district = await query.where('d.code = :code', { code }).getOne();
     if (!district) {
-      throw new BadRequestException('District not found');
+      throw new BadRequestException('DISTRICT_NOT_FOUND');
     }
     if (district.name) {
       district.name = dto.name;
@@ -174,7 +174,7 @@ export class DistrictService {
         where: { code: dto.provinceCode },
       });
       if (!province) {
-        throw new BadRequestException('Province not found');
+        throw new BadRequestException('PROVINCE_NOT_FOUND');
       }
       district.provinceCode = province.code;
       district.parentCode = province.id;
@@ -183,7 +183,7 @@ export class DistrictService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     district.updatedBy = adminExist.id;
 
@@ -195,13 +195,13 @@ export class DistrictService {
     const query = this.districtRepository.createQueryBuilder('d');
     const district = await query.where('d.id = :id', { id }).getOne();
     if (!district) {
-      throw new BadRequestException('province not found');
+      throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     district.updatedBy = adminExist.id;
     district.deletedAt = new Date();
@@ -214,13 +214,13 @@ export class DistrictService {
     const query = this.districtRepository.createQueryBuilder('d');
     const district = await query.where('d.code = :code', { code }).getOne();
     if (!district) {
-      throw new BadRequestException('province not found');
+      throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     district.updatedBy = adminExist.id;
     district.deletedAt = new Date();

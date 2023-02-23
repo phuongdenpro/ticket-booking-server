@@ -15,17 +15,6 @@ export class CustomerGroupDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Customer, (customer) => customer.customerGroupDetail)
-  @JoinColumn([{ name: 'customer_id', referencedColumnName: 'id' }])
-  customers: Customer[];
-
-  @ManyToOne(
-    () => CustomerGroup,
-    (customerGroup) => customerGroup.customerGroupDetail,
-  )
-  @JoinColumn([{ name: 'customer_group_id', referencedColumnName: 'id' }])
-  customerGroups: CustomerGroup[];
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -33,7 +22,6 @@ export class CustomerGroupDetail {
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
   public updatedAt?: Date;
 
@@ -44,4 +32,16 @@ export class CustomerGroupDetail {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relationship
+  @ManyToOne(() => Customer, (customer) => customer.customerGroupDetail)
+  @JoinColumn([{ name: 'customer_id', referencedColumnName: 'id' }])
+  customer: Customer;
+
+  @ManyToOne(
+    () => CustomerGroup,
+    (customerGroup) => customerGroup.customerGroupDetail,
+  )
+  @JoinColumn([{ name: 'customer_group_id', referencedColumnName: 'id' }])
+  customerGroup: CustomerGroup;
 }

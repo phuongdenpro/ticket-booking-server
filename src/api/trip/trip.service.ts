@@ -50,26 +50,24 @@ export class TripService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
 
     const trip = new Trip();
     if (!name) {
-      throw new BadRequestException('Name is required');
+      throw new BadRequestException('NAME_IS_REQUIRED');
     }
     trip.name = name;
     trip.note = note;
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate < currentDate) {
-      throw new BadRequestException('Start date must be greater than now');
+      throw new BadRequestException('TRIP_START_DATE_GREATER_THAN_NOW');
     }
     trip.startDate = startDate;
 
     if (endDate) {
       if (endDate < currentDate && endDate < startDate) {
-        throw new BadRequestException(
-          'End date must be greater than start date',
-        );
+        throw new BadRequestException('TRIP_END_DATE_GREATER_THAN_START_DATE');
       } else {
         trip.endDate = endDate;
       }
@@ -79,7 +77,7 @@ export class TripService {
       .getRepository(Station)
       .findOne({ where: { id: fromStationId } });
     if (!fromStation) {
-      throw new BadRequestException('From station not found');
+      throw new BadRequestException('FROM_STATION_NOT_FOUND');
     }
     trip.fromStation = fromStation;
 
@@ -87,11 +85,11 @@ export class TripService {
       .getRepository(Station)
       .findOne({ where: { id: toStationId } });
     if (!toStation) {
-      throw new BadRequestException('To station not found');
+      throw new BadRequestException('TO_STATION_NOT_FOUND');
     }
     trip.toStation = toStation;
     if (fromStationId === toStationId) {
-      throw new BadRequestException('From station and to station must be diff');
+      throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
 
     if (isActive === undefined || isActive === null) {
@@ -160,28 +158,6 @@ export class TripService {
       .limit(pagination.take)
       .getMany();
 
-    // const newDataResult = [];
-    // if (departureTime) {
-    //   departureTime = new Date(departureTime);
-    //   // find trip detail and add to trip list
-    //   await Promise.all(
-    //     dataResult.map(async (trip) => {
-    //       const dto = new FilterTripDetailDto();
-    //       dto.departureTime = departureTime;
-    //       dto.tripId = trip.id;
-    //       const tripDetailDataResult = await this.tripDetailService.findAll(
-    //         dto,
-    //         {
-    //           page: 1,
-    //           pageSize: 100,
-    //         },
-    //       );
-    //       trip.tripDetails = tripDetailDataResult.dataResult;
-    //       newDataResult.push(trip);
-    //     }),
-    //   );
-    // }
-
     return { dataResult, pagination, total };
   }
 
@@ -213,12 +189,12 @@ export class TripService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
 
     const trip = await this.tripService.findOne({ where: { id } });
     if (!trip) {
-      throw new BadRequestException('Trip not found');
+      throw new BadRequestException('TRIP_NOT_FOUND');
     }
     if (name) {
       trip.name = name;
@@ -230,13 +206,13 @@ export class TripService {
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate !== undefined || startDate !== null) {
       if (startDate < currentDate) {
-        throw new BadRequestException('Start date must be greater than now');
+        throw new BadRequestException('TRIP_START_DATE_GREATER_THAN_NOW');
       }
       trip.startDate = startDate;
     }
     if (endDate !== undefined || endDate !== null) {
       if (endDate < currentDate) {
-        throw new BadRequestException('End date must be greater than now');
+        throw new BadRequestException('TRIP_END_DATE_GREATER_THAN_NOW');
       }
       trip.endDate = endDate;
     }
@@ -246,7 +222,7 @@ export class TripService {
         .getRepository(Station)
         .findOne({ where: { id: fromStationId } });
       if (!fromStation) {
-        throw new BadRequestException('From station not found');
+        throw new BadRequestException('FROM_STATION_NOT_FOUND');
       }
       trip.fromStation = fromStation;
     }
@@ -255,14 +231,12 @@ export class TripService {
         .getRepository(Station)
         .findOne({ where: { id: toStationId } });
       if (!toStation) {
-        throw new BadRequestException('To station not found');
+        throw new BadRequestException('TO_STATION_NOT_FOUND');
       }
       trip.toStation = toStation;
     }
     if (fromStationId === toStationId) {
-      throw new BadRequestException(
-        'From station and to station must be different',
-      );
+      throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
     if (isActive) {
       trip.isActive = TripStatusEnum.ACTIVE === isActive;
@@ -302,7 +276,7 @@ export class TripService {
 
     const trip = await this.tripService.findOne({ where: { id } });
     if (!trip) {
-      throw new BadRequestException('Trip not found');
+      throw new BadRequestException('TRIP_NOT_FOUND');
     }
     trip.deletedAt = new Date();
     trip.updatedBy = adminExist.id;

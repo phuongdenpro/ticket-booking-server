@@ -37,7 +37,7 @@ export class SeatService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
 
     const seat = new Seat();
@@ -182,13 +182,13 @@ export class SeatService {
     const { name, type, floor, vehicleId } = dto;
     const seat = await this.seatRepository.findOne({ where: { id } });
     if (!seat) {
-      throw new NotFoundException('Seat not found');
+      throw new NotFoundException('SEAT_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
 
     if (name) {
@@ -225,7 +225,7 @@ export class SeatService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     seat.updatedBy = adminExist.id;
     seat.deletedAt = new Date();

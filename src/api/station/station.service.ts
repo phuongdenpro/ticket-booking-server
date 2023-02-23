@@ -28,16 +28,19 @@ export class StationService {
 
   async saveStation(dto: SaveStationDto, userId: string) {
     const { name, address, wardId, images } = dto;
-    console.log(images);
-    
+
     const ward = await this.dataSource
       .getRepository(Ward)
       .findOne({ where: { code: wardId } });
+    if (!ward) {
+      throw new BadRequestException('WARD_NOT_FOUND');
+    }
+
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     const station = new Station();
     station.name = name;
@@ -46,27 +49,27 @@ export class StationService {
     station.createdBy = adminExist.id;
     const newStation = await this.stationRepository.save(station);
 
-    const newImages = await images.map(async (image) => {
+    const saveImages = await images.map(async (image) => {
       image.createdBy = adminExist.id;
-      const newImage = await this.imageResourceService.saveImageResource(
+      const saveImage = await this.imageResourceService.saveImageResource(
         image,
         adminExist.id,
         null,
         newStation.id,
       );
-      delete newImage.station;
-      delete newImage.createdBy;
-      delete newImage.updatedBy;
-      delete newImage.deletedAt;
-      delete newImage.isDeleted;
+      delete saveImage.station;
+      delete saveImage.createdBy;
+      delete saveImage.updatedBy;
+      delete saveImage.deletedAt;
+      delete saveImage.isDeleted;
 
-      return newImage;
+      return saveImage;
     });
-    newStation.images = await Promise.all(newImages);
+    newStation.images = await Promise.all(saveImages);
     return newStation;
   }
 
-  async findOneById(id: string) {
+  async findOneStationById(id: string) {
     const query = this.stationRepository.createQueryBuilder('q');
     query.where('q.id = :id', { id });
 
@@ -141,13 +144,13 @@ export class StationService {
     const station = await this.stationRepository.findOne({ where: { id } });
 
     if (!station) {
-      throw new NotFoundException('Station not found');
+      throw new NotFoundException('STATION_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     station.name = name;
     station.address = address;
@@ -174,17 +177,17 @@ export class StationService {
   }
 
   // delete a record by id
-  async hiddenById(userId: string, id: string) {
+  async deleteStationById(userId: string, id: string) {
     const station = await this.stationRepository.findOne({ where: { id } });
 
     if (!station) {
-      throw new NotFoundException('Station not found');
+      throw new NotFoundException('STATION_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     station.deletedAt = new Date();
     station.updatedBy = adminExist.id;
@@ -198,7 +201,7 @@ export class StationService {
 
       const list = await Promise.all(
         ids.map(async (id) => {
-          await this.hiddenById(userId, id);
+          await this.deleteStationById(userId, id);
         }),
       );
       return list;

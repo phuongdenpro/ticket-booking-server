@@ -43,8 +43,6 @@ export class AuthUserService {
   }
 
   async register(dto: UserRegisterDto) {
-    // if (!dto.username.match(USERNAME_REGEX))
-    //   throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     if (!dto.phone.match(PHONE_REGEX)) {
       throw new BadRequestException('INVALID_PHONE_NUMBER');
     }
@@ -73,13 +71,18 @@ export class AuthUserService {
 
       await queryRunner.commitTransaction();
       const userCreated = await this.userRepository.save(user);
-      delete userCreated.createdAt;
-      delete userCreated.updatedAt;
-      delete userCreated.deletedAt;
-      delete userCreated.updatedBy;
-      delete userCreated.password;
+      const {
+        createdAt,
+        updatedAt,
+        deletedAt,
+        updatedBy,
+        password,
+        ...newUser
+      } = userCreated;
 
-      return userCreated;
+      // this.customerGroupService
+
+      return newUser;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;
@@ -148,7 +151,7 @@ export class AuthUserService {
   async refreshTokens(refreshToken: string) {
     const userExist = await this.findOneByRefreshToken(refreshToken);
     if (!userExist || !userExist.refreshToken)
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
 
     const tokens = await this.authService.createTokens(
       userExist,

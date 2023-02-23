@@ -38,7 +38,7 @@ export class StationController {
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
   async getStationById(@Param('id') id: string) {
-    return await this.stationService.findOneById(id);
+    return await this.stationService.findOneStationById(id);
   }
 
   @Get()
@@ -69,7 +69,7 @@ export class StationController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async hiddenStationById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.stationService.hiddenById(user.id, id);
+    return await this.stationService.deleteStationById(user.id, id);
   }
 
   @Delete('multiple')
@@ -91,6 +91,6 @@ export class StationController {
     @Query() dto: FilterStationDto,
     @Res() res: Response,
   ) {
-    return await this.stationService.exportStation(dto,res);
+    return await this.stationService.exportStation(dto, res);
   }
 }

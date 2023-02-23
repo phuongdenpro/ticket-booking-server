@@ -1,15 +1,12 @@
 import {
   Column,
   Entity,
-  JoinTable,
-  ManyToMany,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToMany,
 } from 'typeorm';
-import { Customer } from './customer.entities';
-import { Promotion } from './promotion.entities';
 import { CustomerGroupDetail } from './customer-group-detail.entities';
 import { ApplicableCustomerGroup } from './applicable-customer-group.entities';
 
@@ -28,23 +25,10 @@ export class CustomerGroup {
   note: string;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
-  createdBy:string;
+  createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
-  updatedBy:string;
-
-  // Relations
-  @ManyToMany(
-    () => CustomerGroupDetail,
-    (customerGroupDetail) => customerGroupDetail.customerGroups,
-  )
-  customerGroupDetail?: CustomerGroupDetail[];
-
-  @ManyToMany(
-    () => ApplicableCustomerGroup,
-    (applicableCustomerGroup) => applicableCustomerGroup.customerGroups,
-  )
-  applicableCustomerGroup?: ApplicableCustomerGroup[];
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
@@ -53,7 +37,6 @@ export class CustomerGroup {
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
   public updatedAt?: Date;
 
@@ -64,4 +47,17 @@ export class CustomerGroup {
     select: false,
   })
   public deletedAt?: Date;
+
+  // Relations
+  @OneToMany(
+    () => CustomerGroupDetail,
+    (customerGroupDetail) => customerGroupDetail.customerGroup,
+  )
+  customerGroupDetail?: CustomerGroupDetail[];
+
+  @OneToMany(
+    () => ApplicableCustomerGroup,
+    (applicableCustomerGroup) => applicableCustomerGroup.customerGroups,
+  )
+  applicableCustomerGroup?: ApplicableCustomerGroup[];
 }

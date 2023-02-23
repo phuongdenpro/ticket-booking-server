@@ -75,7 +75,7 @@ export class VehicleService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     vehicle.createdBy = adminExist.id;
 
@@ -223,7 +223,7 @@ export class VehicleService {
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (name) {
       vehicle.name = name;
@@ -270,13 +270,13 @@ export class VehicleService {
   async deleteById(userId: string, id: string) {
     const hiddenVehicle = await this.vehicleService.findOne({ where: { id } });
     if (!hiddenVehicle) {
-      throw new BadRequestException('Vehicle not found');
+      throw new BadRequestException('VEHICLE_NOT_FOUND');
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
 
     hiddenVehicle.deletedAt = new Date();

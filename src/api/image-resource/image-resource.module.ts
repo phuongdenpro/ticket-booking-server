@@ -6,6 +6,7 @@ import { ImageResource, Station, Vehicle } from 'src/database/entities';
 @Module({
   imports: [TypeOrmModule.forFeature([ImageResource, Station, Vehicle])],
   providers: [ImageResourceService],
+  controllers: [],
   exports: [ImageResourceService],
 })
 export class ImageResourceModule {}
