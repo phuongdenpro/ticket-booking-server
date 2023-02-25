@@ -17,7 +17,7 @@ export class FilterSeatDto {
   @IsOptional()
   name: string;
 
-  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SALES })
+  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SALES, enum: SeatTypeEnum })
   @IsOptional()
   @IsString()
   @IsEnum(SeatTypeEnum)

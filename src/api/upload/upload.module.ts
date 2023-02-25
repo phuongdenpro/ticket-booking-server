@@ -1,11 +1,10 @@
+import { CustomerModule } from './../customer/customer.module';
 import { Module } from '@nestjs/common';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { UploadController } from './upload.controller';
 import { UploadService } from './upload.service';
-import { UsersModule } from '../users/user.module';
 
 @Module({
-  imports: [UsersModule],
+  imports: [CustomerModule],
   controllers: [UploadController],
   providers: [UploadService],
   exports: [UploadService],

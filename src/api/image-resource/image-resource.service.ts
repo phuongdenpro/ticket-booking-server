@@ -40,11 +40,7 @@ export class ImageResourceService {
     if (!vehicleId && !stationId) {
       throw new BadRequestException('INVALID_IMAGE_RESOURCE');
     }
-    if (imageResource.isDeleted) {
-      imageResource.deletedAt = new Date();
-    } else {
-      imageResource.deletedAt = null;
-    }
+
     return await this.imageResourceService.save(imageResource);
   }
 }

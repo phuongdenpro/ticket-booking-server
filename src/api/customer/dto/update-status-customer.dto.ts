@@ -1,10 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserStatusEnum } from './../../../enums';
+import { UserStatusEnum } from '../../../enums';
 import { IsEnum, IsNotEmpty } from 'class-validator';
 
-export class UpdateStatusUserDto {
+export class UpdateStatusCustomerDto {
   @IsEnum(UserStatusEnum)
-  @ApiProperty({ example: UserStatusEnum.INACTIVATE })
+  @ApiProperty({ example: UserStatusEnum.INACTIVATE, enum: UserStatusEnum })
   @IsNotEmpty()
   status: UserStatusEnum;
 }

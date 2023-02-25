@@ -15,7 +15,10 @@ export class FilterVehicleDto {
   @IsOptional()
   name: string;
 
-  @ApiPropertyOptional({ example: VehicleTypeEnum.LIMOUSINE })
+  @ApiPropertyOptional({
+    example: VehicleTypeEnum.LIMOUSINE,
+    enum: VehicleTypeEnum,
+  })
   @IsOptional()
   @IsString()
   @IsEnum(VehicleTypeEnum)

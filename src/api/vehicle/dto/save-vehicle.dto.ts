@@ -29,7 +29,10 @@ export class SaveVehicleDto {
   })
   description: string;
 
-  @ApiPropertyOptional({ example: VehicleTypeEnum.SLEEPER_BUS })
+  @ApiPropertyOptional({
+    example: VehicleTypeEnum.SLEEPER_BUS,
+    enum: VehicleTypeEnum,
+  })
   @IsOptional()
   @IsString()
   @IsEnum(VehicleTypeEnum)
@@ -50,7 +53,7 @@ export class SaveVehicleDto {
   @Max(2)
   floorNumber: number;
 
-  @ApiProperty({ example: VehicleSeatsEnum.LIMOUSINE })
+  @ApiProperty({ example: VehicleSeatsEnum.LIMOUSINE, enum: VehicleSeatsEnum })
   @IsNotEmpty()
   @IsNumber()
   @IsEnum(VehicleSeatsEnum)

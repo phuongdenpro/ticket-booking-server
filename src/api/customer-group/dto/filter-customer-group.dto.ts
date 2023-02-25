@@ -8,7 +8,7 @@ export class FilterCustomerDto {
   @IsString({ message: 'CUSTOMER_NAME_IS_STRING' })
   customerName: string;
 
-  @ApiPropertyOptional({ example: GenderEnum.MALE })
+  @ApiPropertyOptional({ example: GenderEnum.MALE, enum: GenderEnum })
   @IsOptional()
   @IsString({ message: 'GENDER_IS_STRING' })
   @IsEnum(GenderEnum, { message: 'GENDER_IS_ENUM' })
@@ -24,7 +24,7 @@ export class FilterCustomerDto {
   @IsString({ message: 'EMAIL_IS_STRING' })
   email: string;
 
-  @ApiPropertyOptional({ example: SortEnum.ASC })
+  @ApiPropertyOptional({ example: SortEnum.ASC, enum: SortEnum })
   @IsOptional()
   @IsString({ message: 'SORT_IS_STRING' })
   @IsEnum(SortEnum, { message: 'SORT_IS_ENUM' })

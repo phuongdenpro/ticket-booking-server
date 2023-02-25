@@ -44,7 +44,7 @@ export class UpdateTripDto {
   @IsOptional()
   toStationId: string;
 
-  @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE })
+  @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE, enum: TripStatusEnum })
   @IsOptional()
   @IsEnum(TripStatusEnum)
   @IsNumber()

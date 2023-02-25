@@ -13,7 +13,10 @@ export class UpdateTripDetailDto {
   @IsDate({ context: { errorCode: 400, description: 'INVALID_DATE' } })
   expectedTime: Date;
 
-  @ApiPropertyOptional({ example: TripDetailStatusEnum.SALES })
+  @ApiPropertyOptional({
+    example: TripDetailStatusEnum.SALES,
+    enum: TripDetailStatusEnum,
+  })
   @IsOptional()
   @IsString({ message: 'INVALID_STRING' })
   @IsEnum(TripDetailStatusEnum, { message: 'INVALID_TRIP_DETAIL_STATUS' })

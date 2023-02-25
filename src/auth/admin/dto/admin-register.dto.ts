@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { GenderEnum } from './../../../enums';
 import {
   IsEnum,
@@ -25,14 +25,13 @@ export class AdminRegisterDto {
   @IsString()
   name: string;
 
-  @ApiProperty({ example: '0354043344' })
+  @ApiPropertyOptional({ example: '0354043344' })
   @IsOptional()
   @IsString()
   phone?: string;
 
-  @ApiProperty({ example: GenderEnum.FEMALE })
+  @ApiPropertyOptional({ example: GenderEnum.FEMALE, enum: GenderEnum })
   @IsOptional()
-  @IsNotEmpty()
   @IsEnum(GenderEnum)
   gender?: GenderEnum;
 }

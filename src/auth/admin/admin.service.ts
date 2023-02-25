@@ -75,13 +75,17 @@ export class AdminService {
       const staffCreated = await this.staffRepository.save(staffCred);
 
       await queryRunner.commitTransaction();
-      delete staffCreated.createdAt;
-      delete staffCreated.updatedAt;
-      delete staffCreated.deletedAt;
-      delete staffCreated.createdBy;
-      delete staffCreated.updatedBy;
-      delete staffCreated.password;
-      return staffCreated;
+      const {
+        createdAt,
+        updatedAt,
+        deletedAt,
+        createdBy,
+        updatedBy,
+        password,
+        ...staff
+      } = staffCreated;
+
+      return staff;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;

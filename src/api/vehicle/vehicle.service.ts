@@ -96,7 +96,6 @@ export class VehicleService {
         delete newImage.createdBy;
         delete newImage.updatedBy;
         delete newImage.deletedAt;
-        delete newImage.isDeleted;
 
         return newImage;
       });
@@ -263,7 +262,6 @@ export class VehicleService {
       delete newImage.createdBy;
       delete newImage.updatedBy;
       delete newImage.deletedAt;
-      delete newImage.isDeleted;
 
       return newImage;
     });

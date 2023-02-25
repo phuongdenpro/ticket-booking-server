@@ -59,7 +59,6 @@ export class StationService {
       delete saveImage.createdBy;
       delete saveImage.updatedBy;
       delete saveImage.deletedAt;
-      delete saveImage.isDeleted;
 
       return saveImage;
     });

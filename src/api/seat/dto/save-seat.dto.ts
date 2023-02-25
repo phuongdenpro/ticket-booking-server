@@ -18,7 +18,7 @@ export class SaveSeatDto {
   @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
   name: string;
 
-  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SALES })
+  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SALES, enum: SeatTypeEnum })
   @IsOptional()
   @IsString()
   @IsEnum(SeatTypeEnum)

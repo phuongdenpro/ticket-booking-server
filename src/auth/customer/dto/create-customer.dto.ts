@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { GenderEnum } from './../../../enums';
+import { GenderEnum } from '../../../enums';
 import {
   IsDate,
   IsEnum,
@@ -9,7 +9,7 @@ import {
   MinLength,
 } from 'class-validator';
 
-export class UserRegisterDto {
+export class CustomerRegisterDto {
   @ApiPropertyOptional({ example: 'superman@gmail.com' })
   @IsString()
   @IsOptional()
@@ -36,7 +36,7 @@ export class UserRegisterDto {
   @IsString()
   phone?: string;
 
-  @ApiProperty({ example: GenderEnum.NONE })
+  @ApiProperty({ example: GenderEnum.NONE, enum: GenderEnum })
   @IsEnum(GenderEnum)
   @IsNotEmpty()
   gender: GenderEnum.NONE;

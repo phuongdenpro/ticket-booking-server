@@ -1,48 +1,31 @@
-import { Customer } from './../../database/entities';
+import { CustomerService } from '../../api/customer/customer.service';
+import { Customer } from '../../database/entities';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RoleEnum } from './../../enums';
+import { RoleEnum } from '../../enums';
 import { EMAIL_REGEX, PHONE_REGEX } from '../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
-import { UserUpdatePasswordDto, UserLoginDto, UserRegisterDto } from './dto';
-import * as bcrypt from 'bcrypt';
+import { CustomerLoginDto, CustomerRegisterDto } from './dto';
 
 @Injectable()
-export class AuthUserService {
+export class AuthCustomerService {
   constructor(
     @InjectRepository(Customer) private userRepository: Repository<Customer>,
     private authService: AuthService,
+    private customerService: CustomerService,
     private dataSource: DataSource,
   ) {}
-
-  async findOneById(id: string, options?: any) {
-    return this.userRepository.findOne({ where: { id }, ...options });
-  }
-
-  async findOneByEmail(username: string, options?: any) {
-    return this.userRepository.findOne({
-      where: { email: username },
-      ...options,
-    });
-  }
-
-  async findOneByRefreshToken(refreshToken: string, options?: any) {
-    return this.userRepository.findOne({
-      where: { refreshToken },
-      ...options,
-    });
-  }
 
   async updateUserCredentialByUserId(userId: string, data: any) {
     return this.userRepository.update({ id: userId }, data);
   }
 
-  async register(dto: UserRegisterDto) {
+  async register(dto: CustomerRegisterDto) {
     if (!dto.phone.match(PHONE_REGEX)) {
       throw new BadRequestException('INVALID_PHONE_NUMBER');
     }
@@ -50,7 +33,7 @@ export class AuthUserService {
       throw new BadRequestException('INVALID_EMAIL');
     }
 
-    const userExist = await this.findOneByEmail(dto.email);
+    const userExist = await this.customerService.findOneByEmail(dto.email);
     if (userExist) {
       throw new BadRequestException('USERNAME_ALREADY_EXIST');
     }
@@ -80,8 +63,6 @@ export class AuthUserService {
         ...newUser
       } = userCreated;
 
-      // this.customerGroupService
-
       return newUser;
     } catch (err) {
       await queryRunner.rollbackTransaction();
@@ -92,13 +73,13 @@ export class AuthUserService {
   }
 
   async profile(id: string) {
-    const userExist = this.findOneById(id);
+    const userExist = this.customerService.findOneById(id);
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
     return userExist;
   }
 
-  async login(dto: UserLoginDto) {
-    const userExist = await this.findOneByEmail(dto.email);
+  async login(dto: CustomerLoginDto) {
+    const userExist = await this.customerService.findOneByEmail(dto.email);
 
     if (!userExist) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
@@ -149,7 +130,9 @@ export class AuthUserService {
   }
 
   async refreshTokens(refreshToken: string) {
-    const userExist = await this.findOneByRefreshToken(refreshToken);
+    const userExist = await this.customerService.findOneByRefreshToken(
+      refreshToken,
+    );
     if (!userExist || !userExist.refreshToken)
       throw new UnauthorizedException('UNAUTHORIZED');
 
@@ -164,29 +147,5 @@ export class AuthUserService {
     });
 
     return tokens;
-  }
-
-  async updatePassword(id: string, dto: UserUpdatePasswordDto) {
-    const userExist = await this.findOneById(id);
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
-
-    const isPasswordMatches = await bcrypt.compare(
-      dto?.oldPassword,
-      userExist?.password,
-    );
-    if (!isPasswordMatches)
-      throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    // if (!isPasswordMatches) throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    if (dto?.newPassword !== dto?.confirmNewPassword)
-      throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
-
-    const passwordHash = await bcrypt.hash(
-      dto.newPassword,
-      await bcrypt.genSalt(),
-    );
-    return await this.userRepository.update(
-      { id: userExist.id },
-      { password: passwordHash, updatedBy: userExist.id },
-    );
   }
 }

@@ -18,9 +18,6 @@ export class ImageResource {
   @Column({ name: 'url', type: 'text', nullable: false })
   url: string;
 
-  @Column({ name: 'is_deleted', type: 'tinyint', default: false })
-  isDeleted: boolean;
-
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
 

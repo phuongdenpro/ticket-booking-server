@@ -1,3 +1,4 @@
+import { AuthCustomerModule } from './customer/customer.module';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
@@ -6,7 +7,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AdminModule } from './admin/admin.module';
 import { AuthService } from './auth.service';
 import { AtStrategy, LocalStrategy, RtStrategy } from './strategies';
-import { AuthUserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -14,7 +14,7 @@ import { AuthUserModule } from './user/user.module';
     JwtModule.register({}),
     TypeOrmModule.forFeature([]),
     AdminModule,
-    AuthUserModule,
+    AuthCustomerModule,
     HttpModule,
   ],
   controllers: [],

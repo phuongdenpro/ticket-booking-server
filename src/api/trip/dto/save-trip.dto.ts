@@ -49,7 +49,7 @@ export class SaveTripDto {
   @Length(36, 36, { message: 'To Station Id must be 36 characters' })
   toStationId: string;
 
-  @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE })
+  @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE, enum: TripStatusEnum })
   @IsOptional()
   @IsEnum(TripStatusEnum)
   @IsNumber()
