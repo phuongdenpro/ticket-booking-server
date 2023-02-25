@@ -1,4 +1,4 @@
-import { SortEnum } from './../../enums/sort.enum';
+import { SeatTypeEnum, SortEnum } from './../../enums';
 import {
   BadRequestException,
   Injectable,
@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Seat, Staff, Vehicle } from 'src/database/entities';
+import { Seat, Staff, Vehicle } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import {
   FilterSeatDto,
@@ -14,8 +14,7 @@ import {
   SeatDeleteMultiInput,
   UpdateSeatDto,
 } from './dto';
-import { Pagination } from 'src/decorator';
-import { SeatTypeEnum } from 'src/enums';
+import { Pagination } from './../../decorator';
 
 @Injectable()
 export class SeatService {

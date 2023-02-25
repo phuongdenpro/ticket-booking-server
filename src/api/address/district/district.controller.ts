@@ -1,6 +1,20 @@
-import { UpdateDistrictDto } from './dto/update-district.dto';
-import { FilterDistrictDto } from './dto/filter-district.dto';
+import { JwtAuthGuard } from './../../../auth/guards';
+import { RoleEnum } from './../../../enums/roles.enum';
 import { DistrictService } from './district.service';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../../decorator';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import {
+  SaveDistrictDto,
+  DistrictDeleteMultiCode,
+  UpdateDistrictDto,
+  FilterDistrictDto,
+  DistrictDeleteMultiId,
+} from './dto';
 import {
   Body,
   Controller,
@@ -14,12 +28,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RoleEnum } from 'src/enums';
-import { JwtAuthGuard } from 'src/auth/guards';
-import { SaveDistrictDto } from './dto/save-district.dto';
-import { DistrictDeleteMultiCode, DistrictDeleteMultiId } from './dto';
 
 @Controller('district')
 @ApiTags('District')

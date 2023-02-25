@@ -8,7 +8,7 @@ import {
   IsArray,
   Length,
 } from 'class-validator';
-import { ImageResource } from 'src/database/entities';
+import { ImageResource } from './../../../database/entities';
 
 export class SaveStationDto {
   @ApiProperty({ example: 'Bến xe Demo' })

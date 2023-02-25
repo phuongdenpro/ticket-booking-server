@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { UserStatusEnum } from 'src/enums';
+import { UserStatusEnum } from './../../../enums';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class FilterUserDto {

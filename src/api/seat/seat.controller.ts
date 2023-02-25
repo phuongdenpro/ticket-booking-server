@@ -1,3 +1,4 @@
+import { RoleEnum } from './../../enums/roles.enum';
 import {
   Body,
   Controller,
@@ -13,9 +14,13 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { SeatService } from './seat.service';
-import { RoleEnum } from 'src/enums';
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
-import { JwtAuthGuard } from 'src/auth/guards';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
+import { JwtAuthGuard } from './../../auth/guards';
 import {
   FilterSeatDto,
   SaveSeatDto,

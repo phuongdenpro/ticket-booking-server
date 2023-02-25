@@ -4,8 +4,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { District, Province, Staff } from 'src/database/entities';
-import { Pagination } from 'src/decorator';
+import { District, Province, Staff } from './../../../database/entities';
+import { Pagination } from './../../../decorator';
 import { DataSource, Repository } from 'typeorm';
 import {
   UpdateDistrictDto,

@@ -4,9 +4,9 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Ward, District, Staff } from 'src/database/entities';
+import { Ward, District, Staff } from './../../../database/entities';
 import { DataSource, Repository } from 'typeorm';
-import { Pagination } from 'src/decorator';
+import { Pagination } from './../../../decorator';
 import {
   SaveWardDto,
   FilterWardDto,

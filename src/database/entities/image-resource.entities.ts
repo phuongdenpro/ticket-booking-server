@@ -1,4 +1,4 @@
-import { Station, Vehicle } from 'src/database/entities';
+import { Station, Vehicle } from './../../database/entities';
 import {
   Column,
   CreateDateColumn,

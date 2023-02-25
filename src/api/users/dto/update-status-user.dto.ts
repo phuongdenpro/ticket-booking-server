@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserStatusEnum } from 'src/enums';
+import { UserStatusEnum } from './../../../enums';
 import { IsEnum, IsNotEmpty } from 'class-validator';
 
 export class UpdateStatusUserDto {

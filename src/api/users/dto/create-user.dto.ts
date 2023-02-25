@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { UserStatusEnum } from 'src/enums';
+import { UserStatusEnum } from './../../../enums';
 import {
   IsDate,
   IsEnum,

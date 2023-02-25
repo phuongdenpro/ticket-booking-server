@@ -1,4 +1,4 @@
-import { SeatTypeEnum } from 'src/enums';
+import { SeatTypeEnum } from './../../../enums/seat-type.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,

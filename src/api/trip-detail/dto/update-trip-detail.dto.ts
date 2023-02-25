@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
-import { TripDetailStatusEnum } from 'src/enums';
+import { TripDetailStatusEnum } from './../../../enums';
 
 export class UpdateTripDetailDto {
   @ApiPropertyOptional({ example: '2023-02-12' })

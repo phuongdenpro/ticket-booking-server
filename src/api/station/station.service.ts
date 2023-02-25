@@ -1,17 +1,15 @@
 import { SortEnum } from './../../enums/sort.enum';
-import { Ward } from './../../database/entities/vi-address-ward.entities';
 import { DataSource, Repository } from 'typeorm';
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ImageResource, Staff, Station } from 'src/database/entities';
+import { ImageResource, Staff, Station, Ward } from './../../database/entities';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Pagination } from 'src/decorator';
-import { FilterStationDto, SaveStationDto } from './dto';
+import { Pagination } from './../../decorator';
+import { FilterStationDto, SaveStationDto, StationDeleteInput } from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
-import { StationDeleteInput } from './dto/delete-station.dto';
 import { BadRequestException } from '@nestjs/common';
 import * as excel from 'exceljs';
 import { Response } from 'express';

@@ -1,4 +1,4 @@
-import { GenderEnum, SortEnum } from 'src/enums';
+import { SortEnum, GenderEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEnum } from 'class-validator';
 

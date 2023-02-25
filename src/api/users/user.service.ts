@@ -1,5 +1,5 @@
-import { Pagination } from 'src/decorator';
-import { Customer } from 'src/database/entities';
+import { Pagination } from './../../decorator';
+import { Customer } from './../../database/entities';
 import {
   BadRequestException,
   Injectable,
@@ -7,10 +7,8 @@ import {
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UserStatusEnum } from 'src/enums';
-// import { mappingTranslate } from '@src/libs/utils/translate.util';
-import { GenderEnum } from 'src/enums';
-import { EMAIL_REGEX, PHONE_REGEX } from 'src/utils/regex.util';
+import { UserStatusEnum, GenderEnum } from './../../enums';
+import { EMAIL_REGEX, PHONE_REGEX } from './../../utils/regex.util';
 import * as bcrypt from 'bcrypt';
 import moment from 'moment';
 import { DataSource, Repository } from 'typeorm';

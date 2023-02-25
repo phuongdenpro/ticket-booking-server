@@ -1,5 +1,9 @@
-import { UpdateVehicleDto } from './dto/update-vehicle.dto';
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
 import {
   Body,
   Controller,
@@ -12,8 +16,8 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { RoleEnum } from 'src/enums';
-import { JwtAuthGuard } from 'src/auth/guards';
+import { RoleEnum } from './../../enums';
+import { JwtAuthGuard } from './../../auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Patch } from '@nestjs/common/decorators';
 import { VehicleService } from './vehicle.service';
@@ -21,6 +25,7 @@ import {
   FilterVehicleDto,
   SaveVehicleDto,
   VehicleDeleteMultiInput,
+  UpdateVehicleDto,
 } from './dto';
 
 @Controller('vehicle')

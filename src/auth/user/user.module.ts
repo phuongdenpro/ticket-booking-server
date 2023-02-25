@@ -1,4 +1,4 @@
-import { Customer } from 'src/database/entities';
+import { Customer } from './../../database/entities';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from '../auth.service';

@@ -1,13 +1,12 @@
-import { SaveSeatDto } from './../seat/dto/save-seat.dto';
-import { SortEnum } from './../../enums/sort.enum';
+import { SaveSeatDto } from './../seat/dto';
 import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { ImageResource, Staff, Vehicle } from 'src/database/entities';
-import { LICENSE_PLATE_REGEX } from 'src/utils';
+import { ImageResource, Staff, Vehicle } from './../../database/entities';
+import { LICENSE_PLATE_REGEX } from './../../utils';
 import { DataSource, Repository } from 'typeorm';
 import {
   FilterVehicleDto,
@@ -16,8 +15,13 @@ import {
   VehicleDeleteMultiInput,
 } from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
-import { Pagination } from 'src/decorator';
-import { VehicleTypeEnum, VehicleSeatsEnum, SeatTypeEnum } from 'src/enums';
+import { Pagination } from './../../decorator';
+import {
+  VehicleTypeEnum,
+  VehicleSeatsEnum,
+  SeatTypeEnum,
+  SortEnum,
+} from './../../enums';
 import { SeatService } from '../seat/seat.service';
 
 @Injectable()

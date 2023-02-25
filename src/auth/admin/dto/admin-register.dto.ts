@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { GenderEnum } from 'src/enums';
+import { GenderEnum } from './../../../enums';
 import {
   IsEnum,
   IsNotEmpty,

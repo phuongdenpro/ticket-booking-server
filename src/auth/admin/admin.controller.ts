@@ -1,5 +1,5 @@
 import { AdminRefreshTokenDto } from './dto/admin-refresh-token.dto';
-import { CurrentUser } from 'src/decorator';
+import { CurrentUser } from './../../decorator';
 import {
   Body,
   Controller,

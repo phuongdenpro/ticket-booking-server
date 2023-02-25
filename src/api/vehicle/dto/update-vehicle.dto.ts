@@ -9,8 +9,8 @@ import {
   IsEnum,
   IsArray,
 } from 'class-validator';
-import { ImageResource } from 'src/database/entities';
-import { VehicleTypeEnum, VehicleSeatsEnum } from 'src/enums';
+import { ImageResource } from './../../../database/entities';
+import { VehicleTypeEnum, VehicleSeatsEnum } from './../../../enums';
 
 export class UpdateVehicleDto {
   @ApiPropertyOptional({ example: 'Xe giường nằm Limousine số 1' })

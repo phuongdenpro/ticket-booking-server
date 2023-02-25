@@ -1,17 +1,17 @@
-import { SaveProvinceDto } from './dto/save-province.dto';
-import { Province, Staff } from 'src/database/entities';
+import { Province, Staff } from './../../../database/entities';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Pagination } from 'src/decorator';
+import { Pagination } from './../../../decorator';
 import { DataSource, Repository } from 'typeorm';
 import {
   FilterProvinceDto,
   ProvinceDeleteMultiCode,
   ProvinceDeleteMultiId,
+  SaveProvinceDto,
 } from './dto';
 
 @Injectable()

@@ -1,4 +1,10 @@
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
+import { RoleEnum } from './../../enums';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
 import { StationService } from './station.service';
 import {
   Body,
@@ -12,12 +18,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { RoleEnum } from 'src/enums';
-import { JwtAuthGuard } from 'src/auth/guards';
+import { JwtAuthGuard } from './../../auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { FilterStationDto, SaveStationDto } from './dto';
+import { FilterStationDto, SaveStationDto, StationDeleteInput } from './dto';
 import { Patch, Res } from '@nestjs/common/decorators';
-import { StationDeleteInput } from './dto/delete-station.dto';
 import { Readable } from 'stream';
 import { Response } from 'express';
 

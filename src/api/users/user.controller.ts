@@ -1,6 +1,10 @@
-import { CurrentUser, GetPagination, Pagination } from 'src/decorator';
-import { Roles } from 'src/decorator/roles.decorator';
-import { Staff } from 'src/database/entities';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
+import { Staff } from './../../database/entities';
 import {
   Body,
   Controller,
@@ -17,9 +21,8 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards';
-// import { LoggingInterceptor } from '@src/libs/utils/filter/logging.filter';
-import { RoleEnum } from 'src/enums';
+import { JwtAuthGuard } from './../../auth/guards';
+import { RoleEnum } from './../../enums';
 
 import {
   CountUserDto,

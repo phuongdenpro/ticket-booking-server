@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
-import { SortEnum } from 'src/enums';
+import { SortEnum } from './../../../enums';
 
 export class CountUserDto {
   @ApiPropertyOptional()

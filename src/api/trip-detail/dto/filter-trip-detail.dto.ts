@@ -6,7 +6,7 @@ import {
   IsString,
   IsNumber,
 } from 'class-validator';
-import { TripDetailStatusEnum } from 'src/enums';
+import { TripDetailStatusEnum } from './../../../enums';
 
 export class FilterTripDetailDto {
   @ApiPropertyOptional({ example: '2023-02-12' })

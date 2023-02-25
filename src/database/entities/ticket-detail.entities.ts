@@ -1,6 +1,5 @@
 import { Seat } from './seat.entities';
 import { Ticket } from './ticket.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 import {
   Column,
   Entity,
@@ -8,7 +7,11 @@ import {
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
+
 @Entity({ name: 'ticket_detail' })
 export class TicketDetail {
   @PrimaryGeneratedColumn('uuid')

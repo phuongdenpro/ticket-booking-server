@@ -1,7 +1,7 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 import { ApiQuery } from '@nestjs/swagger';
 
-import { toBoolean } from 'src/utils';
+import { toBoolean } from './../utils';
 
 export type Pagination = {
   skip?: number;

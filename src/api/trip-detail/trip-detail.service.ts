@@ -1,5 +1,3 @@
-import { UpdateTripDetailDto } from './dto/update-trip-detail.dto';
-import { Vehicle } from './../../database/entities/vehicle.entities';
 import {
   BadRequestException,
   Injectable,
@@ -7,12 +5,16 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Staff, Trip, TripDetail } from 'src/database/entities';
+import { Staff, Trip, TripDetail, Vehicle } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
-import { SaveTripDetailDto, TripDetailDeleteMultiInput } from './dto';
-import { SortEnum, TripDetailStatusEnum } from 'src/enums';
-import { FilterTripDetailDto } from './dto/filter-trip-detail.dto';
-import { Pagination } from 'src/decorator';
+import {
+  SaveTripDetailDto,
+  TripDetailDeleteMultiInput,
+  UpdateTripDetailDto,
+  FilterTripDetailDto,
+} from './dto';
+import { SortEnum, TripDetailStatusEnum } from './../../enums';
+import { Pagination } from './../../decorator';
 
 @Injectable()
 export class TripDetailService {

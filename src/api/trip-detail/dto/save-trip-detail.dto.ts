@@ -7,7 +7,7 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { TripDetailStatusEnum } from 'src/enums';
+import { TripDetailStatusEnum } from './../../../enums';
 
 export class SaveTripDetailDto {
   @ApiProperty({ example: '2023-02-12' })

@@ -1,5 +1,4 @@
-import { UserRefreshTokenDto } from './dto/user-refresh-token.dto';
-import { CurrentUser } from 'src/decorator';
+import { CurrentUser } from './../../decorator';
 import {
   Body,
   Controller,
@@ -10,8 +9,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards';
-import { UserLoginDto } from './dto/user-login.dto';
-import { UserRegisterDto } from './dto/user-register.dto';
+import { UserLoginDto, UserRegisterDto, UserRefreshTokenDto } from './dto';
 import { AuthUserService } from './user.service';
 
 @Controller('auth/user')
