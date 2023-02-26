@@ -24,6 +24,11 @@ export const mappingTranslate = {
   PHONE_IS_STRING: 'Số điện thoại phải là chuỗi ký tự',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
   NAME_BETWEEN_1_100_CHARACTERS: 'Tên phải từ 1 đến 100 ký tự',
+  CODE_BETWEEN_1_10_CHARACTERS: 'Mã phải từ 1 đến 10 ký tự',
+  CODE_IS_NUMBER: 'mã phải là số',
+  CODE_IS_STRING: 'mã phải là chuỗi ký tự',
+  CODE_IS_REQUIRED: 'Mã không được để trống',
+  KEYWORDS_IS_STRING: 'Từ khóa phải là chuỗi ký tự',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',
@@ -69,12 +74,18 @@ export const mappingTranslate = {
   INVALID_IMAGE_RESOURCE: 'Ảnh không đúng định dạng',
 
   // province
-  PROVINCE_NOT_FOUND: 'Không tìm thấy tỉnh/thành phố',
   TO_PROVINCE_CODE_INVALID_NUMBER: 'mã tỉnh thành đi phải là số',
   FROM_PROVINCE_CODE_INVALID_NUMBER: 'mã tỉnh thành đến phải là số',
   CODENAME_IS_STRING: 'Mã tên phải là chuỗi ký tự',
   CODENAME_BETWEEN_1_255_CHARACTERS: 'Mã tên phải từ 1 đến 255 ký tự',
+  PROVINCE_NOT_FOUND: 'Không tìm thấy tỉnh/thành phố',
+  CODENAME_IS_REQUIRED: 'Mã tên phải là chuỗi ký tự',
   PROVINCE_CODE_IS_NUMBER: 'mã tỉnh thành phải là số',
+  PROVINCE_CODE_IS_REQUIRED: 'mã tỉnh thành phải là số',
+  PROVINCE_TYPE_IS_STRING: 'tỉnh thành phải là chuỗi ký tự',
+  PROVINCE_TYPE_IS_REQUIRED: 'loại tỉnh thành không được để trống',
+  PROVINCE_TYPE_BETWEEN_1_50_CHARACTERS:
+    'loại tỉnh thành phải từ 1 đến 50 ký tự',
 
   // district
   DISTRICT_NOT_FOUND: 'Không tìm thấy quận/huyện',
@@ -84,13 +95,19 @@ export const mappingTranslate = {
 
   // ward
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
+  WARD_ID_IS_REQUIRED: 'Mã phường/xã không được để trống',
+  WARD_ID_IS_NUMBER: 'Mã phường/xã phải là số',
 
   // station
-  STATION_NOT_FOUND: 'Không tìm thấy bến xe',
+  STATION_CODE_EXISTED: 'Mã bến xe đã tồn tại',
   FROM_STATION_NOT_FOUND: 'Không tìm thấy bến xe đi',
-  TO_STATION_NOT_FOUND: 'Không tìm thấy bến xe đến',
   FROM_STATION_AND_TO_STATION_IS_SAME:
     'Bến xe đi và bến xe đến không được trùng nhau',
+  TO_STATION_NOT_FOUND: 'Không tìm thấy bến xe đến',
+  STATION_NOT_FOUND: 'Không tìm thấy bến xe',
+  ADDRESS_IS_REQUIRED: 'Địa chỉ không được để trống',
+  ADDRESS_IS_STRING: 'Địa chỉ phải là chuỗi ký tự',
+  ADDRESS_BETWEEN_1_255_CHARACTERS: 'Địa chỉ phải từ 1 đến 255 ký tự',
 
   // seat
   SEAT_NOT_FOUND: 'Không tìm thấy ghế',

@@ -24,6 +24,15 @@ export class Station {
   @Column({ name: 'address', type: 'varchar', length: 255, nullable: false })
   address: string;
 
+  @Column({
+    name: 'code',
+    type: 'varchar',
+    length: 10,
+    nullable: false,
+    unique: true,
+  })
+  code: string;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 

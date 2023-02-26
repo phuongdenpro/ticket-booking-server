@@ -1,4 +1,4 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
@@ -8,32 +8,33 @@ import {
   IsArray,
   Length,
 } from 'class-validator';
-import { ImageResource } from './../../../database/entities';
+import { ImageResource } from '../../../database/entities';
 
-export class SaveStationDto {
-  @ApiProperty({ example: 'Bến xe Demo' })
-  @IsNotEmpty({ message: 'NAME_IS_REQUIRED' })
+export class UpdateStationDto {
+  @ApiPropertyOptional({ example: 'Bến xe Demo' })
+  @IsOptional()
   @IsString({ message: 'NAME_IS_STRING' })
   @Length(1, 100, { message: 'NAME_BETWEEN_1_100_CHARACTERS' })
   name: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'Demo, Phường 26, Bình Thạnh, Thành phố Hồ Chí Minh',
   })
-  @IsNotEmpty({ message: 'ADDRESS_IS_REQUIRED' })
+  @IsOptional()
   @IsString({ message: 'ADDRESS_IS_STRING' })
   @Length(1, 255, { message: 'ADDRESS_BETWEEN_1_255_CHARACTERS' })
   address: string;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: 'SGDM',
   })
-  @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
+  @IsOptional()
   @IsString({ message: 'CODE_IS_STRING' })
   @Length(1, 255, { message: 'CODE_BETWEEN_1_10_CHARACTERS' })
   code: string;
 
-  @ApiProperty({ example: 26914 })
+  @ApiPropertyOptional({ example: 26914 })
+  @IsOptional()
   @IsNotEmpty({ message: 'WARD_ID_IS_REQUIRED' })
   @IsNumber(
     { allowInfinity: false, allowNaN: false },

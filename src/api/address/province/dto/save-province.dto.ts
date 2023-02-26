@@ -1,30 +1,34 @@
+import { ProvinceTypeEnum } from './../../../../enums/province-type.enum';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsNumber, Length } from 'class-validator';
 
 export class SaveProvinceDto {
   @ApiProperty({ example: 'Thành phố Hà Nội' })
-  @IsNotEmpty({ message: 'Name is required' })
-  @IsString({ message: 'Name is string' })
-  @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
+  @IsNotEmpty({ message: 'NAME_IS_REQUIRED' })
+  @IsString({ message: 'NAME_IS_STRING' })
+  @Length(1, 100, { message: 'NAME_LENGTH' })
   name: string;
 
-  @ApiProperty({ example: 'thành phố trung ương' })
-  @IsNotEmpty({ message: 'Type is required' })
-  @IsString()
-  @Length(1, 50, { message: 'Type must be between 1 and 50 characters' })
-  type: string;
+  @ApiProperty({
+    example: ProvinceTypeEnum.MUNICIPALITY,
+    enum: ProvinceTypeEnum,
+  })
+  @IsNotEmpty({ message: 'PROVINCE_TYPE_IS_REQUIRED' })
+  @IsString({ message: 'PROVINCE_TYPE_IS_STRING' })
+  @Length(1, 50, { message: 'PROVINCE_TYPE_BETWEEN_1_50_CHARACTERS' })
+  type: ProvinceTypeEnum;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty({ message: 'code is number' })
+  @IsNotEmpty({ message: 'CODENAME_IS_REQUIRED' })
   @IsNumber(
     { allowNaN: false, allowInfinity: false },
-    { message: 'code is number' },
+    { message: 'CODE_IS_NUMBER' },
   )
   code: number;
 
   @ApiProperty({ example: 'thanh_pho_ha_noi' })
-  @IsNotEmpty({ message: 'code name is require' })
-  @IsString({ message: 'code name is string' })
-  @Length(1, 255, { message: 'code name must be between 1 and 255 characters' })
+  @IsNotEmpty({ message: 'CODENAME_IS_REQUIRED' })
+  @IsString({ message: 'CODENAME_IS_STRING' })
+  @Length(1, 255, { message: 'CODENAME_BETWEEN_1_255_CHARACTERS' })
   codename: string;
 }

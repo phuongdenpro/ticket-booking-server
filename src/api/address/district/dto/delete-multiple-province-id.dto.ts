@@ -5,7 +5,7 @@ export class DistrictDeleteMultiCode {
   @ApiProperty({
     example: [1000],
     description: 'list code',
-    type: Array<number>,
+    type: [Number],
   })
   @IsArray()
   @IsNotEmpty({ message: 'CODES_IS_REQUIRED' })

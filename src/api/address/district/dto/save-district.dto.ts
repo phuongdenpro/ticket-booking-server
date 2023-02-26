@@ -15,18 +15,24 @@ export class SaveDistrictDto {
   type: string;
 
   @ApiProperty({ example: 17 })
-  @IsNotEmpty()
-  @IsNumber()
+  @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
+  @IsNumber(
+    { allowInfinity: false, allowNaN: false },
+    { message: 'CODE_IS_NUMBER' },
+  )
   code: number;
 
   @ApiProperty({ example: 'huyen_dong_anh' })
-  @IsNotEmpty()
-  @IsString()
-  @Length(1, 255)
+  @IsNotEmpty({ message: 'CODENAME_IS_REQUIRED' })
+  @IsString({ message: 'CODENAME_IS_STRING' })
+  @Length(1, 255, { message: 'CODENAME_BETWEEN_1_255_CHARACTERS' })
   codename: string;
 
   @ApiProperty({ example: 1 })
-  @IsNotEmpty()
-  @IsNumber()
+  @IsNotEmpty({ message: 'PROVINCE_CODE_IS_REQUIRED' })
+  @IsNumber(
+    { allowInfinity: false, allowNaN: false },
+    { message: 'PROVINCE_CODE_IS_NUMBER' },
+  )
   provinceCode: number;
 }

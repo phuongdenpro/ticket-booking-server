@@ -20,9 +20,14 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from './../../auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { FilterStationDto, SaveStationDto, StationDeleteInput } from './dto';
+import {
+  FilterStationDto,
+  SaveStationDto,
+  DeleteStationByIdsDto,
+  UpdateStationDto,
+  DeleteStationByCodesDto,
+} from './dto';
 import { Patch, Res } from '@nestjs/common/decorators';
-import { Readable } from 'stream';
 import { Response } from 'express';
 
 @Controller('station')
@@ -45,6 +50,12 @@ export class StationController {
     return await this.stationService.findOneStationById(id);
   }
 
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
+  async getStationByCode(@Param('code') code: string) {
+    return await this.stationService.findOneStationByCode(code);
+  }
+
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAll(
@@ -62,9 +73,22 @@ export class StationController {
   async updateStationById(
     @CurrentUser() user,
     @Param('id') id: string,
-    @Body() dto: SaveStationDto,
+    @Body() dto: UpdateStationDto,
   ) {
-    return await this.stationService.updateById(user.id, id, dto);
+    return await this.stationService.updateStationById(user.id, id, dto);
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateStationByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdateStationDto,
+  ) {
+    return await this.stationService.updateStationByCode(user.id, code, dto);
   }
 
   @Delete('id/:id')
@@ -72,17 +96,41 @@ export class StationController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async hiddenStationById(@CurrentUser() user, @Param('id') id: string) {
+  async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
     return await this.stationService.deleteStationById(user.id, id);
   }
 
-  @Delete('multiple')
+  @Delete('code/:code')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteMultiple(@CurrentUser() user, @Body() dto: StationDeleteInput) {
-    return await this.stationService.deleteMultiple(user.id, dto);
+  async deleteStationByCode(@CurrentUser() user, @Param('code') code: string) {
+    return await this.stationService.deleteStationByCode(user.id, code);
+  }
+
+  @Delete('multiple/ids')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleStationByIds(
+    @CurrentUser() user,
+    @Body() dto: DeleteStationByIdsDto,
+  ) {
+    return await this.stationService.deleteMultipleStationByIds(user.id, dto);
+  }
+
+  @Delete('multiple/codes')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleStationByCodes(
+    @CurrentUser() user,
+    @Body() dto: DeleteStationByCodesDto,
+  ) {
+    return await this.stationService.deleteMultipleStationByCodes(user.id, dto);
   }
 
   @Post('export')
@@ -90,11 +138,7 @@ export class StationController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async export(
-    @CurrentUser() user,
-    @Query() dto: FilterStationDto,
-    @Res() res: Response,
-  ) {
+  async export(@Query() dto: FilterStationDto, @Res() res: Response) {
     return await this.stationService.exportStation(dto, res);
   }
 }

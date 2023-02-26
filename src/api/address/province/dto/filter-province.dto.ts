@@ -14,7 +14,7 @@ export class FilterProvinceDto {
     enum: ProvinceTypeEnum,
   })
   @IsOptional()
-  @Length(1, 50, { message: 'type must be between 1 and 50 characters' })
+  @Length(1, 50, { message: 'PROVINCE_TYPE_BETWEEN_1_50_CHARACTERS' })
   @IsEnum(ProvinceTypeEnum)
   type: ProvinceTypeEnum;
 
