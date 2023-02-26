@@ -95,7 +95,7 @@ export class DistrictService {
     district.name = dto.name;
     district.type = dto.type;
     district.code = dto.code;
-    district.codename = dto.nameWithType;
+    district.codename = dto.codename;
     district.provinceCode = province.code;
     district.parentCode = province.id;
     const adminExist = await this.dataSource

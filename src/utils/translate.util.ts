@@ -23,6 +23,7 @@ export const mappingTranslate = {
   SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
   PHONE_IS_STRING: 'Số điện thoại phải là chuỗi ký tự',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
+  NAME_BETWEEN_1_100_CHARACTERS: 'Tên phải từ 1 đến 100 ký tự',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',
@@ -71,11 +72,15 @@ export const mappingTranslate = {
   PROVINCE_NOT_FOUND: 'Không tìm thấy tỉnh/thành phố',
   TO_PROVINCE_CODE_INVALID_NUMBER: 'mã tỉnh thành đi phải là số',
   FROM_PROVINCE_CODE_INVALID_NUMBER: 'mã tỉnh thành đến phải là số',
+  CODENAME_IS_STRING: 'Mã tên phải là chuỗi ký tự',
+  CODENAME_BETWEEN_1_255_CHARACTERS: 'Mã tên phải từ 1 đến 255 ký tự',
+  PROVINCE_CODE_IS_NUMBER: 'mã tỉnh thành phải là số',
 
   // district
   DISTRICT_NOT_FOUND: 'Không tìm thấy quận/huyện',
   DISTRICT_TYPE_IS_STRING: 'Quận/huyện phải là chuỗi ký tự',
   DISTRICT_TYPE_LENGTH: 'Quận/huyện phải từ 1 đến 50 ký tự',
+  DISTRICT_TYPE_REQUIRED: 'Quận/huyện không được để trống',
 
   // ward
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',

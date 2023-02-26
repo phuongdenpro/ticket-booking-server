@@ -1,4 +1,4 @@
-import { AuthCustomerModule } from './customer/customer.module';
+import { AuthCustomerModule } from './customer/auth-customer.module';
 import { HttpModule } from '@nestjs/axios';
 import { Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';

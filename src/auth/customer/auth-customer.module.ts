@@ -4,8 +4,8 @@ import { Customer } from '../../database/entities';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthService } from '../auth.service';
-import { AuthCustomerController } from './customer.controller';
-import { AuthCustomerService } from './customer.service';
+import { AuthCustomerController } from './auth-customer.controller';
+import { AuthCustomerService } from './auth-customer.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Customer]), CustomerModule],

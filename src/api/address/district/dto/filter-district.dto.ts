@@ -16,15 +16,15 @@ export class FilterDistrictDto {
 
   @ApiPropertyOptional({ example: 'thanh' })
   @IsOptional()
-  @IsString({ message: 'code name is string' })
-  @Length(1, 255, { message: 'code name must be between 1 and 255 characters' })
+  @IsString({ message: 'CODENAME_IS_STRING' })
+  @Length(1, 255, { message: 'CODENAME_BETWEEN_1_255_CHARACTERS' })
   codename?: string;
 
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @IsNumber(
     { allowNaN: false, allowInfinity: false },
-    { message: 'province code is number' },
+    { message: 'PROVINCE_CODE_IS_NUMBER' },
   )
   provinceCode?: number;
 }

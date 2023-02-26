@@ -22,7 +22,7 @@ export class FilterVehicleDto {
   @IsOptional()
   @IsString()
   @IsEnum(VehicleTypeEnum)
-  type: string;
+  type: VehicleTypeEnum;
 
   @ApiPropertyOptional({ example: '51A-111.11' })
   @IsString()

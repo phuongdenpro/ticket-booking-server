@@ -51,6 +51,7 @@ export class AuthCustomerService {
       user.email = dto.email;
       user.gender = dto.gender;
       user.birthday = dto.birthday;
+      user.status = 0;
 
       await queryRunner.commitTransaction();
       const userCreated = await this.userRepository.save(user);

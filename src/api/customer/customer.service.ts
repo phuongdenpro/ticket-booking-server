@@ -1,3 +1,4 @@
+import { SortEnum } from './../../enums';
 import { CustomerUpdatePasswordDto } from './../../auth/customer/dto/update-password.dto';
 import { AuthService } from './../../auth/auth.service';
 import { Pagination } from '../../decorator';
@@ -38,12 +39,8 @@ export class CustomerService {
     });
   }
 
-  async updateUserCredentialByUserId(userId: string, data: any) {
-    return this.customerRepository.update({ id: userId }, data);
-  }
-
   async findAll(dto: FilterCustomerDto, pagination: Pagination) {
-    const { keywords } = dto;
+    const { keywords, status } = dto;
     const query = this.customerRepository.createQueryBuilder('u');
     if (keywords) {
       query
@@ -54,12 +51,16 @@ export class CustomerService {
         .orWhere("LPAD(u.code::text, 8, '0') like :query")
         .setParameter('query', `%${keywords}%`);
     }
+
+    if (status) {
+      query.andWhere('u.status = :status', { status });
+    }
     const total = await query.clone().getCount();
 
     const dataResult = await query
       .offset(pagination.skip)
       .limit(pagination.take)
-      .orderBy('u.updatedAt', 'DESC')
+      .orderBy('u.createdAt', SortEnum.DESC)
       .getMany();
 
     return { dataResult, pagination, total };
@@ -77,17 +78,20 @@ export class CustomerService {
 
   async updatePassword(id: string, dto: CustomerUpdatePasswordDto) {
     const userExist = await this.findOneById(id);
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
+    if (!userExist) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
 
     const isPasswordMatches = await bcrypt.compare(
       dto?.oldPassword,
       userExist?.password,
     );
-    if (!isPasswordMatches)
+    if (!isPasswordMatches) {
       throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    // if (!isPasswordMatches) throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    if (dto?.newPassword !== dto?.confirmNewPassword)
+    }
+    if (dto?.newPassword !== dto?.confirmNewPassword) {
       throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
+    }
 
     const passwordHash = await bcrypt.hash(
       dto.newPassword,

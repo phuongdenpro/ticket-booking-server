@@ -1,29 +1,19 @@
-import { CurrentUser, GetPagination, Pagination, Roles } from '../../decorator';
+import { GetPagination, Pagination, Roles } from '../../decorator';
 import {
-  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   ParseUUIDPipe,
-  Patch,
-  Post,
   Query,
-  Res,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
 import { RoleEnum } from '../../enums';
 
-import {
-  CountCustomerDto,
-  CustomerRegisterDto,
-  FilterCustomerDto,
-  UpdateCustomerDto,
-} from './dto';
+import { FilterCustomerDto } from './dto';
 import { CustomerService } from './customer.service';
 
 @Controller('customer')
