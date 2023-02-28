@@ -3,12 +3,12 @@ import { IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class UpdateWardDto {
   @ApiPropertyOptional({ example: 'Thị trấn Đông Anh' })
-  @IsString({ message: 'Name is string' })
+  @IsString({ message: 'NAME_IS_STRING' })
   @IsOptional()
   name: string;
 
   @ApiPropertyOptional({ example: 'thị trấn' })
-  @IsString({ message: 'Type is string' })
+  @IsString({ message: 'WARD_TYPE_IS_STRING' })
   @IsOptional()
   type: string;
 
@@ -16,20 +16,20 @@ export class UpdateWardDto {
   @IsOptional()
   @IsNumber(
     { allowNaN: false, allowInfinity: false },
-    { message: 'Code is number' },
+    { message: 'CODE_IS_NUMBER' },
   )
   code: number;
 
   @ApiPropertyOptional({ example: 'thi_tran_dong_anh' })
   @IsOptional()
-  @IsString({ message: 'code name is string' })
+  @IsString({ message: 'CODENAME_IS_STRING' })
   codename: string;
 
   @ApiPropertyOptional({ example: 17 })
   @IsOptional()
   @IsNumber(
     { allowNaN: false, allowInfinity: false },
-    { message: 'district code is number' },
+    { message: 'DISTRICT_CODE_ID_NUMBER' },
   )
   districtCode: number;
 }

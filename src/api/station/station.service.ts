@@ -20,6 +20,8 @@ import { BadRequestException } from '@nestjs/common';
 import * as excel from 'exceljs';
 import { Response } from 'express';
 import { Readable } from 'stream';
+import { DistrictService } from '../address/district/district.service';
+import { ProvinceService } from '../address/province/province.service';
 
 @Injectable()
 export class StationService {
@@ -27,6 +29,8 @@ export class StationService {
     @InjectRepository(Station)
     private readonly stationRepository: Repository<Station>,
     private imageResourceService: ImageResourceService,
+    private districtService: DistrictService,
+    private provinceService: ProvinceService,
     private dataSource: DataSource,
   ) {}
 
@@ -87,8 +91,41 @@ export class StationService {
 
     const dataResult = await query
       .leftJoinAndSelect('q.ward', 'w')
-      .select(['q', 'w.id', 'w.code'])
+      .select([
+        'q',
+        'w.id',
+        'w.code',
+        'w.name',
+        'w.type',
+        'w.codename',
+        'w.districtCode',
+      ])
       .getOne();
+
+    if (dataResult.ward.districtCode) {
+      const district = await this.districtService.findOneByCode(
+        dataResult.ward.districtCode,
+      );
+      dataResult['district'] = {
+        id: district.dataResult.id,
+        name: district.dataResult.name,
+        type: district.dataResult.type,
+        codename: district.dataResult.codename,
+        code: district.dataResult.code,
+      };
+
+      const province = await this.provinceService.findOneByCode(
+        district.dataResult.provinceCode,
+      );
+      dataResult['province'] = {
+        id: province.dataResult.id,
+        name: province.dataResult.name,
+        type: province.dataResult.type,
+        codename: province.dataResult.codename,
+        code: province.dataResult.code,
+      };
+    }
+    delete dataResult.ward.districtCode;
 
     if (dataResult) {
       const queryImage = this.dataSource

@@ -94,14 +94,19 @@ export const mappingTranslate = {
 
   // district
   DISTRICT_NOT_FOUND: 'Không tìm thấy quận/huyện',
-  DISTRICT_TYPE_IS_STRING: 'Quận/huyện phải là chuỗi ký tự',
-  DISTRICT_TYPE_LENGTH: 'Quận/huyện phải từ 1 đến 50 ký tự',
-  DISTRICT_TYPE_REQUIRED: 'Quận/huyện không được để trống',
+  DISTRICT_TYPE_IS_STRING: 'Loại quận/huyện phải là chuỗi ký tự',
+  DISTRICT_TYPE_LENGTH: 'Loại quận/huyện phải từ 1 đến 50 ký tự',
+  DISTRICT_TYPE_REQUIRED: 'Loại quận/huyện không được để trống',
+  DISTRICT_CODE_ID_NUMBER: 'Mã quận/huyện phải là số',
+  DISTRICT_CODE_ID_REQUIRED: 'Mã quận/huyện không được để trống',
 
   // ward
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
   WARD_ID_IS_REQUIRED: 'Mã phường/xã không được để trống',
   WARD_ID_IS_NUMBER: 'Mã phường/xã phải là số',
+  WARD_TYPE_IS_STRING: 'Loại phường/xã phải là chuỗi ký tự',
+  WARD_TYPE_BETWEEN_1_50_CHARACTERS: 'loại phường/xã phải từ 1 đến 50 ký tự',
+  WARD_TYPE_IS_REQUIRED: 'loại phường/xã không được để trống',
 
   // station
   STATION_CODE_EXISTED: 'Mã bến xe đã tồn tại',

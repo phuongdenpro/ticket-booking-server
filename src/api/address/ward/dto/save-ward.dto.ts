@@ -3,35 +3,36 @@ import { IsNotEmpty, IsString, IsNumber, Length } from 'class-validator';
 
 export class SaveWardDto {
   @ApiPropertyOptional({ example: 'Thị trấn Đông Anh' })
-  @IsString({ message: 'Name is string' })
-  @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
+  @IsString({ message: 'NAME_IS_STRING' })
+  @Length(1, 100, { message: 'NAME_BETWEEN_1_100_CHARACTERS' })
+  @IsNotEmpty({ message: 'NAME_IS_REQUIRED' })
   name: string;
 
   @ApiPropertyOptional({ example: 'thị trấn' })
-  @IsNotEmpty({ message: 'Type is required' })
-  @IsString({ message: 'Type is string' })
-  @Length(1, 50, { message: 'Type must be between 1 and 50 characters' })
+  @IsNotEmpty({ message: 'WARD_TYPE_IS_REQUIRED' })
+  @IsString({ message: 'WARD_TYPE_IS_STRING' })
+  @Length(1, 50, { message: 'WARD_TYPE_BETWEEN_1_50_CHARACTERS' })
   type: string;
 
   @ApiPropertyOptional({ example: 454 })
-  @IsNotEmpty({ message: 'Code is required' })
+  @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
   @IsNumber(
     { allowNaN: false, allowInfinity: false },
-    { message: 'Code is number' },
+    { message: 'CODE_IS_NUMBER' },
   )
   code: number;
 
   @ApiPropertyOptional({ example: 'thi_tran_dong_anh' })
-  @IsNotEmpty({ message: 'code name is require' })
-  @IsString({ message: 'code name is string' })
-  @Length(1, 255, { message: 'Name must be between 1 and 255 characters' })
+  @IsNotEmpty({ message: 'CODENAME_IS_REQUIRED' })
+  @IsString({ message: 'CODENAME_IS_STRING' })
+  @Length(1, 255, { message: 'CODENAME_BETWEEN_1_255_CHARACTERS' })
   codename: string;
 
   @ApiPropertyOptional({ example: 17 })
-  @IsNotEmpty({ message: 'district code is require' })
+  @IsNotEmpty({ message: 'DISTRICT_CODE_ID_REQUIRED' })
   @IsNumber(
     { allowNaN: false, allowInfinity: false },
-    { message: 'district code is number' },
+    { message: 'DISTRICT_CODE_ID_NUMBER' },
   )
   districtCode: number;
 }

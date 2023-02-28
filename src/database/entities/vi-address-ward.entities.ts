@@ -1,5 +1,3 @@
-import { Staff } from './staff.entities';
-import { Customer } from './customer.entities';
 import {
   Column,
   Entity,
@@ -11,8 +9,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { District } from './vi-address-district.entities';
-import { Station } from './station.entities';
+import { District, Station, Staff, Customer } from './';
 
 @Entity({ name: 'vi_address_ward' })
 export class Ward {
