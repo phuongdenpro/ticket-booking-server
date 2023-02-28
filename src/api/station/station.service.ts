@@ -34,6 +34,16 @@ export class StationService {
     private dataSource: DataSource,
   ) {}
 
+  private selectFile = [
+    'q',
+    'w.id',
+    'w.code',
+    'w.name',
+    'w.type',
+    'w.codename',
+    'w.districtCode',
+  ];
+
   async saveStation(dto: SaveStationDto, userId: string) {
     const { name, address, wardId, images, code } = dto;
 
@@ -91,15 +101,7 @@ export class StationService {
 
     const dataResult = await query
       .leftJoinAndSelect('q.ward', 'w')
-      .select([
-        'q',
-        'w.id',
-        'w.code',
-        'w.name',
-        'w.type',
-        'w.codename',
-        'w.districtCode',
-      ])
+      .select(this.selectFile)
       .getOne();
 
     if (dataResult.ward.districtCode) {
@@ -147,8 +149,33 @@ export class StationService {
 
     const dataResult = await query
       .leftJoinAndSelect('q.ward', 'w')
-      .select(['q', 'w.id', 'w.code'])
+      .select(this.selectFile)
       .getOne();
+
+    if (dataResult.ward.districtCode) {
+      const district = await this.districtService.findOneByCode(
+        dataResult.ward.districtCode,
+      );
+      dataResult['district'] = {
+        id: district.dataResult.id,
+        name: district.dataResult.name,
+        type: district.dataResult.type,
+        codename: district.dataResult.codename,
+        code: district.dataResult.code,
+      };
+
+      const province = await this.provinceService.findOneByCode(
+        district.dataResult.provinceCode,
+      );
+      dataResult['province'] = {
+        id: province.dataResult.id,
+        name: province.dataResult.name,
+        type: province.dataResult.type,
+        codename: province.dataResult.codename,
+        code: province.dataResult.code,
+      };
+    }
+    delete dataResult.ward.districtCode;
 
     if (dataResult) {
       const queryImage = this.dataSource
@@ -166,17 +193,23 @@ export class StationService {
 
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
     const query = this.stationRepository.createQueryBuilder('r');
-    if (dto?.keywords) {
+    const { keywords, sort } = dto;
+    if (keywords) {
       query
         .orWhere('r.name like :query')
         .orWhere('r.address like :query')
-        .setParameter('query', `%${dto?.keywords}%`);
+        .orWhere('r.code like :query')
+        .setParameter('query', `%${keywords}%`);
+    }
+    if (sort) {
+      query.orderBy('r.createdAt', sort);
+    } else {
+      query.orderBy('r.createdAt', SortEnum.DESC);
     }
 
     const dataResult = await query
       .leftJoinAndSelect('r.ward', 'w')
-      .select(['r', 'w.id', 'w.code'])
-      .orderBy('r.createdAt', SortEnum.DESC)
+      .select(this.selectFile)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
