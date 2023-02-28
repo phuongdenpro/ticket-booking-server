@@ -192,23 +192,23 @@ export class StationService {
   }
 
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
-    const query = this.stationRepository.createQueryBuilder('r');
+    const query = this.stationRepository.createQueryBuilder('q');
     const { keywords, sort } = dto;
     if (keywords) {
       query
-        .orWhere('r.name like :query')
-        .orWhere('r.address like :query')
-        .orWhere('r.code like :query')
+        .orWhere('q.name like :query')
+        .orWhere('q.address like :query')
+        .orWhere('q.code like :query')
         .setParameter('query', `%${keywords}%`);
     }
     if (sort) {
-      query.orderBy('r.createdAt', sort);
+      query.orderBy('q.createdAt', sort);
     } else {
-      query.orderBy('r.createdAt', SortEnum.DESC);
+      query.orderBy('q.createdAt', SortEnum.DESC);
     }
 
     const dataResult = await query
-      .leftJoinAndSelect('r.ward', 'w')
+      .leftJoinAndSelect('q.ward', 'w')
       .select(this.selectFile)
       .offset(pagination.skip)
       .limit(pagination.take)

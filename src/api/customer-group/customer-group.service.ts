@@ -76,12 +76,12 @@ export class CustomerGroupService {
     dto: FilterCustomerGroupDto,
     pagination?: Pagination,
   ) {
-    const { customerGroupName, sort } = dto;
+    const { keywords, sort } = dto;
     const query = this.customerGroupRepository.createQueryBuilder('q');
 
-    if (customerGroupName) {
+    if (keywords) {
       query.andWhere('q.name LIKE :customerGroupName', {
-        customerGroupName: `%${customerGroupName}%`,
+        customerGroupName: `%${keywords}%`,
       });
     }
 
@@ -93,30 +93,12 @@ export class CustomerGroupService {
       .getMany();
 
     const total = await query.clone().getCount();
-    // get customer in groups
-    // const newCustomerGroup = await customerGroups.map(async (group) => {
-    //   const customerGD = await this.dataSource
-    //     .getRepository(CustomerGroupDetail)
-    //     .find({
-    //       where: { customerGroup: { id: group.id } },
-    //       relations: ['customer'],
-    //       skip: pagination.skip,
-    //       take: pagination.take,
-    //     });
-    //   group['customers'] = customerGD.map((item) => {
-    //     const { deletedAt, accessToken, refreshToken, password, ...customer } =
-    //       item.customer;
-    //     return customer;
-    //   });
-    //   return group;
-    // });
 
     return {
       dataResult: customerGroups,
       total,
       pagination,
     };
-    // }
   }
 
   async updateCustomerGroupById(
@@ -217,25 +199,22 @@ export class CustomerGroupService {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
 
-    const { customerName, gender, phone, email, sort } = dto;
+    const { keywords, gender, sort } = dto;
 
     const queryCGD = this.customerGDRepository.createQueryBuilder('q1');
     queryCGD.where('q1.customer_group_id = :groupId', {
       groupId,
     });
-    if (customerName) {
-      queryCGD.andWhere('c.fullName LIKE :customerName', {
-        customerName: `%${customerName}%`,
-      });
+    if (keywords) {
+      queryCGD
+        .orWhere('c.fullName LIKE :customerName', {
+          customerName: `%${keywords}%`,
+        })
+        .orWhere('c.phone LIKE :phone', { phone: `%${keywords}%` })
+        .orWhere('c.email LIKE :email', { email: `%${keywords}%` });
     }
     if (gender) {
       queryCGD.andWhere('c.gender = :gender', { gender });
-    }
-    if (phone) {
-      queryCGD.andWhere('c.phone LIKE :phone', { phone: `%${phone}%` });
-    }
-    if (email) {
-      queryCGD.andWhere('c.email LIKE :email', { email: `%${email}%` });
     }
 
     queryCGD.leftJoinAndSelect('q1.customer', 'c');

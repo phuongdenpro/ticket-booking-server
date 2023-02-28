@@ -1,28 +1,12 @@
-import { SortEnum, GenderEnum } from './../../../enums';
+import { SortEnum } from '../../../enums/sort.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsOptional, IsString, IsEnum } from 'class-validator';
 
-export class FilterCustomerDto {
-  @ApiPropertyOptional({ example: '' })
+export class FilterCustomerGroupDto {
+  @ApiPropertyOptional({ example: 'cao cấp' })
   @IsOptional()
-  @IsString({ message: 'CUSTOMER_NAME_IS_STRING' })
-  customerName: string;
-
-  @ApiPropertyOptional({ example: GenderEnum.MALE, enum: GenderEnum })
-  @IsOptional()
-  @IsString({ message: 'GENDER_IS_STRING' })
-  @IsEnum(GenderEnum, { message: 'GENDER_IS_ENUM' })
-  gender: string;
-
-  @ApiPropertyOptional({ example: '' })
-  @IsOptional()
-  @IsString({ message: 'PHONE_IS_STRING' })
-  phone: string;
-
-  @ApiPropertyOptional({ example: '' })
-  @IsOptional()
-  @IsString({ message: 'EMAIL_IS_STRING' })
-  email: string;
+  @IsString({ message: 'KEYWORDS_IS_STRING' })
+  keywords: string;
 
   @ApiPropertyOptional({ example: SortEnum.ASC, enum: SortEnum })
   @IsOptional()
