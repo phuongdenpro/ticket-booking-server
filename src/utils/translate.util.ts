@@ -15,6 +15,10 @@ export const mappingTranslate = {
   INVALID_STRING: 'Phải là chuỗi ký tự.',
   INVALID_DATE: 'Ngày không đúng định dạng.',
   DESCRIPTION_IS_STRING: 'Mô tả thông tin phải là chuỗi ký tự',
+  DESCRIPTION_IS_REQUIRED: 'Mô tả thông tin không được để trống',
+  DESCRIPTION_BETWEEN_1_1000_CHARACTERS:
+    'Mô tả thông tin phải từ 1 đến 1000 ký tự',
+  NOTE_BETWEEN_1_1000_CHARACTERS: 'Ghi chú phải từ 1 đến 1000 ký tự',
   NOTE_IS_STRING: 'Ghi chú phải là chuỗi ký tự',
   SORT_IS_STRING: 'Giá trị sắp xếp phải là chuỗi ký tự',
   GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
@@ -56,6 +60,7 @@ export const mappingTranslate = {
   CUSTOMER_ID_MUST_BE_36_CHARACTERS: 'Mã khách hàng phải có 36 ký tự',
   CUSTOMER_ID_IS_ARRAY: 'Mã khách hàng phải là mảng',
   CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
+  CUSTOMER_STATUS_IS_ENUM: 'Trạng thái khách hàng không hợp lệ',
 
   // customer group
   CUSTOMER_GROUP_NOT_FOUND: 'Không tìm thấy nhóm khách hàng',
@@ -111,6 +116,9 @@ export const mappingTranslate = {
 
   // seat
   SEAT_NOT_FOUND: 'Không tìm thấy ghế',
+  SEAT_TYPE_IS_STRING: 'Loại ghế phải là chuỗi ký tự',
+  SEAT_TYPE_IS_ENUM: 'Loại ghế không hợp lệ',
+  FLOOR_IS_NUMBER: 'Số tầng phải là số',
 
   // trip
   TRIP_NOT_FOUND: 'Không tìm thấy chuyến xe',
@@ -123,6 +131,17 @@ export const mappingTranslate = {
   TRIP_END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
   TRIP_END_DATE_GREATER_THAN_START_DATE:
     'Ngày kết thúc phải lớn hơn ngày bắt đầu',
+  START_DATE_IS_REQUIRED: 'Ngày bắt đầu không được để trống',
+  END_DATE_IS_REQUIRED: 'Ngày kết thúc không được để trống',
+  FROM_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
+  FROM_STATION_ID_IS_STRING: 'Mã bến xe đi phải là chuỗi ký tự',
+  FROM_STATION_ID_IS_36_CHARACTERS: 'Mã bến xe đi phải là 36 ký tự',
+  TO_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
+  TO_STATION_ID_IS_STRING: 'Mã bến xe đi phải là chuỗi ký tự',
+  TO_STATION_ID_IS_36_CHARACTERS: 'Mã bến xe đi phải là 36 ký tự',
+  TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM: 'Trạng thái chuyến đi không hợp lệ',
+  START_DATE_IS_DATE: 'Ngày bắt đầu phải là ngày',
+  END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
 
   // trip detail
   DEPARTURE_DATE_REQUIRED: 'Thời gian khởi hành là không được để trống',
@@ -143,4 +162,7 @@ export const mappingTranslate = {
   VEHICLE_ID_INVALID: 'Id của xe không hợp lệ',
   LICENSE_PLATE_INVALID: 'Biển số xe không hợp lệ',
   FLOOR_NUMBER_INVALID: 'Số tầng không hợp lệ',
+
+  // ticket group
+  TICKET_GROUP_NOT_FOUND: 'Không tìm thấy nhóm vé',
 };

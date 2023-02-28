@@ -5,7 +5,7 @@ export class FilterTripDto {
   @ApiPropertyOptional({
     example: 'Bến xe miền đông - Bến xe Đức Long Bảo Lộc',
   })
-  @IsString({ message: 'NAME_IS_STRING', context: { fieldName: 'Tên chuyến' } })
+  @IsString({ message: 'NAME_IS_STRING' })
   @IsOptional()
   name: string;
 
@@ -18,11 +18,6 @@ export class FilterTripDto {
   @IsDate({ message: 'TRIP_END_DATE_INVALID' })
   @IsOptional()
   endDate: Date;
-
-  // @ApiPropertyOptional({ example: '2023-02-15T02:37:29.450Z' })
-  // @IsOptional()
-  // @IsDate({ message: 'DEPARTURE_DATE_INVALID' })
-  // departureTime: Date;
 
   @ApiPropertyOptional({ example: 'd7d44845-b906-4a3c-be7b-232cc555f019' })
   @IsString({ message: 'FROM_STATION_ID_IS_STRING' })

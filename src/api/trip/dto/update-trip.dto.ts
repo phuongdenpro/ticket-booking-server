@@ -12,7 +12,7 @@ export class UpdateTripDto {
   @ApiPropertyOptional({
     example: 'Bến xe miền đông - Bến xe Đức Long Bảo Lộc',
   })
-  @IsString({ message: 'Name is string' })
+  @IsString({ message: 'NAME_IS_STRING' })
   @IsOptional()
   name: string;
 
@@ -21,26 +21,26 @@ export class UpdateTripDto {
       'Từ Hồ Chí Minh đi Bến xe Đức Long Bảo Lộc xuất phát từ 5h chiều hằng ngày',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'NOTE_IS_STRING' })
   note: string;
 
   @ApiPropertyOptional({ example: '2023-02-12' })
-  @IsDate({ message: 'Start date is date' })
+  @IsDate({ message: 'START_DATE_IS_DATE' })
   @IsOptional()
   startDate: Date;
 
   @ApiPropertyOptional({ example: '2024-02-15T02:37:29.450Z' })
-  @IsDate({ message: 'End date is date' })
+  @IsDate({ message: 'END_DATE_IS_DATE' })
   @IsOptional()
   endDate: Date;
 
   @ApiPropertyOptional({ example: 'd7d44845-b906-4a3c-be7b-232cc555f019' })
-  @IsString({ message: 'From Station Id is string' })
+  @IsString({ message: 'FROM_STATION_ID_IS_STRING' })
   @IsOptional()
   fromStationId: string;
 
   @ApiPropertyOptional({ example: 'd7d44845-b906-4a3c-be7b-232cc555f071' })
-  @IsString({ message: 'To Station Id is string' })
+  @IsString({ message: 'TO_STATION_ID_IS_STRING' })
   @IsOptional()
   toStationId: string;
 

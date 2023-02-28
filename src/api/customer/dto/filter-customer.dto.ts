@@ -5,14 +5,14 @@ import { IsEnum, IsOptional, IsString } from 'class-validator';
 export class FilterCustomerDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'KEYWORDS_IS_STRING' })
   keywords: string;
 
   @ApiPropertyOptional({
-    example: UserStatusEnum.INACTIVATE,
+    example: UserStatusEnum.ACTIVE,
     enum: UserStatusEnum,
   })
   @IsOptional()
-  @IsEnum(UserStatusEnum)
+  @IsEnum(UserStatusEnum, { message: 'CUSTOMER_STATUS_IS_ENUM' })
   status: UserStatusEnum;
 }

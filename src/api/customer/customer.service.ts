@@ -1,4 +1,4 @@
-import { SortEnum } from './../../enums';
+import { SortEnum, UserStatusEnum } from './../../enums';
 import { CustomerUpdatePasswordDto } from './../../auth/customer/dto/update-password.dto';
 import { AuthService } from './../../auth/auth.service';
 import { Pagination } from '../../decorator';
@@ -18,25 +18,42 @@ export class CustomerService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string, options?: any) {
-    return await this.customerRepository.findOne({
-      where: { id },
-      ...options,
-    });
+  private selectFields = [
+    'u.id',
+    'u.lastLogin',
+    'u.status',
+    'u.phone',
+    'u.email',
+    'u.fullName',
+    'u.gender',
+    'u.address',
+    'u.note',
+    'u.birthday',
+    'u.createdAt',
+    'u.updatedAt',
+    'u.updatedBy',
+  ];
+
+  async findOneByEmail(email: string) {
+    const userExist = await this.customerRepository
+      .createQueryBuilder('u')
+      .where('u.email = :email', { email })
+      .select(this.selectFields)
+      .getOne();
+
+    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
+    return userExist;
   }
 
-  async findOneByEmail(email: string, options?: any) {
-    return this.customerRepository.findOne({
-      where: { email },
-      ...options,
-    });
-  }
+  async findOneByRefreshToken(refreshToken: string) {
+    const userExist = await this.customerRepository
+      .createQueryBuilder('u')
+      .where('u.refreshToken = :refreshToken', { refreshToken })
+      .select(this.selectFields)
+      .getOne();
 
-  async findOneByRefreshToken(refreshToken: string, options?: any) {
-    return this.customerRepository.findOne({
-      where: { refreshToken },
-      ...options,
-    });
+    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
+    return userExist;
   }
 
   async findAll(dto: FilterCustomerDto, pagination: Pagination) {
@@ -61,15 +78,17 @@ export class CustomerService {
       .offset(pagination.skip)
       .limit(pagination.take)
       .orderBy('u.createdAt', SortEnum.DESC)
+      .select(this.selectFields)
       .getMany();
 
     return { dataResult, pagination, total };
   }
 
-  async findOne(id: string) {
+  async findOneById(id: string) {
     const userExist = await this.customerRepository
       .createQueryBuilder('u')
       .where('u.id = :id', { id })
+      .select(this.selectFields)
       .getOne();
 
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
@@ -101,5 +120,9 @@ export class CustomerService {
       { id: userExist.id },
       { password: passwordHash, updatedBy: userExist.id },
     );
+  }
+
+  async getCustomerStatus() {
+    return Object.keys(UserStatusEnum).map((key) => UserStatusEnum[key]);
   }
 }

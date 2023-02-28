@@ -20,6 +20,9 @@ import { UploadModule } from './api/upload/upload.module';
 import { TripModule } from './api/trip/trip.module';
 import { TripDetailModule } from './api/trip-detail/trip-detail.module';
 import { CustomerGroupModule } from './api/customer-group/customer-group.module';
+import { TicketGroupModule } from './api/ticket-group/ticket-group.module';
+import { PriceListModule } from './api/price-list/price-list.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.local' }),
@@ -36,8 +39,10 @@ import { CustomerGroupModule } from './api/customer-group/customer-group.module'
     TripDetailModule,
     VehicleModule,
     SeatModule,
+    TicketGroupModule,
     ImageResourceModule,
     UploadModule,
+    PriceListModule,
   ],
   providers: [
     {

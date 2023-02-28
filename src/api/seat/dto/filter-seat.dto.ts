@@ -7,25 +7,30 @@ import {
   Max,
   IsOptional,
   IsEnum,
-  Length,
 } from 'class-validator';
 
 export class FilterSeatDto {
   @ApiPropertyOptional({ example: 'A1' })
-  @IsString({ message: 'Name is string' })
-  @Length(0, 100, { message: 'Name must be between 0 and 100 characters' })
+  @IsString({ message: 'NAME_IS_STRING' })
   @IsOptional()
   name: string;
 
   @ApiPropertyOptional({ example: SeatTypeEnum.NON_SALES, enum: SeatTypeEnum })
   @IsOptional()
-  @IsString()
-  @IsEnum(SeatTypeEnum)
+  @IsString({ message: 'SEAT_TYPE_IS_STRING' })
+  @IsEnum(SeatTypeEnum, { message: 'SEAT_TYPE_IS_ENUM' })
   type: SeatTypeEnum;
 
-  @ApiPropertyOptional({ example: 1 })
+  @ApiPropertyOptional({ example: 1, enum: [1, 2] })
   @IsOptional()
-  @IsNumber()
+  @IsNumber(
+    {
+      allowNaN: false,
+      allowInfinity: false,
+      maxDecimalPlaces: 0,
+    },
+    { message: 'FLOOR_IS_NUMBER' },
+  )
   @Min(1)
   @Max(2)
   floor: number;

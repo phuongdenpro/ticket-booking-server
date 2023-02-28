@@ -18,29 +18,33 @@ import { CustomerService } from './customer.service';
 
 @Controller('customer')
 @ApiTags('Customer')
-@UseGuards(JwtAuthGuard)
-@ApiBearerAuth()
 export class CustomerController {
-  constructor(private userService: CustomerService) {}
+  constructor(private customerService: CustomerService) {}
+
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getCustomerStatus() {
+    return this.customerService.getCustomerStatus();
+  }
 
   @Get()
-  @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findAll(
     @Query() dto: FilterCustomerDto,
     @GetPagination() pagination?: Pagination,
   ) {
-    return this.userService.findAll(dto, pagination);
+    return await this.customerService.findAll(dto, pagination);
   }
 
   @Get(':id')
-  @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findCustomerOneById(@Param('id', ParseUUIDPipe) id: string) {
-    return this.userService.findOne(id);
+    return await this.customerService.findOneById(id);
   }
 }
