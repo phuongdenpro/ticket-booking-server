@@ -1,4 +1,4 @@
-import { RemoveCustomerDto } from './dto/remove-customer.dto';
+import { RoleEnum } from './../../enums/roles.enum';
 import {
   Body,
   Controller,
@@ -22,11 +22,16 @@ import {
   UpdateCustomerGroupDto,
   RemoveMultiCustomerDto,
   FilterCustomerDto,
+  RemoveCustomerDto,
 } from './dto';
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RoleEnum } from 'src/enums';
-import { JwtAuthGuard } from 'src/auth/guards';
+import { JwtAuthGuard } from './../../auth/guards';
 
 @Controller('customer-group')
 @ApiTags('Customer Group')

@@ -3,7 +3,7 @@ import {
   CustomerGroup,
   CustomerGroupDetail,
   Staff,
-} from 'src/database/entities';
+} from './../../database/entities';
 import {
   BadRequestException,
   Injectable,
@@ -22,7 +22,7 @@ import {
   FilterCustomerDto,
   RemoveMultiCustomerDto,
 } from './dto';
-import { Pagination } from 'src/decorator';
+import { Pagination } from './../../decorator';
 
 @Injectable()
 export class CustomerGroupService {

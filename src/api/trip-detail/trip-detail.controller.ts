@@ -12,9 +12,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { JwtAuthGuard } from 'src/auth/guards';
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
-import { RoleEnum } from 'src/enums';
+import { JwtAuthGuard } from './../../auth/guards';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
+import { RoleEnum } from './../../enums';
 import { TripDetailService } from './trip-detail.service';
 import {
   FilterTripDetailDto,

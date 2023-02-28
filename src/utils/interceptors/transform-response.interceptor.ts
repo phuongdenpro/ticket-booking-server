@@ -1,4 +1,4 @@
-import { Pagination } from 'src/decorator';
+import { Pagination } from './../../decorator';
 import {
   CallHandler,
   ExecutionContext,

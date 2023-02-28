@@ -22,13 +22,12 @@ export class Customer {
   lastLogin?: Date;
 
   @Column({
-    name: 'is_active',
-    type: 'bool',
-    default: false,
-    select: true,
-    nullable: true,
+    name: 'status',
+    type: 'int',
+    default: 0,
+    nullable: false,
   })
-  isActive?: boolean;
+  status?: number;
 
   @Column({ name: 'phone', type: 'varchar', nullable: true })
   phone?: string;

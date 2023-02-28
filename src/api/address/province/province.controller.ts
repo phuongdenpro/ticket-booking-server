@@ -1,4 +1,4 @@
-import { ProvinceDeleteMultiId } from './dto/delete-multiple-province-code.dto';
+import { RoleEnum } from './../../../enums/roles.enum';
 import {
   Body,
   Controller,
@@ -14,14 +14,19 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { ProvinceService } from './province.service';
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
-import { RoleEnum } from 'src/enums';
-import { JwtAuthGuard } from 'src/auth/guards';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../../decorator';
+import { JwtAuthGuard } from './../../../auth/guards';
 import {
   FilterProvinceDto,
   ProvinceDeleteMultiCode,
   SaveProvinceDto,
   UpdateProvinceDto,
+  ProvinceDeleteMultiId,
 } from './dto';
 
 @Controller('province')

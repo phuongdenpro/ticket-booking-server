@@ -14,9 +14,9 @@ import {
 
 export class SaveTripDto {
   @ApiProperty({ example: 'Bến xe miền đông - Bến xe Đức Long Bảo Lộc' })
-  @IsNotEmpty({ message: 'Name is required' })
-  @IsString({ message: 'Name is string' })
-  @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
+  @IsNotEmpty({ message: 'NAME_IS_REQUIRED' })
+  @IsString({ message: 'NAME_IS_STRING' })
+  @Length(1, 100, { message: 'NAME_BETWEEN_1_100_CHARACTERS' })
   name: string;
 
   @ApiPropertyOptional({
@@ -24,35 +24,35 @@ export class SaveTripDto {
       'Từ Hồ Chí Minh đi Bến xe Đức Long Bảo Lộc xuất phát từ 5h chiều hằng ngày',
   })
   @IsOptional()
-  @IsString()
+  @IsString({ message: 'NOTE_IS_STRING' })
   note: string;
 
   @ApiProperty({ example: '2023-02-12' })
-  @IsNotEmpty({ message: 'start date is required' })
+  @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
   @IsDate()
   startDate: Date;
 
   @ApiPropertyOptional({ example: '2024-02-15T02:37:29.450Z' })
-  @IsDate({ message: 'End date is date' })
+  @IsDate({ message: 'END_DATE_IS_REQUIRED' })
   @IsOptional()
   endDate: Date;
 
   @ApiProperty({ example: 'd7d44845-b906-4a3c-be7b-232cc555f019' })
-  @IsString({ message: 'From Station Id is string' })
-  @IsNotEmpty({ message: 'From Station Id is required' })
-  @Length(36, 36, { message: 'From Station Id must be 36 characters' })
+  @IsString({ message: 'FROM_STATION_ID_IS_REQUIRED' })
+  @IsNotEmpty({ message: 'FROM_STATION_ID_IS_REQUIRED' })
+  @Length(36, 36, { message: 'FROM_STATION_ID_IS_36_CHARACTERS' })
   fromStationId: string;
 
   @ApiProperty({ example: 'd7d44845-b906-4a3c-be7b-232cc555f071' })
-  @IsString({ message: 'To Station Id is string' })
-  @IsNotEmpty({ message: 'To Station Id is required' })
-  @Length(36, 36, { message: 'To Station Id must be 36 characters' })
+  @IsString({ message: 'TO_STATION_ID_IS_STRING' })
+  @IsNotEmpty({ message: 'TO_STATION_ID_IS_REQUIRED' })
+  @Length(36, 36, { message: 'TO_STATION_ID_IS_36_CHARACTERS' })
   toStationId: string;
 
-  @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE })
+  @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE, enum: TripStatusEnum })
   @IsOptional()
-  @IsEnum(TripStatusEnum)
-  @IsNumber()
+  @IsEnum(TripStatusEnum, { message: 'TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM' })
+  @IsNumber({ allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 })
   @Min(0)
   @Max(1)
   isActive: TripStatusEnum;

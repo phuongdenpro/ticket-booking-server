@@ -15,6 +15,10 @@ export const mappingTranslate = {
   INVALID_STRING: 'Phải là chuỗi ký tự.',
   INVALID_DATE: 'Ngày không đúng định dạng.',
   DESCRIPTION_IS_STRING: 'Mô tả thông tin phải là chuỗi ký tự',
+  DESCRIPTION_IS_REQUIRED: 'Mô tả thông tin không được để trống',
+  DESCRIPTION_BETWEEN_1_1000_CHARACTERS:
+    'Mô tả thông tin phải từ 1 đến 1000 ký tự',
+  NOTE_BETWEEN_1_1000_CHARACTERS: 'Ghi chú phải từ 1 đến 1000 ký tự',
   NOTE_IS_STRING: 'Ghi chú phải là chuỗi ký tự',
   SORT_IS_STRING: 'Giá trị sắp xếp phải là chuỗi ký tự',
   GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
@@ -23,6 +27,12 @@ export const mappingTranslate = {
   SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
   PHONE_IS_STRING: 'Số điện thoại phải là chuỗi ký tự',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
+  NAME_BETWEEN_1_100_CHARACTERS: 'Tên phải từ 1 đến 100 ký tự',
+  CODE_BETWEEN_1_10_CHARACTERS: 'Mã phải từ 1 đến 10 ký tự',
+  CODE_IS_NUMBER: 'mã phải là số',
+  CODE_IS_STRING: 'mã phải là chuỗi ký tự',
+  CODE_IS_REQUIRED: 'Mã không được để trống',
+  KEYWORDS_IS_STRING: 'Từ khóa phải là chuỗi ký tự',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',
@@ -50,6 +60,7 @@ export const mappingTranslate = {
   CUSTOMER_ID_MUST_BE_36_CHARACTERS: 'Mã khách hàng phải có 36 ký tự',
   CUSTOMER_ID_IS_ARRAY: 'Mã khách hàng phải là mảng',
   CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
+  CUSTOMER_STATUS_IS_ENUM: 'Trạng thái khách hàng không hợp lệ',
 
   // customer group
   CUSTOMER_GROUP_NOT_FOUND: 'Không tìm thấy nhóm khách hàng',
@@ -68,27 +79,46 @@ export const mappingTranslate = {
   INVALID_IMAGE_RESOURCE: 'Ảnh không đúng định dạng',
 
   // province
-  PROVINCE_NOT_FOUND: 'Không tìm thấy tỉnh/thành phố',
   TO_PROVINCE_CODE_INVALID_NUMBER: 'mã tỉnh thành đi phải là số',
   FROM_PROVINCE_CODE_INVALID_NUMBER: 'mã tỉnh thành đến phải là số',
+  CODENAME_IS_STRING: 'Mã tên phải là chuỗi ký tự',
+  CODENAME_BETWEEN_1_255_CHARACTERS: 'Mã tên phải từ 1 đến 255 ký tự',
+  PROVINCE_NOT_FOUND: 'Không tìm thấy tỉnh/thành phố',
+  CODENAME_IS_REQUIRED: 'Mã tên phải là chuỗi ký tự',
+  PROVINCE_CODE_IS_NUMBER: 'mã tỉnh thành phải là số',
+  PROVINCE_CODE_IS_REQUIRED: 'mã tỉnh thành phải là số',
+  PROVINCE_TYPE_IS_STRING: 'tỉnh thành phải là chuỗi ký tự',
+  PROVINCE_TYPE_IS_REQUIRED: 'loại tỉnh thành không được để trống',
+  PROVINCE_TYPE_BETWEEN_1_50_CHARACTERS:
+    'loại tỉnh thành phải từ 1 đến 50 ký tự',
 
   // district
   DISTRICT_NOT_FOUND: 'Không tìm thấy quận/huyện',
   DISTRICT_TYPE_IS_STRING: 'Quận/huyện phải là chuỗi ký tự',
   DISTRICT_TYPE_LENGTH: 'Quận/huyện phải từ 1 đến 50 ký tự',
+  DISTRICT_TYPE_REQUIRED: 'Quận/huyện không được để trống',
 
   // ward
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
+  WARD_ID_IS_REQUIRED: 'Mã phường/xã không được để trống',
+  WARD_ID_IS_NUMBER: 'Mã phường/xã phải là số',
 
   // station
-  STATION_NOT_FOUND: 'Không tìm thấy bến xe',
+  STATION_CODE_EXISTED: 'Mã bến xe đã tồn tại',
   FROM_STATION_NOT_FOUND: 'Không tìm thấy bến xe đi',
-  TO_STATION_NOT_FOUND: 'Không tìm thấy bến xe đến',
   FROM_STATION_AND_TO_STATION_IS_SAME:
     'Bến xe đi và bến xe đến không được trùng nhau',
+  TO_STATION_NOT_FOUND: 'Không tìm thấy bến xe đến',
+  STATION_NOT_FOUND: 'Không tìm thấy bến xe',
+  ADDRESS_IS_REQUIRED: 'Địa chỉ không được để trống',
+  ADDRESS_IS_STRING: 'Địa chỉ phải là chuỗi ký tự',
+  ADDRESS_BETWEEN_1_255_CHARACTERS: 'Địa chỉ phải từ 1 đến 255 ký tự',
 
   // seat
   SEAT_NOT_FOUND: 'Không tìm thấy ghế',
+  SEAT_TYPE_IS_STRING: 'Loại ghế phải là chuỗi ký tự',
+  SEAT_TYPE_IS_ENUM: 'Loại ghế không hợp lệ',
+  FLOOR_IS_NUMBER: 'Số tầng phải là số',
 
   // trip
   TRIP_NOT_FOUND: 'Không tìm thấy chuyến xe',
@@ -101,6 +131,17 @@ export const mappingTranslate = {
   TRIP_END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
   TRIP_END_DATE_GREATER_THAN_START_DATE:
     'Ngày kết thúc phải lớn hơn ngày bắt đầu',
+  START_DATE_IS_REQUIRED: 'Ngày bắt đầu không được để trống',
+  END_DATE_IS_REQUIRED: 'Ngày kết thúc không được để trống',
+  FROM_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
+  FROM_STATION_ID_IS_STRING: 'Mã bến xe đi phải là chuỗi ký tự',
+  FROM_STATION_ID_IS_36_CHARACTERS: 'Mã bến xe đi phải là 36 ký tự',
+  TO_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
+  TO_STATION_ID_IS_STRING: 'Mã bến xe đi phải là chuỗi ký tự',
+  TO_STATION_ID_IS_36_CHARACTERS: 'Mã bến xe đi phải là 36 ký tự',
+  TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM: 'Trạng thái chuyến đi không hợp lệ',
+  START_DATE_IS_DATE: 'Ngày bắt đầu phải là ngày',
+  END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
 
   // trip detail
   DEPARTURE_DATE_REQUIRED: 'Thời gian khởi hành là không được để trống',
@@ -121,4 +162,7 @@ export const mappingTranslate = {
   VEHICLE_ID_INVALID: 'Id của xe không hợp lệ',
   LICENSE_PLATE_INVALID: 'Biển số xe không hợp lệ',
   FLOOR_NUMBER_INVALID: 'Số tầng không hợp lệ',
+
+  // ticket group
+  TICKET_GROUP_NOT_FOUND: 'Không tìm thấy nhóm vé',
 };

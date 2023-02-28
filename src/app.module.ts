@@ -7,9 +7,8 @@ import {
   ExceptionHandlerInterceptor,
   TransformResponseInterceptor,
 } from './utils/interceptors';
-// import { ExceptionHandlerInterceptor, TransformResponseInterceptor } from '@utils';
 import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './api/users/user.module';
+import { CustomerModule } from './api/customer/customer.module';
 import { ProvinceModule } from './api/address/province/province.module';
 import { DistrictModule } from './api/address/district/district.module';
 import { WardModule } from './api/address/ward/ward.module';
@@ -21,24 +20,29 @@ import { UploadModule } from './api/upload/upload.module';
 import { TripModule } from './api/trip/trip.module';
 import { TripDetailModule } from './api/trip-detail/trip-detail.module';
 import { CustomerGroupModule } from './api/customer-group/customer-group.module';
+import { TicketGroupModule } from './api/ticket-group/ticket-group.module';
+import { PriceListModule } from './api/price-list/price-list.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, envFilePath: '.env.local' }),
     ScheduleModule.forRoot(),
     DatabaseModule,
     AuthModule,
+    CustomerModule,
     CustomerGroupModule,
-    DistrictModule,
-    ImageResourceModule,
     ProvinceModule,
-    SeatModule,
+    DistrictModule,
+    WardModule,
     StationModule,
     TripModule,
     TripDetailModule,
-    UsersModule,
-    UploadModule,
     VehicleModule,
-    WardModule,
+    SeatModule,
+    TicketGroupModule,
+    ImageResourceModule,
+    UploadModule,
+    PriceListModule,
   ],
   providers: [
     {

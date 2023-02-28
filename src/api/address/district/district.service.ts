@@ -4,8 +4,8 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { District, Province, Staff } from 'src/database/entities';
-import { Pagination } from 'src/decorator';
+import { District, Province, Staff } from './../../../database/entities';
+import { Pagination } from './../../../decorator';
 import { DataSource, Repository } from 'typeorm';
 import {
   UpdateDistrictDto,
@@ -95,7 +95,7 @@ export class DistrictService {
     district.name = dto.name;
     district.type = dto.type;
     district.code = dto.code;
-    district.codename = dto.nameWithType;
+    district.codename = dto.codename;
     district.provinceCode = province.code;
     district.parentCode = province.id;
     const adminExist = await this.dataSource

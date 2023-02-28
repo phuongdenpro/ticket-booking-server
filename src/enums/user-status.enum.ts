@@ -1,5 +1,5 @@
 export enum UserStatusEnum {
-  INACTIVATE,
-  ACTIVE,
-  SUSPENSION,
+  INACTIVATE = 'Chưa kích hoạt',
+  ACTIVE = 'Kích hoạt',
+  SUSPENSION = 'Tạm khóa',
 }

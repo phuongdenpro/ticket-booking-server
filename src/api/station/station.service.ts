@@ -1,17 +1,21 @@
 import { SortEnum } from './../../enums/sort.enum';
-import { Ward } from './../../database/entities/vi-address-ward.entities';
 import { DataSource, Repository } from 'typeorm';
 import {
   Injectable,
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { ImageResource, Staff, Station } from 'src/database/entities';
+import { ImageResource, Staff, Station, Ward } from './../../database/entities';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Pagination } from 'src/decorator';
-import { FilterStationDto, SaveStationDto } from './dto';
+import { Pagination } from './../../decorator';
+import {
+  FilterStationDto,
+  SaveStationDto,
+  UpdateStationDto,
+  DeleteStationByIdsDto,
+  DeleteStationByCodesDto,
+} from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
-import { StationDeleteInput } from './dto/delete-station.dto';
 import { BadRequestException } from '@nestjs/common';
 import * as excel from 'exceljs';
 import { Response } from 'express';
@@ -27,7 +31,7 @@ export class StationService {
   ) {}
 
   async saveStation(dto: SaveStationDto, userId: string) {
-    const { name, address, wardId, images } = dto;
+    const { name, address, wardId, images, code } = dto;
 
     const ward = await this.dataSource
       .getRepository(Ward)
@@ -42,10 +46,19 @@ export class StationService {
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+
+    const oldStation = await this.stationRepository.findOne({
+      where: { code },
+    });
+    if (oldStation) {
+      throw new BadRequestException('STATION_CODE_EXISTED');
+    }
+
     const station = new Station();
     station.name = name;
     station.address = address;
     station.ward = ward;
+    station.code = code;
     station.createdBy = adminExist.id;
     const newStation = await this.stationRepository.save(station);
 
@@ -61,7 +74,6 @@ export class StationService {
       delete saveImage.createdBy;
       delete saveImage.updatedBy;
       delete saveImage.deletedAt;
-      delete saveImage.isDeleted;
 
       return saveImage;
     });
@@ -83,6 +95,29 @@ export class StationService {
         .getRepository(ImageResource)
         .createQueryBuilder('i');
       queryImage.where('i.station_id = :id', { id });
+      const images = await queryImage
+        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt'])
+        .getMany();
+      dataResult.images = images;
+    }
+
+    return { dataResult };
+  }
+
+  async findOneStationByCode(code: string) {
+    const query = this.stationRepository.createQueryBuilder('q');
+    query.where('q.code = :code', { code });
+
+    const dataResult = await query
+      .leftJoinAndSelect('q.ward', 'w')
+      .select(['q', 'w.id', 'w.code'])
+      .getOne();
+
+    if (dataResult) {
+      const queryImage = this.dataSource
+        .getRepository(ImageResource)
+        .createQueryBuilder('i');
+      queryImage.where('i.station_id = :id', { id: dataResult.id });
       const images = await queryImage
         .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt'])
         .getMany();
@@ -135,26 +170,105 @@ export class StationService {
     return { dataResult, pagination, total };
   }
 
-  async updateById(userId: string, id: string, dto: SaveStationDto) {
-    const { name, address, wardId, images } = dto;
-    const ward = await this.dataSource
-      .getRepository(Ward)
-      .findOne({ where: { code: wardId } });
+  async updateStationById(userId: string, id: string, dto: UpdateStationDto) {
+    const { name, address, wardId, images, code } = dto;
 
     const station = await this.stationRepository.findOne({ where: { id } });
-
     if (!station) {
       throw new NotFoundException('STATION_NOT_FOUND');
     }
+
+    if (wardId) {
+      const ward = await this.dataSource
+        .getRepository(Ward)
+        .findOne({ where: { code: wardId } });
+      station.ward = ward;
+    }
+    if (code) {
+      const oldStation = await this.stationRepository.findOne({
+        where: { code },
+      });
+      if (oldStation) {
+        throw new BadRequestException('STATION_CODE_EXISTED');
+      }
+      station.code = code;
+    }
+    if (name) {
+      station.name = name;
+    }
+    if (address) {
+      station.address = address;
+    }
+
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    station.name = name;
-    station.address = address;
-    station.ward = ward;
+    station.updatedBy = adminExist.id;
+
+    const newStation = await this.stationRepository.save(station);
+
+    const newImages = await images.map(async (image) => {
+      image.createdBy = adminExist.id;
+      const newImage = await this.imageResourceService.saveImageResource(
+        image,
+        adminExist.id,
+        null,
+        newStation.id,
+      );
+      delete newImage.station;
+      delete newImage.createdBy;
+
+      return newImage;
+    });
+    newStation.images = await Promise.all(newImages);
+    return newStation;
+  }
+
+  async updateStationByCode(
+    userId: string,
+    currentCode: string,
+    dto: UpdateStationDto,
+  ) {
+    const { name, address, wardId, images, code } = dto;
+
+    const station = await this.stationRepository.findOne({
+      where: { code: currentCode },
+    });
+    if (!station) {
+      throw new NotFoundException('STATION_NOT_FOUND');
+    }
+
+    if (wardId) {
+      const ward = await this.dataSource
+        .getRepository(Ward)
+        .findOne({ where: { code: wardId } });
+      station.ward = ward;
+    }
+    if (code) {
+      const oldStation = await this.stationRepository.findOne({
+        where: { code },
+      });
+      if (oldStation) {
+        throw new BadRequestException('STATION_CODE_EXISTED');
+      }
+      station.code = code;
+    }
+    if (name) {
+      station.name = name;
+    }
+    if (address) {
+      station.address = address;
+    }
+
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
     station.updatedBy = adminExist.id;
 
     const newStation = await this.stationRepository.save(station);
@@ -195,13 +309,50 @@ export class StationService {
     return await this.stationRepository.save(station);
   }
 
-  async deleteMultiple(userId: string, dto: StationDeleteInput) {
+  // delete a record by code
+  async deleteStationByCode(userId: string, code: string) {
+    const station = await this.stationRepository.findOne({ where: { code } });
+
+    if (!station) {
+      throw new NotFoundException('STATION_NOT_FOUND');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    station.deletedAt = new Date();
+    station.updatedBy = adminExist.id;
+
+    return await this.stationRepository.save(station);
+  }
+
+  async deleteMultipleStationByIds(userId: string, dto: DeleteStationByIdsDto) {
     try {
       const { ids } = dto;
 
       const list = await Promise.all(
         ids.map(async (id) => {
           await this.deleteStationById(userId, id);
+        }),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultipleStationByCodes(
+    userId: string,
+    dto: DeleteStationByCodesDto,
+  ) {
+    try {
+      const { codes } = dto;
+
+      const list = await Promise.all(
+        codes.map(async (code) => {
+          await this.deleteStationByCode(userId, code);
         }),
       );
       return list;
@@ -226,7 +377,7 @@ export class StationService {
         .orderBy('r.createdAt', SortEnum.ASC)
         .getMany();
 
-      const total = await query.clone().getCount();
+      // const total = await query.clone().getCount();
 
       if (dataResult.length > 0) {
         // query image for each station

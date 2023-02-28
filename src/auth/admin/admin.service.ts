@@ -1,12 +1,12 @@
-import { Staff } from 'src/database/entities';
+import { Staff } from './../../database/entities';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RoleEnum } from 'src/enums';
-import { EMAIL_REGEX, PHONE_REGEX } from 'src/utils/regex.util';
+import { RoleEnum } from './../../enums';
+import { EMAIL_REGEX, PHONE_REGEX } from './../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { AdminLoginDto, AdminRegisterDto } from './dto';
@@ -75,13 +75,17 @@ export class AdminService {
       const staffCreated = await this.staffRepository.save(staffCred);
 
       await queryRunner.commitTransaction();
-      delete staffCreated.createdAt;
-      delete staffCreated.updatedAt;
-      delete staffCreated.deletedAt;
-      delete staffCreated.createdBy;
-      delete staffCreated.updatedBy;
-      delete staffCreated.password;
-      return staffCreated;
+      const {
+        createdAt,
+        updatedAt,
+        deletedAt,
+        createdBy,
+        updatedBy,
+        password,
+        ...staff
+      } = staffCreated;
+
+      return staff;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;

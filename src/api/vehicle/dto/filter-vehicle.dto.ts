@@ -7,7 +7,7 @@ import {
   IsOptional,
   IsEnum,
 } from 'class-validator';
-import { VehicleTypeEnum } from 'src/enums';
+import { VehicleTypeEnum } from './../../../enums';
 
 export class FilterVehicleDto {
   @ApiPropertyOptional({ example: 'Xe giường nằm Limousine số 1' })
@@ -15,11 +15,14 @@ export class FilterVehicleDto {
   @IsOptional()
   name: string;
 
-  @ApiPropertyOptional({ example: VehicleTypeEnum.LIMOUSINE })
+  @ApiPropertyOptional({
+    example: VehicleTypeEnum.LIMOUSINE,
+    enum: VehicleTypeEnum,
+  })
   @IsOptional()
   @IsString()
   @IsEnum(VehicleTypeEnum)
-  type: string;
+  type: VehicleTypeEnum;
 
   @ApiPropertyOptional({ example: '51A-111.11' })
   @IsString()

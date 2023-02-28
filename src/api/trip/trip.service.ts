@@ -1,24 +1,28 @@
-import { SaveTripDto, FilterTripDto, UpdateTripDto } from './dto';
+import {
+  SaveTripDto,
+  FilterTripDto,
+  UpdateTripDto,
+  TripDeleteMultiInput,
+} from './dto';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Staff, Station, Trip } from 'src/database/entities';
+import { Staff, Station, Trip } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
-import { SortEnum, TripStatusEnum } from 'src/enums';
-import { Pagination } from 'src/decorator';
-import { TripDeleteMultiInput } from './dto/delete-multiple-input-trip.dto';
+import { SortEnum, TripStatusEnum } from './../../enums';
+import { Pagination } from './../../decorator';
 
 @Injectable()
 export class TripService {
   constructor(
     @InjectRepository(Trip)
-    private readonly tripService: Repository<Trip>,
-    // private tripDetailService: TripDetailService,
+    private readonly tripRepository: Repository<Trip>,
     private dataSource: DataSource,
   ) {}
+
   private tripSelect = [
     'q.id',
     'q.name',
@@ -99,7 +103,7 @@ export class TripService {
     }
 
     trip.createdBy = adminExist.id;
-    const saveTrip = await this.tripService.save(trip);
+    const saveTrip = await this.tripRepository.save(trip);
     return {
       id: saveTrip.id,
       name: saveTrip.name,
@@ -125,7 +129,7 @@ export class TripService {
   async findAllTrip(dto: FilterTripDto, pagination?: Pagination) {
     const { name, fromStationId, toStationId } = dto;
     let { startDate, endDate } = dto;
-    const query = this.tripService.createQueryBuilder('q');
+    const query = this.tripRepository.createQueryBuilder('q');
 
     if (name) {
       query.andWhere('q.name like :name', { name: `%${name}%` });
@@ -162,7 +166,7 @@ export class TripService {
   }
 
   async findOneTripById(id: string) {
-    const query = this.tripService.createQueryBuilder('q');
+    const query = this.tripRepository.createQueryBuilder('q');
     query.where('q.id = :id', { id });
 
     const dataResult = await query
@@ -192,7 +196,7 @@ export class TripService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const trip = await this.tripService.findOne({ where: { id } });
+    const trip = await this.tripRepository.findOne({ where: { id } });
     if (!trip) {
       throw new BadRequestException('TRIP_NOT_FOUND');
     }
@@ -243,7 +247,7 @@ export class TripService {
     }
     trip.updatedBy = adminExist.id;
 
-    const updateTrip = await this.tripService.save(trip);
+    const updateTrip = await this.tripRepository.save(trip);
     return {
       id: updateTrip.id,
       name: updateTrip.name,
@@ -274,7 +278,7 @@ export class TripService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const trip = await this.tripService.findOne({ where: { id } });
+    const trip = await this.tripRepository.findOne({ where: { id } });
     if (!trip) {
       throw new BadRequestException('TRIP_NOT_FOUND');
     }
@@ -282,7 +286,7 @@ export class TripService {
     trip.updatedBy = adminExist.id;
 
     return await (
-      await this.tripService.save(trip)
+      await this.tripRepository.save(trip)
     ).id;
   }
 

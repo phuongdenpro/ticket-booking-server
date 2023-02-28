@@ -1,9 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class FilterStationDto {
   @ApiPropertyOptional()
-  @IsString()
+  @IsString({ message: 'KEYWORDS_IS_STRING' })
   @IsOptional()
   keywords: string;
 }

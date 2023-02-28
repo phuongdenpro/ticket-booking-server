@@ -1,3 +1,4 @@
+import { RoleEnum } from './../../../enums/roles.enum';
 import {
   Body,
   Controller,
@@ -13,10 +14,14 @@ import {
 } from '@nestjs/common';
 import { WardService } from './ward.service';
 import { DataSource } from 'typeorm';
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../../decorator';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RoleEnum } from 'src/enums';
-import { JwtAuthGuard } from 'src/auth/guards';
+import { JwtAuthGuard } from './../../../auth/guards';
 import {
   UpdateWardDto,
   FilterWardDto,
@@ -24,7 +29,6 @@ import {
   WardDeleteMultiId,
   WardDeleteMultiCode,
 } from './dto';
-
 @Controller('ward')
 @ApiTags('Ward')
 export class WardController {
@@ -159,5 +163,30 @@ export class WardController {
   //     });
   //   });
   //   return provinces;
+  // }
+
+  // @Get('crawl')
+  // @HttpCode(HttpStatus.OK)
+  // async crawlData(@GetPagination() pagination?: Pagination) {
+  //   const districts = await this.districtService.findAll({}, pagination);
+  //   districts.dataResult.forEach(async (district) => {
+  //     console.log(district.code);
+  //     const url = `https://provinces.open-api.vn/api/d/${district.code}?depth=2`;
+  //     const response = await axios.get(url);
+  //     response.data.wards.forEach(async (ward) => {
+  //       const oldWard = this.wardService.findOneByCode(ward.code);
+  //       console.log(ward.codename);
+  //       if (!(await oldWard).dataResult.codename) {
+  //         const dto = new UpdateWardDto();
+  //         dto.codename = ward.codename;
+  //         const saveWard = await this.wardService.updateByCode(
+  //           ward.code,
+  //           dto,
+  //           '08926136-26d8-4176-827e-060cc7e6285d',
+  //         );
+  //         console.log(saveWard);
+  //       }
+  //     });
+  //   });
   // }
 }

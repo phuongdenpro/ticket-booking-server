@@ -1,5 +1,5 @@
 import { DeleteFileUploadDto, UploadWithPathUploadDto } from './dto';
-import { JwtAuthGuard } from 'src/auth/guards';
+import { JwtAuthGuard } from './../../auth/guards';
 import {
   Body,
   Controller,
@@ -12,7 +12,10 @@ import {
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
-import { FileFieldsInterceptor, FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileFieldsInterceptor,
+  FileInterceptor,
+} from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { UploadService } from './upload.service';
 
@@ -62,8 +65,6 @@ export class UploadController {
     // return this.uploadService.uploadImageWithAWS(file);
     return this.uploadService.uploadImageWithCloudinary(file);
   }
-
-
 
   @Post('video')
   @HttpCode(HttpStatus.OK)
@@ -133,6 +134,5 @@ export class UploadController {
     },
   ) {
     return this.uploadService.uploadMutiFile(files);
-    
   }
 }

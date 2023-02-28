@@ -1,7 +1,7 @@
+import { RoleEnum } from './../enums/roles.enum';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { RoleEnum } from 'src/enums';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 import { JwtPayload } from './interfaces';

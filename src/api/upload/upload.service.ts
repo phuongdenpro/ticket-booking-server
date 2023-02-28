@@ -5,7 +5,7 @@ import { S3 } from 'aws-sdk';
 
 import { ConfigService } from '@nestjs/config';
 
-import { IMAGE_REGEX, VIDEO_REGEX } from 'src/utils';
+import { IMAGE_REGEX, VIDEO_REGEX } from './../../utils';
 import { UploadApiErrorResponse, UploadApiResponse, v2 } from 'cloudinary';
 import { Readable } from 'stream';
 import { DeleteFileUploadDto, UploadWithPathUploadDto } from './dto';

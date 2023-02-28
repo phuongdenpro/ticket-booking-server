@@ -1,4 +1,3 @@
-import { TripDeleteMultiInput } from './dto/delete-multiple-input-trip.dto';
 import {
   Body,
   Controller,
@@ -14,10 +13,20 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { TripService } from './trip.service';
-import { CurrentUser, GetPagination, Pagination, Roles } from 'src/decorator';
-import { RoleEnum } from 'src/enums';
-import { JwtAuthGuard } from 'src/auth/guards';
-import { FilterTripDto, SaveTripDto, UpdateTripDto } from './dto';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
+import { RoleEnum } from './../../enums';
+import { JwtAuthGuard } from './../../auth/guards';
+import {
+  FilterTripDto,
+  SaveTripDto,
+  UpdateTripDto,
+  TripDeleteMultiInput,
+} from './dto';
 
 @Controller('trip')
 @ApiTags('Trip')

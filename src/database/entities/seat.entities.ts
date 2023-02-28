@@ -1,4 +1,4 @@
-import { SeatTypeEnum } from 'src/enums';
+import { SeatTypeEnum } from './../../enums/seat-type.enum';
 import { TicketDetail } from './ticket-detail.entities';
 import { Vehicle } from './vehicle.entities';
 import {

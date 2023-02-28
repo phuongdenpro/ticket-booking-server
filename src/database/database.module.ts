@@ -1,14 +1,14 @@
+import { DatabaseLogger } from './../utils/typeorm-logger';
 import { Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {toBoolean} from '../utils/to-boolean';
+import { toBoolean } from '../utils/to-boolean';
 
 import * as dbEntities from './entities';
-import { DatabaseLogger } from 'src/utils';
 
-const entities = (Object.keys(dbEntities) as Array<keyof typeof dbEntities>).map(
-  (entity) => dbEntities[entity]
-);
+const entities = (
+  Object.keys(dbEntities) as Array<keyof typeof dbEntities>
+).map((entity) => dbEntities[entity]);
 @Module({
   imports: [
     TypeOrmModule.forRootAsync({
