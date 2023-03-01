@@ -6,8 +6,8 @@ import { PriceListController } from './price-list.controller';
 
 @Module({
   imports: [TypeOrmModule.forFeature([PriceList, TicketGroup, PriceDetail])],
-  providers: [PriceListService],
   controllers: [PriceListController],
+  providers: [PriceListService],
   exports: [PriceListService],
 })
 export class PriceListModule {}

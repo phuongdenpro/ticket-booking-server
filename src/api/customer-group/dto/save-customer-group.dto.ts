@@ -3,7 +3,7 @@ import { IsNotEmpty, IsString, IsOptional, Length } from 'class-validator';
 
 export class SaveCustomerGroupDto {
   @ApiProperty({ example: 'Nhóm khách hàng cơ bản' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'NAME_IS_REQUIRED' })
   @IsString({ message: 'NAME_IS_STRING' })
   @Length(1, 100, { message: 'NAME_LENGTH' })
   name: string;

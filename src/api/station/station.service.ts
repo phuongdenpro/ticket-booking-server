@@ -243,17 +243,14 @@ export class StationService {
   async updateStationById(userId: string, id: string, dto: UpdateStationDto) {
     const { name, address, wardId, images, code } = dto;
 
-    const station = await this.stationRepository.findOne({ where: { id } });
+    const station = await this.stationRepository.findOne({
+      where: { id },
+      relations: ['ward'],
+    });
     if (!station) {
       throw new NotFoundException('STATION_NOT_FOUND');
     }
 
-    if (wardId) {
-      const ward = await this.dataSource
-        .getRepository(Ward)
-        .findOne({ where: { code: wardId } });
-      station.ward = ward;
-    }
     if (code) {
       const oldStation = await this.stationRepository.findOne({
         where: { code },
@@ -266,9 +263,38 @@ export class StationService {
     if (name) {
       station.name = name;
     }
+    if (wardId) {
+      const ward = await this.dataSource
+        .getRepository(Ward)
+        .findOne({ where: { code: wardId } });
+      station.ward = ward;
+      delete station.ward.createdAt;
+      delete station.ward.updatedAt;
+      delete station.ward.createdBy;
+      delete station.ward.updatedBy;
+    }
+    const districtDataResult = await this.districtService.findOneByCode(
+      station.ward.districtCode,
+    );
+    const {
+      createdAt: createdAtDistrict,
+      updatedAt: updatedAtDistrict,
+      createdBy: createdByDistrict,
+      updatedBy: updatedByDistrict,
+      ...district
+    } = districtDataResult.dataResult;
+
+    const provinceDataResult = await this.provinceService.findOneByCode(
+      district.provinceCode,
+    );
+    const { createdAt, updatedAt, createdBy, updatedBy, ...province } =
+      provinceDataResult.dataResult;
     if (address) {
       station.address = address;
     }
+    station.fullAddress = `${station.address}, ${station.ward.name}, ${district.name}, ${province.name}`;
+    station['district'] = district;
+    station['province'] = province;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -280,20 +306,22 @@ export class StationService {
 
     const newStation = await this.stationRepository.save(station);
 
-    const newImages = await images.map(async (image) => {
-      image.createdBy = adminExist.id;
-      const newImage = await this.imageResourceService.saveImageResource(
-        image,
-        adminExist.id,
-        null,
-        newStation.id,
-      );
-      delete newImage.station;
-      delete newImage.createdBy;
+    if (images && images.length > 0) {
+      const newImages = await images.map(async (image) => {
+        image.createdBy = adminExist.id;
+        const newImage = await this.imageResourceService.saveImageResource(
+          image,
+          adminExist.id,
+          null,
+          newStation.id,
+        );
+        delete newImage.station;
+        delete newImage.createdBy;
 
-      return newImage;
-    });
-    newStation.images = await Promise.all(newImages);
+        return newImage;
+      });
+      newStation.images = await Promise.all(newImages);
+    }
     return newStation;
   }
 
@@ -316,6 +344,10 @@ export class StationService {
         .getRepository(Ward)
         .findOne({ where: { code: wardId } });
       station.ward = ward;
+      delete station.ward.createdAt;
+      delete station.ward.updatedAt;
+      delete station.ward.createdBy;
+      delete station.ward.updatedBy;
     }
     if (code) {
       const oldStation = await this.stationRepository.findOne({
@@ -329,9 +361,28 @@ export class StationService {
     if (name) {
       station.name = name;
     }
+    const districtDataResult = await this.districtService.findOneByCode(
+      station.ward.districtCode,
+    );
+    const {
+      createdAt: createdAtDistrict,
+      updatedAt: updatedAtDistrict,
+      createdBy: createdByDistrict,
+      updatedBy: updatedByDistrict,
+      ...district
+    } = districtDataResult.dataResult;
+
+    const provinceDataResult = await this.provinceService.findOneByCode(
+      district.provinceCode,
+    );
+    const { createdAt, updatedAt, createdBy, updatedBy, ...province } =
+      provinceDataResult.dataResult;
     if (address) {
       station.address = address;
     }
+    station.fullAddress = `${station.address}, ${station.ward.name}, ${district.name}, ${province.name}`;
+    station['district'] = district;
+    station['province'] = province;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -343,20 +394,22 @@ export class StationService {
 
     const newStation = await this.stationRepository.save(station);
 
-    const newImages = await images.map(async (image) => {
-      image.createdBy = adminExist.id;
-      const newImage = await this.imageResourceService.saveImageResource(
-        image,
-        adminExist.id,
-        null,
-        newStation.id,
-      );
-      delete newImage.station;
-      delete newImage.createdBy;
+    if (images && images.length > 0) {
+      const newImages = await images.map(async (image) => {
+        image.createdBy = adminExist.id;
+        const newImage = await this.imageResourceService.saveImageResource(
+          image,
+          adminExist.id,
+          null,
+          newStation.id,
+        );
+        delete newImage.station;
+        delete newImage.createdBy;
 
-      return newImage;
-    });
-    newStation.images = await Promise.all(newImages);
+        return newImage;
+      });
+      newStation.images = await Promise.all(newImages);
+    }
     return newStation;
   }
 

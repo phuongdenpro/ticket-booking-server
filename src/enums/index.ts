@@ -1,4 +1,4 @@
-export * from './delete-status.enum';
+export * from './active-status.enum';
 export * from './gender.enum';
 export * from './roles.enum';
 export * from './seat-type.enum';

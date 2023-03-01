@@ -132,10 +132,9 @@ export const mappingTranslate = {
   TRIP_ID_INVALID: 'Id của chuyến đi không hợp lệ',
   TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng chuyến không đúng định dạng',
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng chuyến không đúng định dạng',
-  TRIP_START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
+  START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   TRIP_END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
-  TRIP_END_DATE_GREATER_THAN_START_DATE:
-    'Ngày kết thúc phải lớn hơn ngày bắt đầu',
+  END_DATE_GREATER_THAN_START_DATE: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
   START_DATE_IS_REQUIRED: 'Ngày bắt đầu không được để trống',
   END_DATE_IS_REQUIRED: 'Ngày kết thúc không được để trống',
   FROM_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
@@ -170,4 +169,11 @@ export const mappingTranslate = {
 
   // ticket group
   TICKET_GROUP_NOT_FOUND: 'Không tìm thấy nhóm vé',
+
+  // price list
+  PRICE_LIST_STATUS_INVALID:
+    'Trạng thái của bảng giá không hợp lệ. Chỉ nhận 1 trong 2 giá trị: "Kích hoạt", "Tạm ngưng"',
+  PRICE_LIST_STATUS_IS_STRING: 'Trạng thái của bảng giá phải là chuỗi ký tự',
+  START_DATE_MUST_BE_LESS_THAN_END_DATE:
+    'Ngày bắt đầu phải nhỏ hơn ngày kết thúc',
 };

@@ -1,3 +1,4 @@
+import { SortEnum } from './../../enums';
 import {
   Customer,
   CustomerGroup,
@@ -84,21 +85,21 @@ export class CustomerGroupService {
         customerGroupName: `%${keywords}%`,
       });
     }
+    if (sort) {
+      query.orderBy('q.createdAt', sort);
+    } else {
+      query.orderBy('q.createdAt', SortEnum.DESC);
+    }
 
     // get customer groups
-    const customerGroups = await query
-      .orderBy('q.createdAt', sort)
+    const dataResult = await query
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
 
     const total = await query.clone().getCount();
 
-    return {
-      dataResult: customerGroups,
-      total,
-      pagination,
-    };
+    return { dataResult, total, pagination };
   }
 
   async updateCustomerGroupById(
@@ -216,6 +217,11 @@ export class CustomerGroupService {
     if (gender) {
       queryCGD.andWhere('c.gender = :gender', { gender });
     }
+    if (sort) {
+      queryCGD.orderBy('q1.createdAt', sort);
+    } else {
+      queryCGD.orderBy('q1.createdAt', SortEnum.DESC);
+    }
 
     queryCGD.leftJoinAndSelect('q1.customer', 'c');
     const dataResultGD = await queryCGD
@@ -233,7 +239,6 @@ export class CustomerGroupService {
         'c.birthday',
         'c.createdAt',
       ])
-      .orderBy('q1.createdAt', sort)
       .take(pagination.take)
       .skip(pagination.skip)
       .getMany();

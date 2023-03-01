@@ -65,13 +65,13 @@ export class TripService {
     trip.note = note;
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate < currentDate) {
-      throw new BadRequestException('TRIP_START_DATE_GREATER_THAN_NOW');
+      throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     trip.startDate = startDate;
 
     if (endDate) {
       if (endDate < currentDate && endDate < startDate) {
-        throw new BadRequestException('TRIP_END_DATE_GREATER_THAN_START_DATE');
+        throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
       } else {
         trip.endDate = endDate;
       }
@@ -210,7 +210,7 @@ export class TripService {
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate !== undefined || startDate !== null) {
       if (startDate < currentDate) {
-        throw new BadRequestException('TRIP_START_DATE_GREATER_THAN_NOW');
+        throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
       }
       trip.startDate = startDate;
     }

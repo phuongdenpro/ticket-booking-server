@@ -24,6 +24,9 @@ export class Station {
   @Column({ name: 'address', type: 'varchar', length: 255, nullable: false })
   address: string;
 
+  @Column({ name: 'full_address', type: 'text' })
+  fullAddress: string;
+
   @Column({
     name: 'code',
     type: 'varchar',
