@@ -133,7 +133,7 @@ export const mappingTranslate = {
   TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng chuyến không đúng định dạng',
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng chuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
-  TRIP_END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
+  END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_START_DATE: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
   START_DATE_IS_REQUIRED: 'Ngày bắt đầu không được để trống',
   END_DATE_IS_REQUIRED: 'Ngày kết thúc không được để trống',
@@ -176,4 +176,5 @@ export const mappingTranslate = {
   PRICE_LIST_STATUS_IS_STRING: 'Trạng thái của bảng giá phải là chuỗi ký tự',
   START_DATE_MUST_BE_LESS_THAN_END_DATE:
     'Ngày bắt đầu phải nhỏ hơn ngày kết thúc',
+  PRICE_LIST_NOT_FOUND: 'Không tìm thấy bảng giá',
 };

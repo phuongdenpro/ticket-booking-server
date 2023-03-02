@@ -23,17 +23,17 @@ export class SaveTripDto {
     example:
       'Từ Hồ Chí Minh đi Bến xe Đức Long Bảo Lộc xuất phát từ 5h chiều hằng ngày',
   })
-  @IsOptional()
   @IsString({ message: 'NOTE_IS_STRING' })
+  @IsOptional()
   note: string;
 
   @ApiProperty({ example: '2023-02-12' })
   @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
-  @IsDate()
+  @IsDate({ message: 'START_DATE_IS_DATE' })
   startDate: Date;
 
   @ApiPropertyOptional({ example: '2024-02-15T02:37:29.450Z' })
-  @IsDate({ message: 'END_DATE_IS_REQUIRED' })
+  @IsDate({ message: 'END_DATE_IS_DATE' })
   @IsOptional()
   endDate: Date;
 
@@ -50,10 +50,10 @@ export class SaveTripDto {
   toStationId: string;
 
   @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE, enum: TripStatusEnum })
-  @IsOptional()
   @IsEnum(TripStatusEnum, { message: 'TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM' })
   @IsNumber({ allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 })
   @Min(0)
   @Max(1)
+  @IsOptional()
   isActive: TripStatusEnum;
 }

@@ -6,15 +6,22 @@ import {
   Pagination,
   Roles,
 } from './../../decorator';
-import { CreatePriceListDto, FilterPriceListDto } from './dto';
+import {
+  CreatePriceListDto,
+  FilterPriceListDto,
+  UpdatePriceListDto,
+  DeletePriceListDto,
+} from './dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -31,10 +38,7 @@ export class PriceListController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createCustomerGroup(
-    @Body() dto: CreatePriceListDto,
-    @CurrentUser() user,
-  ) {
+  async createPriceList(@Body() dto: CreatePriceListDto, @CurrentUser() user) {
     return await this.priceListService.createPriceList(dto, user.id);
   }
 
@@ -43,7 +47,7 @@ export class PriceListController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getCustomerGroup(@Param('id') id: string) {
+  async getPriceListById(@Param('id') id: string) {
     return await this.priceListService.getPriceListById(id);
   }
 
@@ -57,5 +61,36 @@ export class PriceListController {
     @GetPagination() pagination?: Pagination,
   ) {
     return await this.priceListService.findAllPriceList(dto, pagination);
+  }
+
+  @Patch('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateStationById(
+    @CurrentUser() user,
+    @Param('id') id: string,
+    @Body() dto: UpdatePriceListDto,
+  ) {
+    return await this.priceListService.updatePriceListById(user.id, id, dto);
+  }
+
+  @Delete('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deletePriceListById(@CurrentUser() user, @Param('id') id: string) {
+    return await this.priceListService.deletePriceListById(id, user.id);
+  }
+
+  @Delete('multiple')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiple(@CurrentUser() user, @Body() dto: DeletePriceListDto) {
+    return await this.priceListService.deleteMultiPriceListByIds(user.id, dto);
   }
 }

@@ -1,7 +1,16 @@
 import { ActiveStatusEnum, SortEnum } from './../../enums';
-import { CreatePriceListDto, FilterPriceListDto } from './dto';
+import {
+  CreatePriceListDto,
+  FilterPriceListDto,
+  UpdatePriceListDto,
+  DeletePriceListDto,
+} from './dto';
 import { PriceDetail, PriceList, Staff } from './../../database/entities';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pagination } from './../../decorator';
 import { DataSource, Repository } from 'typeorm';
@@ -120,9 +129,93 @@ export class PriceListService {
     return { dataResult, total, pagination };
   }
 
-  async updatePriceListById(adminId: string, id: string, dto) {}
+  async updatePriceListById(
+    adminId: string,
+    id: string,
+    dto: UpdatePriceListDto,
+  ) {
+    const { name, note, startDate, endDate, status } = dto;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
 
-  async deletePriceListById(adminId: string, id: string) {}
+    const priceList = await this.priceListRepository.findOne({
+      where: { id },
+    });
+    if (!priceList) {
+      throw new BadRequestException('PRICE_LIST_NOT_FOUND');
+    }
 
-  async deleteMultiPriceListByIds(adminId: string, dto) {}
+    if (name) {
+      priceList.name = name;
+    }
+    if (note) {
+      priceList.note = note;
+    }
+    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    if (startDate !== undefined || startDate !== null) {
+      if (startDate < currentDate) {
+        throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
+      }
+      const newStartDate = new Date(startDate);
+      priceList.startDate = newStartDate;
+    }
+    if (endDate) {
+      if (endDate < currentDate) {
+        throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
+      }
+      if (startDate > endDate) {
+        throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
+      }
+      const newEndDate = new Date(endDate);
+      priceList.endDate = newEndDate;
+    }
+    if (status) {
+      priceList.status = status === ActiveStatusEnum.ACTIVE ? true : false;
+    }
+
+    priceList.updatedBy = adminExist.id;
+    const updateTrip = await this.priceListRepository.save(priceList);
+    return updateTrip;
+  }
+
+  async deletePriceListById(id: string, adminId: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+
+    const priceList = await this.priceListRepository.findOne({
+      where: { id: id },
+    });
+    if (!priceList) {
+      throw new BadRequestException('PRICE_LIST_NOT_FOUND');
+    }
+    priceList.deletedAt = new Date();
+    priceList.updatedBy = adminExist.id;
+
+    const deletedPriceList = await this.priceListRepository.save(priceList);
+    return {
+      id: deletedPriceList.id,
+      message: 'Xoá thành công',
+    };
+  }
+
+  async deleteMultiPriceListByIds(adminId: string, dto: DeletePriceListDto) {
+    try {
+      const { ids } = dto;
+
+      const list = await Promise.all(
+        ids.map(async (id) => await this.deletePriceListById(id, adminId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
 }
