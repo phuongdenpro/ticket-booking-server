@@ -50,6 +50,15 @@ export class CustomerGroupController {
     return await this.customGroupService.createCustomerGroup(dto, user.id);
   }
 
+  @Delete('id/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteCustomerGroupById(@CurrentUser() user, @Param('id') id: string) {
+    return await this.customGroupService.deleteCustomerGroupById(user.id, id);
+  }
+
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
@@ -88,14 +97,7 @@ export class CustomerGroupController {
     );
   }
 
-  @Delete('id/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Roles(RoleEnum.STAFF)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async deleteCustomerGroupById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.customGroupService.deleteCustomerGroupById(user.id, id);
-  }
+  
 
   @Delete('multiple')
   @HttpCode(HttpStatus.OK)

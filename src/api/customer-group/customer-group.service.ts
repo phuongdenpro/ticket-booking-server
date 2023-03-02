@@ -36,12 +36,13 @@ export class CustomerGroupService {
   ) {}
 
   async createCustomerGroup(dto: SaveCustomerGroupDto, userId: string) {
-    const { name, description, note } = dto;
+    const { code, name, description, note } = dto;
 
     const customerGroup = new CustomerGroup();
     if (!name) {
       throw new BadRequestException('NAME_IS_REQUIRED');
     }
+    customerGroup.code = code;
     customerGroup.name = name;
     customerGroup.description = description;
     customerGroup.note = note;
@@ -79,10 +80,20 @@ export class CustomerGroupService {
   ) {
     const { keywords, sort } = dto;
     const query = this.customerGroupRepository.createQueryBuilder('q');
+    console.log(keywords);
 
     if (keywords) {
-      query.andWhere('q.name LIKE :customerGroupName', {
+      query.orWhere('q.code LIKE :customerGroupCode', {
+        customerGroupCode: `%${keywords}%`,
+      });
+      query.orWhere('q.name LIKE :customerGroupName', {
         customerGroupName: `%${keywords}%`,
+      });
+      query.orWhere('q.description LIKE :customerGroupDescription', {
+        customerGroupDescription: `%${keywords}%`,
+      });
+      query.orWhere('q.note LIKE :customerGroupNote', {
+        customerGroupNote: `%${keywords}%`,
       });
     }
     if (sort) {
@@ -108,7 +119,10 @@ export class CustomerGroupService {
     dto: UpdateCustomerGroupDto,
   ) {
     const customerGroup = await this.getCustomerGroupById(id);
-    const { name, description, note } = dto;
+    const { code, name, description, note } = dto;
+    if (code) {
+      customerGroup.code = code;
+    }
     if (name) {
       customerGroup.name = name;
     }
@@ -133,20 +147,7 @@ export class CustomerGroupService {
   }
 
   async deleteCustomerGroupById(adminId: string, id: string) {
-    const dataResult = await this.getCustomersByGroupId(
-      id,
-      adminId,
-      undefined,
-      {
-        page: 1,
-        pageSize: 1,
-      },
-    );
-    const customerGroup = dataResult.dataResult;
-
-    if (customerGroup['customers'].length > 0) {
-      throw new BadRequestException('CUSTOMER_GROUP_HAS_CUSTOMER');
-    }
+    const customerGroup = await this.getCustomerGroupById(id);
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId, isActive: true } });

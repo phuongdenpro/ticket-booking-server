@@ -6,17 +6,17 @@ export class FilterCustomerDto {
   @ApiPropertyOptional({ example: '' })
   @IsOptional()
   @IsString({ message: 'KEYWORDS_IS_STRING' })
-  keywords: string;
+  keywords?: string;
 
   @ApiPropertyOptional({ example: GenderEnum.MALE, enum: GenderEnum })
   @IsOptional()
   @IsString({ message: 'GENDER_IS_STRING' })
   @IsEnum(GenderEnum, { message: 'GENDER_IS_ENUM' })
-  gender: string;
+  gender?: string;
 
   @ApiPropertyOptional({ example: SortEnum.ASC, enum: SortEnum })
   @IsOptional()
   @IsString({ message: 'SORT_IS_STRING' })
   @IsEnum(SortEnum, { message: 'SORT_IS_ENUM' })
-  sort: SortEnum;
+  sort?: SortEnum;
 }
