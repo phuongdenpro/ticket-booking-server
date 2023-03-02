@@ -61,7 +61,7 @@ export class TicketGroupService {
 
     const dataResult = await query.select(this.selectFields).getOne();
 
-    return { dataResult };
+    return dataResult;
   }
 
   async findAllTicketGroup(dto: FilterTicketGroupDto, pagination?: Pagination) {
@@ -75,12 +75,13 @@ export class TicketGroupService {
         .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` });
     }
     if (sort) {
-      query.orderBy('q.name', sort).orderBy('q.createdAt', sort);
+      query.orderBy('q.name', sort);
     } else {
-      query.orderBy('q.name', SortEnum.DESC).orderBy('q.createdAt', sort);
+      query.orderBy('q.name', SortEnum.DESC);
     }
 
     const dataResult = await query
+      .addOrderBy('q.createdAt', SortEnum.ASC)
       .select(this.selectFields)
       .skip(pagination.skip)
       .take(pagination.take)

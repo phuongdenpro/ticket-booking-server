@@ -255,7 +255,7 @@ export class StationService {
       const oldStation = await this.stationRepository.findOne({
         where: { code },
       });
-      if (oldStation) {
+      if (oldStation && oldStation.id !== id) {
         throw new BadRequestException('STATION_CODE_EXISTED');
       }
       station.code = code;
@@ -353,7 +353,7 @@ export class StationService {
       const oldStation = await this.stationRepository.findOne({
         where: { code },
       });
-      if (oldStation) {
+      if (oldStation && oldStation.id !== station.id) {
         throw new BadRequestException('STATION_CODE_EXISTED');
       }
       station.code = code;

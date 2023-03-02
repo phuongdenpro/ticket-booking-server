@@ -22,16 +22,11 @@ export class PriceDetail {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @ManyToOne(() => PriceList, (priceList) => priceList.priceDetails)
-  @JoinColumn({ name: 'price_list_id', referencedColumnName: 'id' })
-  priceList: PriceList;
+  @Column({ name: 'created_by', type: 'varchar', nullable: false })
+  createdBy: string;
 
-  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.priceDetail)
-  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
-  ticketGroup: TicketGroup;
-
-  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.priceDetail)
-  orderDetails: OrderDetail[];
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
@@ -51,4 +46,16 @@ export class PriceDetail {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relationships
+  @ManyToOne(() => PriceList, (priceList) => priceList.priceDetails)
+  @JoinColumn({ name: 'price_list_id', referencedColumnName: 'id' })
+  priceList: PriceList;
+
+  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.priceDetail)
+  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
+  ticketGroup: TicketGroup;
+
+  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.priceDetail)
+  orderDetails: OrderDetail[];
 }

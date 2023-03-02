@@ -21,10 +21,10 @@ export const mappingTranslate = {
   NOTE_BETWEEN_1_1000_CHARACTERS: 'Ghi chú phải từ 1 đến 1000 ký tự',
   NOTE_IS_STRING: 'Ghi chú phải là chuỗi ký tự',
   SORT_IS_STRING: 'Giá trị sắp xếp phải là chuỗi ký tự',
+  SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
   GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
   GENDER_IS_ENUM:
     'Giới tính chỉ nhận 1 trong 3 giá trị sau: MALE, FEMALE, NONE',
-  SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
   PHONE_IS_STRING: 'Số điện thoại phải là chuỗi ký tự',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
   NAME_BETWEEN_1_100_CHARACTERS: 'Tên phải từ 1 đến 100 ký tự',
@@ -109,7 +109,7 @@ export const mappingTranslate = {
   WARD_TYPE_IS_REQUIRED: 'loại phường/xã không được để trống',
 
   // station
-  STATION_CODE_EXISTED: 'Mã bến xe đã tồn tại',
+  STATION_CODE_EXISTED: 'Mã bến xe đã tồn tại ở một bến xe khác',
   FROM_STATION_NOT_FOUND: 'Không tìm thấy bến xe đi',
   FROM_STATION_AND_TO_STATION_IS_SAME:
     'Bến xe đi và bến xe đến không được trùng nhau',
@@ -169,6 +169,9 @@ export const mappingTranslate = {
 
   // ticket group
   TICKET_GROUP_NOT_FOUND: 'Không tìm thấy nhóm vé',
+  TICKET_GROUP_ID_IS_REQUIRED: 'Id của nhóm vé là không được để trống',
+  TICKET_GROUP_ID_IS_STRING: 'Id của nhóm vé phải là chuỗi ký tự',
+  TICKET_GROUP_ID_IS_36_CHARACTERS: 'Id của nhóm vé phải là 36 ký tự',
 
   // price list
   PRICE_LIST_STATUS_INVALID:
@@ -177,4 +180,12 @@ export const mappingTranslate = {
   START_DATE_MUST_BE_LESS_THAN_END_DATE:
     'Ngày bắt đầu phải nhỏ hơn ngày kết thúc',
   PRICE_LIST_NOT_FOUND: 'Không tìm thấy bảng giá',
+  PRICE_LIST_ID_IS_STRING: 'Id của bảng giá phải là chuỗi ký tự',
+  PRICE_LIST_ID_IS_REQUIRED: 'Id của bảng giá không được để trống',
+  PRICE_LIST_ID_IS_36_CHARACTERS: 'Id của bảng giá phải là 36 ký tự',
+
+  // price details
+  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết giá',
+  PRICE_IS_NUMBER: 'Giá phải là số',
+  PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Giá phải lớn hơn hoặc bằng 0',
 };
