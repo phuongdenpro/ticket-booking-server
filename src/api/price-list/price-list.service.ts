@@ -7,6 +7,7 @@ import {
   CreatePriceDetailDto,
   FilterPriceDetailDto,
   UpdatePriceDetailDto,
+  DeletePriceDetailDto,
 } from './dto';
 import { PriceDetail, PriceList, Staff } from './../../database/entities';
 import {
@@ -42,6 +43,8 @@ export class PriceListService {
     't.name',
     't.description',
     't.note',
+    't.createdBy',
+    't.createdAt',
   ];
 
   async createPriceList(dto: CreatePriceListDto, adminId: string) {
@@ -229,9 +232,35 @@ export class PriceListService {
   async deleteMultiPriceListByIds(adminId: string, dto: DeletePriceListDto) {
     try {
       const { ids } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: adminId, isActive: true } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
 
       const list = await Promise.all(
-        ids.map(async (id) => await this.deletePriceListById(id, adminId)),
+        ids.map(async (id) => {
+          const priceList = await this.priceListRepository.findOne({
+            where: { id: id },
+          });
+          if (!priceList) {
+            return {
+              id: priceList.id,
+              message: 'Không tìm thấy bảng giá',
+            };
+          }
+          priceList.deletedAt = new Date();
+          priceList.updatedBy = adminExist.id;
+
+          const deletedPriceList = await this.priceListRepository.save(
+            priceList,
+          );
+          return {
+            id: deletedPriceList.id,
+            message: 'Xoá thành công',
+          };
+        }),
       );
       return list;
     } catch (err) {
@@ -249,13 +278,27 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const priceList = await this.getPriceListById(priceListId);
+    const priceList = await this.getPriceListById(priceListId, {
+      select: [
+        'id',
+        'name',
+        'note',
+        'startDate',
+        'endDate',
+        'status',
+        'createdAt',
+        'createdBy',
+      ],
+    });
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
 
     const ticketGroup = await this.ticketGroupService.findOneTicketGroupById(
       ticketGroupId,
+      {
+        select: ['id', 'name', 'note', 'description', 'createdAt', 'createdBy'],
+      },
     );
     if (!ticketGroup) {
       throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
@@ -270,15 +313,6 @@ export class PriceListService {
     priceDetail.priceList = priceList;
     priceDetail.ticketGroup = ticketGroup;
     priceDetail.createdBy = adminExist.id;
-
-    delete priceDetail.ticketGroup.createdAt;
-    delete priceDetail.ticketGroup.updatedAt;
-    delete priceDetail.ticketGroup.createdBy;
-    delete priceDetail.ticketGroup.updatedBy;
-    delete priceDetail.priceList.createdAt;
-    delete priceDetail.priceList.updatedAt;
-    delete priceDetail.priceList.createdBy;
-    delete priceDetail.priceList.updatedBy;
 
     const savePriceDetail = await this.priceDetailRepository.save(priceDetail);
     delete savePriceDetail.deletedAt;
@@ -354,6 +388,9 @@ export class PriceListService {
       if (price < 0) {
         throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
       }
+      if (price > Number.MAX_VALUE) {
+        throw new BadRequestException('PRICE_IS_TOO_BIG');
+      }
       priceDetail.price = price;
     }
     if (note) {
@@ -387,5 +424,65 @@ export class PriceListService {
     );
     delete updatePriceDetail.deletedAt;
     return updatePriceDetail;
+  }
+
+  async deletePriceDetailById(adminId: string, id: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+
+    const priceDetail = await this.getPriceDetailById(id);
+    if (!priceDetail) {
+      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
+    priceDetail.updatedBy = adminExist.id;
+    priceDetail.deletedAt = new Date();
+
+    return await this.priceDetailRepository.save(priceDetail);
+  }
+
+  async deleteMultiPriceDetailByIds(
+    adminId: string,
+    dto: DeletePriceDetailDto,
+  ) {
+    try {
+      const { ids } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: adminId, isActive: true } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+
+      const list = await Promise.all(
+        ids.map(async (id) => {
+          const priceDetail = await this.priceDetailRepository.findOne({
+            where: { id: id },
+          });
+          if (!priceDetail) {
+            return {
+              id: priceDetail.id,
+              message: 'Không tìm thấy chi tiết bảng giá',
+            };
+          }
+          priceDetail.deletedAt = new Date();
+          priceDetail.updatedBy = adminExist.id;
+
+          const deletedPriceList = await this.priceDetailRepository.save(
+            priceDetail,
+          );
+          return {
+            id: deletedPriceList.id,
+            message: 'Xoá thành công',
+          };
+        }),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
   }
 }

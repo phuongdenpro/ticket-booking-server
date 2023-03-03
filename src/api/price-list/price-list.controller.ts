@@ -14,6 +14,7 @@ import {
   CreatePriceDetailDto,
   FilterPriceDetailDto,
   UpdatePriceDetailDto,
+  DeletePriceDetailDto,
 } from './dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
@@ -152,7 +153,7 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deletePriceDetailById(@CurrentUser() user, @Param('id') id: string) {
-    return { message: 'coming soon' };
+    return await this.priceListService.deletePriceDetailById(user.id, id);
   }
 
   @Delete('price-detail/multiple')
@@ -160,7 +161,13 @@ export class PriceListController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteMultiplePriceDetailByIds(@CurrentUser() user, @Body() dto) {
-    return { message: 'coming soon' };
+  async deleteMultiplePriceDetailByIds(
+    @CurrentUser() user,
+    @Body() dto: DeletePriceDetailDto,
+  ) {
+    return await this.priceListService.deleteMultiPriceDetailByIds(
+      user.id,
+      dto,
+    );
   }
 }

@@ -188,4 +188,5 @@ export const mappingTranslate = {
   PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết giá',
   PRICE_IS_NUMBER: 'Giá phải là số',
   PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Giá phải lớn hơn hoặc bằng 0',
+  PRICE_IS_TOO_BIG: 'Giá lớn hơn miền giá trị của double',
 };
