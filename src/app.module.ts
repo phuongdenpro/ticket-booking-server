@@ -41,8 +41,8 @@ import { PriceListModule } from './api/price-list/price-list.module';
     SeatModule,
     TicketGroupModule,
     ImageResourceModule,
-    UploadModule,
     PriceListModule,
+    UploadModule,
   ],
   providers: [
     {

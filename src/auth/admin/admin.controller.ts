@@ -3,6 +3,7 @@ import { CurrentUser } from './../../decorator';
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -26,18 +27,18 @@ export class AdminController {
     return this.adminService.register(user?.['id'], dto);
   }
 
-  // @Get('profile')
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
-  // @HttpCode(HttpStatus.OK)
-  // async profile(@CurrentUser() user) {
-  //   return this.adminService.profile(user?.['id']);
-  // }
-
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: AdminLoginDto) {
     return this.adminService.login(dto);
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  async profile(@CurrentUser() user) {
+    return this.adminService.profile(user?.['id']);
   }
 
   @Post('logout')

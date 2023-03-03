@@ -1,30 +1,27 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, Length } from 'class-validator';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class FilterWardDto {
   @ApiPropertyOptional({ example: 'phuc' })
   @IsOptional()
-  @IsString({ message: 'name is string' })
-  @Length(1, 100, { message: 'Name must be between 1 and 100 characters' })
+  @IsString({ message: 'NAME_IS_STRING' })
   name?: string;
 
   @ApiPropertyOptional({ example: 'phuong' })
   @IsOptional()
-  @IsString({ message: 'type is string' })
-  @Length(1, 50, { message: 'type must be between 1 and 50 characters' })
+  @IsString({ message: 'WARD_TYPE_IS_STRING' })
   type?: string;
 
   @ApiPropertyOptional({ example: 'phuc' })
   @IsOptional()
-  @IsString({ message: 'code name is string' })
-  @Length(1, 255, { message: 'code name must be between 1 and 255 characters' })
+  @IsString({ message: 'CODENAME_IS_STRING' })
   codename?: string;
 
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()
   @IsNumber(
     { allowNaN: false, allowInfinity: false },
-    { message: 'district code is number' },
+    { message: 'DISTRICT_CODE_ID_NUMBER' },
   )
   districtCode?: number;
 }

@@ -1,3 +1,4 @@
+import { SortEnum } from './../../enums';
 import {
   Customer,
   CustomerGroup,
@@ -35,12 +36,13 @@ export class CustomerGroupService {
   ) {}
 
   async createCustomerGroup(dto: SaveCustomerGroupDto, userId: string) {
-    const { name, description, note } = dto;
+    const { code, name, description, note } = dto;
 
     const customerGroup = new CustomerGroup();
     if (!name) {
       throw new BadRequestException('NAME_IS_REQUIRED');
     }
+    customerGroup.code = code;
     customerGroup.name = name;
     customerGroup.description = description;
     customerGroup.note = note;
@@ -76,47 +78,39 @@ export class CustomerGroupService {
     dto: FilterCustomerGroupDto,
     pagination?: Pagination,
   ) {
-    const { customerGroupName, sort } = dto;
+    const { keywords, sort } = dto;
     const query = this.customerGroupRepository.createQueryBuilder('q');
+    console.log(keywords);
 
-    if (customerGroupName) {
-      query.andWhere('q.name LIKE :customerGroupName', {
-        customerGroupName: `%${customerGroupName}%`,
+    if (keywords) {
+      query.orWhere('q.code LIKE :customerGroupCode', {
+        customerGroupCode: `%${keywords}%`,
       });
+      query.orWhere('q.name LIKE :customerGroupName', {
+        customerGroupName: `%${keywords}%`,
+      });
+      query.orWhere('q.description LIKE :customerGroupDescription', {
+        customerGroupDescription: `%${keywords}%`,
+      });
+      query.orWhere('q.note LIKE :customerGroupNote', {
+        customerGroupNote: `%${keywords}%`,
+      });
+    }
+    if (sort) {
+      query.orderBy('q.createdAt', sort);
+    } else {
+      query.orderBy('q.createdAt', SortEnum.DESC);
     }
 
     // get customer groups
-    const customerGroups = await query
-      .orderBy('q.createdAt', sort)
+    const dataResult = await query
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
 
     const total = await query.clone().getCount();
-    // get customer in groups
-    // const newCustomerGroup = await customerGroups.map(async (group) => {
-    //   const customerGD = await this.dataSource
-    //     .getRepository(CustomerGroupDetail)
-    //     .find({
-    //       where: { customerGroup: { id: group.id } },
-    //       relations: ['customer'],
-    //       skip: pagination.skip,
-    //       take: pagination.take,
-    //     });
-    //   group['customers'] = customerGD.map((item) => {
-    //     const { deletedAt, accessToken, refreshToken, password, ...customer } =
-    //       item.customer;
-    //     return customer;
-    //   });
-    //   return group;
-    // });
 
-    return {
-      dataResult: customerGroups,
-      total,
-      pagination,
-    };
-    // }
+    return { dataResult, total, pagination };
   }
 
   async updateCustomerGroupById(
@@ -125,7 +119,10 @@ export class CustomerGroupService {
     dto: UpdateCustomerGroupDto,
   ) {
     const customerGroup = await this.getCustomerGroupById(id);
-    const { name, description, note } = dto;
+    const { code, name, description, note } = dto;
+    if (code) {
+      customerGroup.code = code;
+    }
     if (name) {
       customerGroup.name = name;
     }
@@ -150,20 +147,7 @@ export class CustomerGroupService {
   }
 
   async deleteCustomerGroupById(adminId: string, id: string) {
-    const dataResult = await this.getCustomersByGroupId(
-      id,
-      adminId,
-      undefined,
-      {
-        page: 1,
-        pageSize: 1,
-      },
-    );
-    const customerGroup = dataResult.dataResult;
-
-    if (customerGroup['customers'].length > 0) {
-      throw new BadRequestException('CUSTOMER_GROUP_HAS_CUSTOMER');
-    }
+    const customerGroup = await this.getCustomerGroupById(id);
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId, isActive: true } });
@@ -217,25 +201,27 @@ export class CustomerGroupService {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
 
-    const { customerName, gender, phone, email, sort } = dto;
+    const { keywords, gender, sort } = dto;
 
     const queryCGD = this.customerGDRepository.createQueryBuilder('q1');
     queryCGD.where('q1.customer_group_id = :groupId', {
       groupId,
     });
-    if (customerName) {
-      queryCGD.andWhere('c.fullName LIKE :customerName', {
-        customerName: `%${customerName}%`,
-      });
+    if (keywords) {
+      queryCGD
+        .orWhere('c.fullName LIKE :customerName', {
+          customerName: `%${keywords}%`,
+        })
+        .orWhere('c.phone LIKE :phone', { phone: `%${keywords}%` })
+        .orWhere('c.email LIKE :email', { email: `%${keywords}%` });
     }
     if (gender) {
       queryCGD.andWhere('c.gender = :gender', { gender });
     }
-    if (phone) {
-      queryCGD.andWhere('c.phone LIKE :phone', { phone: `%${phone}%` });
-    }
-    if (email) {
-      queryCGD.andWhere('c.email LIKE :email', { email: `%${email}%` });
+    if (sort) {
+      queryCGD.orderBy('q1.createdAt', sort);
+    } else {
+      queryCGD.orderBy('q1.createdAt', SortEnum.DESC);
     }
 
     queryCGD.leftJoinAndSelect('q1.customer', 'c');
@@ -254,7 +240,6 @@ export class CustomerGroupService {
         'c.birthday',
         'c.createdAt',
       ])
-      .orderBy('q1.createdAt', sort)
       .take(pagination.take)
       .skip(pagination.skip)
       .getMany();

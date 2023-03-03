@@ -65,13 +65,13 @@ export class TripService {
     trip.note = note;
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate < currentDate) {
-      throw new BadRequestException('TRIP_START_DATE_GREATER_THAN_NOW');
+      throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     trip.startDate = startDate;
 
     if (endDate) {
       if (endDate < currentDate && endDate < startDate) {
-        throw new BadRequestException('TRIP_END_DATE_GREATER_THAN_START_DATE');
+        throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
       } else {
         trip.endDate = endDate;
       }
@@ -210,13 +210,13 @@ export class TripService {
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate !== undefined || startDate !== null) {
       if (startDate < currentDate) {
-        throw new BadRequestException('TRIP_START_DATE_GREATER_THAN_NOW');
+        throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
       }
       trip.startDate = startDate;
     }
     if (endDate !== undefined || endDate !== null) {
       if (endDate < currentDate) {
-        throw new BadRequestException('TRIP_END_DATE_GREATER_THAN_NOW');
+        throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
       }
       trip.endDate = endDate;
     }
@@ -270,10 +270,10 @@ export class TripService {
     };
   }
 
-  async deleteTripById(id: string, userId: string) {
+  async deleteTripById(id: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: adminId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
