@@ -76,24 +76,43 @@ export class StationService {
     station.ward = ward;
     station.code = code;
     station.createdBy = adminExist.id;
+
+    const district = await this.districtService.findOneByCode(
+      station.ward.districtCode,
+      {
+        select: ['id', 'name', 'type', 'codename', 'code'],
+      },
+    );
+    const province = await this.provinceService.findOneByCode(
+      district.provinceCode,
+      {
+        select: ['id', 'name', 'type', 'codename', 'code'],
+      },
+    );
+    station.fullAddress = `${station.address}, ${station.ward.name}, ${district.name}, ${province.name}`;
+
     const newStation = await this.stationRepository.save(station);
+    newStation['district'] = district;
+    newStation['province'] = province;
 
-    const saveImages = await images.map(async (image) => {
-      image.createdBy = adminExist.id;
-      const saveImage = await this.imageResourceService.saveImageResource(
-        image,
-        adminExist.id,
-        null,
-        newStation.id,
-      );
-      delete saveImage.station;
-      delete saveImage.updatedBy;
-      delete saveImage.updatedAt;
-      delete saveImage.deletedAt;
+    if (images && images.length > 0) {
+      const saveImages = await images.map(async (image) => {
+        image.createdBy = adminExist.id;
+        const saveImage = await this.imageResourceService.saveImageResource(
+          image,
+          adminExist.id,
+          null,
+          newStation.id,
+        );
+        delete saveImage.station;
+        delete saveImage.updatedBy;
+        delete saveImage.updatedAt;
+        delete saveImage.deletedAt;
 
-      return saveImage;
-    });
-    newStation.images = await Promise.all(saveImages);
+        return saveImage;
+      });
+      newStation.images = await Promise.all(saveImages);
+    }
     return newStation;
   }
 
