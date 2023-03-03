@@ -1,5 +1,4 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsString,
@@ -14,15 +13,15 @@ export class UpdateStationDto {
   @ApiPropertyOptional({ example: 'Bến xe Demo' })
   @IsOptional()
   @IsString({ message: 'NAME_IS_STRING' })
-  @Length(1, 100, { message: 'NAME_BETWEEN_1_100_CHARACTERS' })
+  @Length(0, 100, { message: 'NAME_BETWEEN_1_100_CHARACTERS' })
   name: string;
 
   @ApiPropertyOptional({
-    example: 'Demo, Phường 26, Bình Thạnh, Thành phố Hồ Chí Minh',
+    example: 'Demo',
   })
   @IsOptional()
   @IsString({ message: 'ADDRESS_IS_STRING' })
-  @Length(1, 255, { message: 'ADDRESS_BETWEEN_1_255_CHARACTERS' })
+  @Length(0, 255, { message: 'ADDRESS_BETWEEN_1_255_CHARACTERS' })
   address: string;
 
   @ApiPropertyOptional({
@@ -30,7 +29,7 @@ export class UpdateStationDto {
   })
   @IsOptional()
   @IsString({ message: 'CODE_IS_STRING' })
-  @Length(1, 255, { message: 'CODE_BETWEEN_1_10_CHARACTERS' })
+  @Length(0, 255, { message: 'CODE_BETWEEN_1_10_CHARACTERS' })
   code: string;
 
   @ApiPropertyOptional({ example: 26914 })
@@ -56,6 +55,5 @@ export class UpdateStationDto {
   })
   @IsOptional()
   @IsArray()
-  @Type(() => ImageResource)
   images?: ImageResource[];
 }

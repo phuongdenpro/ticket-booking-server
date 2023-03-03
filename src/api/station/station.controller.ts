@@ -41,7 +41,7 @@ export class StationController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async createNewStation(@Body() dto: SaveStationDto, @CurrentUser() user) {
-    return await this.stationService.saveStation(dto, user.id);
+    return await this.stationService.createStation(dto, user.id);
   }
 
   @Get('id/:id')

@@ -30,12 +30,11 @@ export class ProvinceService {
     return { dataResult };
   }
 
-  async findOneByCode(code: number) {
-    const query = this.provinceRepository.createQueryBuilder('p');
-    query.where('p.code = :code', { code });
-
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneByCode(code: number, options?: any) {
+    return await this.provinceRepository.findOne({
+      where: { code },
+      ...options,
+    });
   }
 
   // find all

@@ -31,12 +31,8 @@ export class WardService {
     return { dataResult };
   }
 
-  async findOneByCode(code: number) {
-    const query = this.wardRepository.createQueryBuilder('w');
-    query.where('w.code = :code', { code });
-
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneByCode(code: number, options?: any) {
+    return await this.wardRepository.findOne({ where: { code }, ...options });
   }
 
   async findByDistrictCode(districtCode: number, pagination?: Pagination) {

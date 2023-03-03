@@ -22,6 +22,7 @@ import { Response } from 'express';
 import { Readable } from 'stream';
 import { DistrictService } from '../address/district/district.service';
 import { ProvinceService } from '../address/province/province.service';
+import { WardService } from '../address/ward/ward.service';
 
 @Injectable()
 export class StationService {
@@ -29,6 +30,7 @@ export class StationService {
     @InjectRepository(Station)
     private readonly stationRepository: Repository<Station>,
     private imageResourceService: ImageResourceService,
+    private wardService: WardService,
     private districtService: DistrictService,
     private provinceService: ProvinceService,
     private dataSource: DataSource,
@@ -44,12 +46,12 @@ export class StationService {
     'w.districtCode',
   ];
 
-  async saveStation(dto: SaveStationDto, userId: string) {
+  async createStation(dto: SaveStationDto, userId: string) {
     const { name, address, wardId, images, code } = dto;
 
-    const ward = await this.dataSource
-      .getRepository(Ward)
-      .findOne({ where: { code: wardId } });
+    const ward = await this.wardService.findOneByCode(wardId, {
+      select: ['id', 'name', 'type', 'codename', 'code'],
+    });
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
@@ -85,8 +87,8 @@ export class StationService {
         newStation.id,
       );
       delete saveImage.station;
-      delete saveImage.createdBy;
       delete saveImage.updatedBy;
+      delete saveImage.updatedAt;
       delete saveImage.deletedAt;
 
       return saveImage;
@@ -104,39 +106,29 @@ export class StationService {
       .select(this.selectFile)
       .getOne();
 
-    if (dataResult.ward.districtCode) {
-      const district = await this.districtService.findOneByCode(
-        dataResult.ward.districtCode,
-      );
-      dataResult['district'] = {
-        id: district.dataResult.id,
-        name: district.dataResult.name,
-        type: district.dataResult.type,
-        codename: district.dataResult.codename,
-        code: district.dataResult.code,
-      };
-
-      const province = await this.provinceService.findOneByCode(
-        district.dataResult.provinceCode,
-      );
-      dataResult['province'] = {
-        id: province.dataResult.id,
-        name: province.dataResult.name,
-        type: province.dataResult.type,
-        codename: province.dataResult.codename,
-        code: province.dataResult.code,
-      };
-    }
-    delete dataResult.ward.districtCode;
-
     if (dataResult) {
-      const queryImage = this.dataSource
-        .getRepository(ImageResource)
-        .createQueryBuilder('i');
-      queryImage.where('i.station_id = :id', { id });
-      const images = await queryImage
-        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt'])
-        .getMany();
+      if (dataResult.ward) {
+        const district = await this.districtService.findOneByCode(
+          dataResult.ward.districtCode,
+          {
+            select: ['id', 'name', 'type', 'codename', 'code'],
+          },
+        );
+        dataResult['district'] = district;
+
+        const province = await this.provinceService.findOneByCode(
+          district.provinceCode,
+          {
+            select: ['id', 'name', 'type', 'codename', 'code'],
+          },
+        );
+        dataResult['province'] = province;
+        delete dataResult.ward.districtCode;
+      }
+      const images =
+        await this.imageResourceService.findImageResourcesByStationId(id, {
+          select: ['id', 'url', 'createdAt', 'createdBy'],
+        });
       dataResult.images = images;
     }
 
@@ -147,48 +139,41 @@ export class StationService {
     const query = this.stationRepository.createQueryBuilder('q');
     query.where('q.code = :code', { code });
 
-    const dataResult = await query
+    const station = await query
       .leftJoinAndSelect('q.ward', 'w')
       .select(this.selectFile)
       .getOne();
 
-    if (dataResult.ward.districtCode) {
-      const district = await this.districtService.findOneByCode(
-        dataResult.ward.districtCode,
-      );
-      dataResult['district'] = {
-        id: district.dataResult.id,
-        name: district.dataResult.name,
-        type: district.dataResult.type,
-        codename: district.dataResult.codename,
-        code: district.dataResult.code,
-      };
+    if (station) {
+      if (station.ward) {
+        const district = await this.districtService.findOneByCode(
+          station.ward.districtCode,
+          {
+            select: ['id', 'name', 'type', 'codename', 'code'],
+          },
+        );
+        station['district'] = district;
 
-      const province = await this.provinceService.findOneByCode(
-        district.dataResult.provinceCode,
-      );
-      dataResult['province'] = {
-        id: province.dataResult.id,
-        name: province.dataResult.name,
-        type: province.dataResult.type,
-        codename: province.dataResult.codename,
-        code: province.dataResult.code,
-      };
-    }
-    delete dataResult.ward.districtCode;
-
-    if (dataResult) {
-      const queryImage = this.dataSource
-        .getRepository(ImageResource)
-        .createQueryBuilder('i');
-      queryImage.where('i.station_id = :id', { id: dataResult.id });
-      const images = await queryImage
-        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt'])
-        .getMany();
-      dataResult.images = images;
+        const province = await this.provinceService.findOneByCode(
+          district.provinceCode,
+          {
+            select: ['id', 'name', 'type', 'codename', 'code'],
+          },
+        );
+        station['province'] = province;
+        delete station.ward.districtCode;
+      }
+      const images =
+        await this.imageResourceService.findImageResourcesByStationId(
+          station.id,
+          {
+            select: ['id', 'url', 'createdAt', 'createdBy'],
+          },
+        );
+      station.images = images;
     }
 
-    return { dataResult };
+    return { dataResult: station };
   }
 
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
@@ -217,26 +202,22 @@ export class StationService {
     const total = await query.clone().getCount();
 
     if (dataResult.length > 0) {
-      // query image for each station
-      const queryImage = this.dataSource
-        .getRepository(ImageResource)
-        .createQueryBuilder('i');
-      const images = await queryImage
-        .andWhere('i.station_id IN (:...ids)', {
-          ids: dataResult.map((station) => station.id),
-        })
-        .leftJoinAndSelect('i.station', 's')
-        .select(['i.id', 'i.url', 'i.updatedAt', 'i.createdAt', 's.id'])
-        .getMany();
-
-      // add image to station
-      dataResult.forEach((station) => {
-        station.images = images.filter(
-          (image) => image.station.id === station.id,
-        );
+      const newDataResult = dataResult.map(async (station) => {
+        station.images =
+          await this.imageResourceService.findImageResourcesByStationId(
+            station.id,
+            {
+              select: ['id', 'url', 'createdAt', 'createdBy'],
+            },
+          );
+        return station;
       });
+      return {
+        dataResult: await Promise.all(newDataResult),
+        pagination,
+        total,
+      };
     }
-
     return { dataResult, pagination, total };
   }
 
@@ -268,27 +249,25 @@ export class StationService {
         .getRepository(Ward)
         .findOne({ where: { code: wardId } });
       station.ward = ward;
-      delete station.ward.createdAt;
-      delete station.ward.updatedAt;
-      delete station.ward.createdBy;
-      delete station.ward.updatedBy;
     }
-    const districtDataResult = await this.districtService.findOneByCode(
-      station.ward.districtCode,
-    );
-    const {
-      createdAt: createdAtDistrict,
-      updatedAt: updatedAtDistrict,
-      createdBy: createdByDistrict,
-      updatedBy: updatedByDistrict,
-      ...district
-    } = districtDataResult.dataResult;
+    delete station.ward.createdAt;
+    delete station.ward.updatedAt;
+    delete station.ward.createdBy;
+    delete station.ward.updatedBy;
 
-    const provinceDataResult = await this.provinceService.findOneByCode(
-      district.provinceCode,
+    const district = await this.districtService.findOneByCode(
+      station.ward.districtCode,
+      {
+        select: ['id', 'name', 'type', 'codename', 'code'],
+      },
     );
-    const { createdAt, updatedAt, createdBy, updatedBy, ...province } =
-      provinceDataResult.dataResult;
+    const province = await this.provinceService.findOneByCode(
+      district.provinceCode,
+      {
+        select: ['id', 'name', 'type', 'codename', 'code'],
+      },
+    );
+
     if (address) {
       station.address = address;
     }
@@ -304,25 +283,31 @@ export class StationService {
     }
     station.updatedBy = adminExist.id;
 
-    const newStation = await this.stationRepository.save(station);
+    const updateStation = await this.stationRepository.save(station);
+    delete updateStation.ward.deletedAt;
 
     if (images && images.length > 0) {
-      const newImages = await images.map(async (image) => {
-        image.createdBy = adminExist.id;
+      // delete old images
+      await this.imageResourceService.removeImageResourcesByStationId(id);
+
+      // save new images
+      const newImages = images.map(async (image) => {
         const newImage = await this.imageResourceService.saveImageResource(
           image,
           adminExist.id,
           null,
-          newStation.id,
+          updateStation.id,
         );
         delete newImage.station;
-        delete newImage.createdBy;
+        delete newImage.updatedBy;
+        delete newImage.updatedAt;
+        delete newImage.deletedAt;
 
         return newImage;
       });
-      newStation.images = await Promise.all(newImages);
+      updateStation.images = await Promise.all(newImages);
     }
-    return newStation;
+    return updateStation;
   }
 
   async updateStationByCode(
@@ -334,6 +319,7 @@ export class StationService {
 
     const station = await this.stationRepository.findOne({
       where: { code: currentCode },
+      relations: ['ward'],
     });
     if (!station) {
       throw new NotFoundException('STATION_NOT_FOUND');
@@ -344,11 +330,11 @@ export class StationService {
         .getRepository(Ward)
         .findOne({ where: { code: wardId } });
       station.ward = ward;
-      delete station.ward.createdAt;
-      delete station.ward.updatedAt;
-      delete station.ward.createdBy;
-      delete station.ward.updatedBy;
     }
+    delete station.ward.createdAt;
+    delete station.ward.updatedAt;
+    delete station.ward.createdBy;
+    delete station.ward.updatedBy;
     if (code) {
       const oldStation = await this.stationRepository.findOne({
         where: { code },
@@ -361,22 +347,20 @@ export class StationService {
     if (name) {
       station.name = name;
     }
-    const districtDataResult = await this.districtService.findOneByCode(
-      station.ward.districtCode,
-    );
-    const {
-      createdAt: createdAtDistrict,
-      updatedAt: updatedAtDistrict,
-      createdBy: createdByDistrict,
-      updatedBy: updatedByDistrict,
-      ...district
-    } = districtDataResult.dataResult;
 
-    const provinceDataResult = await this.provinceService.findOneByCode(
-      district.provinceCode,
+    const district = await this.districtService.findOneByCode(
+      station.ward.districtCode,
+      {
+        select: ['id', 'name', 'type', 'codename', 'code'],
+      },
     );
-    const { createdAt, updatedAt, createdBy, updatedBy, ...province } =
-      provinceDataResult.dataResult;
+    const province = await this.provinceService.findOneByCode(
+      district.provinceCode,
+      {
+        select: ['id', 'name', 'type', 'codename', 'code'],
+      },
+    );
+
     if (address) {
       station.address = address;
     }
@@ -392,25 +376,33 @@ export class StationService {
     }
     station.updatedBy = adminExist.id;
 
-    const newStation = await this.stationRepository.save(station);
+    const updateStation = await this.stationRepository.save(station);
+    delete updateStation.deletedAt;
 
     if (images && images.length > 0) {
-      const newImages = await images.map(async (image) => {
-        image.createdBy = adminExist.id;
+      // delete old images
+      await this.imageResourceService.removeImageResourcesByStationId(
+        updateStation.id,
+      );
+
+      // save new images
+      const newImages = images.map(async (image) => {
         const newImage = await this.imageResourceService.saveImageResource(
           image,
           adminExist.id,
           null,
-          newStation.id,
+          updateStation.id,
         );
         delete newImage.station;
-        delete newImage.createdBy;
+        delete newImage.updatedBy;
+        delete newImage.updatedAt;
+        delete newImage.deletedAt;
 
         return newImage;
       });
-      newStation.images = await Promise.all(newImages);
+      updateStation.images = await Promise.all(newImages);
     }
-    return newStation;
+    return updateStation;
   }
 
   // delete a record by id
