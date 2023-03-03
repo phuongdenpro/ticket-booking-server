@@ -11,7 +11,6 @@ import { EMAIL_REGEX, PHONE_REGEX } from '../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { CustomerLoginDto, CustomerRegisterDto } from './dto';
-import { CustomerUpdatePasswordDto } from './dto/customer-update-password.dto';
 
 @Injectable()
 export class AuthCustomerService {
@@ -72,12 +71,6 @@ export class AuthCustomerService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  async profile(id: string) {
-    const userExist = this.customerService.findOneById(id);
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
-    return userExist;
   }
 
   async login(dto: CustomerLoginDto) {
@@ -149,25 +142,5 @@ export class AuthCustomerService {
     });
 
     return tokens;
-  }
-
-  async updatePassword(id: string, dto: CustomerUpdatePasswordDto) {
-    const userExist = await this.customerService.findOneById(id);
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
-
-    const isPasswordMatches = await this.authService.comparePassword(
-      dto?.oldPassword,
-      userExist?.password
-    );
-    if (!isPasswordMatches) throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    // if (!isPasswordMatches) throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    if (dto?.newPassword !== dto?.confirmNewPassword)
-      throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
-
-    const passwordHash = await this.authService.hashData(dto.newPassword);
-    return await this.userRepository.update(
-      { id: userExist.id },
-      { password: passwordHash, updatedBy: userExist.id }
-    );
   }
 }

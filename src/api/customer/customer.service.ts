@@ -1,6 +1,4 @@
 import { SortEnum, UserStatusEnum } from './../../enums';
-import { CustomerUpdatePasswordDto } from './../../auth/customer/dto/update-password.dto';
-import { AuthService } from './../../auth/auth.service';
 import { Pagination } from '../../decorator';
 import { Customer } from '../../database/entities';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -8,13 +6,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { FilterCustomerDto } from './dto';
 import * as bcrypt from 'bcrypt';
+import { UserUpdatePasswordDto } from '../user/dto';
 
 @Injectable()
 export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-    private authService: AuthService,
     private dataSource: DataSource,
   ) {}
 
@@ -95,7 +93,7 @@ export class CustomerService {
     return userExist;
   }
 
-  async updatePassword(id: string, dto: CustomerUpdatePasswordDto) {
+  async updatePassword(id: string, dto: UserUpdatePasswordDto) {
     const userExist = await this.findOneById(id);
     if (!userExist) {
       throw new BadRequestException('USER_NOT_FOUND');

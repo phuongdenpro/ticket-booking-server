@@ -1,5 +1,5 @@
 import { AdminRefreshTokenDto } from './dto/admin-refresh-token.dto';
-import { CurrentUser } from './../../decorator';
+import { CurrentUser } from '../../decorator';
 import {
   Body,
   Controller,
@@ -11,13 +11,13 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards';
-import { AdminService } from './admin.service';
+import { AuthAdminService } from './auth-admin.service';
 import { AdminLoginDto, AdminRegisterDto } from './dto';
 
 @Controller('auth/admin')
 @ApiTags('Auth')
-export class AdminController {
-  constructor(private adminService: AdminService) {}
+export class AuthAdminController {
+  constructor(private adminService: AuthAdminService) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
