@@ -88,7 +88,7 @@ export class PriceListService {
     return savePriceList;
   }
 
-  async getPriceListById(id: string) {
+  async getPriceListById(id: string, options?: any) {
     const priceList = await this.priceListRepository.findOne({
       where: { id },
       select: [
@@ -103,6 +103,7 @@ export class PriceListService {
         'createdBy',
         'updatedBy',
       ],
+      ...options,
     });
     return priceList;
   }
@@ -359,8 +360,32 @@ export class PriceListService {
       priceDetail.note = note;
     }
     if (priceListId) {
+      const priceList = await this.getPriceListById(priceListId, {
+        select: ['id', 'name', 'note', 'startDate', 'endDate', 'status'],
+      });
+      if (!priceList) {
+        throw new BadRequestException('PRICE_LIST_NOT_FOUND');
+      }
+      priceDetail.priceList = priceList;
     }
     if (ticketGroupId) {
+      const ticketGroup = await this.ticketGroupService.findOneTicketGroupById(
+        ticketGroupId,
+        {
+          select: ['id', 'name', 'note', 'description'],
+        },
+      );
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+      priceDetail.ticketGroup = ticketGroup;
     }
+    priceDetail.updatedBy = adminExist.id;
+
+    const updatePriceDetail = await this.priceDetailRepository.save(
+      priceDetail,
+    );
+    delete updatePriceDetail.deletedAt;
+    return updatePriceDetail;
   }
 }

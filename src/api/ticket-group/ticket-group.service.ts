@@ -23,7 +23,7 @@ export class TicketGroupService {
     private dataSource: DataSource,
   ) {}
 
-  private selectFields = [
+  private selectFieldsWithQ = [
     'q.id',
     'q.name',
     'q.description',
@@ -32,6 +32,16 @@ export class TicketGroupService {
     'q.updatedBy',
     'q.createdAt',
     'q.updatedAt',
+  ];
+  private selectFields = [
+    'id',
+    'name',
+    'description',
+    'note',
+    'createdBy',
+    'updatedBy',
+    'createdAt',
+    'updatedAt',
   ];
 
   async createTicketGroup(dto: CreateTicketGroupDto, adminId: string) {
@@ -55,13 +65,12 @@ export class TicketGroupService {
     return saveTicketGroup;
   }
 
-  async findOneTicketGroupById(id: string) {
-    const query = this.tickerGroupRepository.createQueryBuilder('q');
-    query.where('q.id = :id', { id });
-
-    const dataResult = await query.select(this.selectFields).getOne();
-
-    return dataResult;
+  async findOneTicketGroupById(id: string, options?: any) {
+    return await this.tickerGroupRepository.findOne({
+      where: { id },
+      select: this.selectFields,
+      ...options,
+    });
   }
 
   async findAllTicketGroup(dto: FilterTicketGroupDto, pagination?: Pagination) {
@@ -82,7 +91,7 @@ export class TicketGroupService {
 
     const dataResult = await query
       .addOrderBy('q.createdAt', SortEnum.ASC)
-      .select(this.selectFields)
+      .select(this.selectFieldsWithQ)
       .skip(pagination.skip)
       .take(pagination.take)
       .getMany();

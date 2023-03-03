@@ -13,6 +13,7 @@ import {
   DeletePriceListDto,
   CreatePriceDetailDto,
   FilterPriceDetailDto,
+  UpdatePriceDetailDto,
 } from './dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
@@ -140,9 +141,9 @@ export class PriceListController {
   async updatePriceDetailById(
     @CurrentUser() user,
     @Param('id') id: string,
-    @Body() dto,
+    @Body() dto: UpdatePriceDetailDto,
   ) {
-    return { message: 'coming soon' };
+    return this.priceListService.updatePriceDetailById(user.id, id, dto);
   }
 
   @Delete('price-detail/id/:id')
