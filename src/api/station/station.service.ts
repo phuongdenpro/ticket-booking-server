@@ -47,10 +47,10 @@ export class StationService {
   ];
 
   async createStation(dto: SaveStationDto, userId: string) {
-    const { name, address, wardId, images, code } = dto;
+    const { name, address, wardCode, images, code } = dto;
 
-    const ward = await this.wardService.findOneByCode(wardId, {
-      select: ['id', 'name', 'type', 'codename', 'code'],
+    const ward = await this.wardService.findOneByCode(wardCode, {
+      select: ['id', 'name', 'type', 'codename', 'code', 'districtCode'],
     });
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
@@ -80,7 +80,7 @@ export class StationService {
     const district = await this.districtService.findOneByCode(
       station.ward.districtCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code'],
+        select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
       },
     );
     const province = await this.provinceService.findOneByCode(
@@ -126,11 +126,11 @@ export class StationService {
       .getOne();
 
     if (dataResult) {
-      if (dataResult.ward) {
+      if (dataResult?.ward) {
         const district = await this.districtService.findOneByCode(
           dataResult.ward.districtCode,
           {
-            select: ['id', 'name', 'type', 'codename', 'code'],
+            select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
           },
         );
         dataResult['district'] = district;
@@ -150,6 +150,7 @@ export class StationService {
         });
       dataResult.images = images;
     }
+    delete dataResult.deletedAt;
 
     return { dataResult };
   }
@@ -168,7 +169,7 @@ export class StationService {
         const district = await this.districtService.findOneByCode(
           station.ward.districtCode,
           {
-            select: ['id', 'name', 'type', 'codename', 'code'],
+            select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
           },
         );
         station['district'] = district;
@@ -241,7 +242,7 @@ export class StationService {
   }
 
   async updateStationById(userId: string, id: string, dto: UpdateStationDto) {
-    const { name, address, wardId, images, code } = dto;
+    const { name, address, wardCode, images, code } = dto;
 
     const station = await this.stationRepository.findOne({
       where: { id },
@@ -263,10 +264,10 @@ export class StationService {
     if (name) {
       station.name = name;
     }
-    if (wardId) {
+    if (wardCode) {
       const ward = await this.dataSource
         .getRepository(Ward)
-        .findOne({ where: { code: wardId } });
+        .findOne({ where: { code: wardCode } });
       station.ward = ward;
     }
     delete station.ward.createdAt;
@@ -277,7 +278,7 @@ export class StationService {
     const district = await this.districtService.findOneByCode(
       station.ward.districtCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code'],
+        select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
       },
     );
     const province = await this.provinceService.findOneByCode(
@@ -334,7 +335,7 @@ export class StationService {
     currentCode: string,
     dto: UpdateStationDto,
   ) {
-    const { name, address, wardId, images, code } = dto;
+    const { name, address, wardCode, images, code } = dto;
 
     const station = await this.stationRepository.findOne({
       where: { code: currentCode },
@@ -344,10 +345,10 @@ export class StationService {
       throw new NotFoundException('STATION_NOT_FOUND');
     }
 
-    if (wardId) {
+    if (wardCode) {
       const ward = await this.dataSource
         .getRepository(Ward)
-        .findOne({ where: { code: wardId } });
+        .findOne({ where: { code: wardCode } });
       station.ward = ward;
     }
     delete station.ward.createdAt;
@@ -370,7 +371,7 @@ export class StationService {
     const district = await this.districtService.findOneByCode(
       station.ward.districtCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code'],
+        select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
       },
     );
     const province = await this.provinceService.findOneByCode(

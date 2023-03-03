@@ -23,12 +23,8 @@ export class WardService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string) {
-    const query = this.wardRepository.createQueryBuilder('w');
-    query.where('w.id = :id', { id });
-
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneById(id: string, options?: any) {
+    return await this.wardRepository.findOne({ where: { id }, ...options });
   }
 
   async findOneByCode(code: number, options?: any) {

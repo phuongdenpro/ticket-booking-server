@@ -39,7 +39,7 @@ export class UpdateStationDto {
     { allowInfinity: false, allowNaN: false },
     { message: 'WARD_ID_IS_NUMBER' },
   )
-  wardId: number;
+  wardCode: number;
 
   @ApiPropertyOptional({
     example: [
