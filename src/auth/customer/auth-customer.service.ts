@@ -50,7 +50,6 @@ export class AuthCustomerService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       const passwordHashed = await this.authService.hashData(dto.password);
-      console.log('passwordHashed', passwordHashed);
 
       const user = new Customer();
       user.password = passwordHashed;
@@ -91,18 +90,19 @@ export class AuthCustomerService {
   }
 
   async login(dto: CustomerLoginDto) {
-    const userExist = await this.customerService.findCustomerByEmail(dto.email);
-
+    const { email, password } = dto;
+    const userExist = await this.customerService.findOneByEmail(email, {
+      select: ['password', 'id'],
+    });
     if (!userExist) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
-
     if (!userExist?.password) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
 
     const isPasswordMatches = await this.authService.comparePassword(
-      dto?.password,
+      password,
       userExist?.password,
     );
     if (!isPasswordMatches) {

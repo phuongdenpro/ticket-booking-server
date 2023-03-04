@@ -16,7 +16,7 @@ export class CustomerService {
     private dataSource: DataSource,
   ) {}
 
-  private selectFields = [
+  private selectFieldsWithQ = [
     'u.id',
     'u.lastLogin',
     'u.status',
@@ -32,9 +32,26 @@ export class CustomerService {
     'u.updatedBy',
   ];
 
+  private selectFields = [
+    'id',
+    'lastLogin',
+    'status',
+    'phone',
+    'email',
+    'fullName',
+    'gender',
+    'address',
+    'note',
+    'birthday',
+    'createdAt',
+    'updatedAt',
+    'updatedBy',
+  ];
+
   async findOneByEmail(email: string, options?: any) {
     return await this.customerRepository.findOne({
       where: { email },
+      select: this.selectFields,
       ...options,
     });
   }
@@ -53,7 +70,9 @@ export class CustomerService {
       ...options,
     });
 
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
+    if (!userExist) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
     return userExist;
   }
 
@@ -61,7 +80,7 @@ export class CustomerService {
     const userExist = await this.customerRepository
       .createQueryBuilder('u')
       .where('u.refreshToken = :refreshToken', { refreshToken })
-      .select(this.selectFields)
+      .select(this.selectFieldsWithQ)
       .getOne();
 
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
@@ -90,7 +109,7 @@ export class CustomerService {
       .offset(pagination.skip)
       .limit(pagination.take)
       .orderBy('u.createdAt', SortEnum.DESC)
-      .select(this.selectFields)
+      .select(this.selectFieldsWithQ)
       .getMany();
 
     return { dataResult, pagination, total };
@@ -100,7 +119,7 @@ export class CustomerService {
     const userExist = await this.customerRepository
       .createQueryBuilder('u')
       .where('u.id = :id', { id })
-      .select(this.selectFields)
+      .select(this.selectFieldsWithQ)
       .getOne();
 
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
