@@ -72,9 +72,6 @@ export class AuthAdminService {
       staffCred.gender = dto.gender;
       staffCred.createdBy = userId;
       staffCred.updatedBy = userId;
-      const staffCreated = await this.staffRepository.save(staffCred);
-
-      await queryRunner.commitTransaction();
       const {
         createdAt,
         updatedAt,
@@ -83,7 +80,9 @@ export class AuthAdminService {
         updatedBy,
         password,
         ...staff
-      } = staffCreated;
+      } = await this.staffRepository.save(staffCred);
+
+      await queryRunner.commitTransaction();
 
       return staff;
     } catch (err) {
@@ -92,14 +91,6 @@ export class AuthAdminService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  async profile(id: string) {
-    const staffExist = this.findOneById(id);
-    if (!staffExist) {
-      throw new BadRequestException('USER_NOT_FOUND');
-    }
-    return staffExist;
   }
 
   async login(dto: AdminLoginDto) {

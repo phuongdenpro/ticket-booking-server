@@ -14,7 +14,7 @@ import { CustomerLoginDto, CustomerRefreshTokenDto } from './dto';
 import { AuthCustomerService } from './auth-customer.service';
 
 @Controller('auth/user')
-@ApiTags('Auth')
+@ApiTags('Auth User')
 export class AuthCustomerController {
   constructor(private authCustomerService: AuthCustomerService) {}
 
