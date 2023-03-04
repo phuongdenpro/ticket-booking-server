@@ -80,9 +80,6 @@ export class PriceListService {
     if (!endDate) {
       throw new UnauthorizedException('END_DATE_IS_REQUIRED');
     }
-    if (startDate > endDate) {
-      throw new UnauthorizedException('END_DATE_GREATER_THAN_START_DATE');
-    }
     priceList.endDate = endDate;
 
     const { deletedAt, ...savePriceList } = await this.priceListRepository.save(

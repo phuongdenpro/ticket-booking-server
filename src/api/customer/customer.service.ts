@@ -32,18 +32,32 @@ export class CustomerService {
     'u.updatedBy',
   ];
 
-  async findOneByEmail(email: string) {
-    const userExist = await this.customerRepository
-      .createQueryBuilder('u')
-      .where('u.email = :email', { email })
-      .select(this.selectFields)
-      .getOne();
+  async findOneByEmail(email: string, options?: any) {
+    return await this.customerRepository.findOne({
+      where: { email },
+      ...options,
+    });
+  }
+
+  async findOneByPhone(phone: string, options?: any) {
+    return await this.customerRepository.findOne({
+      where: { phone },
+      select: this.selectFields,
+      ...options,
+    });
+  }
+
+  async findCustomerByEmail(email: string, options?: any) {
+    const userExist = await this.findOneByEmail(email, {
+      select: this.selectFields,
+      ...options,
+    });
 
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
     return userExist;
   }
 
-  async findOneByRefreshToken(refreshToken: string) {
+  async findCustomerByRefreshToken(refreshToken: string) {
     const userExist = await this.customerRepository
       .createQueryBuilder('u')
       .where('u.refreshToken = :refreshToken', { refreshToken })
@@ -82,7 +96,7 @@ export class CustomerService {
     return { dataResult, pagination, total };
   }
 
-  async findOneById(id: string) {
+  async findCustomerById(id: string) {
     const userExist = await this.customerRepository
       .createQueryBuilder('u')
       .where('u.id = :id', { id })
@@ -94,7 +108,7 @@ export class CustomerService {
   }
 
   async updatePassword(id: string, dto: UserUpdatePasswordDto) {
-    const userExist = await this.findOneById(id);
+    const userExist = await this.findCustomerById(id);
     if (!userExist) {
       throw new BadRequestException('USER_NOT_FOUND');
     }

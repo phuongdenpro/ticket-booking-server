@@ -24,6 +24,7 @@ import { TicketGroupModule } from './api/ticket-group/ticket-group.module';
 import { PriceListModule } from './api/price-list/price-list.module';
 import { AdminModule } from './api/admin/admin.module';
 import { UserModule } from './api/user/user.module';
+import { PromotionModule } from './api/promotion/promotion.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { UserModule } from './api/user/user.module';
     ImageResourceModule,
     PriceListModule,
     UploadModule,
+    PromotionModule,
   ],
   providers: [
     {

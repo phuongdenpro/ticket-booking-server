@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RoleEnum } from '../../enums';
+import { GenderEnum, RoleEnum } from '../../enums';
 import { EMAIL_REGEX, PHONE_REGEX } from '../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
@@ -26,16 +26,23 @@ export class AuthCustomerService {
   }
 
   async register(dto: CustomerRegisterDto) {
-    if (!dto.phone.match(PHONE_REGEX)) {
-      throw new BadRequestException('INVALID_PHONE_NUMBER');
-    }
-    if (dto.email && !dto.email.match(EMAIL_REGEX)) {
-      throw new BadRequestException('INVALID_EMAIL');
+    const { email, fullName, gender, birthday, phone } = dto;
+    if (email) {
+      if (!email.match(EMAIL_REGEX)) {
+        throw new BadRequestException('INVALID_EMAIL');
+      }
+      const userEmailExist = await this.customerService.findOneByEmail(email);
+      if (userEmailExist) {
+        throw new BadRequestException('EMAIL_ALREADY_EXIST');
+      }
     }
 
-    const userExist = await this.customerService.findOneByEmail(dto.email);
-    if (userExist) {
-      throw new BadRequestException('USERNAME_ALREADY_EXIST');
+    if (!phone.match(PHONE_REGEX)) {
+      throw new BadRequestException('INVALID_PHONE_NUMBER');
+    }
+    const userPhoneExist = await this.customerService.findOneByPhone(phone);
+    if (userPhoneExist) {
+      throw new BadRequestException('PHONE_ALREADY_EXIST');
     }
 
     const queryRunner = await this.dataSource.createQueryRunner();
@@ -43,28 +50,38 @@ export class AuthCustomerService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       const passwordHashed = await this.authService.hashData(dto.password);
+      console.log('passwordHashed', passwordHashed);
 
       const user = new Customer();
       user.password = passwordHashed;
-      user.fullName = dto.name;
-      user.phone = dto.phone;
-      user.email = dto.email;
-      user.gender = dto.gender;
-      user.birthday = dto.birthday;
+      user.fullName = fullName;
+      user.phone = phone;
+      user.email = email;
+      if (!gender) {
+        user.gender = GenderEnum.OTHER;
+      } else {
+        user.gender = gender;
+      }
+      if (birthday) {
+        user.birthday = birthday;
+      } else {
+        user.birthday = new Date('01-02-1970');
+      }
       user.status = 0;
-
       await queryRunner.commitTransaction();
-      const userCreated = await this.userRepository.save(user);
+      // save and select return fields
       const {
         createdAt,
         updatedAt,
         deletedAt,
         updatedBy,
         password,
-        ...newUser
-      } = userCreated;
+        refreshToken,
+        accessToken,
+        ...saveUser
+      } = await this.userRepository.save(user);
 
-      return newUser;
+      return saveUser;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;
@@ -74,7 +91,7 @@ export class AuthCustomerService {
   }
 
   async login(dto: CustomerLoginDto) {
-    const userExist = await this.customerService.findOneByEmail(dto.email);
+    const userExist = await this.customerService.findCustomerByEmail(dto.email);
 
     if (!userExist) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
@@ -125,7 +142,7 @@ export class AuthCustomerService {
   }
 
   async refreshTokens(refreshToken: string) {
-    const userExist = await this.customerService.findOneByRefreshToken(
+    const userExist = await this.customerService.findCustomerByRefreshToken(
       refreshToken,
     );
     if (!userExist || !userExist.refreshToken)

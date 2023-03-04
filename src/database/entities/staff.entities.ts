@@ -39,7 +39,7 @@ export class Staff {
   fullName?: string;
 
   @Column({ name: 'gender', type: 'varchar', length: 1, default: 'N' })
-  gender?: GenderEnum = GenderEnum.NONE;
+  gender?: GenderEnum;
 
   @Column({
     name: 'address',

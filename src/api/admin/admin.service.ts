@@ -62,4 +62,11 @@ export class AdminService {
       { password: passwordHash, updatedBy: userExist.id },
     );
   }
+
+  async findOneBydId(id: string, options?: any) {
+    return await this.adminRepository.findOne({
+      where: { id },
+      ...options,
+    });
+  }
 }

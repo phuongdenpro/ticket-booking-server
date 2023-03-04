@@ -22,17 +22,15 @@ export const mappingTranslate = {
   NOTE_IS_STRING: 'Ghi chú phải là chuỗi ký tự',
   SORT_IS_STRING: 'Giá trị sắp xếp phải là chuỗi ký tự',
   SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
-  GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
-  GENDER_IS_ENUM:
-    'Giới tính chỉ nhận 1 trong 3 giá trị sau: MALE, FEMALE, NONE',
-  PHONE_IS_STRING: 'Số điện thoại phải là chuỗi ký tự',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
   NAME_BETWEEN_1_100_CHARACTERS: 'Tên phải từ 1 đến 100 ký tự',
   CODE_BETWEEN_1_10_CHARACTERS: 'Mã phải từ 1 đến 10 ký tự',
   CODE_IS_NUMBER: 'mã phải là số',
   CODE_IS_STRING: 'mã phải là chuỗi ký tự',
   CODE_IS_REQUIRED: 'Mã không được để trống',
+  CODE_BETWEEN_1_100_CHARACTERS: 'Mã phải từ 1 đến 100 ký tự',
   KEYWORDS_IS_STRING: 'Từ khóa phải là chuỗi ký tự',
+  IMAGE_IS_STRING: 'url ảnh phải là chuỗi ký tự',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',
@@ -44,12 +42,28 @@ export const mappingTranslate = {
   PASSWORD_NEW_NOT_MATCH: 'Mật khẩu xác nhận không đúng.',
 
   // User 21-30
+  UNAUTHORIZED: 'Không có quyền truy cập',
   INVALID_USERNAME_OR_PASSWORD: 'Tên đăng nhập hoặc mật khẩu không đúng.',
   INVALID_PHONE_NUMBER: 'Số điện thoại không đúng định dạng.',
   INVALID_EMAIL: 'Email không đúng định dạng.',
   USERNAME_ALREADY_EXIST: 'Tên đăng nhập đã tồn tại',
   USER_NOT_FOUND: 'Không tìm thấy tài khoản',
-  UNAUTHORIZED: 'Không có quyền truy cập',
+  EMAIL_ALREADY_EXIST: 'Email đã tồn tại',
+  PASSWORD_IS_REQUIRED: 'Mật khẩu không được để trống',
+  PASSWORD_IS_STRING: 'Mật khẩu phải là chuỗi ký tự',
+  PASSWORD_IS_MIN_LENGTH_6: 'Mật khẩu phải có ít nhất 6 ký tự',
+  PASSWORD_IS_MAX_LENGTH_255: 'Mật khẩu có tối đa 255 ký tự',
+  FULL_NAME_IS_REQUIRED: 'Họ và tên không được để trống',
+  FULL_NAME_IS_STRING: 'Họ và tên phải là chuỗi ký tự',
+  BIRTHDAY_IS_REQUIRED: 'Ngày sinh không được để trống',
+  BIRTHDAY_IS_DATE: 'Ngày sinh phải là ngày tháng',
+  PHONE_ALREADY_EXIST: 'Số điện thoại đã tồn tại',
+  PHONE_IS_REQUIRED: 'Số điện thoại không được để trống',
+  PHONE_IS_STRING: 'Số điện thoại phải là chuỗi ký tự',
+  GENDER_IS_REQUIRED: 'Giới tính không được để trống',
+  GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
+  GENDER_IS_ENUM:
+    'Giới tính chỉ nhận 1 trong 3 giá trị sau: MALE, FEMALE, OTHER',
 
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',
@@ -87,7 +101,7 @@ export const mappingTranslate = {
   CODENAME_IS_REQUIRED: 'Mã tên phải là chuỗi ký tự',
   PROVINCE_CODE_IS_NUMBER: 'mã tỉnh thành phải là số',
   PROVINCE_CODE_IS_REQUIRED: 'mã tỉnh thành phải là số',
-  PROVINCE_TYPE_IS_STRING: 'tỉnh thành phải là chuỗi ký tự',
+  PROVINCE_TYPE_IS_STRING: 'loại tỉnh thành phải là chuỗi ký tự',
   PROVINCE_TYPE_IS_REQUIRED: 'loại tỉnh thành không được để trống',
   PROVINCE_TYPE_BETWEEN_1_50_CHARACTERS:
     'loại tỉnh thành phải từ 1 đến 50 ký tự',
@@ -189,4 +203,22 @@ export const mappingTranslate = {
   PRICE_IS_NUMBER: 'Giá phải là số',
   PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Giá phải lớn hơn hoặc bằng 0',
   PRICE_IS_TOO_BIG: 'Giá lớn hơn miền giá trị của double',
+
+  // promotion
+  BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
+  BUDGET_IS_NUMBER: 'Ngân sách phải là số',
+  PROMOTION_TYPE_IS_STRING: 'Loại chương trình khuyến mãi phải là chuỗi ký tự',
+  PROMOTION_TYPE_IS_REQUIRED: 'Chương trình khuyến mãi không được để trống',
+  PROMOTION_TYPE_IS_ENUM:
+    'Chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Tặng sản phẩm", "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
+  MAX_QUANTITY_IS_REQUIRED: 'Số lượng tối đa không được để trống',
+  MAX_QUANTITY_IS_NUMBER: 'Số lượng tối đa phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED:
+    'Số lượng tối đa cho mỗi khách hàng không được để trống',
+  MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
+    'Số lượng tối đa cho mỗi khách hàng phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_REQUIRED:
+    'Số lượng tối đa cho mỗi khách hàng mỗi ngày không được để trống',
+  MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_NUMBER:
+    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải là số',
 };

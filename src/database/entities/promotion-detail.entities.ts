@@ -1,4 +1,3 @@
-import { Ticket } from './ticket.entities';
 import {
   Column,
   PrimaryGeneratedColumn,
@@ -11,9 +10,13 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { ApplicableTicket } from './applicable-ticket.entities';
-import { ApplicableTicketGroup } from './applicable-ticket-group.entities';
-import { PromotionLine } from './promotion-line.entities';
+import {
+  ApplicableTicket,
+  ApplicableTicketGroup,
+  Promotion,
+  PromotionLine,
+  Ticket,
+} from '.';
 
 @Entity({ name: 'promotion_detail' })
 export class PromotionDetail {
@@ -38,12 +41,31 @@ export class PromotionDetail {
   @Column({ name: 'reduction_amount', type: 'double', default: 0 })
   reductionAmount: number;
 
-  @OneToOne(
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  public createdAt?: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
+  public updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  public deletedAt?: Date;
+
+  // relationships
+  @OneToMany(
     () => PromotionLine,
     (promotionLine) => promotionLine.promotionDetail,
   )
   @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
-  promotionLine: PromotionLine;
+  promotionLine: PromotionLine[];
+
+  @OneToOne(() => Promotion, (promotionLine) => promotionLine.promotionDetail)
+  @JoinColumn({ name: 'promotion_id', referencedColumnName: 'id' })
+  promotion: Promotion;
 
   @OneToMany(
     () => ApplicableTicket,
@@ -59,23 +81,4 @@ export class PromotionDetail {
 
   @ManyToMany(() => Ticket, (ticket) => ticket.promotionDetails)
   tickets: Ticket[];
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  public createdAt?: Date;
-
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public updatedAt?: Date;
-
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
 }
