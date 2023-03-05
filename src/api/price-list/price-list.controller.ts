@@ -67,6 +67,15 @@ export class PriceListController {
     return await this.priceListService.getPriceListById(id);
   }
 
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getPriceListByCode(@Param('code') code: string) {
+    return await this.priceListService.getPriceListByCode(code);
+  }
+
   @Patch('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
@@ -78,6 +87,23 @@ export class PriceListController {
     @Body() dto: UpdatePriceListDto,
   ) {
     return await this.priceListService.updatePriceListById(user.id, id, dto);
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updatePriceListByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdatePriceListDto,
+  ) {
+    return await this.priceListService.updatePriceListByCode(
+      user.id,
+      code,
+      dto,
+    );
   }
 
   @Delete('id/:id')

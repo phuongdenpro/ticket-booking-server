@@ -10,6 +10,12 @@ import {
 } from 'class-validator';
 
 export class CreatePriceListDto {
+  @ApiProperty({ example: 'BGT32023' })
+  @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
+  @IsString({ message: 'CODE_IS_STRING' })
+  @Length(1, 100, { message: 'CODE_BETWEEN_1_100_CHARACTERS' })
+  code: string;
+
   @ApiProperty({ example: 'Bảng giá tháng 3/2023' })
   @IsNotEmpty({ message: 'NAME_IS_REQUIRED' })
   @IsString({ message: 'NAME_IS_STRING' })

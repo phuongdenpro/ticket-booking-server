@@ -154,6 +154,10 @@ export const mappingTranslate = {
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_START_DATE: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
+  OLD_END_DATE_GREATER_THAN_START_DATE:
+    'Ngày kết thúc cũ phải lớn hơn ngày bắt đầu',
+  NEW_END_DATE_GREATER_THAN_START_DATE:
+    'Ngày kết thúc mới phải lớn hơn ngày bắt đầu',
   START_DATE_IS_REQUIRED: 'Ngày bắt đầu không được để trống',
   END_DATE_IS_REQUIRED: 'Ngày kết thúc không được để trống',
   FROM_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
@@ -202,6 +206,7 @@ export const mappingTranslate = {
   PRICE_LIST_ID_IS_STRING: 'Id của bảng giá phải là chuỗi ký tự',
   PRICE_LIST_ID_IS_REQUIRED: 'Id của bảng giá không được để trống',
   PRICE_LIST_ID_IS_36_CHARACTERS: 'Id của bảng giá phải là 36 ký tự',
+  PRICE_LIST_CODE_IS_EXIST: 'mã của bảng giá đã tồn tại',
 
   // price details
   PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết giá',

@@ -31,8 +31,9 @@ export class PriceListService {
     private dataSource: DataSource,
   ) {}
 
-  private selectFieldsPriceDetail = [
+  private selectFieldsPriceDetailWithQ = [
     'q.id',
+    'q.code',
     'q.price',
     'q.note',
     'q.createdBy',
@@ -47,19 +48,54 @@ export class PriceListService {
     't.createdAt',
   ];
 
+  private selectFieldsPriceList = [
+    'id',
+    'code',
+    'name',
+    'note',
+    'startDate',
+    'endDate',
+    'status',
+    'createdAt',
+    'updatedAt',
+    'createdBy',
+    'updatedBy',
+  ];
+
+  private selectFieldsPriceListWithQ = [
+    'q.id',
+    'q.code',
+    'q.name',
+    'q.note',
+    'q.startDate',
+    'q.endDate',
+    'q.status',
+    'q.createdAt',
+    'q.updatedAt',
+    'q.createdBy',
+    'q.updatedBy',
+  ];
+
   async createPriceList(dto: CreatePriceListDto, adminId: string) {
-    const { name, note, startDate, endDate, status } = dto;
+    const { code, name, note, startDate, endDate, status } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    const priceListExist = await this.priceListRepository.findOne({
+      where: { code },
+    });
+    if (priceListExist) {
+      throw new BadRequestException('PRICE_LIST_CODE_IS_EXIST');
+    }
 
     const priceList = new PriceList();
     if (!name) {
-      throw new UnauthorizedException('NAME_IS_REQUIRED');
+      throw new BadRequestException('NAME_IS_REQUIRED');
     }
+    priceList.code = code;
     priceList.name = name;
     priceList.note = note;
     priceList.status = ActiveStatusEnum.ACTIVE === status ? true : false;
@@ -82,27 +118,24 @@ export class PriceListService {
     }
     priceList.endDate = endDate;
 
-    const { deletedAt, ...savePriceList } = await this.priceListRepository.save(
-      priceList,
-    );
+    const savePriceList = await this.priceListRepository.save(priceList);
+    delete savePriceList.deletedAt;
     return savePriceList;
   }
 
   async getPriceListById(id: string, options?: any) {
     const priceList = await this.priceListRepository.findOne({
       where: { id },
-      select: [
-        'id',
-        'name',
-        'note',
-        'startDate',
-        'endDate',
-        'status',
-        'createdAt',
-        'updatedAt',
-        'createdBy',
-        'updatedBy',
-      ],
+      select: this.selectFieldsPriceList,
+      ...options,
+    });
+    return priceList;
+  }
+
+  async getPriceListByCode(code: string, options?: any) {
+    const priceList = await this.priceListRepository.findOne({
+      where: { code },
+      select: this.selectFieldsPriceList,
       ...options,
     });
     return priceList;
@@ -116,7 +149,8 @@ export class PriceListService {
     if (keywords) {
       query
         .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` });
+        .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` });
     }
     if (status) {
       let statusBool = true;
@@ -140,6 +174,7 @@ export class PriceListService {
     }
 
     const dataResult = await query
+      .select(this.selectFieldsPriceListWithQ)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -162,9 +197,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const priceList = await this.priceListRepository.findOne({
-      where: { id },
-    });
+    const priceList = await this.getPriceListById(id);
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
@@ -202,6 +235,66 @@ export class PriceListService {
     return updateTrip;
   }
 
+  async updatePriceListByCode(
+    adminId: string,
+    code: string,
+    dto: UpdatePriceListDto,
+  ) {
+    const { name, note, startDate, endDate, status } = dto;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+
+    const priceList = await this.getPriceListByCode(code);
+    if (!priceList) {
+      throw new BadRequestException('PRICE_LIST_NOT_FOUND');
+    }
+
+    if (name) {
+      priceList.name = name;
+    }
+    if (note) {
+      priceList.note = note;
+    }
+    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    if (startDate) {
+      if (startDate < currentDate) {
+        throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
+      }
+      if (startDate > endDate) {
+        throw new BadRequestException('NEW_END_DATE_GREATER_THAN_START_DATE');
+      }
+      if (startDate > priceList.endDate) {
+        throw new BadRequestException('OLD_END_DATE_GREATER_THAN_START_DATE');
+      }
+      const newStartDate = new Date(startDate);
+      priceList.startDate = newStartDate;
+    }
+    if (endDate) {
+      if (endDate < currentDate) {
+        throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
+      }
+      if (startDate > endDate) {
+        throw new BadRequestException('NEW_END_DATE_GREATER_THAN_START_DATE');
+      }
+      if (startDate > priceList.endDate) {
+        throw new BadRequestException('OLD_END_DATE_GREATER_THAN_START_DATE');
+      }
+      const newEndDate = new Date(endDate);
+      priceList.endDate = newEndDate;
+    }
+    if (status) {
+      priceList.status = status === ActiveStatusEnum.ACTIVE ? true : false;
+    }
+
+    priceList.updatedBy = adminExist.id;
+    const updateTrip = await this.priceListRepository.save(priceList);
+    return updateTrip;
+  }
+
   async deletePriceListById(id: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -213,6 +306,28 @@ export class PriceListService {
     const priceList = await this.priceListRepository.findOne({
       where: { id: id },
     });
+    if (!priceList) {
+      throw new BadRequestException('PRICE_LIST_NOT_FOUND');
+    }
+    priceList.deletedAt = new Date();
+    priceList.updatedBy = adminExist.id;
+
+    const deletedPriceList = await this.priceListRepository.save(priceList);
+    return {
+      id: deletedPriceList.id,
+      message: 'Xoá thành công',
+    };
+  }
+
+  async deletePriceListByCode(code: string, adminId: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+
+    const priceList = await this.getPriceListByCode(code);
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
@@ -238,9 +353,44 @@ export class PriceListService {
 
       const list = await Promise.all(
         ids.map(async (id) => {
-          const priceList = await this.priceListRepository.findOne({
-            where: { id: id },
-          });
+          const priceList = await this.getPriceDetailById(id);
+          if (!priceList) {
+            return {
+              id: priceList.id,
+              message: 'Không tìm thấy bảng giá',
+            };
+          }
+          priceList.deletedAt = new Date();
+          priceList.updatedBy = adminExist.id;
+
+          const deletedPriceList = await this.priceListRepository.save(
+            priceList,
+          );
+          return {
+            id: deletedPriceList.id,
+            message: 'Xoá thành công',
+          };
+        }),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultiPriceListByCodes(adminId: string, dto: DeletePriceListDto) {
+    try {
+      const { ids } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: adminId, isActive: true } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+
+      const list = await Promise.all(
+        ids.map(async (code) => {
+          const priceList = await this.getPriceListByCode(code);
           if (!priceList) {
             return {
               id: priceList.id,
@@ -322,7 +472,7 @@ export class PriceListService {
 
     const priceDetail = await query
       .leftJoinAndSelect('q.ticketGroup', 't')
-      .select(this.selectFieldsPriceDetail)
+      .select(this.selectFieldsPriceDetailWithQ)
       .getOne();
 
     return priceDetail;
@@ -352,7 +502,7 @@ export class PriceListService {
     const dataResult = await query
       .addOrderBy('q.note', SortEnum.ASC)
       .leftJoinAndSelect('q.ticketGroup', 't')
-      .select(this.selectFieldsPriceDetail)
+      .select(this.selectFieldsPriceDetailWithQ)
       .skip(pagination.skip)
       .take(pagination.take)
       .getMany();
