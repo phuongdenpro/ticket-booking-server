@@ -23,6 +23,9 @@ export const mappingTranslate = {
   SORT_IS_STRING: 'Giá trị sắp xếp phải là chuỗi ký tự',
   SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
+  EMAIL_IS_REQUIRED: 'Email không được để trống',
+  EMAIL_INVALID: 'Email không đúng định dạng',
+  EMAIL_LENGTH: 'Email phải từ 6 đến 100 ký tự',
   NAME_BETWEEN_1_100_CHARACTERS: 'Tên phải từ 1 đến 100 ký tự',
   CODE_BETWEEN_1_10_CHARACTERS: 'Mã phải từ 1 đến 10 ký tự',
   CODE_IS_NUMBER: 'mã phải là số',
@@ -55,6 +58,8 @@ export const mappingTranslate = {
   PASSWORD_IS_MAX_LENGTH_255: 'Mật khẩu có tối đa 255 ký tự',
   FULL_NAME_IS_REQUIRED: 'Họ và tên không được để trống',
   FULL_NAME_IS_STRING: 'Họ và tên phải là chuỗi ký tự',
+  FULL_NAME_IS_MIN_LENGTH_1: 'Họ và tên phải có ít nhất 1 ký tự',
+  FULL_NAME_IS_MAX_LENGTH_255: 'Họ và tên có tối đa 255 ký tự',
   BIRTHDAY_IS_REQUIRED: 'Ngày sinh không được để trống',
   BIRTHDAY_IS_DATE: 'Ngày sinh phải là ngày tháng',
   PHONE_ALREADY_EXIST: 'Số điện thoại đã tồn tại',
@@ -207,18 +212,30 @@ export const mappingTranslate = {
   // promotion
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
+  BUDGET_MIN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
+  PROMOTION_CODE_EXISTED: 'Mã khuyến mãi đã tồn tại',
   PROMOTION_TYPE_IS_STRING: 'Loại chương trình khuyến mãi phải là chuỗi ký tự',
   PROMOTION_TYPE_IS_REQUIRED: 'Chương trình khuyến mãi không được để trống',
   PROMOTION_TYPE_IS_ENUM:
     'Chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Tặng sản phẩm", "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
+  MAX_QUANTITY_MIN_1: 'Số lượng tối đa phải lớn hơn hoặc bằng 1',
   MAX_QUANTITY_IS_REQUIRED: 'Số lượng tối đa không được để trống',
   MAX_QUANTITY_IS_NUMBER: 'Số lượng tối đa phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_MIN_1:
+    'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 1',
+  MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED:
     'Số lượng tối đa cho mỗi khách hàng không được để trống',
   MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
     'Số lượng tối đa cho mỗi khách hàng phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0:
+    'Số lượng tối đa cho mỗi khách hàng phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_REQUIRED:
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày không được để trống',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_NUMBER:
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MUST_BE_GREATER_THAN_0:
+    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
+  MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1:
+    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
 };

@@ -25,6 +25,7 @@ export class CustomerService {
     'u.fullName',
     'u.gender',
     'u.address',
+    'u.fullAddress',
     'u.note',
     'u.birthday',
     'u.createdAt',
@@ -41,6 +42,7 @@ export class CustomerService {
     'fullName',
     'gender',
     'address',
+    'fullAddress',
     'note',
     'birthday',
     'createdAt',
@@ -92,11 +94,11 @@ export class CustomerService {
     const query = this.customerRepository.createQueryBuilder('u');
     if (keywords) {
       query
-        .orWhere('u.username like :query')
-        .orWhere('u.name like :query')
+        .orWhere('u.fullName like :query')
         .orWhere('u.phone like :query')
         .orWhere('u.email like :query')
-        .orWhere("LPAD(u.code::text, 8, '0') like :query")
+        .orWhere('u.address like :query')
+        .orWhere('u.note like :query')
         .setParameter('query', `%${keywords}%`);
     }
 

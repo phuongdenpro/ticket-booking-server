@@ -28,18 +28,12 @@ export class AuthCustomerService {
   async register(dto: CustomerRegisterDto) {
     const { email, fullName, gender, birthday, phone } = dto;
     if (email) {
-      if (!email.match(EMAIL_REGEX)) {
-        throw new BadRequestException('INVALID_EMAIL');
-      }
       const userEmailExist = await this.customerService.findOneByEmail(email);
       if (userEmailExist) {
         throw new BadRequestException('EMAIL_ALREADY_EXIST');
       }
     }
 
-    if (!phone.match(PHONE_REGEX)) {
-      throw new BadRequestException('INVALID_PHONE_NUMBER');
-    }
     const userPhoneExist = await this.customerService.findOneByPhone(phone);
     if (userPhoneExist) {
       throw new BadRequestException('PHONE_ALREADY_EXIST');
