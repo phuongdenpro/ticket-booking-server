@@ -25,6 +25,7 @@ import { PriceListModule } from './api/price-list/price-list.module';
 import { AdminModule } from './api/admin/admin.module';
 import { UserModule } from './api/user/user.module';
 import { PromotionModule } from './api/promotion/promotion.module';
+import { BookingModule } from './api/booking/booking.module';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { PromotionModule } from './api/promotion/promotion.module';
     PriceListModule,
     UploadModule,
     PromotionModule,
+    BookingModule,
   ],
   providers: [
     {
