@@ -1,6 +1,5 @@
 export * from './applicable-customer-group.entities';
 export * from './applicable-ticket-group.entities';
-export * from './applicable-ticket.entities';
 export * from './applicable-price-detail.entities';
 export * from './customer-group-detail.entities';
 export * from './customer-group.entities';

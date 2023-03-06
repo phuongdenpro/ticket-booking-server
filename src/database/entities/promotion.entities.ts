@@ -1,4 +1,4 @@
-import { PromotionDetail, ApplicableCustomerGroup } from '.';
+import { PromotionDetail, ApplicableCustomerGroup, PromotionLine } from '.';
 import {
   Column,
   Entity,
@@ -6,7 +6,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToOne,
+  OneToMany,
 } from 'typeorm';
 import { PrimaryGeneratedColumn } from 'typeorm';
 
@@ -24,14 +24,8 @@ export class Promotion {
   @Column({ name: 'description', type: 'text', nullable: false })
   description: string;
 
-  @Column({ name: 'budget', type: 'double', nullable: true })
-  budget: number;
-
-  @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
-  type: string;
-
-  @Column({ name: 'image', type: 'text', nullable: true })
-  image: string;
+  @Column({ name: 'note', type: 'text', nullable: true })
+  note: string;
 
   @Column({ name: 'start_date', type: 'timestamp', nullable: true })
   startDate: Date;
@@ -39,30 +33,14 @@ export class Promotion {
   @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date;
 
-  @Column({ name: 'max_quantity', type: 'int', nullable: true, default: 1 })
-  maxQuantity: number;
-
-  @Column({
-    name: 'max_quantity_per_customer',
-    type: 'int',
-    nullable: true,
-    default: 1,
-  })
-  maxQuantityPerCustomer: number;
-
-  @Column({
-    name: 'max_quantity_per_customer_per_day',
-    type: 'int',
-    nullable: true,
-    default: 1,
-  })
-  maxQuantityPerCustomerPerDay: number;
-
   @Column({ name: 'status', type: 'varchar', nullable: true })
   status: string;
 
-  @Column({ name: 'note', type: 'text', nullable: true })
-  note: string;
+  @Column({ name: 'budget', type: 'double', nullable: true })
+  budget: number;
+
+  @Column({ name: 'image', type: 'text', nullable: true })
+  image: string;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
@@ -92,9 +70,12 @@ export class Promotion {
   )
   applicableCustomerGroups: ApplicableCustomerGroup[];
 
-  @OneToOne(
+  @OneToMany(
     () => PromotionDetail,
     (promotionDetail) => promotionDetail.promotion,
   )
-  promotionDetail: PromotionDetail;
+  promotionDetail: PromotionDetail[];
+
+  @OneToMany(() => PromotionLine, (promotionLine) => promotionLine.promotion)
+  promotionLines: PromotionLine[];
 }

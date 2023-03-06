@@ -1,8 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Promotion } from './promotion.entities';
-import { PromotionDetail } from './promotion-detail.entities';
-import { TicketGroup } from './ticket-group.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
+import { Promotion, PromotionDetail, TicketGroup } from '.';
 
 @Entity({ name: 'applicable_ticket_group' })
 export class ApplicableTicketGroup {
@@ -11,7 +16,7 @@ export class ApplicableTicketGroup {
 
   @ManyToOne(
     () => PromotionDetail,
-    (promotionDetail) => promotionDetail.applicableTicket,
+    (promotionDetail) => promotionDetail.applicableTicketGroup,
   )
   @JoinColumn([{ name: 'promotion_detail_id', referencedColumnName: 'id' }])
   promotionDetail: Promotion;
@@ -26,11 +31,7 @@ export class ApplicableTicketGroup {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({

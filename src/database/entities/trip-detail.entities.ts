@@ -1,15 +1,15 @@
-import { Vehicle } from './vehicle.entities';
-// import { PassengerCarCompany } from './passenger-car-company.entities';
+import { Vehicle, Trip, Province, Ticket } from '.';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-import { Trip } from './trip.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
-import { Province } from './vi-address-provide.entities';
 
 @Entity({ name: 'trip_detail' })
 export class TripDetail {
@@ -40,11 +40,7 @@ export class TripDetail {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -71,4 +67,7 @@ export class TripDetail {
   @ManyToOne(() => Province, (province) => province.toTripDetails)
   @JoinColumn({ name: 'to_province_id', referencedColumnName: 'id' })
   toProvince: Province;
+
+  @OneToMany(() => Ticket, (ticket) => ticket.tripDetail)
+  tickets: Ticket[];
 }

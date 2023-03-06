@@ -6,13 +6,17 @@ import {
   ManyToOne,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
+  JoinColumn,
 } from 'typeorm';
-import { PromotionHistory, PromotionDetail } from '.';
+import { PromotionHistory, PromotionDetail, Promotion } from '.';
 
 @Entity({ name: 'promotion_line' })
 export class PromotionLine {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({
     name: 'promotion_code',
@@ -22,13 +26,14 @@ export class PromotionLine {
   })
   promotionCode: string;
 
-  @Column({
-    name: 'status',
-    type: 'bool',
-    nullable: true,
-    default: false,
-  })
-  status: boolean;
+  @Column({ name: 'start_date', type: 'timestamp', nullable: false })
+  startDate: Date;
+
+  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
+  endDate: Date;
+
+  @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
+  type: string;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
@@ -36,7 +41,7 @@ export class PromotionLine {
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
@@ -55,11 +60,17 @@ export class PromotionLine {
     () => PromotionDetail,
     (promotionDetail) => promotionDetail.promotionLine,
   )
+  @JoinColumn({ name: 'promotion_detail_id', referencedColumnName: 'id' })
   promotionDetail: PromotionDetail;
 
   @ManyToOne(
     () => PromotionHistory,
     (promotionHistory) => promotionHistory.promotionLine,
   )
+  @JoinColumn({ name: 'promotion_history_id', referencedColumnName: 'id' })
   promotionHistory: PromotionHistory;
+
+  @ManyToOne(() => Promotion, (promotion) => promotion.promotionLines)
+  @JoinColumn({ name: 'promotion_id', referencedColumnName: 'id' })
+  promotion: Promotion;
 }
