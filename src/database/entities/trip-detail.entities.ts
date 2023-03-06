@@ -68,11 +68,4 @@ export class TripDetail {
   @ManyToOne(() => Province, (province) => province.toTripDetails)
   @JoinColumn({ name: 'to_province_id', referencedColumnName: 'id' })
   toProvince: Province;
-
-  // @ManyToOne(
-  //   () => PassengerCarCompany,
-  //   (passengerCarCompany) => passengerCarCompany.tripDetails,
-  // )
-  // @JoinColumn({ name: 'passenger_car_id', referencedColumnName: 'id' })
-  // passengerCarCompany: PassengerCarCompany;
 }

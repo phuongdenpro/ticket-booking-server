@@ -1,6 +1,7 @@
 export * from './applicable-customer-group.entities';
 export * from './applicable-ticket-group.entities';
 export * from './applicable-ticket.entities';
+export * from './applicable-price-detail.entities';
 export * from './customer-group-detail.entities';
 export * from './customer-group.entities';
 export * from './customer.entities';
@@ -9,7 +10,6 @@ export * from './order-detail.entities';
 export * from './order-refund-detail.entities';
 export * from './order-refund.entities';
 export * from './order.entities';
-// export * from '../another-entities/passenger-car-company.entities';
 export * from './price-detail.entities';
 export * from './price-list.entities';
 export * from './promotion-detail.entities';

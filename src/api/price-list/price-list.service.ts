@@ -76,6 +76,7 @@ export class PriceListService {
     'q.updatedBy',
   ];
 
+  // price list
   async createPriceList(dto: CreatePriceListDto, adminId: string) {
     const { code, name, note, startDate, endDate, status } = dto;
     const adminExist = await this.dataSource
@@ -415,6 +416,7 @@ export class PriceListService {
     }
   }
 
+  // price detail
   async createPriceDetail(dto: CreatePriceDetailDto, adminId: string) {
     const { price, note, priceListId, ticketGroupId } = dto;
 

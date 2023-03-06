@@ -11,6 +11,7 @@ import {
 } from 'typeorm';
 import { Station } from './station.entities';
 import { TripDetail } from './trip-detail.entities';
+import { ApplicablePriceDetail } from '.';
 
 @Entity({ name: 'trip' })
 export class Trip {
@@ -63,4 +64,10 @@ export class Trip {
 
   @OneToMany(() => TripDetail, (tripDetail) => tripDetail.trip)
   tripDetails: TripDetail[];
+
+  @OneToMany(
+    () => ApplicablePriceDetail,
+    (applicablePriceDetail) => applicablePriceDetail.trip,
+  )
+  applicablePriceDetails: ApplicablePriceDetail[];
 }

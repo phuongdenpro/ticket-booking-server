@@ -6,9 +6,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { PriceList } from './price-list.entities';
-import { OrderDetail } from './order-detail.entities';
-import { TicketGroup } from './ticket-group.entities';
+import { PriceList, OrderDetail, TicketGroup, ApplicablePriceDetail } from '.';
 import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 
 @Entity({ name: 'price_detail' })
@@ -53,4 +51,10 @@ export class PriceDetail {
 
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.priceDetail)
   orderDetails: OrderDetail[];
+
+  @OneToMany(
+    () => ApplicablePriceDetail,
+    (applicablePriceDetail) => applicablePriceDetail.priceDetail,
+  )
+  applicablePriceDetails: ApplicablePriceDetail[];
 }
