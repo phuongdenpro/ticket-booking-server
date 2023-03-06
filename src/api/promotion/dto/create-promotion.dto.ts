@@ -8,6 +8,9 @@ import {
   IsEnum,
   IsDate,
   IsNumber,
+  MinDate,
+  Min,
+  Matches,
 } from 'class-validator';
 
 export class CreatePromotionDto {
@@ -45,6 +48,7 @@ export class CreatePromotionDto {
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 3 },
     { message: 'BUDGET_IS_NUMBER' },
   )
+  @Min(0, { message: 'BUDGET_MIN_0' })
   budget: number;
 
   @ApiProperty({
@@ -59,11 +63,17 @@ export class CreatePromotionDto {
   @ApiProperty({ example: '2023-03-01' })
   @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
   @IsDate({ message: 'START_DATE_IS_DATE' })
+  @MinDate(new Date(`${new Date().toDateString()}`), {
+    message: 'START_DATE_GREATER_THAN_NOW',
+  })
   startDate: Date;
 
   @ApiProperty({ example: '2023-03-31' })
   @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
   @IsDate({ message: 'END_DATE_IS_DATE' })
+  @MinDate(new Date(`${new Date().toDateString()}`), {
+    message: 'END_DATE_GREATER_THAN_NOW',
+  })
   endDate: Date;
 
   @ApiPropertyOptional({
@@ -81,23 +91,24 @@ export class CreatePromotionDto {
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
     { message: 'MAX_QUANTITY_IS_NUMBER' },
   )
+  @Min(100, { message: 'MAX_QUANTITY_MIN_1' })
   maxQuantity: number;
 
-  @ApiPropertyOptional({ example: 1 })
+  @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED' })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
     { message: 'MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
   )
-  @IsOptional()
+  @Min(1, { message: 'MAX_QUANTITY_PER_CUSTOMER_MIN_1' })
   maxQuantityPerCustomer: number;
 
-  @ApiPropertyOptional({ example: 1 })
+  @ApiProperty({ example: 1 })
   @IsNotEmpty({ message: 'MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_REQUIRED' })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
     { message: 'MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_NUMBER' },
   )
-  @IsOptional()
+  @Min(1, { message: 'MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1' })
   maxQuantityPerCustomerPerDay: number;
 }

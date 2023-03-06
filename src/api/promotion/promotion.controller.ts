@@ -7,8 +7,10 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -20,10 +22,19 @@ export class PromotionController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
+  // @Roles(RoleEnum.STAFF)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  async createPromotion(@Body() dto: CreatePromotionDto, @CurrentUser() user) {
+    return await this.promotionService.createPromotion(dto, user.id);
+  }
+
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createPriceList(@Body() dto: CreatePromotionDto, @CurrentUser() user) {
-    return await this.promotionService.createPromotion(dto, user.id);
+  async getPriceListById(@Param('code') code: string) {
+    return await this.promotionService.findOnePromotionByCode(code);
   }
 }

@@ -418,13 +418,19 @@ export class PriceListService {
 
   // price detail
   async createPriceDetail(dto: CreatePriceDetailDto, adminId: string) {
-    const { price, note, priceListId, ticketGroupId } = dto;
+    const { code, price, note, priceListId, ticketGroupId } = dto;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    const priceDetailExist = await this.priceDetailRepository.findOne({
+      where: { code: code },
+    });
+    if (priceDetailExist) {
+      throw new BadRequestException('PRICE_DETAIL_CODE_EXISTED');
     }
 
     const priceList = await this.getPriceListById(priceListId, {
@@ -457,6 +463,7 @@ export class PriceListService {
     if (price < 0) {
       throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
     }
+    priceDetail.code = code;
     priceDetail.price = price;
     priceDetail.note = note;
     priceDetail.priceList = priceList;
@@ -471,6 +478,18 @@ export class PriceListService {
   async getPriceDetailById(id: string) {
     const query = this.priceDetailRepository.createQueryBuilder('q');
     query.where('q.id = :id', { id });
+
+    const priceDetail = await query
+      .leftJoinAndSelect('q.ticketGroup', 't')
+      .select(this.selectFieldsPriceDetailWithQ)
+      .getOne();
+
+    return priceDetail;
+  }
+
+  async getPriceDetailByCode(code: string) {
+    const query = this.priceDetailRepository.createQueryBuilder('q');
+    query.where('q.code = :code', { code });
 
     const priceDetail = await query
       .leftJoinAndSelect('q.ticketGroup', 't')
@@ -575,6 +594,67 @@ export class PriceListService {
     return updatePriceDetail;
   }
 
+  async updatePriceDetailByCode(
+    adminId: string,
+    code: string,
+    dto: UpdatePriceDetailDto,
+  ) {
+    const { price, note, priceListId, ticketGroupId } = dto;
+
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+
+    const priceDetail = await this.getPriceDetailByCode(code);
+    if (!priceDetail) {
+      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
+
+    if (price) {
+      if (price < 0) {
+        throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
+      }
+      if (price > Number.MAX_VALUE) {
+        throw new BadRequestException('PRICE_IS_TOO_BIG');
+      }
+      priceDetail.price = price;
+    }
+    if (note) {
+      priceDetail.note = note;
+    }
+    if (priceListId) {
+      const priceList = await this.getPriceListById(priceListId, {
+        select: ['id', 'name', 'note', 'startDate', 'endDate', 'status'],
+      });
+      if (!priceList) {
+        throw new BadRequestException('PRICE_LIST_NOT_FOUND');
+      }
+      priceDetail.priceList = priceList;
+    }
+    if (ticketGroupId) {
+      const ticketGroup = await this.ticketGroupService.findOneTicketGroupById(
+        ticketGroupId,
+        {
+          select: ['id', 'name', 'note', 'description'],
+        },
+      );
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+      priceDetail.ticketGroup = ticketGroup;
+    }
+    priceDetail.updatedBy = adminExist.id;
+
+    const updatePriceDetail = await this.priceDetailRepository.save(
+      priceDetail,
+    );
+    delete updatePriceDetail.deletedAt;
+    return updatePriceDetail;
+  }
+
   async deletePriceDetailById(adminId: string, id: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -584,6 +664,24 @@ export class PriceListService {
     }
 
     const priceDetail = await this.getPriceDetailById(id);
+    if (!priceDetail) {
+      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
+    priceDetail.updatedBy = adminExist.id;
+    priceDetail.deletedAt = new Date();
+
+    return await this.priceDetailRepository.save(priceDetail);
+  }
+
+  async deletePriceDetailByCode(adminId: string, code: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+
+    const priceDetail = await this.getPriceDetailByCode(code);
     if (!priceDetail) {
       throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
     }
@@ -610,6 +708,48 @@ export class PriceListService {
         ids.map(async (id) => {
           const priceDetail = await this.priceDetailRepository.findOne({
             where: { id: id },
+          });
+          if (!priceDetail) {
+            return {
+              id: priceDetail.id,
+              message: 'Không tìm thấy chi tiết bảng giá',
+            };
+          }
+          priceDetail.deletedAt = new Date();
+          priceDetail.updatedBy = adminExist.id;
+
+          const deletedPriceList = await this.priceDetailRepository.save(
+            priceDetail,
+          );
+          return {
+            id: deletedPriceList.id,
+            message: 'Xoá thành công',
+          };
+        }),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultiPriceDetailByCodes(
+    adminId: string,
+    dto: DeletePriceDetailDto,
+  ) {
+    try {
+      const { ids } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: adminId, isActive: true } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+
+      const list = await Promise.all(
+        ids.map(async (code) => {
+          const priceDetail = await this.priceDetailRepository.findOne({
+            where: { code },
           });
           if (!priceDetail) {
             return {

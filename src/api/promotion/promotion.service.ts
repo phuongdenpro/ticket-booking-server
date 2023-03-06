@@ -15,12 +15,30 @@ export class PromotionService {
   ) {}
 
   async createPromotion(dto: CreatePromotionDto, adminId: string) {
-    const { name, description, note, image, startDate, endDate, status } = dto;
+    const {
+      name,
+      description,
+      note,
+      image,
+      startDate,
+      endDate,
+      status,
+      code,
+      budget,
+      maxQuantity,
+      maxQuantityPerCustomer,
+      maxQuantityPerCustomerPerDay,
+      type,
+    } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    const oldPromotionExist = await this.findOnePromotionByCode(code, {});
+    if (oldPromotionExist) {
+      throw new UnauthorizedException('PROMOTION_CODE_EXISTED');
     }
 
     const promotion = new Promotion();
@@ -53,10 +71,42 @@ export class PromotionService {
     } else {
       promotion.status = PromotionStatusEnum.ACTIVE;
     }
+    if (maxQuantity) {
+      if (maxQuantity < 0) {
+        throw new UnauthorizedException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
+      }
+      promotion.maxQuantity = maxQuantity;
+    }
+    if (maxQuantityPerCustomer) {
+      if (maxQuantityPerCustomer < 0) {
+        throw new UnauthorizedException(
+          'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
+        );
+      }
+      promotion.maxQuantityPerCustomer = maxQuantityPerCustomer;
+    }
+    if (maxQuantityPerCustomerPerDay) {
+      if (maxQuantityPerCustomerPerDay < 0) {
+        throw new UnauthorizedException(
+          'MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MUST_BE_GREATER_THAN_0',
+        );
+      }
+      promotion.maxQuantityPerCustomerPerDay = maxQuantityPerCustomerPerDay;
+    }
     promotion.createdBy = adminExist.id;
-    console.log(dto);
     // const savePromotion = await this.priceListRepository.save(promotion);
     // delete promotion.deletedAt;
     // return savePromotion;
+  }
+
+  async findOnePromotionByCode(
+    code: string,
+    options?: any,
+    whereOptions?: any,
+  ) {
+    return await this.priceListRepository.findOne({
+      where: { code, ...whereOptions },
+      ...options,
+    });
   }
 }

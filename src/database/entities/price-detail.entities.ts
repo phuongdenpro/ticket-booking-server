@@ -14,6 +14,9 @@ export class PriceDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
+
   @Column({ name: 'price', type: 'double', nullable: false, default: 0.0 })
   price: number;
 

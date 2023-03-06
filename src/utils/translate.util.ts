@@ -216,6 +216,7 @@ export const mappingTranslate = {
   PRICE_IS_NUMBER: 'Giá phải là số',
   PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Giá phải lớn hơn hoặc bằng 0',
   PRICE_IS_TOO_BIG: 'Giá lớn hơn miền giá trị của double',
+  PRICE_DETAIL_CODE_EXISTED: 'Mã chi tiết giá đã tồn tại',
 
   // promotion
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
