@@ -57,12 +57,18 @@ export class TripController {
     return await this.tripService.findOneTripById(id);
   }
 
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
+  async getTripByCode(@Param('code') code: string) {
+    return await this.tripService.findOneTripByCode(code);
+  }
+
   @Patch('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateStationById(
+  async updateTripById(
     @CurrentUser() user,
     @Param('id') id: string,
     @Body() dto: UpdateTripDto,
@@ -70,13 +76,35 @@ export class TripController {
     return await this.tripService.updateTripById(id, dto, user.id);
   }
 
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateTripByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdateTripDto,
+  ) {
+    return await this.tripService.updateTripByCode(code, dto, user.id);
+  }
+
   @Delete('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
+  async deleteTripById(@CurrentUser() user, @Param('id') id: string) {
     return await this.tripService.deleteTripById(id, user.id);
+  }
+
+  @Delete('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteTripByCode(@CurrentUser() user, @Param('code') code: string) {
+    return await this.tripService.deleteTripById(code, user.id);
   }
 
   @Delete('multiple')
@@ -86,5 +114,17 @@ export class TripController {
   @ApiBearerAuth()
   async deleteMultiple(@CurrentUser() user, @Body() dto: TripDeleteMultiInput) {
     return await this.tripService.deleteMultipleTrip(user.id, dto);
+  }
+
+  @Delete('multiple/code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleByCodes(
+    @CurrentUser() user,
+    @Body() dto: TripDeleteMultiInput,
+  ) {
+    return await this.tripService.deleteMultipleTripByCodes(user.id, dto);
   }
 }
