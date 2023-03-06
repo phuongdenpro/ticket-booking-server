@@ -16,6 +16,9 @@ export class TripDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
+
   @Column({ name: 'departure_time', type: 'timestamp', nullable: false })
   departureTime: Date;
 

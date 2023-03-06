@@ -146,13 +146,13 @@ export const mappingTranslate = {
   FLOOR_IS_NUMBER: 'Số tầng phải là số',
 
   // trip
-  TRIP_NOT_FOUND: 'Không tìm thấy chuyến xe',
-  TRIP_ID_REQUIRED: 'Id của chuyến đi là không được để trống',
-  TRIP_ID_IS_STRING: 'Id của chuyến đi phải là chuỗi ký tự',
-  TRIP_ID_INVALID: 'Id của chuyến đi không hợp lệ',
-  TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng chuyến không đúng định dạng',
-  TRIP_CODE_EXIST: 'Mã chuyến đi đã tồn tại',
-  TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng chuyến không đúng định dạng',
+  TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
+  TRIP_ID_REQUIRED: 'Id của tuyến đi là không được để trống',
+  TRIP_ID_IS_STRING: 'Id của tuyến đi phải là chuỗi ký tự',
+  TRIP_ID_INVALID: 'Id của tuyến đi không hợp lệ',
+  TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
+  TRIP_CODE_EXIST: 'Mã tuyến đi đã tồn tại',
+  TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_START_DATE: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
@@ -168,7 +168,7 @@ export const mappingTranslate = {
   TO_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
   TO_STATION_ID_IS_STRING: 'Mã bến xe đi phải là chuỗi ký tự',
   TO_STATION_ID_IS_36_CHARACTERS: 'Mã bến xe đi phải là 36 ký tự',
-  TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM: 'Trạng thái chuyến đi không hợp lệ',
+  TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM: 'Trạng thái tuyến đi không hợp lệ',
   START_DATE_IS_DATE: 'Ngày bắt đầu phải là ngày',
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
 
@@ -183,6 +183,7 @@ export const mappingTranslate = {
   INVALID_TRIP_DETAIL_STATUS: 'Trang thái của chi tiết chuyến đi không hợp lệ',
   TRIP_DETAIL_STATUS_REQUIRED: 'Trang thái của chi tiết chuyến đi không hợp lệ',
   TRIP_DETAIL_NOT_FOUND: 'Không tìm thấy thông tin chuyến đi',
+  TRIP_DETAIL_CODE_EXIST: 'Mã chuyến đi đã tồn tại',
 
   // vehicle
   VEHICLE_NOT_FOUND: 'Không tìm thấy xe',

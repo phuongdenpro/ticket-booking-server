@@ -10,6 +10,12 @@ import {
 import { TripDetailStatusEnum } from './../../../enums';
 
 export class SaveTripDetailDto {
+  @ApiProperty({ example: '' })
+  @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
+  @IsString({ message: 'CODE_IS_STRING' })
+  @Length(1, 100, { message: 'CODE_BETWEEN_1_100_CHARACTERS' })
+  code: string;
+
   @ApiProperty({ example: '2023-02-12' })
   @IsNotEmpty({ message: 'DEPARTURE_DATE_REQUIRED' })
   @IsDate({ message: 'INVALID_DATE' })
