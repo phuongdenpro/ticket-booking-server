@@ -23,7 +23,9 @@ async function bootstrap() {
         utilities.format.nestLike('API'),
       ),
     }),
-    cors: true,
+    cors: {
+      origin: '*',
+    },
   });
   const logger = new Logger();
   const configService = app.get(ConfigService);
