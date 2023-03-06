@@ -13,6 +13,6 @@ import { BookingController } from './booking.controller';
   imports: [TypeOrmModule.forFeature([Ticket, Seat, TicketDetail, Promotion])],
   providers: [BookingService],
   controllers: [BookingController],
-  exports: [BookingController],
+  exports: [BookingService],
 })
 export class BookingModule {}

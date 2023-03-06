@@ -58,28 +58,6 @@ export class PromotionService {
     } else {
       promotion.status = PromotionStatusEnum.ACTIVE;
     }
-    // if (maxQuantity) {
-    //   if (maxQuantity < 0) {
-    //     throw new UnauthorizedException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
-    //   }
-    // promotion.maxQuantity = maxQuantity;
-    // }
-    // if (maxQuantityPerCustomer) {
-    //   if (maxQuantityPerCustomer < 0) {
-    //     throw new UnauthorizedException(
-    //       'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
-    //     );
-    //   }
-    // promotion.maxQuantityPerCustomer = maxQuantityPerCustomer;
-    // }
-    // if (maxQuantityPerCustomerPerDay) {
-    //   if (maxQuantityPerCustomerPerDay < 0) {
-    //     throw new UnauthorizedException(
-    //       'MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MUST_BE_GREATER_THAN_0',
-    //     );
-    //   }
-    // promotion.maxQuantityPerCustomerPerDay = maxQuantityPerCustomerPerDay;
-    // }
     promotion.createdBy = adminExist.id;
     // const savePromotion = await this.priceListRepository.save(promotion);
     // delete promotion.deletedAt;
