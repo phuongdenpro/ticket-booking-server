@@ -42,6 +42,7 @@ export class TripService {
 
   async saveTrip(dto: SaveTripDto, userId: string) {
     const {
+      code,
       name,
       note,
       startDate,
@@ -56,8 +57,15 @@ export class TripService {
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    const tripExist = await this.tripRepository.findOne({
+      where: { code },
+    });
+    if (tripExist) {
+      throw new BadRequestException('TRIP_CODE_EXIST');
+    }
 
     const trip = new Trip();
+    trip.code = code;
     if (!name) {
       throw new BadRequestException('NAME_IS_REQUIRED');
     }
@@ -127,12 +135,15 @@ export class TripService {
   }
 
   async findAllTrip(dto: FilterTripDto, pagination?: Pagination) {
-    const { name, fromStationId, toStationId } = dto;
+    const { keywords, fromStationId, toStationId } = dto;
     let { startDate, endDate } = dto;
     const query = this.tripRepository.createQueryBuilder('q');
 
-    if (name) {
-      query.andWhere('q.name like :name', { name: `%${name}%` });
+    if (keywords) {
+      query
+        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
     }
 
     const currentDate: Date = new Date(`${new Date().toDateString()}`);

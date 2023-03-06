@@ -24,14 +24,6 @@ export class UpdateStationDto {
   @Length(0, 255, { message: 'ADDRESS_BETWEEN_1_255_CHARACTERS' })
   address: string;
 
-  @ApiPropertyOptional({
-    example: 'SGDM',
-  })
-  @IsOptional()
-  @IsString({ message: 'CODE_IS_STRING' })
-  @Length(0, 255, { message: 'CODE_BETWEEN_1_10_CHARACTERS' })
-  code: string;
-
   @ApiPropertyOptional({ example: 26914 })
   @IsOptional()
   @IsNotEmpty({ message: 'WARD_ID_IS_REQUIRED' })

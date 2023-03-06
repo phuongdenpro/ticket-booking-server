@@ -201,9 +201,9 @@ export class StationService {
     const { keywords, sort } = dto;
     if (keywords) {
       query
+        .orWhere('q.code like :query')
         .orWhere('q.name like :query')
         .orWhere('q.address like :query')
-        .orWhere('q.code like :query')
         .setParameter('query', `%${keywords}%`);
     }
     if (sort) {
@@ -242,7 +242,7 @@ export class StationService {
   }
 
   async updateStationById(userId: string, id: string, dto: UpdateStationDto) {
-    const { name, address, wardCode, images, code } = dto;
+    const { name, address, wardCode, images } = dto;
 
     const station = await this.stationRepository.findOne({
       where: { id },
@@ -250,16 +250,6 @@ export class StationService {
     });
     if (!station) {
       throw new NotFoundException('STATION_NOT_FOUND');
-    }
-
-    if (code) {
-      const oldStation = await this.stationRepository.findOne({
-        where: { code },
-      });
-      if (oldStation && oldStation.id !== id) {
-        throw new BadRequestException('STATION_CODE_EXISTED');
-      }
-      station.code = code;
     }
     if (name) {
       station.name = name;
@@ -335,7 +325,7 @@ export class StationService {
     currentCode: string,
     dto: UpdateStationDto,
   ) {
-    const { name, address, wardCode, images, code } = dto;
+    const { name, address, wardCode, images } = dto;
 
     const station = await this.stationRepository.findOne({
       where: { code: currentCode },
@@ -355,15 +345,6 @@ export class StationService {
     delete station.ward.updatedAt;
     delete station.ward.createdBy;
     delete station.ward.updatedBy;
-    if (code) {
-      const oldStation = await this.stationRepository.findOne({
-        where: { code },
-      });
-      if (oldStation && oldStation.id !== station.id) {
-        throw new BadRequestException('STATION_CODE_EXISTED');
-      }
-      station.code = code;
-    }
     if (name) {
       station.name = name;
     }

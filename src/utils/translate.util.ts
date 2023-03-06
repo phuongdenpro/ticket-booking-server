@@ -89,6 +89,7 @@ export const mappingTranslate = {
   CUSTOMER_GROUP_ID_MUST_BE_36_CHARACTERS:
     'Mã nhóm khách hàng phải có 36 ký tự',
   CUSTOMER_GROUP_HAS_CUSTOMER: 'Nhóm khách hàng vẫn còn khách hàng',
+  CUSTOMER_GROUP_CODE_EXIST: 'Mã nhóm khách hàng đã tồn tại',
 
   // customer group detail
   CUSTOMER_ALREADY_IN_GROUP: 'Khách hàng đã tồn tại trong nhóm',
@@ -150,6 +151,7 @@ export const mappingTranslate = {
   TRIP_ID_IS_STRING: 'Id của chuyến đi phải là chuỗi ký tự',
   TRIP_ID_INVALID: 'Id của chuyến đi không hợp lệ',
   TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng chuyến không đúng định dạng',
+  TRIP_CODE_EXIST: 'Mã chuyến đi đã tồn tại',
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng chuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
