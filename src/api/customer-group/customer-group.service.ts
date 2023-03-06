@@ -35,8 +35,42 @@ export class CustomerGroupService {
     private dataSource: DataSource,
   ) {}
 
+  private selectFieldsCG = [
+    'id',
+    'name',
+    'description',
+    'note',
+    'code',
+    'createdBy',
+    'updatedBy',
+    'createdAt',
+    'updatedAt',
+  ];
+
+  async findCustomerGroupByCode(code: string, options?: any) {
+    return await this.customerGroupRepository.findOne({
+      where: { code },
+      select: this.selectFieldsCG,
+      ...options,
+    });
+  }
+
+  async findCustomerGroupById(id: string, options?: any) {
+    return await this.customerGroupRepository.findOne({
+      where: { id },
+      select: this.selectFieldsCG,
+      ...options,
+    });
+  }
+
+  // customer group
   async createCustomerGroup(dto: SaveCustomerGroupDto, userId: string) {
     const { code, name, description, note } = dto;
+
+    const customerGroupExist = await this.findCustomerGroupByCode(code);
+    if (customerGroupExist) {
+      throw new BadRequestException('CUSTOMER_GROUP_CODE_EXIST');
+    }
 
     const customerGroup = new CustomerGroup();
     if (!name) {
@@ -55,23 +89,27 @@ export class CustomerGroupService {
     }
     customerGroup.createdBy = adminExist.id;
 
-    const saveCustomerGroup = await this.customerGroupRepository.save(
-      customerGroup,
-    );
-    const { deletedAt, ...newCustomerGroup } = saveCustomerGroup;
+    const { deletedAt, ...newCustomerGroup } =
+      await this.customerGroupRepository.save(customerGroup);
     return newCustomerGroup;
   }
 
   async getCustomerGroupById(id: string) {
-    const query = this.customerGroupRepository.createQueryBuilder('q');
-    query.where('q.id = :id', { id });
+    const customerGroup = await this.findCustomerGroupById(id);
 
-    const dataResult = await query.getOne();
-
-    if (!dataResult) {
+    if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
-    return dataResult;
+    return customerGroup;
+  }
+
+  async getCustomerGroupByCode(code: string) {
+    const customerGroup = await this.findCustomerGroupByCode(code);
+
+    if (!customerGroup) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+    return customerGroup;
   }
 
   async findAllCustomerGroup(
@@ -119,10 +157,41 @@ export class CustomerGroupService {
     dto: UpdateCustomerGroupDto,
   ) {
     const customerGroup = await this.getCustomerGroupById(id);
-    const { code, name, description, note } = dto;
-    if (code) {
-      customerGroup.code = code;
+    const { name, description, note } = dto;
+    if (name) {
+      customerGroup.name = name;
     }
+    if (description) {
+      customerGroup.description = description;
+    }
+    if (note) {
+      customerGroup.note = note;
+    }
+
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    customerGroup.updatedBy = adminExist.id;
+
+    const { deletedAt, ...saveCustomerGroup } =
+      await this.customerGroupRepository.save(customerGroup);
+    return saveCustomerGroup;
+  }
+
+  async updateCustomerGroupByCode(
+    adminId: string,
+    code: string,
+    dto: UpdateCustomerGroupDto,
+  ) {
+    const customerGroup = await this.getCustomerGroupByCode(code);
+    if (!customerGroup) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+
+    const { name, description, note } = dto;
     if (name) {
       customerGroup.name = name;
     }
@@ -148,6 +217,33 @@ export class CustomerGroupService {
 
   async deleteCustomerGroupById(adminId: string, id: string) {
     const customerGroup = await this.getCustomerGroupById(id);
+    if (!customerGroup) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    customerGroup.updatedBy = adminExist.id;
+    customerGroup.deletedAt = new Date();
+    const saveCustomerGroup = await this.customerGroupRepository.save(
+      customerGroup,
+    );
+    return {
+      id: saveCustomerGroup.id,
+      message: 'Xoá nhóm khách hàng thành công',
+    };
+  }
+
+  async deleteCustomerGroupByCode(adminId: string, code: string) {
+    const customerGroup = await this.getCustomerGroupByCode(code);
+    if (!customerGroup) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId, isActive: true } });
@@ -183,6 +279,25 @@ export class CustomerGroupService {
     }
   }
 
+  async deleteMultipleCustomerGroupByCodes(
+    adminId: string,
+    dto: DeleteMultiCustomerGroupDto,
+  ) {
+    try {
+      const { ids } = dto;
+
+      const list = await Promise.all(
+        ids.map(async (code) => {
+          await this.deleteCustomerGroupByCode(adminId, code);
+        }),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  // customer - customer detail
   async getCustomersByGroupId(
     groupId: string,
     adminId: string,

@@ -18,13 +18,7 @@ export class CustomerGroup {
   @Column({ name: 'name', type: 'varchar', length: 100, nullable: false })
   name: string;
 
-  @Column({
-    name: 'code',
-    type: 'varchar',
-    length: 10,
-    nullable: false,
-    unique: true,
-  })
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
   @Column({ name: 'description', type: 'text', nullable: true })

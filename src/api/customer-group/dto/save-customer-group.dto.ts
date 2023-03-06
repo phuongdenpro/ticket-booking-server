@@ -7,7 +7,7 @@ export class SaveCustomerGroupDto {
   })
   @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
   @IsString({ message: 'CODE_IS_STRING' })
-  @Length(1, 255, { message: 'CODE_BETWEEN_1_10_CHARACTERS' })
+  @Length(1, 100, { message: 'CODE_BETWEEN_1_100_CHARACTERS' })
   code: string;
 
   @ApiProperty({ example: 'Nhóm khách hàng cơ bản' })
