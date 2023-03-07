@@ -11,11 +11,15 @@ import {
 } from 'typeorm';
 import { Station } from './station.entities';
 import { TripDetail } from './trip-detail.entities';
+import { ApplicablePriceDetail } from '.';
 
 @Entity({ name: 'trip' })
 export class Trip {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'name', type: 'varchar', length: 255, nullable: false })
   name: string;
@@ -63,4 +67,10 @@ export class Trip {
 
   @OneToMany(() => TripDetail, (tripDetail) => tripDetail.trip)
   tripDetails: TripDetail[];
+
+  @OneToMany(
+    () => ApplicablePriceDetail,
+    (applicablePriceDetail) => applicablePriceDetail.trip,
+  )
+  applicablePriceDetails: ApplicablePriceDetail[];
 }

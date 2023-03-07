@@ -5,13 +5,13 @@ export class FilterTripDto {
   @ApiPropertyOptional({
     example: 'Bến xe miền đông - Bến xe Đức Long Bảo Lộc',
   })
-  @IsString({ message: 'NAME_IS_STRING' })
+  @IsString({ message: 'KEYWORDS_IS_STRING' })
   @IsOptional()
-  name: string;
+  keywords: string;
 
   @ApiPropertyOptional({ example: '2023-02-15' })
-  @IsOptional()
   @IsDate({ message: 'TRIP_START_DATE_INVALID' })
+  @IsOptional()
   startDate: Date;
 
   @ApiPropertyOptional({ example: '2024-02-15T02:37:29.450Z' })

@@ -4,7 +4,7 @@ import { IsArray, IsNotEmpty } from 'class-validator';
 export class DeleteMultiCustomerGroupDto {
   @ApiProperty({
     example: ['', ''],
-    description: 'list customer group id',
+    description: 'list customer group id / code',
     type: Array<string>,
   })
   @IsArray()

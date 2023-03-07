@@ -1,18 +1,18 @@
-import { Staff } from './../../database/entities';
+import { Staff } from '../../database/entities';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RoleEnum } from './../../enums';
-import { EMAIL_REGEX, PHONE_REGEX } from './../../utils/regex.util';
+import { RoleEnum } from '../../enums';
+import { EMAIL_REGEX, PHONE_REGEX } from '../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { AdminLoginDto, AdminRegisterDto } from './dto';
 
 @Injectable()
-export class AdminService {
+export class AuthAdminService {
   constructor(
     @InjectRepository(Staff) private staffRepository: Repository<Staff>,
     private authService: AuthService,
@@ -72,9 +72,6 @@ export class AdminService {
       staffCred.gender = dto.gender;
       staffCred.createdBy = userId;
       staffCred.updatedBy = userId;
-      const staffCreated = await this.staffRepository.save(staffCred);
-
-      await queryRunner.commitTransaction();
       const {
         createdAt,
         updatedAt,
@@ -83,7 +80,9 @@ export class AdminService {
         updatedBy,
         password,
         ...staff
-      } = staffCreated;
+      } = await this.staffRepository.save(staffCred);
+
+      await queryRunner.commitTransaction();
 
       return staff;
     } catch (err) {
@@ -92,14 +91,6 @@ export class AdminService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  async profile(id: string) {
-    const staffExist = this.findOneById(id);
-    if (!staffExist) {
-      throw new BadRequestException('USER_NOT_FOUND');
-    }
-    return staffExist;
   }
 
   async login(dto: AdminLoginDto) {

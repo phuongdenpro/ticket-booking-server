@@ -41,7 +41,7 @@ export class StationController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async createNewStation(@Body() dto: SaveStationDto, @CurrentUser() user) {
-    return await this.stationService.saveStation(dto, user.id);
+    return await this.stationService.createStation(dto, user.id);
   }
 
   @Get('id/:id')
@@ -92,7 +92,7 @@ export class StationController {
   }
 
   @Delete('id/:id')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
@@ -101,7 +101,7 @@ export class StationController {
   }
 
   @Delete('code/:code')
-  @HttpCode(HttpStatus.OK)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

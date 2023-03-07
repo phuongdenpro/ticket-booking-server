@@ -13,6 +13,8 @@ import {
   DeletePriceListDto,
   CreatePriceDetailDto,
   FilterPriceDetailDto,
+  UpdatePriceDetailDto,
+  DeletePriceDetailDto,
 } from './dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
@@ -35,6 +37,7 @@ import { PriceListService } from './price-list.service';
 export class PriceListController {
   constructor(private priceListService: PriceListService) {}
 
+  // price list
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
@@ -65,6 +68,15 @@ export class PriceListController {
     return await this.priceListService.getPriceListById(id);
   }
 
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getPriceListByCode(@Param('code') code: string) {
+    return await this.priceListService.getPriceListByCode(code);
+  }
+
   @Patch('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
@@ -76,6 +88,23 @@ export class PriceListController {
     @Body() dto: UpdatePriceListDto,
   ) {
     return await this.priceListService.updatePriceListById(user.id, id, dto);
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updatePriceListByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdatePriceListDto,
+  ) {
+    return await this.priceListService.updatePriceListByCode(
+      user.id,
+      code,
+      dto,
+    );
   }
 
   @Delete('id/:id')
@@ -99,6 +128,7 @@ export class PriceListController {
     return await this.priceListService.deleteMultiPriceListByIds(user.id, dto);
   }
 
+  // price detail
   @Post('price-detail')
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
@@ -132,6 +162,15 @@ export class PriceListController {
     return await this.priceListService.getPriceDetailById(id);
   }
 
+  @Get('price-detail/code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getPriceDetailByCode(@Param('code') code: string) {
+    return await this.priceListService.getPriceDetailByCode(code);
+  }
+
   @Patch('price-detail/id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
@@ -140,9 +179,22 @@ export class PriceListController {
   async updatePriceDetailById(
     @CurrentUser() user,
     @Param('id') id: string,
-    @Body() dto,
+    @Body() dto: UpdatePriceDetailDto,
   ) {
-    return { message: 'coming soon' };
+    return this.priceListService.updatePriceDetailById(user.id, id, dto);
+  }
+
+  @Patch('price-detail/code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updatePriceDetailByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdatePriceDetailDto,
+  ) {
+    return this.priceListService.updatePriceDetailByCode(user.id, code, dto);
   }
 
   @Delete('price-detail/id/:id')
@@ -151,7 +203,19 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deletePriceDetailById(@CurrentUser() user, @Param('id') id: string) {
-    return { message: 'coming soon' };
+    return await this.priceListService.deletePriceDetailById(user.id, id);
+  }
+
+  @Delete('price-detail/code/:code')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deletePriceDetailByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+  ) {
+    return await this.priceListService.deletePriceDetailByCode(user.id, code);
   }
 
   @Delete('price-detail/multiple')
@@ -159,7 +223,28 @@ export class PriceListController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteMultiplePriceDetailByIds(@CurrentUser() user, @Body() dto) {
-    return { message: 'coming soon' };
+  async deleteMultiplePriceDetailByIds(
+    @CurrentUser() user,
+    @Body() dto: DeletePriceDetailDto,
+  ) {
+    return await this.priceListService.deleteMultiPriceDetailByIds(
+      user.id,
+      dto,
+    );
+  }
+
+  @Delete('price-detail/multiple/code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiplePriceDetailByCodes(
+    @CurrentUser() user,
+    @Body() dto: DeletePriceDetailDto,
+  ) {
+    return await this.priceListService.deleteMultiPriceDetailByCodes(
+      user.id,
+      dto,
+    );
   }
 }

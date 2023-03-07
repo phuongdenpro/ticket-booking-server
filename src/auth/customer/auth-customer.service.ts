@@ -6,12 +6,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { RoleEnum } from '../../enums';
+import { GenderEnum, RoleEnum } from '../../enums';
 import { EMAIL_REGEX, PHONE_REGEX } from '../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { CustomerLoginDto, CustomerRegisterDto } from './dto';
-import { CustomerUpdatePasswordDto } from './dto/customer-update-password.dto';
 
 @Injectable()
 export class AuthCustomerService {
@@ -27,16 +26,17 @@ export class AuthCustomerService {
   }
 
   async register(dto: CustomerRegisterDto) {
-    if (!dto.phone.match(PHONE_REGEX)) {
-      throw new BadRequestException('INVALID_PHONE_NUMBER');
-    }
-    if (dto.email && !dto.email.match(EMAIL_REGEX)) {
-      throw new BadRequestException('INVALID_EMAIL');
+    const { email, fullName, gender, birthday, phone } = dto;
+    if (email) {
+      const userEmailExist = await this.customerService.findOneByEmail(email);
+      if (userEmailExist) {
+        throw new BadRequestException('EMAIL_ALREADY_EXIST');
+      }
     }
 
-    const userExist = await this.customerService.findOneByEmail(dto.email);
-    if (userExist) {
-      throw new BadRequestException('USERNAME_ALREADY_EXIST');
+    const userPhoneExist = await this.customerService.findOneByPhone(phone);
+    if (userPhoneExist) {
+      throw new BadRequestException('PHONE_ALREADY_EXIST');
     }
 
     const queryRunner = await this.dataSource.createQueryRunner();
@@ -47,25 +47,34 @@ export class AuthCustomerService {
 
       const user = new Customer();
       user.password = passwordHashed;
-      user.fullName = dto.name;
-      user.phone = dto.phone;
-      user.email = dto.email;
-      user.gender = dto.gender;
-      user.birthday = dto.birthday;
+      user.fullName = fullName;
+      user.phone = phone;
+      user.email = email;
+      if (!gender) {
+        user.gender = GenderEnum.OTHER;
+      } else {
+        user.gender = gender;
+      }
+      if (birthday) {
+        user.birthday = birthday;
+      } else {
+        user.birthday = new Date('01-02-1970');
+      }
       user.status = 0;
-
       await queryRunner.commitTransaction();
-      const userCreated = await this.userRepository.save(user);
+      // save and select return fields
       const {
         createdAt,
         updatedAt,
         deletedAt,
         updatedBy,
         password,
-        ...newUser
-      } = userCreated;
+        refreshToken,
+        accessToken,
+        ...saveUser
+      } = await this.userRepository.save(user);
 
-      return newUser;
+      return saveUser;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;
@@ -74,25 +83,20 @@ export class AuthCustomerService {
     }
   }
 
-  async profile(id: string) {
-    const userExist = this.customerService.findOneById(id);
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
-    return userExist;
-  }
-
   async login(dto: CustomerLoginDto) {
-    const userExist = await this.customerService.findOneByEmail(dto.email);
-
+    const { email, password } = dto;
+    const userExist = await this.customerService.findOneByEmail(email, {
+      select: ['password', 'id'],
+    });
     if (!userExist) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
-
     if (!userExist?.password) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
 
     const isPasswordMatches = await this.authService.comparePassword(
-      dto?.password,
+      password,
       userExist?.password,
     );
     if (!isPasswordMatches) {
@@ -132,7 +136,7 @@ export class AuthCustomerService {
   }
 
   async refreshTokens(refreshToken: string) {
-    const userExist = await this.customerService.findOneByRefreshToken(
+    const userExist = await this.customerService.findCustomerByRefreshToken(
       refreshToken,
     );
     if (!userExist || !userExist.refreshToken)
@@ -149,25 +153,5 @@ export class AuthCustomerService {
     });
 
     return tokens;
-  }
-
-  async updatePassword(id: string, dto: CustomerUpdatePasswordDto) {
-    const userExist = await this.customerService.findOneById(id);
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
-
-    const isPasswordMatches = await this.authService.comparePassword(
-      dto?.oldPassword,
-      userExist?.password
-    );
-    if (!isPasswordMatches) throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    // if (!isPasswordMatches) throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    if (dto?.newPassword !== dto?.confirmNewPassword)
-      throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
-
-    const passwordHash = await this.authService.hashData(dto.newPassword);
-    return await this.userRepository.update(
-      { id: userExist.id },
-      { password: passwordHash, updatedBy: userExist.id }
-    );
   }
 }

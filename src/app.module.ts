@@ -22,6 +22,10 @@ import { TripDetailModule } from './api/trip-detail/trip-detail.module';
 import { CustomerGroupModule } from './api/customer-group/customer-group.module';
 import { TicketGroupModule } from './api/ticket-group/ticket-group.module';
 import { PriceListModule } from './api/price-list/price-list.module';
+import { AdminModule } from './api/admin/admin.module';
+import { UserModule } from './api/user/user.module';
+import { PromotionModule } from './api/promotion/promotion.module';
+import { BookingModule } from './api/booking/booking.module';
 
 @Module({
   imports: [
@@ -29,6 +33,8 @@ import { PriceListModule } from './api/price-list/price-list.module';
     ScheduleModule.forRoot(),
     DatabaseModule,
     AuthModule,
+    AdminModule,
+    UserModule,
     CustomerModule,
     CustomerGroupModule,
     ProvinceModule,
@@ -43,6 +49,8 @@ import { PriceListModule } from './api/price-list/price-list.module';
     ImageResourceModule,
     PriceListModule,
     UploadModule,
+    PromotionModule,
+    BookingModule,
   ],
   providers: [
     {

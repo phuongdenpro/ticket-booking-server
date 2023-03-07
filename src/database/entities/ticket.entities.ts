@@ -1,24 +1,22 @@
-import { OrderRefundDetail } from './order-refund-detail.entities';
-import { PromotionDetail } from './promotion-detail.entities';
 import {
   Column,
   DeleteDateColumn,
   Entity,
   JoinColumn,
-  ManyToMany,
   ManyToOne,
   OneToMany,
   OneToOne,
-} from 'typeorm';
-import { TicketDetail } from './ticket-detail.entities';
-import { OrderDetail } from './order-detail.entities';
-import { TicketGroupDetail } from './ticket-group-detail.entities';
-import { ApplicableTicket } from './applicable-ticket.entities';
-import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import {
+  TicketDetail,
+  OrderDetail,
+  TicketGroupDetail,
+  OrderRefundDetail,
+  TripDetail,
+} from '.';
 
 @Entity({ name: 'ticket' })
 export class Ticket {
@@ -66,23 +64,17 @@ export class Ticket {
   public deletedAt?: Date;
 
   // relationship
-  @OneToMany(
-    () => ApplicableTicket,
-    (applicableTicket) => applicableTicket.ticket,
-  )
-  applicableTicket: ApplicableTicket[];
-
-  @ManyToMany(
-    () => PromotionDetail,
-    (promotionDetail) => promotionDetail.tickets,
-  )
-  promotionDetails: PromotionDetail[];
+  // @OneToMany(
+  //   () => ApplicableTicket,
+  //   (applicableTicket) => applicableTicket.ticket,
+  // )
+  // applicableTicket: ApplicableTicket[];
 
   @OneToMany(
     () => TicketGroupDetail,
     (ticketGroupDetail) => ticketGroupDetail.ticket,
   )
-  ticketGroupDetail: TicketGroupDetail;
+  ticketGroupDetail: TicketGroupDetail[];
 
   @OneToOne(() => TicketDetail, (ticketDetail) => ticketDetail.ticket)
   ticketDetail: TicketDetail;
@@ -96,4 +88,8 @@ export class Ticket {
   )
   @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
   orderRefundDetail: OrderRefundDetail;
+
+  @ManyToOne(() => TripDetail, (tripDetail) => tripDetail.tickets)
+  @JoinColumn({ name: 'trip_detail_id', referencedColumnName: 'id' })
+  tripDetail: TripDetail;
 }

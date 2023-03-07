@@ -1,6 +1,4 @@
 import { SortEnum, UserStatusEnum } from './../../enums';
-import { CustomerUpdatePasswordDto } from './../../auth/customer/dto/update-password.dto';
-import { AuthService } from './../../auth/auth.service';
 import { Pagination } from '../../decorator';
 import { Customer } from '../../database/entities';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -8,17 +6,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { FilterCustomerDto } from './dto';
 import * as bcrypt from 'bcrypt';
+import { UserUpdatePasswordDto } from '../user/dto';
 
 @Injectable()
 export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-    private authService: AuthService,
     private dataSource: DataSource,
   ) {}
 
-  private selectFields = [
+  private selectFieldsWithQ = [
     'u.id',
     'u.lastLogin',
     'u.status',
@@ -27,6 +25,7 @@ export class CustomerService {
     'u.fullName',
     'u.gender',
     'u.address',
+    'u.fullAddress',
     'u.note',
     'u.birthday',
     'u.createdAt',
@@ -34,22 +33,56 @@ export class CustomerService {
     'u.updatedBy',
   ];
 
-  async findOneByEmail(email: string) {
-    const userExist = await this.customerRepository
-      .createQueryBuilder('u')
-      .where('u.email = :email', { email })
-      .select(this.selectFields)
-      .getOne();
+  private selectFields = [
+    'id',
+    'lastLogin',
+    'status',
+    'phone',
+    'email',
+    'fullName',
+    'gender',
+    'address',
+    'fullAddress',
+    'note',
+    'birthday',
+    'createdAt',
+    'updatedAt',
+    'updatedBy',
+  ];
 
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
+  async findOneByEmail(email: string, options?: any) {
+    return await this.customerRepository.findOne({
+      where: { email },
+      select: this.selectFields,
+      ...options,
+    });
+  }
+
+  async findOneByPhone(phone: string, options?: any) {
+    return await this.customerRepository.findOne({
+      where: { phone },
+      select: this.selectFields,
+      ...options,
+    });
+  }
+
+  async findCustomerByEmail(email: string, options?: any) {
+    const userExist = await this.findOneByEmail(email, {
+      select: this.selectFields,
+      ...options,
+    });
+
+    if (!userExist) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
     return userExist;
   }
 
-  async findOneByRefreshToken(refreshToken: string) {
+  async findCustomerByRefreshToken(refreshToken: string) {
     const userExist = await this.customerRepository
       .createQueryBuilder('u')
       .where('u.refreshToken = :refreshToken', { refreshToken })
-      .select(this.selectFields)
+      .select(this.selectFieldsWithQ)
       .getOne();
 
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
@@ -61,11 +94,11 @@ export class CustomerService {
     const query = this.customerRepository.createQueryBuilder('u');
     if (keywords) {
       query
-        .orWhere('u.username like :query')
-        .orWhere('u.name like :query')
+        .orWhere('u.fullName like :query')
         .orWhere('u.phone like :query')
         .orWhere('u.email like :query')
-        .orWhere("LPAD(u.code::text, 8, '0') like :query")
+        .orWhere('u.address like :query')
+        .orWhere('u.note like :query')
         .setParameter('query', `%${keywords}%`);
     }
 
@@ -78,25 +111,25 @@ export class CustomerService {
       .offset(pagination.skip)
       .limit(pagination.take)
       .orderBy('u.createdAt', SortEnum.DESC)
-      .select(this.selectFields)
+      .select(this.selectFieldsWithQ)
       .getMany();
 
     return { dataResult, pagination, total };
   }
 
-  async findOneById(id: string) {
+  async findCustomerById(id: string) {
     const userExist = await this.customerRepository
       .createQueryBuilder('u')
       .where('u.id = :id', { id })
-      .select(this.selectFields)
+      .select(this.selectFieldsWithQ)
       .getOne();
 
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
     return userExist;
   }
 
-  async updatePassword(id: string, dto: CustomerUpdatePasswordDto) {
-    const userExist = await this.findOneById(id);
+  async updatePassword(id: string, dto: UserUpdatePasswordDto) {
+    const userExist = await this.findCustomerById(id);
     if (!userExist) {
       throw new BadRequestException('USER_NOT_FOUND');
     }

@@ -38,6 +38,7 @@ import { JwtAuthGuard } from './../../auth/guards';
 export class CustomerGroupController {
   constructor(private customGroupService: CustomerGroupService) {}
 
+  // customer group
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
@@ -50,13 +51,16 @@ export class CustomerGroupController {
     return await this.customGroupService.createCustomerGroup(dto, user.id);
   }
 
-  @Delete('id/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
+  @Get()
+  @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteCustomerGroupById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.customGroupService.deleteCustomerGroupById(user.id, id);
+  async findAllCustomerGroup(
+    @Query() dto: FilterCustomerGroupDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.customGroupService.findAllCustomerGroup(dto, pagination);
   }
 
   @Get('id/:id')
@@ -64,20 +68,17 @@ export class CustomerGroupController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getCustomerGroup(@Param('id') id: string) {
+  async getCustomerGroupById(@Param('id') id: string) {
     return await this.customGroupService.getCustomerGroupById(id);
   }
 
-  @Get()
+  @Get('code/:code')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async findAll(
-    @Query() dto: FilterCustomerGroupDto,
-    @GetPagination() pagination?: Pagination,
-  ) {
-    return await this.customGroupService.findAllCustomerGroup(dto, pagination);
+  async getCustomerGroupByCode(@Param('code') code: string) {
+    return await this.customGroupService.getCustomerGroupByCode(code);
   }
 
   @Patch('id/:id')
@@ -97,7 +98,43 @@ export class CustomerGroupController {
     );
   }
 
-  
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateCustomerGroupByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdateCustomerGroupDto,
+  ) {
+    return await this.customGroupService.updateCustomerGroupByCode(
+      user.id,
+      code,
+      dto,
+    );
+  }
+
+  @Delete('id/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteCustomerGroupById(@CurrentUser() user, @Param('id') id: string) {
+    return await this.customGroupService.deleteCustomerGroupById(user.id, id);
+  }
+
+  @Delete('code/:code')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteCustomerGroupByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+  ) {
+    return await this.customGroupService.deleteCustomerGroupById(user.id, code);
+  }
 
   @Delete('multiple')
   @HttpCode(HttpStatus.OK)
@@ -114,6 +151,22 @@ export class CustomerGroupController {
     );
   }
 
+  @Delete('multiple/codes')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleCustomerGroupByCodes(
+    @CurrentUser() user,
+    @Body() dto: DeleteMultiCustomerGroupDto,
+  ) {
+    return await this.customGroupService.deleteMultipleCustomerGroupByCodes(
+      user.id,
+      dto,
+    );
+  }
+
+  // customer
   @Get(':id/customers')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)

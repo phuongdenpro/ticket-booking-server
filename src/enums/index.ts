@@ -9,3 +9,5 @@ export * from './user-status.enum';
 export * from './vehicle-seats.enum';
 export * from './vehicle-type.enum';
 export * from './province-type.enum';
+export * from './promotion-status.enum';
+export * from './promotion-type.enum';

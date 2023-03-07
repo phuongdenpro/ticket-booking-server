@@ -23,20 +23,12 @@ export class WardService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string) {
-    const query = this.wardRepository.createQueryBuilder('w');
-    query.where('w.id = :id', { id });
-
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneById(id: string, options?: any) {
+    return await this.wardRepository.findOne({ where: { id }, ...options });
   }
 
-  async findOneByCode(code: number) {
-    const query = this.wardRepository.createQueryBuilder('w');
-    query.where('w.code = :code', { code });
-
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneByCode(code: number, options?: any) {
+    return await this.wardRepository.findOne({ where: { code }, ...options });
   }
 
   async findByDistrictCode(districtCode: number, pagination?: Pagination) {

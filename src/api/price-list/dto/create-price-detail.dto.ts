@@ -9,6 +9,12 @@ import {
 } from 'class-validator';
 
 export class CreatePriceDetailDto {
+  @ApiProperty({ example: 'BGT32023' })
+  @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
+  @IsString({ message: 'CODE_IS_STRING' })
+  @Length(1, 100, { message: 'CODE_BETWEEN_1_100_CHARACTERS' })
+  code: string;
+
   @ApiProperty({ example: 100000 })
   @IsNumber(
     { allowInfinity: false, allowNaN: false },

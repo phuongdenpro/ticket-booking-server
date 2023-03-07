@@ -38,7 +38,7 @@ export class TripDetailController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createNewVehicle(@Body() dto: SaveTripDetailDto, @CurrentUser() user) {
+  async createTripDetail(@Body() dto: SaveTripDetailDto, @CurrentUser() user) {
     return await this.tripDetailService.saveTripDetail(dto, user.id);
   }
 
@@ -53,8 +53,14 @@ export class TripDetailController {
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
-  async getTripById(@Param('id') id: string) {
-    return await this.tripDetailService.findOneTripDetailById(id);
+  async getTripDetailById(@Param('id') id: string) {
+    return await this.tripDetailService.getTripDetailById(id);
+  }
+
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
+  async getTripDetailByCode(@Param('code') code: string) {
+    return await this.tripDetailService.getTripDetailByCode(code);
   }
 
   @Patch('id/:id')
@@ -62,7 +68,7 @@ export class TripDetailController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateStationById(
+  async updateTripDetailById(
     @CurrentUser() user,
     @Param('id') id: string,
     @Body() dto: UpdateTripDetailDto,
@@ -70,13 +76,42 @@ export class TripDetailController {
     return await this.tripDetailService.updateTripDetailById(dto, id, user.id);
   }
 
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateTripDetailByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdateTripDetailDto,
+  ) {
+    return await this.tripDetailService.updateTripDetailById(
+      dto,
+      code,
+      user.id,
+    );
+  }
+
   @Delete('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
+  async deleteTripDetailById(@CurrentUser() user, @Param('id') id: string) {
     return await this.tripDetailService.deleteTripDetailById(id, user.id);
+  }
+
+  @Delete('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteTripDetailByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+  ) {
+    return await this.tripDetailService.deleteTripDetailByCode(code, user.id);
   }
 
   @Delete('multiple')
@@ -84,11 +119,26 @@ export class TripDetailController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteMultiple(
+  async deleteMultipleTripDetailByIds(
     @CurrentUser() user,
     @Body() dto: TripDetailDeleteMultiInput,
   ) {
     return await this.tripDetailService.deleteMultipleTripDetailByIds(
+      user.id,
+      dto,
+    );
+  }
+
+  @Delete('multiple/code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleTripDetailByCode(
+    @CurrentUser() user,
+    @Body() dto: TripDetailDeleteMultiInput,
+  ) {
+    return await this.tripDetailService.deleteMultipleTripDetailByCodes(
       user.id,
       dto,
     );

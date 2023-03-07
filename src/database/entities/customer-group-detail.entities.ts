@@ -18,11 +18,7 @@ export class CustomerGroupDetail {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({

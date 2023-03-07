@@ -1,3 +1,4 @@
+import { WardService } from './../address/ward/ward.service';
 import { ProvinceService } from './../address/province/province.service';
 import { DistrictService } from './../address/district/district.service';
 import { ImageResourceService } from './../image-resource/image-resource.service';
@@ -29,6 +30,7 @@ import {
   providers: [
     StationService,
     ImageResourceService,
+    WardService,
     DistrictService,
     ProvinceService,
   ],

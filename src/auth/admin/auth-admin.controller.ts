@@ -1,9 +1,7 @@
-import { AdminRefreshTokenDto } from './dto/admin-refresh-token.dto';
-import { CurrentUser } from './../../decorator';
+import { CurrentUser } from '../../decorator';
 import {
   Body,
   Controller,
-  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -11,13 +9,13 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards';
-import { AdminService } from './admin.service';
-import { AdminLoginDto, AdminRegisterDto } from './dto';
+import { AuthAdminService } from './auth-admin.service';
+import { AdminLoginDto, AdminRegisterDto, AdminRefreshTokenDto } from './dto';
 
 @Controller('auth/admin')
-@ApiTags('Auth')
-export class AdminController {
-  constructor(private adminService: AdminService) {}
+@ApiTags('Auth Admin')
+export class AuthAdminController {
+  constructor(private adminService: AuthAdminService) {}
 
   @Post('register')
   @HttpCode(HttpStatus.CREATED)
@@ -31,14 +29,6 @@ export class AdminController {
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: AdminLoginDto) {
     return this.adminService.login(dto);
-  }
-
-  @Get('profile')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  @HttpCode(HttpStatus.OK)
-  async profile(@CurrentUser() user) {
-    return this.adminService.profile(user?.['id']);
   }
 
   @Post('logout')

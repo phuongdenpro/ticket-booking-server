@@ -22,17 +22,18 @@ export const mappingTranslate = {
   NOTE_IS_STRING: 'Ghi chú phải là chuỗi ký tự',
   SORT_IS_STRING: 'Giá trị sắp xếp phải là chuỗi ký tự',
   SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
-  GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
-  GENDER_IS_ENUM:
-    'Giới tính chỉ nhận 1 trong 3 giá trị sau: MALE, FEMALE, NONE',
-  PHONE_IS_STRING: 'Số điện thoại phải là chuỗi ký tự',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
+  EMAIL_IS_REQUIRED: 'Email không được để trống',
+  EMAIL_INVALID: 'Email không đúng định dạng',
+  EMAIL_LENGTH: 'Email phải từ 6 đến 100 ký tự',
   NAME_BETWEEN_1_100_CHARACTERS: 'Tên phải từ 1 đến 100 ký tự',
   CODE_BETWEEN_1_10_CHARACTERS: 'Mã phải từ 1 đến 10 ký tự',
   CODE_IS_NUMBER: 'mã phải là số',
   CODE_IS_STRING: 'mã phải là chuỗi ký tự',
   CODE_IS_REQUIRED: 'Mã không được để trống',
+  CODE_BETWEEN_1_100_CHARACTERS: 'Mã phải từ 1 đến 100 ký tự',
   KEYWORDS_IS_STRING: 'Từ khóa phải là chuỗi ký tự',
+  IMAGE_IS_STRING: 'url ảnh phải là chuỗi ký tự',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',
@@ -44,12 +45,30 @@ export const mappingTranslate = {
   PASSWORD_NEW_NOT_MATCH: 'Mật khẩu xác nhận không đúng.',
 
   // User 21-30
+  UNAUTHORIZED: 'Không có quyền truy cập',
   INVALID_USERNAME_OR_PASSWORD: 'Tên đăng nhập hoặc mật khẩu không đúng.',
   INVALID_PHONE_NUMBER: 'Số điện thoại không đúng định dạng.',
   INVALID_EMAIL: 'Email không đúng định dạng.',
   USERNAME_ALREADY_EXIST: 'Tên đăng nhập đã tồn tại',
   USER_NOT_FOUND: 'Không tìm thấy tài khoản',
-  UNAUTHORIZED: 'Không có quyền truy cập',
+  EMAIL_ALREADY_EXIST: 'Email đã tồn tại',
+  PASSWORD_IS_REQUIRED: 'Mật khẩu không được để trống',
+  PASSWORD_IS_STRING: 'Mật khẩu phải là chuỗi ký tự',
+  PASSWORD_IS_MIN_LENGTH_6: 'Mật khẩu phải có ít nhất 6 ký tự',
+  PASSWORD_IS_MAX_LENGTH_255: 'Mật khẩu có tối đa 255 ký tự',
+  FULL_NAME_IS_REQUIRED: 'Họ và tên không được để trống',
+  FULL_NAME_IS_STRING: 'Họ và tên phải là chuỗi ký tự',
+  FULL_NAME_IS_MIN_LENGTH_1: 'Họ và tên phải có ít nhất 1 ký tự',
+  FULL_NAME_IS_MAX_LENGTH_255: 'Họ và tên có tối đa 255 ký tự',
+  BIRTHDAY_IS_REQUIRED: 'Ngày sinh không được để trống',
+  BIRTHDAY_IS_DATE: 'Ngày sinh phải là ngày tháng',
+  PHONE_ALREADY_EXIST: 'Số điện thoại đã tồn tại',
+  PHONE_IS_REQUIRED: 'Số điện thoại không được để trống',
+  PHONE_IS_STRING: 'Số điện thoại phải là chuỗi ký tự',
+  GENDER_IS_REQUIRED: 'Giới tính không được để trống',
+  GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
+  GENDER_IS_ENUM:
+    'Giới tính chỉ nhận 1 trong 3 giá trị sau: MALE, FEMALE, OTHER',
 
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',
@@ -70,6 +89,7 @@ export const mappingTranslate = {
   CUSTOMER_GROUP_ID_MUST_BE_36_CHARACTERS:
     'Mã nhóm khách hàng phải có 36 ký tự',
   CUSTOMER_GROUP_HAS_CUSTOMER: 'Nhóm khách hàng vẫn còn khách hàng',
+  CUSTOMER_GROUP_CODE_EXIST: 'Mã nhóm khách hàng đã tồn tại',
 
   // customer group detail
   CUSTOMER_ALREADY_IN_GROUP: 'Khách hàng đã tồn tại trong nhóm',
@@ -87,7 +107,7 @@ export const mappingTranslate = {
   CODENAME_IS_REQUIRED: 'Mã tên phải là chuỗi ký tự',
   PROVINCE_CODE_IS_NUMBER: 'mã tỉnh thành phải là số',
   PROVINCE_CODE_IS_REQUIRED: 'mã tỉnh thành phải là số',
-  PROVINCE_TYPE_IS_STRING: 'tỉnh thành phải là chuỗi ký tự',
+  PROVINCE_TYPE_IS_STRING: 'loại tỉnh thành phải là chuỗi ký tự',
   PROVINCE_TYPE_IS_REQUIRED: 'loại tỉnh thành không được để trống',
   PROVINCE_TYPE_BETWEEN_1_50_CHARACTERS:
     'loại tỉnh thành phải từ 1 đến 50 ký tự',
@@ -126,15 +146,20 @@ export const mappingTranslate = {
   FLOOR_IS_NUMBER: 'Số tầng phải là số',
 
   // trip
-  TRIP_NOT_FOUND: 'Không tìm thấy chuyến xe',
-  TRIP_ID_REQUIRED: 'Id của chuyến đi là không được để trống',
-  TRIP_ID_IS_STRING: 'Id của chuyến đi phải là chuỗi ký tự',
-  TRIP_ID_INVALID: 'Id của chuyến đi không hợp lệ',
-  TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng chuyến không đúng định dạng',
-  TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng chuyến không đúng định dạng',
+  TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
+  TRIP_ID_REQUIRED: 'Id của tuyến đi là không được để trống',
+  TRIP_ID_IS_STRING: 'Id của tuyến đi phải là chuỗi ký tự',
+  TRIP_ID_INVALID: 'Id của tuyến đi không hợp lệ',
+  TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
+  TRIP_CODE_EXIST: 'Mã tuyến đi đã tồn tại',
+  TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_START_DATE: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
+  OLD_END_DATE_GREATER_THAN_START_DATE:
+    'Ngày kết thúc cũ phải lớn hơn ngày bắt đầu',
+  NEW_END_DATE_GREATER_THAN_START_DATE:
+    'Ngày kết thúc mới phải lớn hơn ngày bắt đầu',
   START_DATE_IS_REQUIRED: 'Ngày bắt đầu không được để trống',
   END_DATE_IS_REQUIRED: 'Ngày kết thúc không được để trống',
   FROM_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
@@ -143,7 +168,7 @@ export const mappingTranslate = {
   TO_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
   TO_STATION_ID_IS_STRING: 'Mã bến xe đi phải là chuỗi ký tự',
   TO_STATION_ID_IS_36_CHARACTERS: 'Mã bến xe đi phải là 36 ký tự',
-  TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM: 'Trạng thái chuyến đi không hợp lệ',
+  TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM: 'Trạng thái tuyến đi không hợp lệ',
   START_DATE_IS_DATE: 'Ngày bắt đầu phải là ngày',
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
 
@@ -158,6 +183,7 @@ export const mappingTranslate = {
   INVALID_TRIP_DETAIL_STATUS: 'Trang thái của chi tiết chuyến đi không hợp lệ',
   TRIP_DETAIL_STATUS_REQUIRED: 'Trang thái của chi tiết chuyến đi không hợp lệ',
   TRIP_DETAIL_NOT_FOUND: 'Không tìm thấy thông tin chuyến đi',
+  TRIP_DETAIL_CODE_EXIST: 'Mã chuyến đi đã tồn tại',
 
   // vehicle
   VEHICLE_NOT_FOUND: 'Không tìm thấy xe',
@@ -183,9 +209,42 @@ export const mappingTranslate = {
   PRICE_LIST_ID_IS_STRING: 'Id của bảng giá phải là chuỗi ký tự',
   PRICE_LIST_ID_IS_REQUIRED: 'Id của bảng giá không được để trống',
   PRICE_LIST_ID_IS_36_CHARACTERS: 'Id của bảng giá phải là 36 ký tự',
+  PRICE_LIST_CODE_IS_EXIST: 'mã của bảng giá đã tồn tại',
 
   // price details
   PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết giá',
   PRICE_IS_NUMBER: 'Giá phải là số',
   PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Giá phải lớn hơn hoặc bằng 0',
+  PRICE_IS_TOO_BIG: 'Giá lớn hơn miền giá trị của double',
+  PRICE_DETAIL_CODE_EXISTED: 'Mã chi tiết giá đã tồn tại',
+
+  // promotion
+  BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
+  BUDGET_IS_NUMBER: 'Ngân sách phải là số',
+  BUDGET_MIN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
+  PROMOTION_CODE_EXISTED: 'Mã khuyến mãi đã tồn tại',
+  PROMOTION_TYPE_IS_STRING: 'Loại chương trình khuyến mãi phải là chuỗi ký tự',
+  PROMOTION_TYPE_IS_REQUIRED: 'Chương trình khuyến mãi không được để trống',
+  PROMOTION_TYPE_IS_ENUM:
+    'Chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Tặng sản phẩm", "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
+  MAX_QUANTITY_MIN_1: 'Số lượng tối đa phải lớn hơn hoặc bằng 1',
+  MAX_QUANTITY_IS_REQUIRED: 'Số lượng tối đa không được để trống',
+  MAX_QUANTITY_IS_NUMBER: 'Số lượng tối đa phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_MIN_1:
+    'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 1',
+  MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
+  MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED:
+    'Số lượng tối đa cho mỗi khách hàng không được để trống',
+  MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
+    'Số lượng tối đa cho mỗi khách hàng phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0:
+    'Số lượng tối đa cho mỗi khách hàng phải lớn hơn 0',
+  MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_REQUIRED:
+    'Số lượng tối đa cho mỗi khách hàng mỗi ngày không được để trống',
+  MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_NUMBER:
+    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MUST_BE_GREATER_THAN_0:
+    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
+  MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1:
+    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
 };

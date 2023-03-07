@@ -23,6 +23,7 @@ export class TripDetailService {
     private readonly tripDetailService: Repository<TripDetail>,
     private dataSource: DataSource,
   ) {}
+
   private tripDetailSelect = [
     'q',
     'v.id',
@@ -35,8 +36,16 @@ export class TripDetailService {
   ];
 
   async saveTripDetail(dto: SaveTripDetailDto, userId: string) {
-    const { departureTime, expectedTime, status, tripId, vehicleId } = dto;
+    const { code, departureTime, expectedTime, status, tripId, vehicleId } =
+      dto;
+    const tripDetailExist = await this.tripDetailService.findOne({
+      where: { code },
+    });
+    if (tripDetailExist) {
+      throw new BadRequestException('TRIP_DETAIL_CODE_EXIST');
+    }
     const tripDetail = new TripDetail();
+    tripDetail.code = code;
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
 
     if (departureTime) {
@@ -197,9 +206,25 @@ export class TripDetailService {
     return { dataResult, pagination, total };
   }
 
-  async findOneTripDetailById(id: string) {
+  async getTripDetailById(id: string) {
     const query = this.tripDetailService.createQueryBuilder('q');
     query.where('q.id = :id', { id });
+
+    const tripDetail = await query
+      .andWhere('q.isActive = :isActive', { isActive: true })
+      .leftJoinAndSelect('q.vehicle', 'v')
+      .select(this.tripDetailSelect)
+      .getOne();
+    if (!tripDetail) {
+      throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
+    }
+
+    return tripDetail;
+  }
+
+  async getTripDetailByCode(code: string) {
+    const query = this.tripDetailService.createQueryBuilder('q');
+    query.where('q.code = :code', { code });
 
     const tripDetail = await query
       .andWhere('q.isActive = :isActive', { isActive: true })
@@ -222,7 +247,106 @@ export class TripDetailService {
     let { departureTime, expectedTime } = dto;
 
     const tripDetail = await this.tripDetailService.findOne({
-      where: { id, isActive: true },
+      where: { id },
+    });
+    if (!tripDetail) {
+      throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
+    }
+    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    if (departureTime) {
+      departureTime = new Date(departureTime);
+      if (departureTime >= currentDate) {
+        tripDetail.departureTime = departureTime;
+      } else {
+        throw new BadRequestException(
+          'DEPARTURE_DATE_GREATER_THAN_CURRENT_DATE',
+        );
+      }
+    }
+    if (expectedTime) {
+      expectedTime = new Date(expectedTime);
+      if (
+        (departureTime && expectedTime > departureTime) ||
+        expectedTime > currentDate
+      ) {
+        tripDetail.expectedTime = expectedTime;
+      } else {
+        throw new BadRequestException(
+          'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
+        );
+      }
+    }
+    if (status) {
+      switch (status) {
+        case TripDetailStatusEnum.SALES:
+        case TripDetailStatusEnum.ACTIVE:
+          tripDetail.status = status;
+          break;
+        case TripDetailStatusEnum.INACTIVE:
+        case TripDetailStatusEnum.SOLD_OUT:
+          tripDetail.status = status;
+          tripDetail.isActive = false;
+          break;
+        default:
+          tripDetail.status = TripDetailStatusEnum.SALES;
+          tripDetail.isActive = false;
+          break;
+      }
+    }
+    if (tripId) {
+      const trip = await this.dataSource
+        .getRepository(Trip)
+        .findOne({ where: { id: tripId } });
+      if (trip) {
+        tripDetail.trip = trip;
+      } else {
+        throw new BadRequestException('TRIP_NOT_FOUND');
+      }
+    }
+    if (vehicleId) {
+      const vehicle = await this.dataSource
+        .getRepository(Vehicle)
+        .findOne({ where: { id: vehicleId } });
+      if (vehicle) {
+        tripDetail.vehicle = vehicle;
+      } else {
+        throw new BadRequestException('VEHICLE_NOT_FOUND');
+      }
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    tripDetail.updatedBy = adminExist.id;
+
+    const saveTripDetail = await this.tripDetailService.save(tripDetail);
+    return {
+      id: saveTripDetail.id,
+      departureTime: saveTripDetail.departureTime,
+      expectedTime: saveTripDetail.expectedTime,
+      status: saveTripDetail.status,
+      createdBy: saveTripDetail.createdBy,
+      updatedBy: saveTripDetail.updatedBy,
+      createdAt: saveTripDetail.createdAt,
+      updatedAt: saveTripDetail.updatedAt,
+      isActive: saveTripDetail.isActive,
+      trip: { id: saveTripDetail.trip.id },
+      vehicle: { id: saveTripDetail.vehicle.id },
+    };
+  }
+
+  async updateTripDetailByCode(
+    dto: UpdateTripDetailDto,
+    code: string,
+    userId: string,
+  ) {
+    const { status, tripId, vehicleId } = dto;
+    let { departureTime, expectedTime } = dto;
+
+    const tripDetail = await this.tripDetailService.findOne({
+      where: { code },
     });
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
@@ -330,6 +454,26 @@ export class TripDetailService {
     return await { id: (await this.tripDetailService.save(tripDetail)).id };
   }
 
+  async deleteTripDetailByCode(code: string, userId: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId, isActive: true } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+
+    const tripDetail = await this.tripDetailService.findOne({
+      where: { code },
+    });
+    if (!tripDetail) {
+      throw new BadRequestException('TRIP_DETAIL_NOT_FOUND');
+    }
+    tripDetail.deletedAt = new Date();
+    tripDetail.updatedBy = adminExist.id;
+
+    return await { id: (await this.tripDetailService.save(tripDetail)).id };
+  }
+
   async deleteMultipleTripDetailByIds(
     userId: string,
     dto: TripDetailDeleteMultiInput,
@@ -339,6 +483,24 @@ export class TripDetailService {
 
       const list = await Promise.all(
         ids.map(async (id) => await this.deleteTripDetailById(id, userId)),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultipleTripDetailByCodes(
+    userId: string,
+    dto: TripDetailDeleteMultiInput,
+  ) {
+    try {
+      const { ids } = dto;
+
+      const list = await Promise.all(
+        ids.map(
+          async (code) => await this.deleteTripDetailByCode(code, userId),
+        ),
       );
       return list;
     } catch (err) {

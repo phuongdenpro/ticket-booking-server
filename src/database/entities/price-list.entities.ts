@@ -7,12 +7,15 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { PriceDetail } from './price-detail.entities';
+import { PriceDetail } from '.';
 
 @Entity({ name: 'price_list' })
 export class PriceList {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'name', type: 'varchar', length: 255, nullable: false })
   name: string;
@@ -43,12 +46,7 @@ export class PriceList {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({

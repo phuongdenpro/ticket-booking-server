@@ -1,74 +1,43 @@
-import { Ticket } from './ticket.entities';
 import {
   Column,
   PrimaryGeneratedColumn,
-  ManyToMany,
-  OneToOne,
   Entity,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   JoinColumn,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
-import { ApplicableTicket } from './applicable-ticket.entities';
-import { ApplicableTicketGroup } from './applicable-ticket-group.entities';
-import { PromotionLine } from './promotion-line.entities';
+import { ApplicableTicketGroup, Promotion, PromotionLine } from '.';
 
 @Entity({ name: 'promotion_detail' })
 export class PromotionDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'quantity_buy', type: 'int', default: 0 })
+  @Column({ name: 'quantity_buy', type: 'int', default: 1 })
   quantityBuy: number;
 
-  @Column({ name: 'quantity_receive', type: 'int', default: 0 })
+  @Column({ name: 'quantity_receive', type: 'int', default: 1 })
   quantityReceive: number;
 
-  @Column({ name: 'minimum_total', type: 'double', default: 0 })
-  minimumTotal: number;
-
-  @Column({ name: 'percent', type: 'double', default: 0 })
-  percent: number;
-
-  @Column({ name: 'maximum_reduction_amount', type: 'double', default: 0 })
-  maximumReductionAmount: number;
+  @Column({ name: 'total_purchase_amount', type: 'double', default: 0 })
+  totalPurchaseAmount: number;
 
   @Column({ name: 'reduction_amount', type: 'double', default: 0 })
   reductionAmount: number;
 
-  @OneToOne(
-    () => PromotionLine,
-    (promotionLine) => promotionLine.promotionDetail,
-  )
-  @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
-  promotionLine: PromotionLine;
+  @Column({ name: 'percent_reduction', type: 'double', default: 0 })
+  percentReduction: number;
 
-  @OneToMany(
-    () => ApplicableTicket,
-    (applicableTicket) => applicableTicket.promotionDetail,
-  )
-  applicableTicket?: ApplicableTicket[];
+  @Column({ name: 'maximum_reduction_amount', type: 'double', default: 0 })
+  maximumReductionAmount: number;
 
-  @ManyToMany(
-    () => ApplicableTicketGroup,
-    (applicableTicketGroup) => applicableTicketGroup.promotionDetail,
-  )
-  ApplicableTicketGroup: ApplicableTicketGroup[];
-
-  @ManyToMany(() => Ticket, (ticket) => ticket.promotionDetails)
-  tickets: Ticket[];
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -78,4 +47,22 @@ export class PromotionDetail {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relationships
+  @OneToMany(
+    () => PromotionLine,
+    (promotionLine) => promotionLine.promotionDetail,
+  )
+  @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
+  promotionLine: PromotionLine[];
+
+  @ManyToOne(() => Promotion, (promotionLine) => promotionLine.promotionDetail)
+  @JoinColumn({ name: 'promotion_id', referencedColumnName: 'id' })
+  promotion: Promotion;
+
+  @OneToMany(
+    () => ApplicableTicketGroup,
+    (applicableTicketGroup) => applicableTicketGroup.promotionDetail,
+  )
+  applicableTicketGroup: ApplicableTicketGroup[];
 }

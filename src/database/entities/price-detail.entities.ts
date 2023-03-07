@@ -6,9 +6,7 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { PriceList } from './price-list.entities';
-import { OrderDetail } from './order-detail.entities';
-import { TicketGroup } from './ticket-group.entities';
+import { PriceList, OrderDetail, TicketGroup, ApplicablePriceDetail } from '.';
 import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 
 @Entity({ name: 'price_detail' })
@@ -16,7 +14,10 @@ export class PriceDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'price', type: 'double', nullable: true, default: 0.0 })
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
+
+  @Column({ name: 'price', type: 'double', nullable: false, default: 0.0 })
   price: number;
 
   @Column({ name: 'note', type: 'text' })
@@ -28,15 +29,10 @@ export class PriceDetail {
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -58,4 +54,10 @@ export class PriceDetail {
 
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.priceDetail)
   orderDetails: OrderDetail[];
+
+  @OneToMany(
+    () => ApplicablePriceDetail,
+    (applicablePriceDetail) => applicablePriceDetail.priceDetail,
+  )
+  applicablePriceDetails: ApplicablePriceDetail[];
 }

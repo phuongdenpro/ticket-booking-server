@@ -1,20 +1,23 @@
-import { Vehicle } from './vehicle.entities';
-// import { PassengerCarCompany } from './passenger-car-company.entities';
+import { Vehicle, Trip, Province, Ticket } from '.';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-import { Trip } from './trip.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
-import { Province } from './vi-address-provide.entities';
 
 @Entity({ name: 'trip_detail' })
 export class TripDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'departure_time', type: 'timestamp', nullable: false })
   departureTime: Date;
@@ -37,11 +40,7 @@ export class TripDetail {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -69,10 +68,6 @@ export class TripDetail {
   @JoinColumn({ name: 'to_province_id', referencedColumnName: 'id' })
   toProvince: Province;
 
-  // @ManyToOne(
-  //   () => PassengerCarCompany,
-  //   (passengerCarCompany) => passengerCarCompany.tripDetails,
-  // )
-  // @JoinColumn({ name: 'passenger_car_id', referencedColumnName: 'id' })
-  // passengerCarCompany: PassengerCarCompany;
+  @OneToMany(() => Ticket, (ticket) => ticket.tripDetail)
+  tickets: Ticket[];
 }

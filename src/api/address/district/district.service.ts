@@ -31,12 +31,11 @@ export class DistrictService {
     return { dataResult };
   }
 
-  async findOneByCode(code: number) {
-    const query = this.districtRepository.createQueryBuilder('d');
-    query.where('d.code = :code', { code });
-
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneByCode(code: number, options?: any) {
+    return await this.districtRepository.findOne({
+      where: { code },
+      ...options,
+    });
   }
 
   async findByProvinceCode(provinceCode: number, pagination?: Pagination) {
