@@ -34,6 +34,29 @@ export class VehicleService {
     private dataSource: DataSource,
   ) {}
 
+  async findOneVehicleById(id: string, options?: any) {
+    return await this.vehicleService.findOne({
+      where: { id },
+      relations: ['images', 'seats'].concat(options?.relations || []),
+      select: {
+        seats: {
+          id: true,
+          name: true,
+          type: true,
+          floor: true,
+        },
+        images: {
+          id: true,
+          url: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        ...options?.select,
+      },
+      ...options,
+    });
+  }
+
   async getVehicleTypes() {
     return {
       dataResult: Object.keys(VehicleTypeEnum).map((key) => ({
@@ -130,27 +153,12 @@ export class VehicleService {
     return newVehicle;
   }
 
-  async findOneVehicleById(id: string) {
-    const query = this.vehicleService.createQueryBuilder('q');
-    query.where('q.id = :id', { id });
-
-    const dataResult = await query
-      .leftJoinAndSelect('q.seats', 's')
-      .select(['q', 's'])
-      .getOne();
-
-    if (dataResult) {
-      const queryImage = this.dataSource
-        .getRepository(ImageResource)
-        .createQueryBuilder('i');
-      queryImage.where('i.vehicle_id = :id', { id });
-      const images = await queryImage
-        .select(['i.id', 'i.url', 'i.createdAt', 'i.updatedAt'])
-        .getMany();
-      dataResult.images = images;
+  async getVehicleById(id: string) {
+    const vehicle = await this.findOneVehicleById(id);
+    if (!vehicle) {
+      throw new BadRequestException('VEHICLE_NOT_FOUND');
     }
-
-    return { dataResult };
+    return vehicle;
   }
 
   async findAllVehicle(dto: FilterVehicleDto, pagination?: Pagination) {
@@ -218,7 +226,7 @@ export class VehicleService {
       images,
     } = dto;
 
-    const vehicle = await this.vehicleService.findOne({ where: { id } });
+    const vehicle = await this.findOneVehicleById(id);
     if (!vehicle) {
       throw new BadRequestException('VEHICLE_NOT_FOUND');
     }
@@ -242,6 +250,8 @@ export class VehicleService {
     }
     if (floorNumber && (floorNumber == 1 || floorNumber == 2)) {
       vehicle.floorNumber = floorNumber;
+    } else {
+      vehicle.floorNumber = 1;
     }
     if (totalSeat) {
       vehicle.totalSeat = totalSeat;
@@ -249,23 +259,22 @@ export class VehicleService {
     vehicle.updatedBy = adminExist.id;
 
     const updateVehicle = await this.vehicleService.save(vehicle);
+    if (images && images.length > 0) {
+      const newImages = await images.map(async (image) => {
+        const newImage = await this.imageResourceService.saveImageResource(
+          image,
+          adminExist.id,
+          updateVehicle.id,
+        );
+        delete newImage.vehicle;
+        delete newImage.createdBy;
+        delete newImage.updatedBy;
+        delete newImage.deletedAt;
 
-    const newImages = await images.map(async (image) => {
-      image.createdBy = adminExist.id;
-      image.updatedBy = adminExist.id;
-      const newImage = await this.imageResourceService.saveImageResource(
-        image,
-        adminExist.id,
-        updateVehicle.id,
-      );
-      delete newImage.vehicle;
-      delete newImage.createdBy;
-      delete newImage.updatedBy;
-      delete newImage.deletedAt;
-
-      return newImage;
-    });
-    updateVehicle.images = await Promise.all(newImages);
+        return newImage;
+      });
+      updateVehicle.images = await Promise.all(newImages);
+    }
     return updateVehicle;
   }
 

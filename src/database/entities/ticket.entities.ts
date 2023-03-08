@@ -23,20 +23,20 @@ export class Ticket {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'name', type: 'varchar', length: 255, nullable: false })
-  name: string;
-
-  @Column({ name: 'description', type: 'text' })
-  description: string;
-
-  @Column({ name: 'image', type: 'text' })
-  image: string;
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'status', type: 'tinyint', default: 0 })
   status: boolean;
 
   @Column({ name: 'note', type: 'text' })
   note: string;
+
+  @Column({ name: 'start_date', type: 'timestamp', nullable: false })
+  startDate: Date;
+
+  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
+  endDate: Date;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
@@ -47,12 +47,7 @@ export class Ticket {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -64,20 +59,14 @@ export class Ticket {
   public deletedAt?: Date;
 
   // relationship
-  // @OneToMany(
-  //   () => ApplicableTicket,
-  //   (applicableTicket) => applicableTicket.ticket,
-  // )
-  // applicableTicket: ApplicableTicket[];
-
   @OneToMany(
     () => TicketGroupDetail,
     (ticketGroupDetail) => ticketGroupDetail.ticket,
   )
-  ticketGroupDetail: TicketGroupDetail[];
+  ticketGroupDetails: TicketGroupDetail[];
 
-  @OneToOne(() => TicketDetail, (ticketDetail) => ticketDetail.ticket)
-  ticketDetail: TicketDetail;
+  @OneToMany(() => TicketDetail, (ticketDetail) => ticketDetail.ticket)
+  ticketDetails: TicketDetail[];
 
   @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.ticket)
   orderDetail: OrderDetail;
@@ -89,7 +78,7 @@ export class Ticket {
   @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
   orderRefundDetail: OrderRefundDetail;
 
-  @ManyToOne(() => TripDetail, (tripDetail) => tripDetail.tickets)
+  @OneToOne(() => TripDetail, (tripDetail) => tripDetail.tickets)
   @JoinColumn({ name: 'trip_detail_id', referencedColumnName: 'id' })
   tripDetail: TripDetail;
 }

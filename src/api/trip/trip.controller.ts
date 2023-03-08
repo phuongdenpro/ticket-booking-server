@@ -39,7 +39,7 @@ export class TripController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async createNewVehicle(@Body() dto: SaveTripDto, @CurrentUser() user) {
-    return await this.tripService.saveTrip(dto, user.id);
+    return await this.tripService.createTrip(dto, user.id);
   }
 
   @Get()
@@ -60,7 +60,7 @@ export class TripController {
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
   async getTripByCode(@Param('code') code: string) {
-    return await this.tripService.findOneTripByCode(code);
+    return await this.tripService.getTripByCode(code);
   }
 
   @Patch('id/:id')

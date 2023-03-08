@@ -45,7 +45,7 @@ export class SeatController {
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
   async getSeatById(@Param('id') id: string) {
-    return await this.seatService.findOneSeatById(id);
+    return await this.seatService.getSeatById(id);
   }
 
   @Get('vehicle/:id')

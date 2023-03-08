@@ -12,7 +12,7 @@ export class TicketGroupDetail {
   @JoinColumn([{ name: 'ticket_group_id', referencedColumnName: 'id' }])
   ticketGroup: TicketGroup;
 
-  @ManyToOne(() => Ticket, (ticket) => ticket.ticketGroupDetail)
+  @ManyToOne(() => Ticket, (ticket) => ticket.ticketGroupDetails)
   @JoinColumn([{ name: 'ticket_id', referencedColumnName: 'id' }])
   ticket: Ticket;
 

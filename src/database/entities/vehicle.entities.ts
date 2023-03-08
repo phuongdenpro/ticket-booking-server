@@ -64,13 +64,6 @@ export class Vehicle {
   })
   deletedAt?: Date;
 
-  // @ManyToOne(
-  //   () => PassengerCarCompany,
-  //   (passengerCarCompany) => passengerCarCompany.vehicles,
-  // )
-  // @JoinColumn({ name: 'passenger_car_company_id', referencedColumnName: 'id' })
-  // passengerCarCompany: PassengerCarCompany;
-
   @OneToMany(() => Seat, (seat) => seat.vehicle)
   seats: Seat[];
 

@@ -1,4 +1,4 @@
-import { SortEnum } from './../../enums/sort.enum';
+import { SortEnum } from './../../enums';
 import { DataSource, Repository } from 'typeorm';
 import {
   Injectable,

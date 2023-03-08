@@ -7,9 +7,9 @@ import {
   IsString,
   Length,
 } from 'class-validator';
-import { TripDetailStatusEnum } from './../../../enums';
+import { TripDetailStatusEnum } from '../../../enums';
 
-export class SaveTripDetailDto {
+export class CreateTripDetailDto {
   @ApiProperty({ example: '' })
   @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
   @IsString({ message: 'CODE_IS_STRING' })

@@ -1,11 +1,9 @@
-import { Seat } from './seat.entities';
-import { Ticket } from './ticket.entities';
+import { Seat, Ticket } from '.';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
@@ -17,18 +15,13 @@ export class TicketDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'create_date', type: 'timestamp', nullable: false })
-  createDate: Date;
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: false,
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: false })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -40,15 +33,11 @@ export class TicketDetail {
   public deletedAt?: Date;
 
   // relationships
-  @OneToOne(() => Ticket, (ticket) => ticket.ticketDetail)
+  @ManyToOne(() => Ticket, (ticket) => ticket.ticketDetails)
   @JoinColumn({ name: 'ticket_id', referencedColumnName: 'id' })
   ticket: Ticket;
 
   @ManyToOne(() => Seat, (seat) => seat.ticketDetails)
   @JoinColumn({ name: 'seat_id', referencedColumnName: 'id' })
   seat: Seat;
-
-  // @ManyToOne(() => TicketDetail, (ticketDetail) => ticketDetail.ticket)
-  // @JoinColumn({ name: 'trip_detail_id', referencedColumnName: 'id' })
-  // tripDetail: TicketDetail;
 }

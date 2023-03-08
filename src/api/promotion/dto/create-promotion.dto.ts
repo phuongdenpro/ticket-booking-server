@@ -39,24 +39,6 @@ export class CreatePromotionDto {
   @IsOptional()
   image: string;
 
-  // @ApiProperty({ example: 1000000 })
-  // @IsNotEmpty({ message: 'BUDGET_IS_REQUIRED' })
-  // @IsNumber(
-  //   { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 3 },
-  //   { message: 'BUDGET_IS_NUMBER' },
-  // )
-  // @Min(0, { message: 'BUDGET_MIN_0' })
-  // budget: number;
-
-  // @ApiProperty({
-  //   example: PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT,
-  //   enum: PromotionTypeEnum,
-  // })
-  // @IsNotEmpty({ message: 'PROMOTION_TYPE_IS_REQUIRED' })
-  // @IsString({ message: 'PROMOTION_TYPE_IS_STRING' })
-  // @IsEnum(PromotionTypeEnum, { message: 'PROMOTION_TYPE_IS_ENUM' })
-  // type: PromotionTypeEnum;
-
   @ApiProperty({ example: '2023-03-01' })
   @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
   @IsDate({ message: 'START_DATE_IS_DATE' })
@@ -81,31 +63,4 @@ export class CreatePromotionDto {
   @IsEnum(PromotionStatusEnum, { message: 'PROMOTION_STATUS_INVALID' })
   @IsOptional()
   status: PromotionStatusEnum;
-
-  // @ApiProperty({ example: 1 })
-  // @IsNotEmpty({ message: 'MAX_QUANTITY_IS_REQUIRED' })
-  // @IsNumber(
-  //   { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-  //   { message: 'MAX_QUANTITY_IS_NUMBER' },
-  // )
-  // @Min(100, { message: 'MAX_QUANTITY_MIN_1' })
-  // maxQuantity: number;
-
-  // @ApiProperty({ example: 1 })
-  // @IsNotEmpty({ message: 'MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED' })
-  // @IsNumber(
-  //   { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-  //   { message: 'MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
-  // )
-  // @Min(1, { message: 'MAX_QUANTITY_PER_CUSTOMER_MIN_1' })
-  // maxQuantityPerCustomer: number;
-
-  // @ApiProperty({ example: 1 })
-  // @IsNotEmpty({ message: 'MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_REQUIRED' })
-  // @IsNumber(
-  //   { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-  //   { message: 'MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_NUMBER' },
-  // )
-  // @Min(1, { message: 'MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1' })
-  // maxQuantityPerCustomerPerDay: number;
 }
