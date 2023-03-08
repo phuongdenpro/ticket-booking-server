@@ -211,6 +211,9 @@ export const mappingTranslate = {
   TICKET_END_DATE_GREATER_THAN_TICKET_START_DATE:
     'Ngày vé hết hiệu lực phải lớn hơn ngày vé có hiệu lực',
   TICKET_NOT_FOUND: 'Không tìm thấy thông tin vé',
+  TICKET_DETAIL_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
+  TICKET_ID_IS_STRING: 'Id của vé phải là chuỗi ký tự',
+  TICKET_CODE_IS_STRING: 'Id của vé phải là chuỗi ký tự',
 
   // price list
   PRICE_LIST_STATUS_INVALID:

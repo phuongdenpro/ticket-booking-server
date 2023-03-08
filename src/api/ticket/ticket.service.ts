@@ -1,6 +1,6 @@
 import { Pagination } from './../../decorator';
-import { SortEnum } from './../../enums';
-import { CreateTicketDto, FilterTicketDto } from './dto';
+import { SortEnum, TicketStatusEnum } from './../../enums';
+import { CreateTicketDto, FilterTicketDto, FilterTicketDetailDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Staff, Ticket, TicketDetail } from './../../database/entities';
 import {
@@ -19,13 +19,13 @@ export class TicketService {
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
     @InjectRepository(TicketDetail)
-    private readonly ticketGroupRepository: Repository<TicketDetail>,
+    private readonly ticketDetailRepository: Repository<TicketDetail>,
     private tripDetailService: TripDetailService,
     private seatService: SeatService,
     private dataSource: DataSource,
   ) {}
 
-  private selectFieldsWithQ = [
+  private selectTicketFieldsWithQ = [
     'q.id',
     'q.code',
     'q.note',
@@ -36,6 +36,34 @@ export class TicketService {
     'q.createdAt',
     'q.updatedAt',
     't',
+  ];
+
+  private selectTicketDetailFieldsJson = {
+    ticket: {
+      id: true,
+      code: true,
+      status: true,
+      note: true,
+      startDate: true,
+      endDate: true,
+    },
+    seat: {
+      id: true,
+      name: true,
+      type: true,
+      floor: true,
+    },
+  };
+
+  private selectTicketDetailFieldsWithQ = [
+    'q.id',
+    'q.code',
+    'q.status',
+    'q.note',
+    'q.createdAt',
+    'q.updatedAt',
+    't.id',
+    't.code',
   ];
 
   // ticket service
@@ -167,7 +195,7 @@ export class TicketService {
     }
     if (endDate && endDate >= currentDate && endDate >= startDate) {
       endDate = new Date(endDate);
-      query.andWhere('q.endDate >= :endDate', { endDate });
+      query.andWhere('q.endDate <= :endDate', { endDate });
     }
     if (sort) {
       query.orderBy('q.createdAt', sort);
@@ -178,7 +206,7 @@ export class TicketService {
     const total = await query.getCount();
     const dataResult = await query
       .leftJoinAndSelect('q.ticketDetails', 't')
-      .select(this.selectFieldsWithQ)
+      .select(this.selectTicketFieldsWithQ)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -187,6 +215,38 @@ export class TicketService {
   }
 
   // ticket detail service
+  async findOneTicketDetailByCode(code: string, options?: any) {
+    return await this.ticketDetailRepository.findOne({
+      where: { code, ...options?.where },
+      relations: ['ticket', 'seat'].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options,
+    });
+  }
+
+  async findOneTicketDetailById(id: string, options?: any) {
+    return await this.ticketDetailRepository.findOne({
+      where: { id, ...options?.where },
+      relations: ['ticket', 'seat'].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options,
+    });
+  }
+
   async createTicketDetail(ticketId: string, seatId: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -201,10 +261,71 @@ export class TicketService {
     ticketDetail.ticket = ticketExist;
     ticketDetail.seat = seatExist;
     ticketDetail.code = `${ticketExist.code}-${seatExist.name}`;
-    const saveTicketDetail = await this.ticketGroupRepository.save(
+    const saveTicketDetail = await this.ticketDetailRepository.save(
       ticketDetail,
     );
     delete saveTicketDetail.deletedAt;
     return saveTicketDetail;
+  }
+
+  async getTicketDetailById(id: string) {
+    const ticketDetail = await this.findOneTicketDetailById(id, {
+      select: this.selectTicketDetailFieldsJson,
+    });
+    if (!ticketDetail) {
+      throw new BadRequestException('TICKET_DETAIL_NOT_FOUND');
+    }
+    return ticketDetail;
+  }
+
+  async getTicketDetailByCode(code: string) {
+    const ticketDetail = await this.findOneTicketDetailByCode(code, {
+      select: this.selectTicketDetailFieldsJson,
+    });
+    if (!ticketDetail) {
+      throw new BadRequestException('TICKET_DETAIL_NOT_FOUND');
+    }
+    return ticketDetail;
+  }
+
+  async findAllTicketDetail(
+    dto: FilterTicketDetailDto,
+    pagination?: Pagination,
+  ) {
+    const { keywords, status, sort, ticketCode, ticketId } = dto;
+
+    const query = this.ticketDetailRepository.createQueryBuilder('q');
+    if (keywords) {
+      query
+        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
+    }
+    if (status) {
+      query.andWhere('q.status = :status', {
+        status: status === TicketStatusEnum.NON_SALES ? 0 : 1,
+      });
+    }
+    query.leftJoinAndSelect('q.ticket', 't');
+    if (ticketCode) {
+      query.andWhere('id.code = :ticketCode', { ticketCode });
+    }
+    if (ticketId) {
+      query.andWhere('t.id = :ticketId', { ticketId });
+    }
+    if (sort) {
+      query.orderBy('q.createdAt', sort);
+    } else {
+      query.orderBy('q.createdAt', SortEnum.DESC);
+    }
+
+    const dataResult = await query
+      .select(this.selectTicketDetailFieldsWithQ)
+      .offset(pagination.skip)
+      .limit(pagination.take)
+      .getMany();
+
+    const total = await query.getCount();
+
+    return { dataResult, pagination, total };
   }
 }

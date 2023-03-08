@@ -1,4 +1,5 @@
-import { Seat, Ticket } from '.';
+import { TicketStatusEnum } from './../../enums';
+import { Seat, Ticket, OrderDetail } from '.';
 import {
   Column,
   Entity,
@@ -8,6 +9,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  OneToOne,
 } from 'typeorm';
 
 @Entity({ name: 'ticket_detail' })
@@ -18,10 +20,16 @@ export class TicketDetail {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
+  @Column({ name: 'note', type: 'text' })
+  note: string;
+
+  @Column({ name: 'status', type: 'varchar', length: 100, default: 0 })
+  status: TicketStatusEnum;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
 
-  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: false })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -40,4 +48,7 @@ export class TicketDetail {
   @ManyToOne(() => Seat, (seat) => seat.ticketDetails)
   @JoinColumn({ name: 'seat_id', referencedColumnName: 'id' })
   seat: Seat;
+
+  @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.ticketDetail)
+  orderDetail: OrderDetail;
 }

@@ -1,4 +1,4 @@
-import { FilterTicketDto } from './dto';
+import { FilterTicketDto, FilterTicketDetailDto } from './dto';
 import { GetPagination, Pagination } from './../../decorator';
 import {
   Controller,
@@ -16,6 +16,7 @@ import { ApiTags } from '@nestjs/swagger';
 export class TicketController {
   constructor(private ticketService: TicketService) {}
 
+  // ticket
   // @Post()
   // @HttpCode(HttpStatus.CREATED)
   // @Roles(RoleEnum.STAFF)
@@ -27,7 +28,7 @@ export class TicketController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  async findAll(
+  async findAllTicket(
     @Query() dto: FilterTicketDto,
     @GetPagination() pagination?: Pagination,
   ) {
@@ -36,13 +37,35 @@ export class TicketController {
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
-  async getTripById(@Param('id') id: string) {
+  async getTicketById(@Param('id') id: string) {
     return await this.ticketService.getTicketById(id);
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
-  async getTripByCode(@Param('code') code: string) {
+  async getTicketByCode(@Param('code') code: string) {
     return await this.ticketService.getTicketByCode(code);
+  }
+
+  // ticket detail
+  @Get('ticket-detail')
+  @HttpCode(HttpStatus.OK)
+  async findAllTicketDetail(
+    @Query() dto: FilterTicketDetailDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.ticketService.findAllTicketDetail(dto, pagination);
+  }
+
+  @Get('ticket-detail/id/:id')
+  @HttpCode(HttpStatus.OK)
+  async getTicketDetailById(@Param('id') id: string) {
+    return await this.ticketService.getTicketDetailById(id);
+  }
+
+  @Get('ticket-detail/code/:code')
+  @HttpCode(HttpStatus.OK)
+  async getTicketDetailByCode(@Param('code') code: string) {
+    return await this.ticketService.getTicketDetailByCode(code);
   }
 }

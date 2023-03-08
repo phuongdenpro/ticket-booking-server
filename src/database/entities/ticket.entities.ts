@@ -12,7 +12,6 @@ import {
 } from 'typeorm';
 import {
   TicketDetail,
-  OrderDetail,
   TicketGroupDetail,
   OrderRefundDetail,
   TripDetail,
@@ -67,9 +66,6 @@ export class Ticket {
 
   @OneToMany(() => TicketDetail, (ticketDetail) => ticketDetail.ticket)
   ticketDetails: TicketDetail[];
-
-  @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.ticket)
-  orderDetail: OrderDetail;
 
   @ManyToOne(
     () => OrderRefundDetail,

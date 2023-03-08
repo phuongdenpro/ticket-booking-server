@@ -1,5 +1,3 @@
-import { PriceDetail } from './price-detail.entities';
-import { Order } from './order.entities';
 import {
   Column,
   Entity,
@@ -7,11 +5,17 @@ import {
   ManyToOne,
   JoinColumn,
   OneToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-import { Ticket } from './ticket.entities';
-import { OrderRefundDetail } from './order-refund-detail.entities';
-import { PromotionHistory } from './promotion-history.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import {
+  Order,
+  PriceDetail,
+  TicketDetail,
+  OrderRefundDetail,
+  PromotionHistory,
+} from '.';
 
 @Entity({ name: 'order_detail' })
 export class OrderDetail {
@@ -33,6 +37,20 @@ export class OrderDetail {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  public createdAt?: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
+  public updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  public deletedAt?: Date;
+
   @ManyToOne(() => Order, (order) => order.orderDetails)
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   order: Order;
@@ -41,9 +59,9 @@ export class OrderDetail {
   @JoinColumn({ name: 'price_id', referencedColumnName: 'id' })
   priceDetail: PriceDetail;
 
-  @OneToOne(() => Ticket, (ticket) => ticket.orderDetail)
+  @OneToOne(() => TicketDetail, (ticketDetail) => ticketDetail.orderDetail)
   @JoinColumn({ name: 'ticket_id', referencedColumnName: 'id' })
-  ticket: Ticket;
+  ticketDetail: TicketDetail;
 
   @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.orderRefundDetail)
   orderRefundDetail: OrderRefundDetail;
@@ -59,23 +77,4 @@ export class OrderDetail {
     (promotionHistory) => promotionHistory.receiveOrderDetail,
   )
   receivePromotionHistory: PromotionHistory;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  public createdAt?: Date;
-
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public updatedAt?: Date;
-
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
 }
