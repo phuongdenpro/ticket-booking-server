@@ -12,6 +12,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -19,7 +20,6 @@ import {
 import { RoleEnum } from './../../enums';
 import { JwtAuthGuard } from './../../auth/guards';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { Patch } from '@nestjs/common/decorators';
 import { VehicleService } from './vehicle.service';
 import {
   FilterVehicleDto,
@@ -45,7 +45,7 @@ export class VehicleController {
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
   async getVehicleById(@Param('id') id: string) {
-    return await this.vehicleService.findOneVehicleById(id);
+    return await this.vehicleService.getVehicleById(id);
   }
 
   @Get('/vehicle-type')

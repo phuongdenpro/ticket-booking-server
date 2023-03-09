@@ -23,7 +23,7 @@ export class TripService {
     private dataSource: DataSource,
   ) {}
 
-  private tripSelect = [
+  private tripSelectFieldsWithQ = [
     'q.id',
     'q.name',
     'q.note',
@@ -40,7 +40,46 @@ export class TripService {
     'to.name',
   ];
 
-  async saveTrip(dto: SaveTripDto, userId: string) {
+  private tripSelectFields = [
+    'id',
+    'name',
+    'note',
+    'startDate',
+    'endDate',
+    'createdBy',
+    'updatedBy',
+    'isActive',
+    'createdAt',
+    'updatedAt',
+  ];
+
+  async findOneTripById(id: string, options?: any) {
+    const trip = await this.tripRepository.findOne({
+      where: { id },
+      relations: ['fromStation', 'toStation'],
+      select: {
+        fromStation: { id: true, name: true, code: true },
+        toStation: { id: true, name: true, code: true },
+      },
+      ...options,
+    });
+
+    return trip;
+  }
+
+  async findOneTripByCode(code: string, options?: any) {
+    return await this.tripRepository.findOne({
+      where: { code },
+      relations: ['fromStation', 'toStation'],
+      select: {
+        fromStation: { id: true, name: true, code: true },
+        toStation: { id: true, name: true, code: true },
+      },
+      ...options,
+    });
+  }
+
+  async createTrip(dto: SaveTripDto, userId: string) {
     const {
       code,
       name,
@@ -167,7 +206,7 @@ export class TripService {
       .andWhere('q.isActive = :isActive', { isActive: true })
       .leftJoinAndSelect('q.fromStation', 'fs')
       .leftJoinAndSelect('q.toStation', 'to')
-      .select(this.tripSelect)
+      .select(this.tripSelectFieldsWithQ)
       .orderBy('q.createdAt', SortEnum.ASC)
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -176,32 +215,20 @@ export class TripService {
     return { dataResult, pagination, total };
   }
 
-  async findOneTripById(id: string) {
-    const query = this.tripRepository.createQueryBuilder('q');
-    query.where('q.id = :id', { id });
-
-    const dataResult = await query
-      .andWhere('q.isActive = :isActive', { isActive: true })
-      .leftJoinAndSelect('q.fromStation', 'fs')
-      .leftJoinAndSelect('q.toStation', 'to')
-      .select(this.tripSelect)
-      .getOne();
-
-    return { dataResult };
+  async getTripById(id: string) {
+    const trip = await this.findOneTripById(id);
+    if (!trip) {
+      throw new BadRequestException('TRIP_NOT_FOUND');
+    }
+    return trip;
   }
 
-  async findOneTripByCode(code: string) {
-    const query = this.tripRepository.createQueryBuilder('q');
-    query.where('q.code = :code', { code });
-
-    const dataResult = await query
-      .andWhere('q.isActive = :isActive', { isActive: true })
-      .leftJoinAndSelect('q.fromStation', 'fs')
-      .leftJoinAndSelect('q.toStation', 'to')
-      .select(this.tripSelect)
-      .getOne();
-
-    return { dataResult };
+  async getTripByCode(code: string) {
+    const trip = await this.findOneTripByCode(code);
+    if (!trip) {
+      throw new BadRequestException('TRIP_NOT_FOUND');
+    }
+    return trip;
   }
 
   async updateTripById(id: string, dto: UpdateTripDto, userId: string) {

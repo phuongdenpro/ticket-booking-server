@@ -23,7 +23,7 @@ import { RoleEnum } from './../../enums';
 import { TripDetailService } from './trip-detail.service';
 import {
   FilterTripDetailDto,
-  SaveTripDetailDto,
+  CreateTripDetailDto,
   TripDetailDeleteMultiInput,
   UpdateTripDetailDto,
 } from './dto';
@@ -38,8 +38,8 @@ export class TripDetailController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createTripDetail(@Body() dto: SaveTripDetailDto, @CurrentUser() user) {
-    return await this.tripDetailService.saveTripDetail(dto, user.id);
+  async createTripDetail(@Body() dto: CreateTripDetailDto, @CurrentUser() user) {
+    return await this.tripDetailService.createTripDetail(dto, user.id);
   }
 
   @Get()

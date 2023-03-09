@@ -8,7 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Staff, Trip, TripDetail, Vehicle } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import {
-  SaveTripDetailDto,
+  CreateTripDetailDto,
   TripDetailDeleteMultiInput,
   UpdateTripDetailDto,
   FilterTripDetailDto,
@@ -35,60 +35,91 @@ export class TripDetailService {
     'v.totalSeat',
   ];
 
-  async saveTripDetail(dto: SaveTripDetailDto, userId: string) {
+  async findTripDetailById(id: string, options?: any) {
+    return await this.tripDetailService.findOne({
+      where: { id, ...options?.where },
+      relations: ['vehicle'].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        vehicle: {
+          id: true,
+          name: true,
+          description: true,
+          type: true,
+          licensePlate: true,
+          floorNumber: true,
+          totalSeat: true,
+        },
+        ...options?.select,
+      },
+      ...options,
+    });
+  }
+
+  async findTripDetailByCode(code: string, options?: any) {
+    return await this.tripDetailService.findOne({
+      where: { code, ...options?.where },
+      relations: ['vehicle'].concat(options?.relations || []),
+      select: {
+        vehicle: {
+          id: true,
+          name: true,
+          description: true,
+          type: true,
+          licensePlate: true,
+          floorNumber: true,
+          totalSeat: true,
+        },
+        ...options.select,
+      },
+      ...options,
+    });
+  }
+
+  async createTripDetail(dto: CreateTripDetailDto, userId: string) {
     const { code, departureTime, expectedTime, status, tripId, vehicleId } =
       dto;
-    const tripDetailExist = await this.tripDetailService.findOne({
-      where: { code },
-    });
+    const tripDetailExist = await this.findTripDetailByCode(code);
     if (tripDetailExist) {
       throw new BadRequestException('TRIP_DETAIL_CODE_EXIST');
     }
     const tripDetail = new TripDetail();
     tripDetail.code = code;
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
-
-    if (departureTime) {
-      if (departureTime >= currentDate) {
-        tripDetail.departureTime = departureTime;
-      } else {
-        throw new BadRequestException(
-          'DEPARTURE_DATE_GREATER_THAN_CURRENT_DATE',
-        );
-      }
-    } else {
+    if (!departureTime) {
       throw new BadRequestException('DEPARTURE_DATE_REQUIRED');
     }
-    if (expectedTime) {
-      if (expectedTime >= departureTime) {
-        tripDetail.expectedTime = expectedTime;
-      } else {
-        throw new BadRequestException(
-          'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
-        );
-      }
-    } else {
+    if (departureTime <= currentDate) {
+      throw new BadRequestException('DEPARTURE_DATE_GREATER_THAN_CURRENT_DATE');
+    }
+    tripDetail.departureTime = departureTime;
+    if (!expectedTime) {
       throw new BadRequestException('EXPECTED_DATE_REQUIRED');
     }
-    if (status) {
-      switch (status) {
-        case TripDetailStatusEnum.SALES:
-        case TripDetailStatusEnum.ACTIVE:
-          tripDetail.status = status;
-          tripDetail.isActive = true;
-          break;
-        case TripDetailStatusEnum.INACTIVE:
-        case TripDetailStatusEnum.SOLD_OUT:
-          tripDetail.status = status;
-          tripDetail.isActive = false;
-          break;
-        default:
-        case TripDetailStatusEnum.SOLD_OUT:
-          tripDetail.isActive = false;
-          break;
-      }
-    } else {
+    if (expectedTime <= departureTime) {
+      throw new BadRequestException(
+        'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
+      );
+    }
+    tripDetail.expectedTime = expectedTime;
+    if (!status) {
       throw new BadRequestException('TRIP_DETAIL_STATUS_REQUIRED');
+    }
+    switch (status) {
+      case TripDetailStatusEnum.SALES:
+      case TripDetailStatusEnum.ACTIVE:
+        tripDetail.status = status;
+        tripDetail.isActive = true;
+        break;
+      case TripDetailStatusEnum.INACTIVE:
+      case TripDetailStatusEnum.SOLD_OUT:
+        tripDetail.status = status;
+        tripDetail.isActive = false;
+        break;
+      default:
+        tripDetail.status = TripDetailStatusEnum.INACTIVE;
+        tripDetail.isActive = false;
+        break;
     }
     if (tripId) {
       const trip = await this.dataSource.getRepository(Trip).findOne({
@@ -111,19 +142,16 @@ export class TripDetailService {
     } else {
       throw new NotFoundException('TRIP_ID_REQUIRED');
     }
-    if (vehicleId) {
-      const vehicle = await this.dataSource
-        .getRepository(Vehicle)
-        .findOne({ where: { id: vehicleId } });
-      if (vehicle) {
-        tripDetail.vehicle = vehicle;
-      } else {
-        throw new BadRequestException('VEHICLE_NOT_FOUND');
-      }
-    } else {
+    if (!vehicleId) {
       throw new NotFoundException('VEHICLE_ID_REQUIRED');
     }
-    tripDetail.isActive = true;
+    const vehicle = await this.dataSource
+      .getRepository(Vehicle)
+      .findOne({ where: { id: vehicleId } });
+    if (!vehicle) {
+      throw new BadRequestException('VEHICLE_NOT_FOUND');
+    }
+    tripDetail.vehicle = vehicle;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -207,34 +235,18 @@ export class TripDetailService {
   }
 
   async getTripDetailById(id: string) {
-    const query = this.tripDetailService.createQueryBuilder('q');
-    query.where('q.id = :id', { id });
-
-    const tripDetail = await query
-      .andWhere('q.isActive = :isActive', { isActive: true })
-      .leftJoinAndSelect('q.vehicle', 'v')
-      .select(this.tripDetailSelect)
-      .getOne();
+    const tripDetail = await this.findTripDetailById(id);
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
     }
-
     return tripDetail;
   }
 
   async getTripDetailByCode(code: string) {
-    const query = this.tripDetailService.createQueryBuilder('q');
-    query.where('q.code = :code', { code });
-
-    const tripDetail = await query
-      .andWhere('q.isActive = :isActive', { isActive: true })
-      .leftJoinAndSelect('q.vehicle', 'v')
-      .select(this.tripDetailSelect)
-      .getOne();
+    const tripDetail = await this.findTripDetailByCode(code);
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
     }
-
     return tripDetail;
   }
 

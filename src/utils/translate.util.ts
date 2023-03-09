@@ -140,7 +140,7 @@ export const mappingTranslate = {
   ADDRESS_BETWEEN_1_255_CHARACTERS: 'Địa chỉ phải từ 1 đến 255 ký tự',
 
   // seat
-  SEAT_NOT_FOUND: 'Không tìm thấy ghế',
+  SEAT_NOT_FOUND: 'Không tìm thấy thông tin ghế',
   SEAT_TYPE_IS_STRING: 'Loại ghế phải là chuỗi ký tự',
   SEAT_TYPE_IS_ENUM: 'Loại ghế không hợp lệ',
   FLOOR_IS_NUMBER: 'Số tầng phải là số',
@@ -184,6 +184,9 @@ export const mappingTranslate = {
   TRIP_DETAIL_STATUS_REQUIRED: 'Trang thái của chi tiết chuyến đi không hợp lệ',
   TRIP_DETAIL_NOT_FOUND: 'Không tìm thấy thông tin chuyến đi',
   TRIP_DETAIL_CODE_EXIST: 'Mã chuyến đi đã tồn tại',
+  TRIP_DETAIL_ID_REQUIRED: 'Id của chuyến xe là không được để trống',
+  TRIP_DETAIL_ID_IS_STRING: 'Id của chuyến xe phải là chuỗi ký tự',
+  TRIP_DETAIL_ID_IS_36_CHARACTERS: 'Id của chuyến xe phải có 36 ký tự',
 
   // vehicle
   VEHICLE_NOT_FOUND: 'Không tìm thấy xe',
@@ -198,6 +201,19 @@ export const mappingTranslate = {
   TICKET_GROUP_ID_IS_REQUIRED: 'Id của nhóm vé là không được để trống',
   TICKET_GROUP_ID_IS_STRING: 'Id của nhóm vé phải là chuỗi ký tự',
   TICKET_GROUP_ID_IS_36_CHARACTERS: 'Id của nhóm vé phải là 36 ký tự',
+
+  // ticket
+  TICKET_CODE_EXISTED: 'Mã vé đã tồn tại',
+  TICKET_START_DATE_IS_REQUIRED: 'Ngày vé có hiệu lực không được để trống',
+  TICKET_START_DATE_GREATER_THAN_CURRENT_DATE:
+    'Ngày vé có hiệu lực phải lớn hơn hoặc bằng ngày hiện tại',
+  TICKET_END_DATE_IS_REQUIRED: 'Ngày vé hết hiệu lực không được để trống',
+  TICKET_END_DATE_GREATER_THAN_TICKET_START_DATE:
+    'Ngày vé hết hiệu lực phải lớn hơn ngày vé có hiệu lực',
+  TICKET_NOT_FOUND: 'Không tìm thấy thông tin vé',
+  TICKET_DETAIL_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
+  TICKET_ID_IS_STRING: 'Id của vé phải là chuỗi ký tự',
+  TICKET_CODE_IS_STRING: 'Id của vé phải là chuỗi ký tự',
 
   // price list
   PRICE_LIST_STATUS_INVALID:

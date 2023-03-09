@@ -24,6 +24,22 @@ export class SeatService {
     private dataSource: DataSource,
   ) {}
 
+  async findOneSeatById(id: string, options?: any) {
+    return await this.seatRepository.findOne({
+      where: { id, ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options,
+    });
+  }
+
   async saveSeat(dto: SaveSeatDto, userId: string) {
     const { name, type, floor, vehicleId } = dto;
     const vehicle = await this.dataSource
@@ -133,24 +149,12 @@ export class SeatService {
     return { dataResult, pagination, total };
   }
 
-  async findOneSeatById(id: string) {
-    const query = this.seatRepository.createQueryBuilder('q');
-    query.where('q.id = :id', { id });
-
-    const dataResult = await query
-      .select([
-        'q.id',
-        'q.name',
-        'q.type',
-        'q.floor',
-        'q.createdBy',
-        'q.updatedBy',
-        'q.createdAt',
-        'q.updatedAt',
-      ])
-      .getOne();
-
-    return { dataResult };
+  async getSeatById(id: string) {
+    const seat = await this.findOneSeatById(id);
+    if (!seat) {
+      throw new NotFoundException('SEAT_NOT_FOUND');
+    }
+    return seat;
   }
 
   async findAllSeatByVehicleId(vehicleId: string, pagination?: Pagination) {
