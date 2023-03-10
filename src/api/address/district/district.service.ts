@@ -1,3 +1,4 @@
+import { SortEnum } from './../../../enums';
 import {
   BadRequestException,
   Injectable,
@@ -23,17 +24,34 @@ export class DistrictService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string) {
-    const query = this.districtRepository.createQueryBuilder('d');
-    query.where('d.id = :id', { id });
-
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneById(id: string, options?: any) {
+    return await this.districtRepository.findOne({
+      where: { id, ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options,
+    });
   }
 
   async findOneByCode(code: number, options?: any) {
     return await this.districtRepository.findOne({
-      where: { code },
+      where: { code, ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
       ...options,
     });
   }
@@ -82,12 +100,16 @@ export class DistrictService {
     return { dataResult, pagination, total };
   }
 
-  async save(dto: SaveDistrictDto, userId: string) {
+  async createDistrict(dto: SaveDistrictDto, userId: string) {
     const province = await this.dataSource.getRepository(Province).findOne({
       where: { code: dto.provinceCode },
     });
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
+    }
+    const districtExist = await this.findOneByCode(dto.code);
+    if (districtExist) {
+      throw new BadRequestException('DISTRICT_CODE_EXISTED');
     }
 
     const district = new District();
@@ -120,9 +142,6 @@ export class DistrictService {
     }
     if (dto.type) {
       district.type = dto.type;
-    }
-    if (dto.code) {
-      district.code = dto.code;
     }
     if (dto.codename) {
       district.codename = dto.codename;
@@ -161,9 +180,6 @@ export class DistrictService {
     }
     if (dto.type) {
       district.type = dto.type;
-    }
-    if (dto.code) {
-      district.code = dto.code;
     }
     if (dto.codename) {
       district.codename = dto.codename;

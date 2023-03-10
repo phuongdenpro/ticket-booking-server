@@ -11,6 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
+import { CreateBookingDto } from './dto';
 
 @Controller('booking')
 @ApiTags('Booking')
@@ -19,10 +20,10 @@ export class BookingController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.STAFF)
+  @Roles(RoleEnum.CUSTOMER, RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async booking(@Body() dto, @CurrentUser() user) {
-    return await this.bookingService;
+  async booking(@Body() dto: CreateBookingDto, @CurrentUser() user) {
+    return { message: 'coming soon' };
   }
 }

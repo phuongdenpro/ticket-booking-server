@@ -119,6 +119,7 @@ export const mappingTranslate = {
   DISTRICT_TYPE_REQUIRED: 'Loại quận/huyện không được để trống',
   DISTRICT_CODE_ID_NUMBER: 'Mã quận/huyện phải là số',
   DISTRICT_CODE_ID_REQUIRED: 'Mã quận/huyện không được để trống',
+  DISTRICT_CODE_EXISTED: 'Mã quận/huyện đã tồn tại',
 
   // ward
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
@@ -146,6 +147,10 @@ export const mappingTranslate = {
   FLOOR_IS_NUMBER: 'Số tầng phải là số',
   SEAT_CODE_ALREADY_EXIST: 'Mã ghế này đã tồn tại',
   SEAT_FLOOR_MIN_MAX: 'Số tầng chỉ nhận 1 trong 2 giá trị: 1, 2',
+  SEAT_ID_IS_STRING: 'Mã ghế phải là chuỗi ký tự',
+  SEAT_ID_IS_REQUIRED: 'Mã ghế không được để trống',
+  SEAT_ID_IS_36_CHARACTERS: 'Mã ghế phải có 36 ký tự',
+  SEAT_ID_IS_ARRAY: 'Mã ghế phải là mảng',
 
   // trip
   TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
@@ -227,8 +232,10 @@ export const mappingTranslate = {
   TICKET_NOT_FOUND: 'Không tìm thấy thông tin vé',
   TICKET_DETAIL_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
   TICKET_ID_IS_STRING: 'Id của vé phải là chuỗi ký tự',
+  TICKET_ID_IS_REQUIRED: 'Id của vé là không được để trống',
   TICKET_CODE_IS_STRING: 'Id của vé phải là chuỗi ký tự',
   TICKET_STATUS_IS_STRING: 'trạng thái của vé phải là chuỗi',
+  TICKET_ID_IS_36_CHARACTERS: 'Id của vé phải là 36 ký tự',
 
   // price list
   PRICE_LIST_STATUS_INVALID:
