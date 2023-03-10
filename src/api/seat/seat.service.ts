@@ -10,7 +10,7 @@ import { Seat, Staff, Vehicle } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import {
   FilterSeatDto,
-  SaveSeatDto,
+  CreateSeatDto,
   SeatDeleteMultiInput,
   UpdateSeatDto,
 } from './dto';
@@ -40,8 +40,24 @@ export class SeatService {
     });
   }
 
-  async saveSeat(dto: SaveSeatDto, userId: string) {
-    const { name, type, floor, vehicleId } = dto;
+  async findOneSeatByCode(code: string, options?: any) {
+    return await this.seatRepository.findOne({
+      where: { code, ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options,
+    });
+  }
+
+  async createSeat(dto: CreateSeatDto, userId: string) {
+    const { code, name, type, floor, vehicleId } = dto;
     const vehicle = await this.dataSource
       .getRepository(Vehicle)
       .findOne({ where: { id: vehicleId } });
@@ -55,6 +71,12 @@ export class SeatService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
+    const seatExist = this.getSeatByCode(code, {
+      withDeleted: true,
+    });
+    if (!seatExist) {
+      throw new BadRequestException('SEAT_CODE_ALREADY_EXIST');
+    }
     const seat = new Seat();
     seat.name = name;
     if (!seat) {
@@ -77,11 +99,13 @@ export class SeatService {
   }
 
   async searchSeat(dto: FilterSeatDto, pagination?: Pagination) {
-    const { name, type, floor } = dto;
+    const { keywords, type, floor } = dto;
     const query = this.seatRepository.createQueryBuilder('q');
 
-    if (name) {
-      query.andWhere('q.name like :name', { name: `%${name}%` });
+    if (keywords) {
+      query
+        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` });
     }
     if (type) {
       query.andWhere('q.type = :type', { type });
@@ -115,12 +139,14 @@ export class SeatService {
     vehicleId: string,
     pagination?: Pagination,
   ) {
-    const { name, type, floor } = dto;
+    const { keywords, type, floor } = dto;
     const query = this.seatRepository.createQueryBuilder('q');
     query.where('q.vehicle = :vehicleId', { vehicleId });
 
-    if (name) {
-      query.andWhere('q.name like :name', { name: `%${name}%` });
+    if (keywords) {
+      query
+        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` });
     }
     if (type) {
       query.andWhere('q.type = :type', { type });
@@ -149,8 +175,16 @@ export class SeatService {
     return { dataResult, pagination, total };
   }
 
-  async getSeatById(id: string) {
-    const seat = await this.findOneSeatById(id);
+  async getSeatById(id: string, options?: any) {
+    const seat = await this.findOneSeatById(id, options);
+    if (!seat) {
+      throw new NotFoundException('SEAT_NOT_FOUND');
+    }
+    return seat;
+  }
+
+  async getSeatByCode(code: string, options?: any) {
+    const seat = await this.findOneSeatByCode(code, options);
     if (!seat) {
       throw new NotFoundException('SEAT_NOT_FOUND');
     }

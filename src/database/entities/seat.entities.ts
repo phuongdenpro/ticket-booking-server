@@ -1,6 +1,5 @@
-import { SeatTypeEnum } from './../../enums/seat-type.enum';
-import { TicketDetail } from './ticket-detail.entities';
-import { Vehicle } from './vehicle.entities';
+import { SeatTypeEnum } from './../../enums';
+import { TicketDetail, Vehicle } from '.';
 import {
   Entity,
   Column,
@@ -17,6 +16,9 @@ import {
 export class Seat {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'name', type: 'varchar', length: 255, nullable: true })
   name: string;
@@ -36,11 +38,7 @@ export class Seat {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   updatedAt?: Date;
 
   @DeleteDateColumn({

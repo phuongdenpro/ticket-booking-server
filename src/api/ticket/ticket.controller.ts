@@ -1,15 +1,25 @@
-import { FilterTicketDto, FilterTicketDetailDto } from './dto';
-import { GetPagination, Pagination } from './../../decorator';
+import { JwtAuthGuard } from './../../auth/guards';
+import { RoleEnum } from './../../enums';
+import { FilterTicketDto, UpdateTicketDto, FilterTicketDetailDto } from './dto';
 import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
+import {
+  Body,
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { TicketService } from './ticket.service';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
 @Controller('ticket')
 @ApiTags('Ticket')
@@ -45,6 +55,32 @@ export class TicketController {
   @HttpCode(HttpStatus.OK)
   async getTicketByCode(@Param('code') code: string) {
     return await this.ticketService.getTicketByCode(code);
+  }
+
+  @Patch('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateTripDetailById(
+    @CurrentUser() user,
+    @Param('id') id: string,
+    @Body() dto: UpdateTicketDto,
+  ) {
+    return await this.ticketService.updateTicketById(dto, id, user.id);
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateTripDetailByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdateTicketDto,
+  ) {
+    return await this.ticketService.updateTicketByCode(dto, code, user.id);
   }
 
   // ticket detail

@@ -1,4 +1,3 @@
-import { TripDetail } from './trip-detail.entities';
 import {
   Column,
   Entity,
@@ -8,13 +7,15 @@ import {
   DeleteDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Seat } from './seat.entities';
-import { ImageResource } from './image-resource.entities';
+import { TripDetail, Seat, ImageResource } from '.';
 
 @Entity({ name: 'vehicle' })
 export class Vehicle {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'name', type: 'varchar', length: 100, nullable: true })
   name: string;
@@ -64,6 +65,7 @@ export class Vehicle {
   })
   deletedAt?: Date;
 
+  // relationship
   @OneToMany(() => Seat, (seat) => seat.vehicle)
   seats: Seat[];
 

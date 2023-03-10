@@ -144,6 +144,8 @@ export const mappingTranslate = {
   SEAT_TYPE_IS_STRING: 'Loại ghế phải là chuỗi ký tự',
   SEAT_TYPE_IS_ENUM: 'Loại ghế không hợp lệ',
   FLOOR_IS_NUMBER: 'Số tầng phải là số',
+  SEAT_CODE_ALREADY_EXIST: 'Mã ghế này đã tồn tại',
+  SEAT_FLOOR_MIN_MAX: 'Số tầng chỉ nhận 1 trong 2 giá trị: 1, 2',
 
   // trip
   TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
@@ -194,7 +196,19 @@ export const mappingTranslate = {
   VEHICLE_ID_IS_STRING: 'Id của xe phải là chuỗi ký tự',
   VEHICLE_ID_INVALID: 'Id của xe không hợp lệ',
   LICENSE_PLATE_INVALID: 'Biển số xe không hợp lệ',
+  LICENSE_PLATE_REQUIRED: 'Biển số xe không hợp lệ',
+  LICENSE_PLATE_STRING: 'Biển số xe không hợp lệ',
+  LICENSE_PLATE_BETWEEN_1_20_CHARACTERS: 'Biển số xe phải có 1 đến 20 ký tự',
   FLOOR_NUMBER_INVALID: 'Số tầng không hợp lệ',
+  VEHICLE_TYPE_STRING: 'Loại xe phải là chuỗi',
+  VEHICLE_TYPE_IS_ENUM:
+    'Loại xe phải thuộc 1 trong cái loại sau: "xe limousine", "xe giường nằm", "xe ghế ngồi", "khác"',
+  VEHICLE_FLOOR_NUMBER_IS_NUMBER: 'Số tầng của xe phải là số',
+  VEHICLE_FLOOR_NUMBER_MIN_MAX: 'Số tầng của xe chỉ nhận 2 giá trị: 1, 2',
+  VEHICLE_TOTAL_SEAT_IS_REQUIRE: 'Tổng số ghế của xe không được để trống',
+  VEHICLE_TOTAL_SEAT_IS_NUMBER: 'Tổng số ghế của xe phải là số',
+  VEHICLE_TOTAL_SEAT_IS_ENUM:
+    'Tổng số ghế của xe phải thuộc 1 trong các giá trị sau: 34, 44, 28',
 
   // ticket group
   TICKET_GROUP_NOT_FOUND: 'Không tìm thấy nhóm vé',
@@ -214,6 +228,7 @@ export const mappingTranslate = {
   TICKET_DETAIL_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
   TICKET_ID_IS_STRING: 'Id của vé phải là chuỗi ký tự',
   TICKET_CODE_IS_STRING: 'Id của vé phải là chuỗi ký tự',
+  TICKET_STATUS_IS_STRING: 'trạng thái của vé phải là chuỗi',
 
   // price list
   PRICE_LIST_STATUS_INVALID:

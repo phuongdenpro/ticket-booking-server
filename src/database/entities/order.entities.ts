@@ -5,17 +5,12 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
-} from 'typeorm';
-import { Customer } from './customer.entities';
-import { OrderDetail } from './order-detail.entities';
-import { OrderRefund } from './order-refund.entities';
-import { PromotionHistory } from './promotion-history.entities';
-import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Customer, OrderDetail, OrderRefund, PromotionHistory } from '.';
 
 @Entity({ name: 'order' })
 export class Order {
@@ -34,6 +29,21 @@ export class Order {
   @Column({ name: 'final_total', type: 'double', nullable: true, default: 0.0 })
   finalTotal: number;
 
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  public createdAt?: Date;
+
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
+  public updatedAt?: Date;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'timestamp',
+    nullable: true,
+    select: false,
+  })
+  public deletedAt?: Date;
+
+  // relationship
   @ManyToOne(() => Customer, (customer) => customer.orders)
   @JoinColumn({ name: 'customer_id', referencedColumnName: 'id' })
   customer: Customer;
@@ -49,23 +59,4 @@ export class Order {
     (promotionHistory) => promotionHistory.order,
   )
   promotionHistory: PromotionHistory;
-
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
-  public createdAt?: Date;
-
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public updatedAt?: Date;
-
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
 }

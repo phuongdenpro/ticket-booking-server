@@ -25,7 +25,7 @@ export class Ticket {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
-  @Column({ name: 'status', type: 'tinyint', default: 0 })
+  @Column({ name: 'status', type: 'tinyint', default: 1 })
   status: boolean;
 
   @Column({ name: 'note', type: 'text' })

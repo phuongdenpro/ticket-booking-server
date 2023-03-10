@@ -23,7 +23,7 @@ import {
 import { JwtAuthGuard } from './../../auth/guards';
 import {
   FilterSeatDto,
-  SaveSeatDto,
+  CreateSeatDto,
   SeatDeleteMultiInput,
   UpdateSeatDto,
 } from './dto';
@@ -38,8 +38,8 @@ export class SeatController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createSeat(@Body() dto: SaveSeatDto, @CurrentUser() user) {
-    return await this.seatService.saveSeat(dto, user.id);
+  async createSeat(@Body() dto: CreateSeatDto, @CurrentUser() user) {
+    return await this.seatService.createSeat(dto, user.id);
   }
 
   @Get('id/:id')
