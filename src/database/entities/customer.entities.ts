@@ -1,14 +1,12 @@
-import { GenderEnum } from './../../enums/gender.enum';
+import { GenderEnum } from './../../enums';
 import { Entity, OneToMany, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Order } from './order.entities';
-import { Ward } from './vi-address-ward.entities';
+import { Order, Ward, CustomerGroupDetail } from '.';
 import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { CustomerGroupDetail } from './customer-group-detail.entities';
 
 @Entity({ name: 'customer' })
 export class Customer {
@@ -65,11 +63,7 @@ export class Customer {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', select: false })
   public updatedAt?: Date;
 
   @DeleteDateColumn({

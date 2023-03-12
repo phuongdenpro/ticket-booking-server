@@ -23,7 +23,7 @@ export class UserService {
   ) {}
 
   async profile(id: string) {
-    const userExist = this.customerService.findCustomerById(id);
+    const userExist = this.customerService.getCustomerById(id);
     if (!userExist) {
       throw new UnauthorizedException('USER_NOT_FOUND');
     }
@@ -31,7 +31,7 @@ export class UserService {
   }
 
   async updatePassword(id: string, dto: UserUpdatePasswordDto) {
-    const userExist = await this.customerService.findCustomerById(id);
+    const userExist = await this.customerService.getCustomerById(id);
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
 
     const isPasswordMatches = await this.authService.comparePassword(

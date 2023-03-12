@@ -75,7 +75,7 @@ export class TicketService {
   ];
 
   // other
-  async getTripDetailById(id: string) {
+  private async getTripDetailById(id: string) {
     return await this.dataSource.getRepository(TripDetail).findOne({
       where: { id },
       relations: ['vehicle', 'vehicle.seats'],
@@ -351,6 +351,35 @@ export class TicketService {
   async findOneTicketDetailById(id: string, options?: any) {
     return await this.ticketDetailRepository.findOne({
       where: { id, ...options?.where },
+      relations: ['ticket', 'seat'].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options,
+    });
+  }
+
+  async findOneTicketDetailBy(options: any) {
+    // options = {
+    //   where: {
+    //     seat: {
+    //       id: '7b1e022a-96da-47c5-85b6-81858fd0f601',
+    //       vehicle: {
+    //         tripDetails: {
+    //           id: 'b87985ac-3b08-46bf-8e6f-02902dcaedaf',
+    //         },
+    //       },
+    //     },
+    //   },
+    //   relations: ['seat.vehicle.tripDetails'],
+    // };
+    return await this.ticketDetailRepository.findOne({
+      where: options?.where,
       relations: ['ticket', 'seat'].concat(options?.relations || []),
       select: {
         deletedAt: false,

@@ -104,4 +104,10 @@ export class TicketController {
   async getTicketDetailByCode(@Param('code') code: string) {
     return await this.ticketService.getTicketDetailByCode(code);
   }
+
+  // @Get('ticket-detail/demo')
+  // @HttpCode(HttpStatus.OK)
+  // async getTicketDetailByCode1(@Param('code') code: string) {
+  //   return await this.ticketService.findOneTicketDetailBy({ code });
+  // }
 }

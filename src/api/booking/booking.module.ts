@@ -5,6 +5,7 @@ import {
   TicketDetail,
   Promotion,
   Order,
+  OrderDetail,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -13,7 +14,14 @@ import { BookingController } from './booking.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Ticket, Seat, TicketDetail, Promotion, Order]),
+    TypeOrmModule.forFeature([
+      Ticket,
+      Seat,
+      TicketDetail,
+      Promotion,
+      Order,
+      OrderDetail,
+    ]),
   ],
   providers: [BookingService, SeatService],
   controllers: [BookingController],

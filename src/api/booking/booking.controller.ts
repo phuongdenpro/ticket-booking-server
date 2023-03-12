@@ -24,6 +24,6 @@ export class BookingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async booking(@Body() dto: CreateBookingDto, @CurrentUser() user) {
-    return { message: 'coming soon' };
+    return this.bookingService.booking(dto, user.id);
   }
 }

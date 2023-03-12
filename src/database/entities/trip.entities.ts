@@ -9,9 +9,7 @@ import {
   PrimaryGeneratedColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { Station } from './station.entities';
-import { TripDetail } from './trip-detail.entities';
-import { ApplicablePriceDetail } from '.';
+import { ApplicablePriceDetail, Station, TripDetail } from '.';
 
 @Entity({ name: 'trip' })
 export class Trip {

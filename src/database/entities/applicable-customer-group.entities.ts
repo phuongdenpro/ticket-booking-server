@@ -1,7 +1,13 @@
-import { CustomerGroup } from './customer-group.entities';
-import { Entity, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Promotion } from './promotion.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { CustomerGroup, Promotion } from '.';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
+} from 'typeorm';
 
 @Entity({ name: 'applicable_customer_group' })
 export class ApplicableCustomerGroup {

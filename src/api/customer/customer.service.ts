@@ -52,21 +52,59 @@ export class CustomerService {
 
   async findOneByEmail(email: string, options?: any) {
     return await this.customerRepository.findOne({
-      where: { email },
-      select: this.selectFields,
+      where: { email, ...options?.where },
+      select: {
+        deletedAt: false,
+        password: false,
+        refreshToken: false,
+        accessToken: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
       ...options,
     });
   }
 
   async findOneByPhone(phone: string, options?: any) {
     return await this.customerRepository.findOne({
-      where: { phone },
-      select: this.selectFields,
+      where: { phone, ...options?.where },
+      select: {
+        deletedAt: false,
+        password: false,
+        refreshToken: false,
+        accessToken: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
       ...options,
     });
   }
 
-  async findCustomerByEmail(email: string, options?: any) {
+  async findOneById(id: string, options?: any) {
+    return await this.customerRepository.findOne({
+      where: { id, ...options?.where },
+      select: {
+        deletedAt: false,
+        password: false,
+        refreshToken: false,
+        accessToken: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options,
+    });
+  }
+
+  async getCustomerByEmail(email: string, options?: any) {
     const userExist = await this.findOneByEmail(email, {
       select: this.selectFields,
       ...options,
@@ -117,7 +155,7 @@ export class CustomerService {
     return { dataResult, pagination, total };
   }
 
-  async findCustomerById(id: string) {
+  async getCustomerById(id: string) {
     const userExist = await this.customerRepository
       .createQueryBuilder('u')
       .where('u.id = :id', { id })
@@ -129,7 +167,7 @@ export class CustomerService {
   }
 
   async updatePassword(id: string, dto: UserUpdatePasswordDto) {
-    const userExist = await this.findCustomerById(id);
+    const userExist = await this.getCustomerById(id);
     if (!userExist) {
       throw new BadRequestException('USER_NOT_FOUND');
     }

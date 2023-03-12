@@ -1,4 +1,4 @@
-import { GenderEnum } from './../../enums/gender.enum';
+import { GenderEnum } from './../../enums';
 import {
   Column,
   CreateDateColumn,
@@ -6,10 +6,11 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Ward } from './vi-address-ward.entities';
+import { Order, Ward } from '.';
 
 @Entity({ name: 'staff' })
 export class Staff {
@@ -98,12 +99,7 @@ export class Staff {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -118,4 +114,7 @@ export class Staff {
   @ManyToOne(() => Ward, (ward) => ward.staffs)
   @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
   ward: Ward;
+
+  @OneToMany(() => Order, (order) => order.staff)
+  orders?: Order[];
 }

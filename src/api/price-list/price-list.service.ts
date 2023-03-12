@@ -85,9 +85,7 @@ export class PriceListService {
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    const priceListExist = await this.priceListRepository.findOne({
-      where: { code },
-    });
+    const priceListExist = await this.findOnePriceListByCode(code);
     if (priceListExist) {
       throw new BadRequestException('PRICE_LIST_CODE_IS_EXIST');
     }
@@ -124,22 +122,36 @@ export class PriceListService {
     return savePriceList;
   }
 
-  async getPriceListById(id: string, options?: any) {
+  async findOnePriceListById(id: string, options?: any) {
     const priceList = await this.priceListRepository.findOne({
-      where: { id },
+      where: { id, ...options?.where },
       select: this.selectFieldsPriceList,
-      ...options,
+      relations: [].concat(options?.relations || []),
+      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
+      ...options?.other,
     });
     return priceList;
   }
 
-  async getPriceListByCode(code: string, options?: any) {
+  async findOnePriceListByCode(code: string, options?: any) {
     const priceList = await this.priceListRepository.findOne({
-      where: { code },
+      where: { code, ...options?.where },
       select: this.selectFieldsPriceList,
-      ...options,
+      relations: [].concat(options?.relations || []),
+      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
+      ...options?.other,
     });
     return priceList;
+  }
+
+  async findOnePriceDetailBy(options: any) {
+    return await this.priceDetailRepository.findOne({
+      where: { ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: { ...options?.select },
+      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
+      ...options?.other,
+    });
   }
 
   async findAllPriceList(dto: FilterPriceListDto, pagination?: Pagination) {
@@ -198,7 +210,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const priceList = await this.getPriceListById(id);
+    const priceList = await this.findOnePriceListById(id);
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
@@ -249,7 +261,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const priceList = await this.getPriceListByCode(code);
+    const priceList = await this.findOnePriceListByCode(code);
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
@@ -328,7 +340,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const priceList = await this.getPriceListByCode(code);
+    const priceList = await this.findOnePriceListByCode(code);
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
@@ -391,7 +403,7 @@ export class PriceListService {
 
       const list = await Promise.all(
         ids.map(async (code) => {
-          const priceList = await this.getPriceListByCode(code);
+          const priceList = await this.findOnePriceListByCode(code);
           if (!priceList) {
             return {
               id: priceList.id,
@@ -433,7 +445,7 @@ export class PriceListService {
       throw new BadRequestException('PRICE_DETAIL_CODE_EXISTED');
     }
 
-    const priceList = await this.getPriceListById(priceListId, {
+    const priceList = await this.findOnePriceListById(priceListId, {
       select: [
         'id',
         'name',
@@ -565,7 +577,7 @@ export class PriceListService {
       priceDetail.note = note;
     }
     if (priceListId) {
-      const priceList = await this.getPriceListById(priceListId, {
+      const priceList = await this.findOnePriceListById(priceListId, {
         select: ['id', 'name', 'note', 'startDate', 'endDate', 'status'],
       });
       if (!priceList) {
@@ -626,7 +638,7 @@ export class PriceListService {
       priceDetail.note = note;
     }
     if (priceListId) {
-      const priceList = await this.getPriceListById(priceListId, {
+      const priceList = await this.findOnePriceListById(priceListId, {
         select: ['id', 'name', 'note', 'startDate', 'endDate', 'status'],
       });
       if (!priceList) {

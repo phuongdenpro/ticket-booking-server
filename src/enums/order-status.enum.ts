@@ -1,1 +1,5 @@
-export enum OrderStatus {}
+export enum OrderStatusEnum {
+  UNPAID = 'Chưa thanh toán',
+  PAID = 'Đã thanh toán',
+  CANCEL = 'Đã hủy',
+}

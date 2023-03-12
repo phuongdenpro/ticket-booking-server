@@ -1,3 +1,4 @@
+import { SortEnum } from './../../enums';
 import { AuthService } from './../../auth/auth.service';
 import { AuthAdminService } from '../../auth/admin/auth-admin.service';
 import { Staff } from './../../database/entities/staff.entities';
@@ -17,25 +18,7 @@ export class AdminService {
   ) {}
 
   async profile(adminId: string) {
-    const staffExist = this.authAdminService.findOneById(adminId, {
-      select: [
-        'id',
-        'gender',
-        'phone',
-        'email',
-        'fullName',
-        'address',
-        'note',
-        'lastLogin',
-        'isActive',
-        'birthDay',
-        'code',
-        'createdBy',
-        'updatedBy',
-        'createdAt',
-        'updatedAt',
-      ],
-    });
+    const staffExist = this.authAdminService.findOneById(adminId);
     if (!staffExist) {
       throw new BadRequestException('USER_NOT_FOUND');
     }
@@ -65,7 +48,18 @@ export class AdminService {
 
   async findOneBydId(id: string, options?: any) {
     return await this.adminRepository.findOne({
-      where: { id },
+      where: { id, ...options?.where },
+      select: {
+        password: false,
+        refreshToken: false,
+        accessToken: false,
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
       ...options,
     });
   }

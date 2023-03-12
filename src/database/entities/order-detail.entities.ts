@@ -22,20 +22,17 @@ export class OrderDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({
-    name: 'quantity',
-    type: 'int',
-    nullable: true,
-    default: 1,
-    unsigned: true,
-  })
-  quantity: number;
-
   @Column({ name: 'total', type: 'double', nullable: true, default: 0.0 })
   total: number;
 
   @Column({ name: 'note', type: 'text' })
   note: string;
+
+  @Column({ name: 'created_by', type: 'varchar', nullable: false })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

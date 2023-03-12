@@ -259,8 +259,8 @@ export class TripDetailService {
     return { dataResult, pagination, total };
   }
 
-  async getTripDetailById(id: string) {
-    const tripDetail = await this.findTripDetailById(id);
+  async getTripDetailById(id: string, options?: any) {
+    const tripDetail = await this.findTripDetailById(id, options);
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
     }

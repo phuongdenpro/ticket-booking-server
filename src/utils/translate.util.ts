@@ -51,6 +51,7 @@ export const mappingTranslate = {
   INVALID_EMAIL: 'Email không đúng định dạng.',
   USERNAME_ALREADY_EXIST: 'Tên đăng nhập đã tồn tại',
   USER_NOT_FOUND: 'Không tìm thấy tài khoản',
+  USER_NOT_ACTIVE: 'Tài khoản chưa được kích hoạt hoặc đã bị khóa',
   EMAIL_ALREADY_EXIST: 'Email đã tồn tại',
   PASSWORD_IS_REQUIRED: 'Mật khẩu không được để trống',
   PASSWORD_IS_STRING: 'Mật khẩu phải là chuỗi ký tự',
@@ -147,10 +148,14 @@ export const mappingTranslate = {
   FLOOR_IS_NUMBER: 'Số tầng phải là số',
   SEAT_CODE_ALREADY_EXIST: 'Mã ghế này đã tồn tại',
   SEAT_FLOOR_MIN_MAX: 'Số tầng chỉ nhận 1 trong 2 giá trị: 1, 2',
-  SEAT_ID_IS_STRING: 'Mã ghế phải là chuỗi ký tự',
-  SEAT_ID_IS_REQUIRED: 'Mã ghế không được để trống',
-  SEAT_ID_IS_36_CHARACTERS: 'Mã ghế phải có 36 ký tự',
-  SEAT_ID_IS_ARRAY: 'Mã ghế phải là mảng',
+  SEAT_ID_IS_STRING: 'Id ghế phải là chuỗi ký tự',
+  SEAT_ID_IS_REQUIRED: 'Id ghế không được để trống',
+  SEAT_ID_IS_36_CHARACTERS: 'Id ghế phải có 36 ký tự',
+  SEAT_IDS_IS_ARRAY: 'danh sách id ghế phải là mảng',
+  SEAT_CODE_IS_STRING: 'Mã ghế phải là chuỗi ký tự',
+  SEAT_CODE_IS_REQUIRED: 'Mã ghế không được để trống',
+  SEAT_CODE_IS_36_CHARACTERS: 'Mã ghế phải có 36 ký tự',
+  SEAT_CODES_IS_ARRAY: 'danh sách mã ghế phải là mảng',
 
   // trip
   TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
@@ -285,4 +290,13 @@ export const mappingTranslate = {
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
+
+  // order
+  ORDER_NOT_FOUND: 'Không tìm thấy đơn hàng',
+  ORDER_STATUS_IS_STRING: 'Trạng thái của đơn hàng phải là chuỗi ký tự',
+  ORDER_STATUS_IS_ENUM: 'Trạng thái của đơn hàng không hợp lệ',
+  ORDER_ID_IS_36_CHARACTERS: 'Id của đơn hàng phải là 36 ký tự',
+  ORDER_ID_IS_REQUIRED: 'Id của đơn hàng không được để trống',
+  ORDER_ID_IS_STRING: 'Id của đơn hàng phải là chuỗi ký tự',
+  ORDER_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết đơn hàng',
 };

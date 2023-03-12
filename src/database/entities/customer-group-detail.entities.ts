@@ -1,4 +1,3 @@
-import { CustomerGroup } from './customer-group.entities';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -8,7 +7,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { Customer } from './customer.entities';
+import { CustomerGroup, Customer } from '.';
 
 @Entity({ name: 'customer_group_detail' })
 export class CustomerGroupDetail {

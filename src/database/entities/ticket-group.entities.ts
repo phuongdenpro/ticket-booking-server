@@ -1,16 +1,13 @@
 import {
   Column,
   Entity,
-  ManyToMany,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { ApplicableTicketGroup } from './applicable-ticket-group.entities';
-import { PriceDetail } from './price-detail.entities';
-import { TicketGroupDetail } from './ticket-group-detail.entities';
+import { ApplicableTicketGroup, PriceDetail, TicketGroupDetail } from '.';
 
 @Entity({ name: 'ticket_group' })
 export class TicketGroup {
@@ -53,7 +50,7 @@ export class TicketGroup {
   )
   applicableTicketGroups: ApplicableTicketGroup[];
 
-  @ManyToMany(
+  @OneToMany(
     () => TicketGroupDetail,
     (ticketGroupDetail) => ticketGroupDetail.ticketGroup,
   )
