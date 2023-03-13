@@ -73,7 +73,7 @@ export class WardController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async create(@Body() dto: SaveWardDto, @CurrentUser() user) {
-    return await this.wardService.save(dto, user.id);
+    return await this.wardService.createWard(dto, user.id);
   }
 
   @Patch('id/:id')

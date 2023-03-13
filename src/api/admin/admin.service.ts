@@ -56,11 +56,11 @@ export class AdminService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
-      ...options,
+      ...options?.other,
     });
   }
 }

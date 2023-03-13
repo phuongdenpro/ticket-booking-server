@@ -345,7 +345,7 @@ export class CustomerGroupService {
         'q1.id',
         'q1.createdAt',
         'c.id',
-        'c.isActive',
+        'c.status',
         'c.phone',
         'c.email',
         'c.fullName',

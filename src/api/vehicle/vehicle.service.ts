@@ -101,7 +101,12 @@ export class VehicleService {
       floorNumber,
       totalSeat,
     } = dto;
-    await this.getVehicleByCode(code, { withDeleted: true });
+    const vehicleExist = await this.findOneVehicleByCode(code, {
+      withDeleted: true,
+    });
+    if (vehicleExist) {
+      throw new BadRequestException('VEHICLE_CODE_EXIST');
+    }
 
     const vehicle = new Vehicle();
     vehicle.code = code;
@@ -127,9 +132,12 @@ export class VehicleService {
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     vehicle.createdBy = adminExist.id;
 

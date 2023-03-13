@@ -1,3 +1,4 @@
+import { SortEnum } from './../../../enums';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Injectable,
@@ -24,11 +25,33 @@ export class WardService {
   ) {}
 
   async findOneById(id: string, options?: any) {
-    return await this.wardRepository.findOne({ where: { id }, ...options });
+    return await this.wardRepository.findOne({
+      where: { id, ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      orderBy: {
+        createdAt: SortEnum.DESC,
+        ...options?.orderBy,
+      },
+      ...options?.other,
+    });
   }
 
   async findOneByCode(code: number, options?: any) {
-    return await this.wardRepository.findOne({ where: { code }, ...options });
+    return await this.wardRepository.findOne({
+      where: { code, ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      orderBy: {
+        createdAt: SortEnum.DESC,
+        ...options?.orderBy,
+      },
+      ...options?.other,
+    });
   }
 
   async findByDistrictCode(districtCode: number, pagination?: Pagination) {
@@ -37,7 +60,7 @@ export class WardService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .orderBy('w.code', 'ASC')
+      .orderBy('w.code', SortEnum.DESC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -75,7 +98,7 @@ export class WardService {
     return { dataResult, pagination, total };
   }
 
-  async save(dto: SaveWardDto, userId: string) {
+  async createWard(dto: SaveWardDto, userId: string) {
     const district = await this.dataSource.getRepository(District).findOne({
       where: { code: dto.districtCode },
     });
@@ -101,9 +124,12 @@ export class WardService {
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     ward.createdBy = adminExist.id;
 
@@ -141,9 +167,12 @@ export class WardService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
 
@@ -182,9 +211,12 @@ export class WardService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
 
@@ -199,9 +231,12 @@ export class WardService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
     ward.deletedAt = new Date();
@@ -218,9 +253,12 @@ export class WardService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
     ward.deletedAt = new Date();

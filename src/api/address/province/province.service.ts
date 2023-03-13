@@ -1,3 +1,4 @@
+import { SortEnum } from './../../../enums';
 import { Province, Staff } from './../../../database/entities';
 import {
   BadRequestException,
@@ -32,8 +33,16 @@ export class ProvinceService {
 
   async findOneByCode(code: number, options?: any) {
     return await this.provinceRepository.findOne({
-      where: { code },
-      ...options,
+      where: { code, ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      orderBy: {
+        createdAt: SortEnum.DESC,
+        ...options?.orderBy,
+      },
+      ...options?.other,
     });
   }
 
@@ -66,7 +75,7 @@ export class ProvinceService {
   }
 
   // insert a new record
-  async save(dto: SaveProvinceDto, userId: string) {
+  async createProvince(dto: SaveProvinceDto, userId: string) {
     const province = new Province();
     province.name = dto.name;
     province.type = dto.type;
@@ -74,9 +83,12 @@ export class ProvinceService {
     province.codename = dto.codename;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.createdBy = adminExist.id;
     return await this.provinceRepository.save(province);
@@ -101,9 +113,12 @@ export class ProvinceService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.updatedBy = adminExist.id;
 
@@ -131,9 +146,12 @@ export class ProvinceService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.updatedBy = adminExist.id;
 
@@ -149,9 +167,12 @@ export class ProvinceService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.updatedBy = adminExist.id;
     province.deletedAt = new Date();
@@ -167,9 +188,12 @@ export class ProvinceService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.updatedBy = adminExist.id;
     province.deletedAt = new Date();

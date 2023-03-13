@@ -1,9 +1,18 @@
 import { Order, OrderDetail } from './../../database/entities';
-import { DataSource, Repository } from 'typeorm';
-import { CreateOrderDto, CreateOrderDetailDto } from './dto';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Repository } from 'typeorm';
+import {
+  CreateOrderDto,
+  CreateOrderDetailDto,
+  UpdateOrderDto,
+  UpdateOrderDetailDto,
+} from './dto';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OrderStatusEnum, SortEnum } from './../../enums';
+import { OrderStatusEnum, SortEnum, SeatTypeEnum } from './../../enums';
 import { generateOrderId } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
 import { AdminService } from '../admin/admin.service';
@@ -23,7 +32,6 @@ export class OrderService {
     private readonly seatService: SeatService,
     private readonly ticketService: TicketService,
     private readonly priceListService: PriceListService,
-    private dataSource: DataSource,
   ) {}
 
   // order
@@ -32,9 +40,9 @@ export class OrderService {
       where: { id, ...options?.where },
       relations: ['orderDetails'].concat(options?.relations),
       select: { deletedAt: false, ...options?.select },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -45,9 +53,9 @@ export class OrderService {
       where: { code, ...options?.where },
       relations: options?.relations,
       select: { deletedAt: false, ...options?.select },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -62,6 +70,9 @@ export class OrderService {
     const staff = await this.adminService.findOneBydId(userId);
     if (!customer && !staff) {
       throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!staff.isActive || customer.status === 0) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     if (customer) {
       order.customer = customer;
@@ -114,6 +125,11 @@ export class OrderService {
         return await this.createOrderDetail(dto, userId);
       });
       saveOrder.orderDetails = await Promise.all(orderDetails);
+      saveOrder.total = saveOrder.orderDetails.reduce(
+        (total, orderDetail) => total + orderDetail.total,
+        0,
+      );
+      saveOrder.finalTotal = saveOrder.total;
     } else if (seatCodes && seatCodes.length > 0) {
       const orderDetails = await seatCodes.map(async (seatCode) => {
         const dto = new CreateOrderDetailDto();
@@ -124,25 +140,77 @@ export class OrderService {
         return await this.createOrderDetail(dto, userId);
       });
       saveOrder.orderDetails = await Promise.all(orderDetails);
+      saveOrder.total = saveOrder.orderDetails.reduce(
+        (total, orderDetail) => total + orderDetail.total,
+        0,
+      );
+      saveOrder.finalTotal = saveOrder.total;
     }
-    return saveOrder;
+    return await this.orderRepository.save(order);
   }
 
-  async getOrderById(id: string) {
-    const order = await this.findOrderById(id);
+  async getOrderById(id: string, options?: any) {
+    const order = await this.findOrderById(id, options);
     if (!order) {
       throw new UnauthorizedException('ORDER_NOT_FOUND');
     }
     return order;
   }
 
-  async getOrderByCode(code: string) {
-    const order = await this.findOrderByCode(code);
+  async getOrderByCode(code: string, options?: any) {
+    const order = await this.findOrderByCode(code, options);
     if (!order) {
       throw new UnauthorizedException('ORDER_NOT_FOUND');
     }
     return order;
   }
+
+  async updateOrderById(id: string, dto: UpdateOrderDto, userId: string) {
+    const order = await this.getOrderById(id);
+    if (!order) {
+      throw new NotFoundException('ORDER_NOT_FOUND');
+    }
+    const { note, status, seatCodes, seatIds } = dto;
+    if (note) {
+      order.note = note;
+    }
+    // update seat
+    if (order.status === OrderStatusEnum.UNPAID) {
+      // if old status = unpaid
+      if (seatIds && seatIds.length > 0) {
+        seatIds.forEach(async (seatId, index) => {
+          const seat = await this.seatService.getSeatById(seatId);
+          if (index + 1 <= order.orderDetails.length) {
+          }
+        });
+      }
+    }
+    // update status
+    if (status) {
+      // if old status is unpaid => update status paid and cancel
+      if (order.status === OrderStatusEnum.UNPAID) {
+        switch (status) {
+          case OrderStatusEnum.PAID:
+            order.status = OrderStatusEnum.PAID;
+            break;
+          case OrderStatusEnum.CANCEL:
+            order.status = OrderStatusEnum.CANCEL;
+            break;
+          default:
+            order.status = OrderStatusEnum.UNPAID;
+            break;
+        }
+      }
+      // if old status is paid => update status cancel
+      if (order.status === OrderStatusEnum.PAID) {
+        if (status === OrderStatusEnum.CANCEL) {
+          order.status = OrderStatusEnum.CANCEL;
+        }
+      }
+    }
+  }
+
+  // async updateOrderByCode(id: string, dto: CreateOrderDto, userId: string) {}
 
   // order detail
   async findOrderDetailById(id: string, options?: any) {
@@ -150,9 +218,9 @@ export class OrderService {
       where: { id, ...options?.where },
       relations: ['orderDetails'].concat(options?.relations),
       select: { deletedAt: false, ...options?.select },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -163,15 +231,16 @@ export class OrderService {
       where: { code, ...options?.where },
       relations: options?.relations,
       select: { deletedAt: false, ...options?.select },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
   }
 
   async createOrderDetail(dto: CreateOrderDetailDto, userId: string) {
+    // check permission
     const customer = await this.customerService.findOneById(userId);
     const staff = await this.adminService.findOneBydId(userId);
     if (!customer && !staff) {
@@ -192,9 +261,16 @@ export class OrderService {
       orderDetail.createdBy = staff.id;
     }
     // get ticket detail
+    if (!seatId && !seatCode) {
+      throw new UnauthorizedException('SEAT_ID_OR_SEAT_CODE_REQUIRED');
+    }
+    let ticketDetail;
     if (seatId) {
       const seat = await this.seatService.getSeatById(seatId);
-      const ticketDetail = await this.ticketService.findOneTicketDetailBy({
+      if (seat.type === SeatTypeEnum.SALES) {
+        throw new UnauthorizedException('SEAT_IS_SALES');
+      }
+      ticketDetail = await this.ticketService.findOneTicketDetailBy({
         where: {
           seat: {
             id: seat.id,
@@ -214,7 +290,7 @@ export class OrderService {
       orderDetail.ticketDetail = ticketDetail;
     } else if (seatCode) {
       const seat = await this.seatService.getSeatByCode(seatCode);
-      const ticketDetail = await this.ticketService.findOneTicketDetailBy({
+      ticketDetail = await this.ticketService.findOneTicketDetailBy({
         where: {
           seat: {
             id: seat.id,
@@ -233,7 +309,7 @@ export class OrderService {
       delete ticketDetail.seat;
       orderDetail.ticketDetail = ticketDetail;
     }
-    // get price list
+    // get price detail
     const ticketDetailId = orderDetail.ticketDetail.id;
     const priceDetail = await this.priceListService.findOnePriceDetailBy({
       where: {
@@ -264,22 +340,51 @@ export class OrderService {
       },
     });
     orderDetail.priceDetail = priceDetail;
+    orderDetail.total = priceDetail.price;
 
     const saveOrderDetail = await this.orderDetailRepository.save(orderDetail);
+    // update ticket detail status
+    // await this.ticketService.
+    // update seat status
+    if (seatId) {
+      await this.seatService.updateSeatById(
+        seatId,
+        {
+          name: undefined,
+          type: SeatTypeEnum.PENDING,
+          floor: undefined,
+          vehicleId: undefined,
+        },
+        userId,
+      );
+    } else if (seatCode) {
+      await this.seatService.updateSeatByCode(
+        seatCode,
+        {
+          name: undefined,
+          type: SeatTypeEnum.PENDING,
+          floor: undefined,
+          vehicleId: undefined,
+        },
+        userId,
+      );
+    }
     delete saveOrderDetail.deletedAt;
     return saveOrderDetail;
   }
 
-  async getOrderDetailById(id: string) {
-    const order = await this.findOrderDetailById(id);
+  // async updateOrderDetailById(dto: UpdateOrderDetailDto, userId: string) {}
+
+  async getOrderDetailById(id: string, options?: any) {
+    const order = await this.findOrderDetailById(id, options);
     if (!order) {
       throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
     }
     return order;
   }
 
-  async getOrderDetailByCode(code: string) {
-    const order = await this.findOrderDetailByCode(code);
+  async getOrderDetailByCode(code: string, options?: any) {
+    const order = await this.findOrderDetailByCode(code, options);
     if (!order) {
       throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
     }

@@ -156,6 +156,10 @@ export const mappingTranslate = {
   SEAT_CODE_IS_REQUIRED: 'Mã ghế không được để trống',
   SEAT_CODE_IS_36_CHARACTERS: 'Mã ghế phải có 36 ký tự',
   SEAT_CODES_IS_ARRAY: 'danh sách mã ghế phải là mảng',
+  SEAT_IDS_OR_SEAT_CODES_REQUIRED:
+    'Danh sách id ghế hoặc danh sách mã ghế không được để trống',
+  SEAT_ID_OR_SEAT_CODE_REQUIRED: 'Id ghế hoặc mã ghế không được để trống',
+  SEAT_IS_SALES: 'Ghế này đã được bán',
 
   // trip
   TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',

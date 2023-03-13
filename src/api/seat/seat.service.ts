@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Seat, Staff, Vehicle } from './../../database/entities';
+import { Customer, Seat, Staff, Vehicle } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import {
   FilterSeatDto,
@@ -32,9 +32,9 @@ export class SeatService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -48,9 +48,9 @@ export class SeatService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -66,9 +66,12 @@ export class SeatService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
 
     const seatExist = this.getSeatByCode(code, {
@@ -78,6 +81,7 @@ export class SeatService {
       throw new BadRequestException('SEAT_CODE_ALREADY_EXIST');
     }
     const seat = new Seat();
+    seat.code = code;
     seat.name = name;
     if (!seat) {
       seat.type = SeatTypeEnum.NON_SALES;
@@ -223,9 +227,56 @@ export class SeatService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
+    const customerExist = await this.dataSource
+      .getRepository(Customer)
+      .findOne({ where: { id: userId } });
+    if (!adminExist || !customerExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive || customerExist.status == 0) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    if (name) {
+      seat.name = name;
+    }
+    if (seat) {
+      seat.type = SeatTypeEnum.NON_SALES;
+    } else {
+      seat.type = type;
+    }
+    if (floor < 1 || floor > 2 || !floor) {
+      seat.floor = 1;
+    } else {
+      seat.floor = floor;
+    }
+    if (vehicleId) {
+      const vehicle = await this.dataSource
+        .getRepository(Vehicle)
+        .findOne({ where: { id: vehicleId } });
+      seat.vehicle = vehicle;
+    }
+    seat.updatedBy = adminExist.id;
+    delete seat.vehicle;
+
+    return await this.seatRepository.save(seat);
+  }
+
+  async updateSeatByCode(code: string, dto: UpdateSeatDto, userId: string) {
+    const { name, type, floor, vehicleId } = dto;
+    const seat = await this.seatRepository.findOne({ where: { code } });
+    if (!seat) {
+      throw new NotFoundException('SEAT_NOT_FOUND');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     if (name) {

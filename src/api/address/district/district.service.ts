@@ -32,11 +32,11 @@ export class DistrictService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
-      ...options,
+      ...options?.other,
     });
   }
 
@@ -48,11 +48,11 @@ export class DistrictService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
-      ...options,
+      ...options?.other,
     });
   }
 
@@ -121,9 +121,12 @@ export class DistrictService {
     district.parentCode = province.id;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     district.createdBy = adminExist.id;
 
@@ -159,9 +162,12 @@ export class DistrictService {
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     district.updatedBy = adminExist.id;
 
@@ -196,9 +202,12 @@ export class DistrictService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     district.updatedBy = adminExist.id;
 
@@ -214,9 +223,12 @@ export class DistrictService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     district.updatedBy = adminExist.id;
     district.deletedAt = new Date();

@@ -1,44 +1,31 @@
-import { Customer, Staff } from './../../database/entities';
-import { TripDetailService } from './../trip-detail/trip-detail.service';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { OrderStatusEnum } from './../../enums';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateBookingDto } from './dto';
-import { SeatService } from './../seat/seat.service';
+import { CreateOrderDto } from '../order/dto';
+import { OrderService } from '../order/order.service';
 
 @Injectable()
 export class BookingService {
-  constructor(
-    private readonly tripDetailService: TripDetailService,
-    // private readonly seatService: SeatService,
-    private dataSource: DataSource,
-  ) {}
+  constructor(private readonly orderService: OrderService) {}
 
   async booking(dto: CreateBookingDto, userId: string) {
-    const { seatIds, tripDetailId } = dto;
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
-    const customerExist = await this.dataSource
-      .getRepository(Customer)
-      .findOne({ where: { id: userId } });
-    if (!adminExist && !customerExist) {
-      throw new UnauthorizedException('USER_NOT_FOUND');
+    const { seatIds, seatCodes, tripDetailId } = dto;
+    const dtoOrder = new CreateOrderDto();
+    if (seatIds) {
+      dtoOrder.seatIds = seatIds;
     }
-    if (adminExist.isActive === false || customerExist.status === 0) {
-      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    if (seatCodes) {
+      dtoOrder.seatCodes = seatCodes;
     }
-    const tripDetailExists = await this.tripDetailService.getTripDetailById(
-      tripDetailId,
-    );
-    // const seats = await seatIds.map(async (seatId) => {
-    //   const seat = await this.seatService.getSeatById(seatId, {
-    //     where: {
-    //       vehicle: { id: tripDetailExists.vehicle.id },
-    //     },
-    //   });
-    //   return seat;
-    // });
-
-    return { message: 'coming soon' };
+    if (!seatCodes && !seatIds) {
+      throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
+    }
+    dtoOrder.tripDetailId = tripDetailId;
+    dtoOrder.status = OrderStatusEnum.UNPAID;
+    dtoOrder.note = '';
+    const order = await this.orderService.createOrder(dtoOrder, userId);
+    return order;
   }
+
+  // async payment() {}
 }

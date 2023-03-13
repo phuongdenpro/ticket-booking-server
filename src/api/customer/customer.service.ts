@@ -1,7 +1,11 @@
 import { SortEnum, UserStatusEnum } from './../../enums';
 import { Pagination } from '../../decorator';
 import { Customer } from '../../database/entities';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { FilterCustomerDto } from './dto';
@@ -60,11 +64,11 @@ export class CustomerService {
         accessToken: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
-      ...options,
+      ...options?.other,
     });
   }
 
@@ -78,11 +82,11 @@ export class CustomerService {
         accessToken: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
-      ...options,
+      ...options?.other,
     });
   }
 
@@ -96,11 +100,11 @@ export class CustomerService {
         accessToken: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
-      ...options,
+      ...options?.other,
     });
   }
 
@@ -169,7 +173,10 @@ export class CustomerService {
   async updatePassword(id: string, dto: UserUpdatePasswordDto) {
     const userExist = await this.getCustomerById(id);
     if (!userExist) {
-      throw new BadRequestException('USER_NOT_FOUND');
+      throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (userExist.status == 0) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const isPasswordMatches = await bcrypt.compare(

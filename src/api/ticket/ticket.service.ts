@@ -103,9 +103,9 @@ export class TicketService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -119,9 +119,9 @@ export class TicketService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -340,9 +340,9 @@ export class TicketService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -356,9 +356,9 @@ export class TicketService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -385,9 +385,9 @@ export class TicketService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
@@ -406,6 +406,8 @@ export class TicketService {
     const ticketDetail = new TicketDetail();
     ticketDetail.ticket = ticketExist;
     ticketDetail.seat = seatExist;
+    ticketDetail.note = '';
+    ticketDetail.status = TicketStatusEnum.NON_SALES;
     ticketDetail.code = `${ticketExist.code}-${seatExist.name}`;
     const saveTicketDetail = await this.ticketDetailRepository.save(
       ticketDetail,
@@ -413,6 +415,8 @@ export class TicketService {
     delete saveTicketDetail.deletedAt;
     return saveTicketDetail;
   }
+
+  async updateTicketDetailById(id: string, dto, adminId: string) {}
 
   async getTicketDetailById(id: string) {
     const ticketDetail = await this.findOneTicketDetailById(id, {

@@ -23,7 +23,12 @@ export class TicketDetail {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({ name: 'status', type: 'varchar', length: 100, default: 0 })
+  @Column({
+    name: 'status',
+    type: 'varchar',
+    length: 100,
+    default: TicketStatusEnum.NON_SALES,
+  })
   status: TicketStatusEnum;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })

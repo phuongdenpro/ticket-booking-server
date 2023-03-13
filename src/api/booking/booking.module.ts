@@ -6,24 +6,51 @@ import {
   Promotion,
   Order,
   OrderDetail,
+  Staff,
+  Customer,
+  TripDetail,
+  TicketGroup,
+  PriceList,
+  PriceDetail,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { BookingService } from './booking.service';
 import { BookingController } from './booking.controller';
+import { OrderService } from '../order/order.service';
+import { CustomerService } from '../customer/customer.service';
+import { AdminService } from '../admin/admin.service';
+import { TicketService } from '../ticket/ticket.service';
+import { TicketGroupService } from '../ticket-group/ticket-group.service';
+import { PriceListService } from '../price-list/price-list.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
-      Ticket,
       Seat,
+      Ticket,
       TicketDetail,
       Promotion,
       Order,
       OrderDetail,
+      Staff,
+      Customer,
+      TripDetail,
+      TicketGroup,
+      PriceList,
+      PriceDetail,
     ]),
   ],
-  providers: [BookingService, SeatService],
+  providers: [
+    BookingService,
+    OrderService,
+    CustomerService,
+    AdminService,
+    SeatService,
+    TicketService,
+    TicketGroupService,
+    PriceListService,
+  ],
   controllers: [BookingController],
   exports: [BookingService],
 })
