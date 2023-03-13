@@ -50,7 +50,14 @@ export class StationService {
     const { name, address, wardCode, images, code } = dto;
 
     const ward = await this.wardService.findOneByCode(wardCode, {
-      select: ['id', 'name', 'type', 'codename', 'code', 'districtCode'],
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        codename: true,
+        code: true,
+        districtCode: true,
+      },
     });
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
@@ -80,13 +87,26 @@ export class StationService {
     const district = await this.districtService.findOneByCode(
       station.ward.districtCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+          provinceCode: true,
+        },
       },
     );
     const province = await this.provinceService.findOneByCode(
       district.provinceCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code'],
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+        },
       },
     );
     station.fullAddress = `${station.address}, ${station.ward.name}, ${district.name}, ${province.name}`;
@@ -130,15 +150,27 @@ export class StationService {
         const district = await this.districtService.findOneByCode(
           dataResult.ward.districtCode,
           {
-            select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              codename: true,
+              code: true,
+              provinceCode: true,
+            },
           },
         );
         dataResult['district'] = district;
-
         const province = await this.provinceService.findOneByCode(
           district.provinceCode,
           {
-            select: ['id', 'name', 'type', 'codename', 'code'],
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              codename: true,
+              code: true,
+            },
           },
         );
         dataResult['province'] = province;
@@ -146,7 +178,12 @@ export class StationService {
       }
       const images =
         await this.imageResourceService.findImageResourcesByStationId(id, {
-          select: ['id', 'url', 'createdAt', 'createdBy'],
+          select: {
+            id: true,
+            url: true,
+            createdAt: true,
+            createdBy: true,
+          },
         });
       dataResult.images = images;
     }
@@ -169,7 +206,14 @@ export class StationService {
         const district = await this.districtService.findOneByCode(
           station.ward.districtCode,
           {
-            select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              codename: true,
+              code: true,
+              provinceCode: true,
+            },
           },
         );
         station['district'] = district;
@@ -177,7 +221,13 @@ export class StationService {
         const province = await this.provinceService.findOneByCode(
           district.provinceCode,
           {
-            select: ['id', 'name', 'type', 'codename', 'code'],
+            select: {
+              id: true,
+              name: true,
+              type: true,
+              codename: true,
+              code: true,
+            },
           },
         );
         station['province'] = province;
@@ -187,7 +237,12 @@ export class StationService {
         await this.imageResourceService.findImageResourcesByStationId(
           station.id,
           {
-            select: ['id', 'url', 'createdAt', 'createdBy'],
+            select: {
+              id: true,
+              url: true,
+              createdAt: true,
+              createdBy: true,
+            },
           },
         );
       station.images = images;
@@ -227,7 +282,12 @@ export class StationService {
           await this.imageResourceService.findImageResourcesByStationId(
             station.id,
             {
-              select: ['id', 'url', 'createdAt', 'createdBy'],
+              select: {
+                id: true,
+                url: true,
+                createdAt: true,
+                createdBy: true,
+              },
             },
           );
         return station;
@@ -268,13 +328,26 @@ export class StationService {
     const district = await this.districtService.findOneByCode(
       station.ward.districtCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+          provinceCode: true,
+        },
       },
     );
     const province = await this.provinceService.findOneByCode(
       district.provinceCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code'],
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+        },
       },
     );
 
@@ -352,13 +425,26 @@ export class StationService {
     const district = await this.districtService.findOneByCode(
       station.ward.districtCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code', 'provinceCode'],
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+          provinceCode: true,
+        },
       },
     );
     const province = await this.provinceService.findOneByCode(
       district.provinceCode,
       {
-        select: ['id', 'name', 'type', 'codename', 'code'],
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+        },
       },
     );
 
