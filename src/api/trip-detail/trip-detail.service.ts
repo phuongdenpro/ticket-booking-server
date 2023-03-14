@@ -54,7 +54,7 @@ export class TripDetailService {
         },
         ...options?.select,
       },
-      ...options,
+      ...options.other,
     });
   }
 
@@ -114,7 +114,7 @@ export class TripDetailService {
       throw new BadRequestException('TRIP_DETAIL_STATUS_REQUIRED');
     }
     switch (status) {
-      case TripDetailStatusEnum.SALES:
+      case TripDetailStatusEnum.NOT_SOLD_OUT:
       case TripDetailStatusEnum.ACTIVE:
         tripDetail.status = status;
         tripDetail.isActive = true;
@@ -224,7 +224,7 @@ export class TripDetailService {
       query.andWhere('q.status = :status', { status });
     } else {
       query.andWhere('q.status = :status', {
-        status: TripDetailStatusEnum.SALES,
+        status: TripDetailStatusEnum.NOT_SOLD_OUT,
       });
     }
     if (tripId) {
@@ -315,7 +315,7 @@ export class TripDetailService {
     }
     if (status) {
       switch (status) {
-        case TripDetailStatusEnum.SALES:
+        case TripDetailStatusEnum.NOT_SOLD_OUT:
         case TripDetailStatusEnum.ACTIVE:
           tripDetail.status = status;
           break;
@@ -325,7 +325,7 @@ export class TripDetailService {
           tripDetail.isActive = false;
           break;
         default:
-          tripDetail.status = TripDetailStatusEnum.SALES;
+          tripDetail.status = TripDetailStatusEnum.NOT_SOLD_OUT;
           tripDetail.isActive = false;
           break;
       }
@@ -414,7 +414,7 @@ export class TripDetailService {
     }
     if (status) {
       switch (status) {
-        case TripDetailStatusEnum.SALES:
+        case TripDetailStatusEnum.NOT_SOLD_OUT:
         case TripDetailStatusEnum.ACTIVE:
           tripDetail.status = status;
           break;
@@ -424,7 +424,7 @@ export class TripDetailService {
           tripDetail.isActive = false;
           break;
         default:
-          tripDetail.status = TripDetailStatusEnum.SALES;
+          tripDetail.status = TripDetailStatusEnum.NOT_SOLD_OUT;
           tripDetail.isActive = false;
           break;
       }

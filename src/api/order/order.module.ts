@@ -1,8 +1,6 @@
 import { TicketGroupService } from './../ticket-group/ticket-group.service';
-import { PriceListModule } from './../price-list/price-list.module';
 import { PriceListService } from './../price-list/price-list.service';
 import { PriceList } from './../../database/entities/price-list.entities';
-import { TripDetailService } from './../trip-detail/trip-detail.service';
 import { SeatService } from './../seat/seat.service';
 import { AdminService } from './../admin/admin.service';
 import { CustomerService } from './../customer/customer.service';

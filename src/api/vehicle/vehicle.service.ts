@@ -185,7 +185,7 @@ export class VehicleService {
           dto.floor = 2;
         }
       }
-      dto.type = SeatTypeEnum.NON_SALES;
+      dto.type = SeatTypeEnum.NON_SOLD;
       dto.vehicleId = newVehicle.id;
       await this.seatService.createSeat(dto, userId);
     }

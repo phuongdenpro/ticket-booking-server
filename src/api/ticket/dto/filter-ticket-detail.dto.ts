@@ -9,11 +9,11 @@ export class FilterTicketDetailDto {
   keywords?: string;
 
   @ApiPropertyOptional({
-    example: TicketStatusEnum.NON_SALES,
+    example: TicketStatusEnum.NON_SOLD,
     enum: TicketStatusEnum,
   })
   @IsString({ message: 'STATUS_IS_STRING' })
-  @IsEnum(TicketStatusEnum, { message: 'TICKET_DETAIL_STATUS_IS_ENUM' })
+  @IsEnum(TicketStatusEnum, { message: 'TICKET_STATUS_IS_ENUM' })
   @IsOptional()
   status?: TicketStatusEnum;
 

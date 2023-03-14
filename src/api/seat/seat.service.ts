@@ -84,7 +84,7 @@ export class SeatService {
     seat.code = code;
     seat.name = name;
     if (!seat) {
-      seat.type = SeatTypeEnum.NON_SALES;
+      seat.type = SeatTypeEnum.NON_SOLD;
     } else {
       seat.type = type;
     }
@@ -242,7 +242,7 @@ export class SeatService {
       seat.name = name;
     }
     if (seat) {
-      seat.type = SeatTypeEnum.NON_SALES;
+      seat.type = SeatTypeEnum.NON_SOLD;
     } else {
       seat.type = type;
     }
@@ -283,7 +283,7 @@ export class SeatService {
       seat.name = name;
     }
     if (seat) {
-      seat.type = SeatTypeEnum.NON_SALES;
+      seat.type = SeatTypeEnum.NON_SOLD;
     } else {
       seat.type = type;
     }

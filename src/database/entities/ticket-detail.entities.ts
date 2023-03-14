@@ -27,7 +27,7 @@ export class TicketDetail {
     name: 'status',
     type: 'varchar',
     length: 100,
-    default: TicketStatusEnum.NON_SALES,
+    default: TicketStatusEnum.NON_SOLD,
   })
   status: TicketStatusEnum;
 

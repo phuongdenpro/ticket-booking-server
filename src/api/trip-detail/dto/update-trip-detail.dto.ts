@@ -14,7 +14,7 @@ export class UpdateTripDetailDto {
   expectedTime: Date;
 
   @ApiPropertyOptional({
-    example: TripDetailStatusEnum.SALES,
+    example: TripDetailStatusEnum.NOT_SOLD_OUT,
     enum: TripDetailStatusEnum,
   })
   @IsOptional()

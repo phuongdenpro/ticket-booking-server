@@ -28,7 +28,7 @@ export class Staff {
   lastLogin?: Date = null;
 
   @Column({ name: 'is_active', type: 'bool', default: false, select: false })
-  isActive?: boolean = false;
+  isActive?: boolean;
 
   @Column({ name: 'phone', type: 'varchar', nullable: true })
   phone?: string;

@@ -159,10 +159,11 @@ export const mappingTranslate = {
   SEAT_IDS_OR_SEAT_CODES_REQUIRED:
     'Danh sách id ghế hoặc danh sách mã ghế không được để trống',
   SEAT_ID_OR_SEAT_CODE_REQUIRED: 'Id ghế hoặc mã ghế không được để trống',
-  SEAT_IS_SALES: 'Ghế này đã được bán',
+  SEAT_IS_SOLD: 'Ghế này đã được bán',
 
   // trip
   TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
+  TRIP_NOT_ACTIVE: 'Tuyến xe này không hoạt động',
   TRIP_ID_REQUIRED: 'Id của tuyến đi là không được để trống',
   TRIP_ID_IS_STRING: 'Id của tuyến đi phải là chuỗi ký tự',
   TRIP_ID_INVALID: 'Id của tuyến đi không hợp lệ',
@@ -203,6 +204,8 @@ export const mappingTranslate = {
   TRIP_DETAIL_ID_REQUIRED: 'Id của chuyến xe là không được để trống',
   TRIP_DETAIL_ID_IS_STRING: 'Id của chuyến xe phải là chuỗi ký tự',
   TRIP_DETAIL_ID_IS_36_CHARACTERS: 'Id của chuyến xe phải có 36 ký tự',
+  TRIP_DETAIL_HAS_PASSED: 'Chuyến xe đã khởi hành không thể đặt vé',
+  TRIP_DETAIL_NOT_ACTIVE: 'Chuyến xe không còn hoạt động',
 
   // vehicle
   VEHICLE_NOT_FOUND: 'Không tìm thấy xe',
@@ -239,11 +242,11 @@ export const mappingTranslate = {
   TICKET_END_DATE_GREATER_THAN_TICKET_START_DATE:
     'Ngày vé hết hiệu lực phải lớn hơn ngày vé có hiệu lực',
   TICKET_NOT_FOUND: 'Không tìm thấy thông tin vé',
-  TICKET_DETAIL_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
   TICKET_ID_IS_STRING: 'Id của vé phải là chuỗi ký tự',
   TICKET_ID_IS_REQUIRED: 'Id của vé là không được để trống',
   TICKET_CODE_IS_STRING: 'Id của vé phải là chuỗi ký tự',
   TICKET_STATUS_IS_STRING: 'trạng thái của vé phải là chuỗi',
+  TICKET_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
   TICKET_ID_IS_36_CHARACTERS: 'Id của vé phải là 36 ký tự',
 
   // price list
@@ -303,4 +306,7 @@ export const mappingTranslate = {
   ORDER_ID_IS_REQUIRED: 'Id của đơn hàng không được để trống',
   ORDER_ID_IS_STRING: 'Id của đơn hàng phải là chuỗi ký tự',
   ORDER_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết đơn hàng',
+  ORDER_IS_CANCELLED: 'Đơn hàng đã bị hủy',
+  ORDER_IS_PAID: 'Đơn hàng đã thanh toán',
+  ORDER_IS_PENDING: 'Đơn hàng đang chờ xử lý',
 };

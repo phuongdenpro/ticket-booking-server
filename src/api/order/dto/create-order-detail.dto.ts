@@ -7,7 +7,7 @@ export class CreateOrderDetailDto {
   @IsOptional()
   note: string;
 
-  @ApiProperty({ example: '7b1e022a-96da-47c5-85b6-81858fd0f601' })
+  @ApiProperty({ example: '5da6e37f-bb09-422c-aa27-e5eefa8cb709' })
   @IsNotEmpty({ message: 'ORDER_ID_IS_REQUIRED' })
   @IsString({ message: 'ORDER_ID_IS_STRING' })
   @Length(36, 36, { message: 'ORDER_ID_IS_36_CHARACTERS' })

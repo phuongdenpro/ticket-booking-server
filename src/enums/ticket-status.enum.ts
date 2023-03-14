@@ -1,4 +1,5 @@
 export enum TicketStatusEnum {
-  SALES = 'Đã bán',
-  NON_SALES = 'chưa bán',
+  SOLD = 'Đã bán',
+  PENDING = 'Đang chờ thanh toán',
+  NON_SOLD = 'chưa bán',
 }

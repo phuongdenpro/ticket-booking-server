@@ -5,9 +5,11 @@ import {
   FilterTicketDto,
   UpdateTicketDto,
   FilterTicketDetailDto,
+  UpdateTicketDetailDto,
 } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
+  Customer,
   Staff,
   Ticket,
   TicketDetail,
@@ -29,7 +31,7 @@ export class TicketService {
     private readonly ticketRepository: Repository<Ticket>,
     @InjectRepository(TicketDetail)
     private readonly ticketDetailRepository: Repository<TicketDetail>,
-    private seatService: SeatService,
+    private readonly seatService: SeatService,
     private dataSource: DataSource,
   ) {}
 
@@ -396,9 +398,12 @@ export class TicketService {
   async createTicketDetail(ticketId: string, seatId: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     const ticketExist = await this.getTicketById(ticketId);
     const seatExist = await this.seatService.getSeatById(seatId);
@@ -407,7 +412,7 @@ export class TicketService {
     ticketDetail.ticket = ticketExist;
     ticketDetail.seat = seatExist;
     ticketDetail.note = '';
-    ticketDetail.status = TicketStatusEnum.NON_SALES;
+    ticketDetail.status = TicketStatusEnum.NON_SOLD;
     ticketDetail.code = `${ticketExist.code}-${seatExist.name}`;
     const saveTicketDetail = await this.ticketDetailRepository.save(
       ticketDetail,
@@ -416,7 +421,49 @@ export class TicketService {
     return saveTicketDetail;
   }
 
-  async updateTicketDetailById(id: string, dto, adminId: string) {}
+  async updateTicketDetailById(
+    id: string,
+    dto: UpdateTicketDetailDto,
+    userId: string,
+  ) {
+    const { note, status } = dto;
+    const ticketDetail = await this.getTicketDetailById(id);
+
+    if (note) {
+      ticketDetail.note = note;
+    }
+    if (status) {
+      switch (status) {
+        case TicketStatusEnum.SOLD:
+          ticketDetail.status = TicketStatusEnum.SOLD;
+          break;
+        case TicketStatusEnum.PENDING:
+          ticketDetail.status = TicketStatusEnum.PENDING;
+          break;
+        default:
+          ticketDetail.status = TicketStatusEnum.NON_SOLD;
+          break;
+      }
+    }
+
+    const admin = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId } });
+    const customer = await this.dataSource
+      .getRepository(Customer)
+      .findOne({ where: { id: userId } });
+    if (!admin && !customer) {
+      throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!admin.isActive || customer.status === 0) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    }
+
+    const saveTicketDetail = await this.ticketDetailRepository.save(
+      ticketDetail,
+    );
+    return saveTicketDetail;
+  }
 
   async getTicketDetailById(id: string) {
     const ticketDetail = await this.findOneTicketDetailById(id, {
@@ -452,7 +499,7 @@ export class TicketService {
     }
     if (status) {
       query.andWhere('q.status = :status', {
-        status: status === TicketStatusEnum.NON_SALES ? 0 : 1,
+        status: status === TicketStatusEnum.NON_SOLD ? 0 : 1,
       });
     }
     query.leftJoinAndSelect('q.ticket', 't');

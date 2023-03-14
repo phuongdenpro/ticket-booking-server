@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { FilterCustomerDto } from './dto';
 import * as bcrypt from 'bcrypt';
 import { UserUpdatePasswordDto } from '../user/dto';
@@ -17,7 +17,6 @@ export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-    private dataSource: DataSource,
   ) {}
 
   private selectFieldsWithQ = [

@@ -161,9 +161,9 @@ export class PriceListService {
 
     if (keywords) {
       query
+        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` });
+        .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` });
     }
     if (status) {
       let statusBool = true;
@@ -175,9 +175,7 @@ export class PriceListService {
       query.andWhere('q.startDate >= :startDate', { startDate: newStartDate });
     }
     if (endDate) {
-      const newEndDate = new Date(
-        new Date().setDate(new Date(endDate).getDate() + 1),
-      );
+      const newEndDate = new Date(endDate);
       query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
     if (sort) {

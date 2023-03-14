@@ -20,7 +20,7 @@ export class FilterPriceListDto {
 
   @ApiPropertyOptional({
     example: ActiveStatusEnum.ACTIVE,
-    enum: ActiveStatusEnum,
+    enum: ['', ActiveStatusEnum.ACTIVE, ActiveStatusEnum.INACTIVE],
   })
   @IsString({ message: 'PRICE_LIST_STATUS_IS_STRING' })
   @IsEnum(ActiveStatusEnum, { message: 'PRICE_LIST_STATUS_INVALID' })

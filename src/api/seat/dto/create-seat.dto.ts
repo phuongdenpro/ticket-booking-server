@@ -24,7 +24,7 @@ export class CreateSeatDto {
   @Length(1, 100, { message: 'NAME_BETWEEN_1_100_CHARACTERS' })
   name: string;
 
-  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SALES, enum: SeatTypeEnum })
+  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SOLD, enum: SeatTypeEnum })
   @IsString({ message: 'SEAT_TYPE_IS_STRING' })
   @IsEnum(SeatTypeEnum, { message: 'SEAT_TYPE_IS_ENUM' })
   @IsOptional()

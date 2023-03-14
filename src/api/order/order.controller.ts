@@ -21,14 +21,14 @@ export class OrderController {
   constructor(private orderService: OrderService) {}
 
   // order
-  // @Post()
-  // @HttpCode(HttpStatus.CREATED)
-  // @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
-  // async createOrder(@Body() dto: CreateOrderDto, @CurrentUser() user) {
-  //   return await this.orderService.createOrder(dto, user.id);
-  // }
+  @Post()
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async createOrder(@Body() dto: CreateOrderDto, @CurrentUser() user) {
+    return await this.orderService.createOrder(dto, user.id);
+  }
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
@@ -43,17 +43,17 @@ export class OrderController {
   }
 
   // order detail
-  // @Post('order-detail')
-  // @HttpCode(HttpStatus.CREATED)
-  // @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
-  // async createOrderDetail(
-  //   @Body() dto: CreateOrderDetailDto,
-  //   @CurrentUser() user,
-  // ) {
-  //   return await this.orderService.createOrderDetail(dto, user.id);
-  // }
+  @Post('order-detail')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async createOrderDetail(
+    @Body() dto: CreateOrderDetailDto,
+    @CurrentUser() user,
+  ) {
+    return await this.orderService.createOrderDetail(dto, user.id);
+  }
 
   @Get('order-detail/id/:id')
   @HttpCode(HttpStatus.OK)
