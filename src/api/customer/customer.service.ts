@@ -1,11 +1,7 @@
 import { SortEnum, UserStatusEnum } from './../../enums';
 import { Pagination } from '../../decorator';
 import { Customer } from '../../database/entities';
-import {
-  BadRequestException,
-  Injectable,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { FilterCustomerDto } from './dto';
@@ -34,84 +30,69 @@ export class CustomerService {
     'u.createdAt',
     'u.updatedAt',
     'u.updatedBy',
+    'cgd.id',
+    'cg.id',
+    'cg.code',
+    'cg.description',
+    'cg.note',
   ];
 
-  private selectFields = [
-    'id',
-    'lastLogin',
-    'status',
-    'phone',
-    'email',
-    'fullName',
-    'gender',
-    'address',
-    'fullAddress',
-    'note',
-    'birthday',
-    'createdAt',
-    'updatedAt',
-    'updatedBy',
-  ];
-
-  async findOneByEmail(email: string, options?: any) {
+  async findOneCustomer(options: any) {
     return await this.customerRepository.findOne({
-      where: { email, ...options?.where },
+      where: { ...options?.where },
       select: {
-        deletedAt: false,
-        password: false,
-        refreshToken: false,
-        accessToken: false,
+        id: true,
+        lastLogin: true,
+        status: true,
+        phone: true,
+        email: true,
+        fullName: true,
+        gender: true,
+        address: true,
+        fullAddress: true,
+        note: true,
+        birthday: true,
+        createdAt: true,
+        updatedBy: true,
         ...options?.select,
       },
-      orderBy: {
+      order: {
         createdAt: SortEnum.DESC,
-        ...options?.orderBy,
+        ...options?.order,
       },
       ...options?.other,
     });
+  }
+
+  async findOneByEmail(email: string, options?: any) {
+    if (options) {
+      options.where = { email, ...options?.where };
+    } else {
+      options = { where: { email } };
+    }
+    return await this.findOneCustomer(options);
   }
 
   async findOneByPhone(phone: string, options?: any) {
-    return await this.customerRepository.findOne({
-      where: { phone, ...options?.where },
-      select: {
-        deletedAt: false,
-        password: false,
-        refreshToken: false,
-        accessToken: false,
-        ...options?.select,
-      },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
+    if (options) {
+      options.where = { phone, ...options?.where };
+    } else {
+      options = { where: { phone } };
+    }
+    return await this.findOneCustomer(options);
   }
 
   async findOneById(id: string, options?: any) {
-    return await this.customerRepository.findOne({
-      where: { id, ...options?.where },
-      select: {
-        deletedAt: false,
-        password: false,
-        refreshToken: false,
-        accessToken: false,
-        ...options?.select,
-      },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneCustomer(options);
   }
 
   async getCustomerByEmail(email: string, options?: any) {
-    const userExist = await this.findOneByEmail(email, {
-      select: this.selectFields,
-      ...options,
-    });
+    const userExist = await this.findOneByEmail(email, options);
 
     if (!userExist) {
       throw new BadRequestException('USER_NOT_FOUND');
@@ -119,15 +100,14 @@ export class CustomerService {
     return userExist;
   }
 
-  async findCustomerByRefreshToken(refreshToken: string) {
-    const userExist = await this.customerRepository
-      .createQueryBuilder('u')
-      .where('u.refreshToken = :refreshToken', { refreshToken })
-      .select(this.selectFieldsWithQ)
-      .getOne();
-
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
-    return userExist;
+  async findCustomerByRefreshToken(refreshToken: string, options?: any) {
+    if (options) {
+      options.where = { refreshToken, ...options?.where };
+      options.select = { refreshToken: true, ...options?.select };
+    } else {
+      options = { where: { refreshToken }, select: { refreshToken: true } };
+    }
+    return await this.findOneCustomer(options);
   }
 
   async findAll(dto: FilterCustomerDto, pagination: Pagination) {
@@ -136,8 +116,8 @@ export class CustomerService {
     if (keywords) {
       query
         .orWhere('u.fullName like :query')
-        .orWhere('u.phone like :query')
         .orWhere('u.email like :query')
+        .orWhere('u.phone like :query')
         .orWhere('u.address like :query')
         .orWhere('u.note like :query')
         .setParameter('query', `%${keywords}%`);
@@ -149,6 +129,8 @@ export class CustomerService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
+      .leftJoinAndSelect('u.customerGroupDetail', 'cgd')
+      .leftJoinAndSelect('cgd.customerGroup', 'cg')
       .offset(pagination.skip)
       .limit(pagination.take)
       .orderBy('u.createdAt', SortEnum.DESC)
@@ -159,11 +141,7 @@ export class CustomerService {
   }
 
   async getCustomerById(id: string) {
-    const userExist = await this.customerRepository
-      .createQueryBuilder('u')
-      .where('u.id = :id', { id })
-      .select(this.selectFieldsWithQ)
-      .getOne();
+    const userExist = await this.findOneById(id);
 
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
     return userExist;
@@ -171,9 +149,6 @@ export class CustomerService {
 
   async updatePassword(id: string, dto: UserUpdatePasswordDto) {
     const userExist = await this.getCustomerById(id);
-    if (!userExist) {
-      throw new UnauthorizedException('USER_NOT_FOUND');
-    }
     if (userExist.status == 0) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }

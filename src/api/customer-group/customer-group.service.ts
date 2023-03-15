@@ -1,9 +1,9 @@
+import { AdminService } from './../admin/admin.service';
 import { SortEnum } from './../../enums';
 import {
   Customer,
   CustomerGroup,
   CustomerGroupDetail,
-  Staff,
 } from './../../database/entities';
 import {
   BadRequestException,
@@ -32,39 +32,45 @@ export class CustomerGroupService {
     private readonly customerGroupRepository: Repository<CustomerGroup>,
     @InjectRepository(CustomerGroupDetail)
     private readonly customerGDRepository: Repository<CustomerGroupDetail>,
+    private readonly adminService: AdminService,
     private dataSource: DataSource,
   ) {}
 
-  private selectFieldsCG = [
-    'id',
-    'name',
-    'description',
-    'note',
-    'code',
-    'createdBy',
-    'updatedBy',
-    'createdAt',
-    'updatedAt',
-  ];
+  async findOneCustomerGroup(options: any) {
+    return await this.customerGroupRepository.findOne({
+      where: { ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options?.other,
+    });
+  }
 
   async findCustomerGroupByCode(code: string, options?: any) {
-    return await this.customerGroupRepository.findOne({
-      where: { code },
-      select: this.selectFieldsCG,
-      ...options,
-    });
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneCustomerGroup(options);
   }
 
   async findCustomerGroupById(id: string, options?: any) {
-    return await this.customerGroupRepository.findOne({
-      where: { id },
-      select: this.selectFieldsCG,
-      ...options,
-    });
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneCustomerGroup(options);
   }
 
   // customer group
-  async createCustomerGroup(dto: SaveCustomerGroupDto, userId: string) {
+  async createCustomerGroup(dto: SaveCustomerGroupDto, adminId: string) {
     const { code, name, description, note } = dto;
 
     const customerGroupExist = await this.findCustomerGroupByCode(code);
@@ -81,20 +87,31 @@ export class CustomerGroupService {
     customerGroup.description = description;
     customerGroup.note = note;
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
     customerGroup.createdBy = adminExist.id;
 
-    const { deletedAt, ...newCustomerGroup } =
-      await this.customerGroupRepository.save(customerGroup);
+    const newCustomerGroup = await this.customerGroupRepository.save(
+      customerGroup,
+    );
+    delete newCustomerGroup.deletedAt;
     return newCustomerGroup;
   }
 
-  async getCustomerGroupById(id: string) {
+  async getCustomerGroupById(id: string, adminId: string) {
+    const adminExist = await this.adminService.findOneBydId(adminId);
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
     const customerGroup = await this.findCustomerGroupById(id);
 
     if (!customerGroup) {
@@ -103,7 +120,15 @@ export class CustomerGroupService {
     return customerGroup;
   }
 
-  async getCustomerGroupByCode(code: string) {
+  async getCustomerGroupByCode(code: string, adminId: string) {
+    const adminExist = await this.adminService.findOneBydId(adminId);
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
     const customerGroup = await this.findCustomerGroupByCode(code);
 
     if (!customerGroup) {
@@ -114,11 +139,18 @@ export class CustomerGroupService {
 
   async findAllCustomerGroup(
     dto: FilterCustomerGroupDto,
+    adminId: string,
     pagination?: Pagination,
   ) {
+    const adminExist = await this.adminService.findOneBydId(adminId);
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
     const { keywords, sort } = dto;
     const query = this.customerGroupRepository.createQueryBuilder('q');
-    console.log(keywords);
 
     if (keywords) {
       query.orWhere('q.code LIKE :customerGroupCode', {
@@ -156,7 +188,7 @@ export class CustomerGroupService {
     id: string,
     dto: UpdateCustomerGroupDto,
   ) {
-    const customerGroup = await this.getCustomerGroupById(id);
+    const customerGroup = await this.getCustomerGroupById(id, adminId);
     const { name, description, note } = dto;
     if (name) {
       customerGroup.name = name;
@@ -168,16 +200,19 @@ export class CustomerGroupService {
       customerGroup.note = note;
     }
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
     customerGroup.updatedBy = adminExist.id;
 
-    const { deletedAt, ...saveCustomerGroup } =
-      await this.customerGroupRepository.save(customerGroup);
+    const saveCustomerGroup = await this.customerGroupRepository.save(
+      customerGroup,
+    );
+    delete saveCustomerGroup.deletedAt;
     return saveCustomerGroup;
   }
 
@@ -186,7 +221,7 @@ export class CustomerGroupService {
     code: string,
     dto: UpdateCustomerGroupDto,
   ) {
-    const customerGroup = await this.getCustomerGroupByCode(code);
+    const customerGroup = await this.getCustomerGroupByCode(code, adminId);
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
@@ -202,30 +237,34 @@ export class CustomerGroupService {
       customerGroup.note = note;
     }
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
     customerGroup.updatedBy = adminExist.id;
 
-    const { deletedAt, ...saveCustomerGroup } =
-      await this.customerGroupRepository.save(customerGroup);
+    const saveCustomerGroup = await this.customerGroupRepository.save(
+      customerGroup,
+    );
+    delete saveCustomerGroup.deletedAt;
     return saveCustomerGroup;
   }
 
   async deleteCustomerGroupById(adminId: string, id: string) {
-    const customerGroup = await this.getCustomerGroupById(id);
+    const customerGroup = await this.getCustomerGroupById(id, adminId);
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     customerGroup.updatedBy = adminExist.id;
     customerGroup.deletedAt = new Date();
@@ -239,16 +278,17 @@ export class CustomerGroupService {
   }
 
   async deleteCustomerGroupByCode(adminId: string, code: string) {
-    const customerGroup = await this.getCustomerGroupByCode(code);
+    const customerGroup = await this.getCustomerGroupByCode(code, adminId);
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     customerGroup.updatedBy = adminExist.id;
     customerGroup.deletedAt = new Date();
@@ -304,14 +344,15 @@ export class CustomerGroupService {
     dto: FilterCustomerDto,
     pagination?: Pagination,
   ) {
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
 
-    const customerGroup = await this.getCustomerGroupById(groupId);
+    const customerGroup = await this.getCustomerGroupById(groupId, adminId);
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
@@ -397,11 +438,12 @@ export class CustomerGroupService {
       throw new BadRequestException('CUSTOMER_ALREADY_IN_GROUP');
     }
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const customerGroupDetail = new CustomerGroupDetail();
@@ -430,11 +472,12 @@ export class CustomerGroupService {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const customerGroupDetails = await customerIds.map(async (customerId) => {
@@ -486,16 +529,20 @@ export class CustomerGroupService {
       throw new BadRequestException('CUSTOMER_NOT_FOUND');
     }
 
-    const customerGroup = await this.getCustomerGroupById(customerGroupId);
+    const customerGroup = await this.getCustomerGroupById(
+      customerGroupId,
+      adminId,
+    );
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const query = this.customerGDRepository

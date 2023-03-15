@@ -1,3 +1,4 @@
+import { AdminService } from './../../admin/admin.service';
 import { SortEnum } from './../../../enums';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -5,7 +6,7 @@ import {
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Ward, District, Staff } from './../../../database/entities';
+import { Ward, District } from './../../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import { Pagination } from './../../../decorator';
 import {
@@ -21,6 +22,7 @@ export class WardService {
   constructor(
     @InjectRepository(Ward)
     private readonly wardRepository: Repository<Ward>,
+    private readonly adminService: AdminService,
     private dataSource: DataSource,
   ) {}
 
@@ -122,14 +124,12 @@ export class WardService {
     ward.parentCode = district.id;
     ward.districtCode = district.code;
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (!adminExist.isActive) {
-      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.createdBy = adminExist.id;
 
@@ -165,14 +165,12 @@ export class WardService {
       ward.districtCode = dist.code;
       ward.parentCode = dist.id;
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (!adminExist.isActive) {
-      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
 
@@ -209,14 +207,12 @@ export class WardService {
       ward.districtCode = dist.code;
       ward.parentCode = dist.id;
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (!adminExist.isActive) {
-      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
 
@@ -229,14 +225,12 @@ export class WardService {
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (!adminExist.isActive) {
-      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
     ward.deletedAt = new Date();
@@ -251,14 +245,12 @@ export class WardService {
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (!adminExist.isActive) {
-      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
     ward.deletedAt = new Date();

@@ -58,9 +58,14 @@ export class CustomerGroupController {
   @ApiBearerAuth()
   async findAllCustomerGroup(
     @Query() dto: FilterCustomerGroupDto,
+    @CurrentUser() user,
     @GetPagination() pagination?: Pagination,
   ) {
-    return await this.customGroupService.findAllCustomerGroup(dto, pagination);
+    return await this.customGroupService.findAllCustomerGroup(
+      dto,
+      user.id,
+      pagination,
+    );
   }
 
   @Get('id/:id')
@@ -68,8 +73,8 @@ export class CustomerGroupController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getCustomerGroupById(@Param('id') id: string) {
-    return await this.customGroupService.getCustomerGroupById(id);
+  async getCustomerGroupById(@Param('id') id: string, @CurrentUser() user) {
+    return await this.customGroupService.getCustomerGroupById(id, user.id);
   }
 
   @Get('code/:code')
@@ -77,8 +82,11 @@ export class CustomerGroupController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getCustomerGroupByCode(@Param('code') code: string) {
-    return await this.customGroupService.getCustomerGroupByCode(code);
+  async getCustomerGroupByCode(
+    @Param('code') code: string,
+    @CurrentUser() user,
+  ) {
+    return await this.customGroupService.getCustomerGroupByCode(code, user.id);
   }
 
   @Patch('id/:id')

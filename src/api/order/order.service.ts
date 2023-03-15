@@ -81,7 +81,7 @@ export class OrderService {
     if (customer && customer.status === 0) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-    if (admin && admin.isActive === false) {
+    if (admin && !admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 

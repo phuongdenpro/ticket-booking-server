@@ -26,8 +26,15 @@ export class AdminService {
   }
 
   async updatePassword(id: string, dto: AdminUpdatePasswordDto) {
-    const userExist = await this.adminRepository.findOneById(id);
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
+    const userExist = await this.adminRepository.findOne({
+      where: { id },
+    });
+    if (!userExist) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    if (!userExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
 
     const isPasswordMatches = await this.authService.comparePassword(
       dto?.oldPassword,
@@ -56,9 +63,9 @@ export class AdminService {
         deletedAt: false,
         ...options?.select,
       },
-      orderBy: {
+      order: {
         createdAt: SortEnum.DESC,
-        ...options?.orderBy,
+        ...options?.order,
       },
       ...options?.other,
     });
