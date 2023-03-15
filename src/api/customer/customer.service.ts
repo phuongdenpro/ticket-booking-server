@@ -32,9 +32,13 @@ export class CustomerService {
     'u.updatedBy',
     'cgd.id',
     'cg.id',
+    'cg.name',
     'cg.code',
     'cg.description',
     'cg.note',
+    'cg.createdBy',
+    'cg.createdAt',
+    'cg.updatedAt',
   ];
 
   async findOneCustomer(options: any) {
