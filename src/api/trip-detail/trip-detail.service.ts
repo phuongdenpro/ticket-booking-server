@@ -15,12 +15,14 @@ import {
 } from './dto';
 import { SortEnum, TripDetailStatusEnum } from './../../enums';
 import { Pagination } from './../../decorator';
+import { TicketService } from '../ticket/ticket.service';
 
 @Injectable()
 export class TripDetailService {
   constructor(
     @InjectRepository(TripDetail)
-    private readonly tripDetailService: Repository<TripDetail>,
+    private readonly tripDetailRepository: Repository<TripDetail>,
+    private readonly ticketService: TicketService,
     private dataSource: DataSource,
   ) {}
 
@@ -36,7 +38,7 @@ export class TripDetailService {
   ];
 
   async findTripDetailById(id: string, options?: any) {
-    return await this.tripDetailService.findOne({
+    return await this.tripDetailRepository.findOne({
       where: { id, ...options?.where },
       relations: ['vehicle'].concat(options?.relations || []),
       select: {
@@ -52,12 +54,12 @@ export class TripDetailService {
         },
         ...options?.select,
       },
-      ...options,
+      ...options.other,
     });
   }
 
   async findTripDetailByCode(code: string, options?: any) {
-    return await this.tripDetailService.findOne({
+    return await this.tripDetailRepository.findOne({
       where: { code, ...options?.where },
       relations: ['vehicle'].concat(options?.relations || []),
       select: {
@@ -79,12 +81,17 @@ export class TripDetailService {
   async createTripDetail(dto: CreateTripDetailDto, userId: string) {
     const { code, departureTime, expectedTime, status, tripId, vehicleId } =
       dto;
+
+    // check trip details is exist
     const tripDetailExist = await this.findTripDetailByCode(code);
     if (tripDetailExist) {
       throw new BadRequestException('TRIP_DETAIL_CODE_EXIST');
     }
+
+    // create new trip details and validate
     const tripDetail = new TripDetail();
     tripDetail.code = code;
+    // check time
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (!departureTime) {
       throw new BadRequestException('DEPARTURE_DATE_REQUIRED');
@@ -102,11 +109,12 @@ export class TripDetailService {
       );
     }
     tripDetail.expectedTime = expectedTime;
+    // check status
     if (!status) {
       throw new BadRequestException('TRIP_DETAIL_STATUS_REQUIRED');
     }
     switch (status) {
-      case TripDetailStatusEnum.SALES:
+      case TripDetailStatusEnum.NOT_SOLD_OUT:
       case TripDetailStatusEnum.ACTIVE:
         tripDetail.status = status;
         tripDetail.isActive = true;
@@ -121,6 +129,7 @@ export class TripDetailService {
         tripDetail.isActive = false;
         break;
     }
+    // check trip is exist and ref from province, to province
     if (tripId) {
       const trip = await this.dataSource.getRepository(Trip).findOne({
         where: { id: tripId },
@@ -129,6 +138,7 @@ export class TripDetailService {
           'toStation.ward.parentCode.parentCode',
         ],
       });
+      // ref from province and to province
       if (trip) {
         const fromProvince = trip.fromStation.ward.parentCode['parentCode'];
         const toProvince = trip.toStation.ward.parentCode['parentCode'];
@@ -142,6 +152,7 @@ export class TripDetailService {
     } else {
       throw new NotFoundException('TRIP_ID_REQUIRED');
     }
+    // check vehicle
     if (!vehicleId) {
       throw new NotFoundException('VEHICLE_ID_REQUIRED');
     }
@@ -153,6 +164,7 @@ export class TripDetailService {
     }
     tripDetail.vehicle = vehicle;
 
+    // check permissions
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
@@ -161,7 +173,20 @@ export class TripDetailService {
     }
     tripDetail.createdBy = adminExist.id;
 
-    const saveTripDetail = await this.tripDetailService.save(tripDetail);
+    const saveTripDetail = await this.tripDetailRepository.save(tripDetail);
+    // create ticket
+    await this.ticketService.createTicket(
+      {
+        code: saveTripDetail.code,
+        note: '',
+        startDate: new Date(),
+        endDate: departureTime,
+        tripDetailId: saveTripDetail.id,
+      },
+      adminExist.id,
+    );
+
+    // return value
     return {
       id: saveTripDetail.id,
       departureTime: saveTripDetail.departureTime,
@@ -180,7 +205,7 @@ export class TripDetailService {
   async findAll(dto: FilterTripDetailDto, pagination?: Pagination) {
     const { status, tripId, fromProvinceCode, toProvinceCode } = dto;
     let { departureTime } = dto;
-    const query = this.tripDetailService.createQueryBuilder('q');
+    const query = this.tripDetailRepository.createQueryBuilder('q');
     query.where('q.isActive = :isActive', { isActive: true });
 
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
@@ -199,7 +224,7 @@ export class TripDetailService {
       query.andWhere('q.status = :status', { status });
     } else {
       query.andWhere('q.status = :status', {
-        status: TripDetailStatusEnum.SALES,
+        status: TripDetailStatusEnum.NOT_SOLD_OUT,
       });
     }
     if (tripId) {
@@ -234,8 +259,8 @@ export class TripDetailService {
     return { dataResult, pagination, total };
   }
 
-  async getTripDetailById(id: string) {
-    const tripDetail = await this.findTripDetailById(id);
+  async getTripDetailById(id: string, options?: any) {
+    const tripDetail = await this.findTripDetailById(id, options);
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
     }
@@ -258,7 +283,7 @@ export class TripDetailService {
     const { status, tripId, vehicleId } = dto;
     let { departureTime, expectedTime } = dto;
 
-    const tripDetail = await this.tripDetailService.findOne({
+    const tripDetail = await this.tripDetailRepository.findOne({
       where: { id },
     });
     if (!tripDetail) {
@@ -290,7 +315,7 @@ export class TripDetailService {
     }
     if (status) {
       switch (status) {
-        case TripDetailStatusEnum.SALES:
+        case TripDetailStatusEnum.NOT_SOLD_OUT:
         case TripDetailStatusEnum.ACTIVE:
           tripDetail.status = status;
           break;
@@ -300,7 +325,7 @@ export class TripDetailService {
           tripDetail.isActive = false;
           break;
         default:
-          tripDetail.status = TripDetailStatusEnum.SALES;
+          tripDetail.status = TripDetailStatusEnum.NOT_SOLD_OUT;
           tripDetail.isActive = false;
           break;
       }
@@ -333,7 +358,7 @@ export class TripDetailService {
     }
     tripDetail.updatedBy = adminExist.id;
 
-    const saveTripDetail = await this.tripDetailService.save(tripDetail);
+    const saveTripDetail = await this.tripDetailRepository.save(tripDetail);
     return {
       id: saveTripDetail.id,
       departureTime: saveTripDetail.departureTime,
@@ -357,7 +382,7 @@ export class TripDetailService {
     const { status, tripId, vehicleId } = dto;
     let { departureTime, expectedTime } = dto;
 
-    const tripDetail = await this.tripDetailService.findOne({
+    const tripDetail = await this.tripDetailRepository.findOne({
       where: { code },
     });
     if (!tripDetail) {
@@ -389,7 +414,7 @@ export class TripDetailService {
     }
     if (status) {
       switch (status) {
-        case TripDetailStatusEnum.SALES:
+        case TripDetailStatusEnum.NOT_SOLD_OUT:
         case TripDetailStatusEnum.ACTIVE:
           tripDetail.status = status;
           break;
@@ -399,7 +424,7 @@ export class TripDetailService {
           tripDetail.isActive = false;
           break;
         default:
-          tripDetail.status = TripDetailStatusEnum.SALES;
+          tripDetail.status = TripDetailStatusEnum.NOT_SOLD_OUT;
           tripDetail.isActive = false;
           break;
       }
@@ -432,7 +457,7 @@ export class TripDetailService {
     }
     tripDetail.updatedBy = adminExist.id;
 
-    const saveTripDetail = await this.tripDetailService.save(tripDetail);
+    const saveTripDetail = await this.tripDetailRepository.save(tripDetail);
     return {
       id: saveTripDetail.id,
       departureTime: saveTripDetail.departureTime,
@@ -456,14 +481,16 @@ export class TripDetailService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const tripDetail = await this.tripDetailService.findOne({ where: { id } });
+    const tripDetail = await this.tripDetailRepository.findOne({
+      where: { id },
+    });
     if (!tripDetail) {
       throw new BadRequestException('TRIP_DETAIL_NOT_FOUND');
     }
     tripDetail.deletedAt = new Date();
     tripDetail.updatedBy = adminExist.id;
 
-    return await { id: (await this.tripDetailService.save(tripDetail)).id };
+    return await { id: (await this.tripDetailRepository.save(tripDetail)).id };
   }
 
   async deleteTripDetailByCode(code: string, userId: string) {
@@ -474,7 +501,7 @@ export class TripDetailService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const tripDetail = await this.tripDetailService.findOne({
+    const tripDetail = await this.tripDetailRepository.findOne({
       where: { code },
     });
     if (!tripDetail) {
@@ -483,7 +510,7 @@ export class TripDetailService {
     tripDetail.deletedAt = new Date();
     tripDetail.updatedBy = adminExist.id;
 
-    return await { id: (await this.tripDetailService.save(tripDetail)).id };
+    return await { id: (await this.tripDetailRepository.save(tripDetail)).id };
   }
 
   async deleteMultipleTripDetailByIds(

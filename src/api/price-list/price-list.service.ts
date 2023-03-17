@@ -81,13 +81,14 @@ export class PriceListService {
     const { code, name, note, startDate, endDate, status } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    const priceListExist = await this.priceListRepository.findOne({
-      where: { code },
-    });
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+    }
+    const priceListExist = await this.findOnePriceListByCode(code);
     if (priceListExist) {
       throw new BadRequestException('PRICE_LIST_CODE_IS_EXIST');
     }
@@ -103,19 +104,19 @@ export class PriceListService {
     priceList.createdBy = adminExist.id;
 
     if (!startDate) {
-      throw new UnauthorizedException('START_DATE_IS_REQUIRED');
+      throw new BadRequestException('START_DATE_IS_REQUIRED');
     }
     if (startDate > endDate) {
-      throw new UnauthorizedException('START_DATE_MUST_BE_LESS_THAN_END_DATE');
+      throw new BadRequestException('START_DATE_MUST_BE_LESS_THAN_END_DATE');
     }
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate < currentDate) {
-      throw new UnauthorizedException('START_DATE_GREATER_THAN_NOW');
+      throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     priceList.startDate = startDate;
 
     if (!endDate) {
-      throw new UnauthorizedException('END_DATE_IS_REQUIRED');
+      throw new BadRequestException('END_DATE_IS_REQUIRED');
     }
     priceList.endDate = endDate;
 
@@ -124,22 +125,36 @@ export class PriceListService {
     return savePriceList;
   }
 
-  async getPriceListById(id: string, options?: any) {
+  async findOnePriceListById(id: string, options?: any) {
     const priceList = await this.priceListRepository.findOne({
-      where: { id },
+      where: { id, ...options?.where },
       select: this.selectFieldsPriceList,
-      ...options,
+      relations: [].concat(options?.relations || []),
+      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
+      ...options?.other,
     });
     return priceList;
   }
 
-  async getPriceListByCode(code: string, options?: any) {
+  async findOnePriceListByCode(code: string, options?: any) {
     const priceList = await this.priceListRepository.findOne({
-      where: { code },
+      where: { code, ...options?.where },
       select: this.selectFieldsPriceList,
-      ...options,
+      relations: [].concat(options?.relations || []),
+      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
+      ...options?.other,
     });
     return priceList;
+  }
+
+  async findOnePriceDetailBy(options: any) {
+    return await this.priceDetailRepository.findOne({
+      where: { ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: { ...options?.select },
+      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
+      ...options?.other,
+    });
   }
 
   async findAllPriceList(dto: FilterPriceListDto, pagination?: Pagination) {
@@ -149,9 +164,9 @@ export class PriceListService {
 
     if (keywords) {
       query
+        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` });
+        .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` });
     }
     if (status) {
       let statusBool = true;
@@ -163,9 +178,7 @@ export class PriceListService {
       query.andWhere('q.startDate >= :startDate', { startDate: newStartDate });
     }
     if (endDate) {
-      const newEndDate = new Date(
-        new Date().setDate(new Date(endDate).getDate() + 1),
-      );
+      const newEndDate = new Date(endDate);
       query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
     if (sort) {
@@ -193,12 +206,15 @@ export class PriceListService {
     const { name, note, startDate, endDate, status } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+    }
 
-    const priceList = await this.getPriceListById(id);
+    const priceList = await this.findOnePriceListById(id);
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
@@ -244,12 +260,14 @@ export class PriceListService {
     const { name, note, startDate, endDate, status } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const priceList = await this.getPriceListByCode(code);
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+    }
+    const priceList = await this.findOnePriceListByCode(code);
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
@@ -299,11 +317,13 @@ export class PriceListService {
   async deletePriceListById(id: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+    }
     const priceList = await this.priceListRepository.findOne({
       where: { id: id },
     });
@@ -323,12 +343,15 @@ export class PriceListService {
   async deletePriceListByCode(code: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+    }
 
-    const priceList = await this.getPriceListByCode(code);
+    const priceList = await this.findOnePriceListByCode(code);
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
@@ -347,9 +370,12 @@ export class PriceListService {
       const { ids } = dto;
       const adminExist = await this.dataSource
         .getRepository(Staff)
-        .findOne({ where: { id: adminId, isActive: true } });
+        .findOne({ where: { id: adminId } });
       if (!adminExist) {
         throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
       }
 
       const list = await Promise.all(
@@ -384,14 +410,17 @@ export class PriceListService {
       const { ids } = dto;
       const adminExist = await this.dataSource
         .getRepository(Staff)
-        .findOne({ where: { id: adminId, isActive: true } });
+        .findOne({ where: { id: adminId } });
       if (!adminExist) {
         throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
       }
 
       const list = await Promise.all(
         ids.map(async (code) => {
-          const priceList = await this.getPriceListByCode(code);
+          const priceList = await this.findOnePriceListByCode(code);
           if (!priceList) {
             return {
               id: priceList.id,
@@ -422,9 +451,12 @@ export class PriceListService {
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
     }
     const priceDetailExist = await this.priceDetailRepository.findOne({
       where: { code: code },
@@ -433,7 +465,7 @@ export class PriceListService {
       throw new BadRequestException('PRICE_DETAIL_CODE_EXISTED');
     }
 
-    const priceList = await this.getPriceListById(priceListId, {
+    const priceList = await this.findOnePriceListById(priceListId, {
       select: [
         'id',
         'name',
@@ -542,9 +574,12 @@ export class PriceListService {
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
     }
 
     const priceDetail = await this.getPriceDetailById(id);
@@ -565,7 +600,7 @@ export class PriceListService {
       priceDetail.note = note;
     }
     if (priceListId) {
-      const priceList = await this.getPriceListById(priceListId, {
+      const priceList = await this.findOnePriceListById(priceListId, {
         select: ['id', 'name', 'note', 'startDate', 'endDate', 'status'],
       });
       if (!priceList) {
@@ -603,9 +638,12 @@ export class PriceListService {
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
     }
 
     const priceDetail = await this.getPriceDetailByCode(code);
@@ -626,7 +664,7 @@ export class PriceListService {
       priceDetail.note = note;
     }
     if (priceListId) {
-      const priceList = await this.getPriceListById(priceListId, {
+      const priceList = await this.findOnePriceListById(priceListId, {
         select: ['id', 'name', 'note', 'startDate', 'endDate', 'status'],
       });
       if (!priceList) {
@@ -658,9 +696,12 @@ export class PriceListService {
   async deletePriceDetailById(adminId: string, id: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
     }
 
     const priceDetail = await this.getPriceDetailById(id);
@@ -676,9 +717,12 @@ export class PriceListService {
   async deletePriceDetailByCode(adminId: string, code: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
     }
 
     const priceDetail = await this.getPriceDetailByCode(code);
@@ -699,9 +743,12 @@ export class PriceListService {
       const { ids } = dto;
       const adminExist = await this.dataSource
         .getRepository(Staff)
-        .findOne({ where: { id: adminId, isActive: true } });
+        .findOne({ where: { id: adminId } });
       if (!adminExist) {
         throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
       }
 
       const list = await Promise.all(
@@ -741,9 +788,12 @@ export class PriceListService {
       const { ids } = dto;
       const adminExist = await this.dataSource
         .getRepository(Staff)
-        .findOne({ where: { id: adminId, isActive: true } });
+        .findOne({ where: { id: adminId } });
       if (!adminExist) {
         throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
       }
 
       const list = await Promise.all(

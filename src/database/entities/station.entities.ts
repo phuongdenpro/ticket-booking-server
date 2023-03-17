@@ -1,6 +1,4 @@
-import { ImageResource } from './image-resource.entities';
-import { Trip } from './trip.entities';
-import { Ward } from './vi-address-ward.entities';
+import { ImageResource, Trip, Ward } from '.';
 import {
   Column,
   Entity,

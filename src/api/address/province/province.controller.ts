@@ -61,7 +61,7 @@ export class ProvinceController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async create(@Body() dto: SaveProvinceDto, @CurrentUser() user) {
-    return this.provinceService.save(dto, user.id);
+    return this.provinceService.createProvince(dto, user.id);
   }
 
   @Patch('id/:id')

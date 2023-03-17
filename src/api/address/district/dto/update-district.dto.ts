@@ -12,11 +12,6 @@ export class UpdateDistrictDto {
   @IsString()
   type: string;
 
-  @ApiPropertyOptional({ example: 17 })
-  @IsOptional()
-  @IsNumber()
-  code: number;
-
   @ApiPropertyOptional({ example: 'huyen_dong_anh' })
   @IsOptional()
   @IsString()

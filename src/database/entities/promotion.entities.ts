@@ -7,8 +7,8 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   OneToMany,
+  PrimaryGeneratedColumn,
 } from 'typeorm';
-import { PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'promotion' })
 export class Promotion {

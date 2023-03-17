@@ -45,6 +45,6 @@ export class CustomerController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findCustomerOneById(@Param('id', ParseUUIDPipe) id: string) {
-    return await this.customerService.findCustomerById(id);
+    return await this.customerService.getCustomerById(id);
   }
 }

@@ -2,7 +2,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, Length } from 'class-validator';
 
 export class AddCustomerDto {
-  @ApiProperty({ example: '32489ff0-cb19-41c2-991c-53b98398f773' })
+  @ApiProperty({ example: '958a39f4-f52a-412d-9042-3acb3590e210' })
   @IsNotEmpty({ message: 'CUSTOMER_ID_IS_REQUIRED' })
   @IsString({ message: 'CUSTOMER_ID_IS_STRING' })
   @Length(36, 36, { message: 'CUSTOMER_ID_MUST_BE_36_CHARACTERS' })

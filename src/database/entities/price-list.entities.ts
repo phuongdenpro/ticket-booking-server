@@ -37,13 +37,13 @@ export class PriceList {
   })
   status: boolean;
 
-  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
 
-  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
+  @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
 
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })

@@ -1,4 +1,6 @@
-import { Province, Staff } from './../../../database/entities';
+import { AdminService } from './../../admin/admin.service';
+import { SortEnum } from './../../../enums';
+import { Province } from './../../../database/entities';
 import {
   BadRequestException,
   Injectable,
@@ -19,22 +21,41 @@ export class ProvinceService {
   constructor(
     @InjectRepository(Province)
     private readonly provinceRepository: Repository<Province>,
+    private readonly adminService: AdminService,
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string) {
-    const query = this.provinceRepository.createQueryBuilder('p');
-    query.where('p.id = :id', { id });
+  async findOneProvince(options: any) {
+    return await this.provinceRepository.findOne({
+      where: { ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options?.other,
+    });
+  }
 
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneProvince(options);
   }
 
   async findOneByCode(code: number, options?: any) {
-    return await this.provinceRepository.findOne({
-      where: { code },
-      ...options,
-    });
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneProvince(options);
   }
 
   // find all
@@ -66,17 +87,18 @@ export class ProvinceService {
   }
 
   // insert a new record
-  async save(dto: SaveProvinceDto, userId: string) {
+  async createProvince(dto: SaveProvinceDto, userId: string) {
     const province = new Province();
     province.name = dto.name;
     province.type = dto.type;
     province.code = dto.code;
     province.codename = dto.codename;
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     province.createdBy = adminExist.id;
     return await this.provinceRepository.save(province);
@@ -99,11 +121,12 @@ export class ProvinceService {
     if (dto.codename) {
       province.codename = dto.codename;
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.updatedBy = adminExist.id;
 
@@ -129,11 +152,12 @@ export class ProvinceService {
     if (dto.codename) {
       province.codename = dto.codename;
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.updatedBy = adminExist.id;
 
@@ -147,11 +171,12 @@ export class ProvinceService {
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.updatedBy = adminExist.id;
     province.deletedAt = new Date();
@@ -165,11 +190,12 @@ export class ProvinceService {
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     province.updatedBy = adminExist.id;
     province.deletedAt = new Date();

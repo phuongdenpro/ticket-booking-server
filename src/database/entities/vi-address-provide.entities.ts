@@ -1,4 +1,3 @@
-import { TripDetail } from './trip-detail.entities';
 import {
   Column,
   CreateDateColumn,
@@ -8,7 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { District } from './vi-address-district.entities';
+import { TripDetail, District } from '.';
 
 @Entity({ name: 'vi_address_provide' })
 export class Province {

@@ -6,11 +6,10 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-import { Order } from './order.entities';
-import { PromotionLine } from './promotion-line.entities';
-import { OrderDetail } from './order-detail.entities';
-import { UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { Order, PromotionLine, OrderDetail } from '.';
 
 @Entity({ name: 'promotion_history' })
 export class PromotionHistory {
@@ -29,9 +28,9 @@ export class PromotionHistory {
   @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
   type: string;
 
-  @OneToMany(() => Order, (order) => order.promotionHistory)
-  @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
-  order: Order[];
+  // @OneToMany(() => Order, (order) => order.promotionHistory)
+  // @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
+  // order: Order[];
 
   @OneToMany(
     () => PromotionLine,

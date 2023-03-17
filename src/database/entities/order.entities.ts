@@ -5,22 +5,20 @@ import {
   ManyToOne,
   OneToMany,
   OneToOne,
-} from 'typeorm';
-import { Customer } from './customer.entities';
-import { OrderDetail } from './order-detail.entities';
-import { OrderRefund } from './order-refund.entities';
-import { PromotionHistory } from './promotion-history.entities';
-import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+import { Customer, OrderDetail, OrderRefund, PromotionHistory, Staff } from '.';
 
 @Entity({ name: 'order' })
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'note', type: 'text' })
   note: string;
@@ -34,31 +32,16 @@ export class Order {
   @Column({ name: 'final_total', type: 'double', nullable: true, default: 0.0 })
   finalTotal: number;
 
-  @ManyToOne(() => Customer, (customer) => customer.orders)
-  @JoinColumn({ name: 'customer_id', referencedColumnName: 'id' })
-  customer: Customer;
+  @Column({ name: 'created_by', type: 'varchar', nullable: false })
+  createdBy: string;
 
-  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
-  orderDetails: OrderDetail[];
-
-  @OneToOne(() => OrderRefund, (orderRefund) => orderRefund.order)
-  orderRefund: OrderRefund;
-
-  @ManyToOne(
-    () => PromotionHistory,
-    (promotionHistory) => promotionHistory.order,
-  )
-  promotionHistory: PromotionHistory;
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -68,4 +51,25 @@ export class Order {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relationship
+  @ManyToOne(() => Customer, (customer) => customer.orders)
+  @JoinColumn({ name: 'customer_id', referencedColumnName: 'id' })
+  customer: Customer;
+
+  @ManyToOne(() => Staff, (staff) => staff.orders)
+  @JoinColumn({ name: 'staff_id', referencedColumnName: 'id' })
+  staff: Staff;
+
+  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.order)
+  orderDetails: OrderDetail[];
+
+  @OneToOne(() => OrderRefund, (orderRefund) => orderRefund.order)
+  orderRefund: OrderRefund;
+
+  // @ManyToOne(
+  //   () => PromotionHistory,
+  //   (promotionHistory) => promotionHistory.order,
+  // )
+  // promotionHistory: PromotionHistory;
 }

@@ -46,12 +46,15 @@ export const mappingTranslate = {
 
   // User 21-30
   UNAUTHORIZED: 'Không có quyền truy cập',
+  Unauthorized: 'Không có quyền truy cập',
   INVALID_USERNAME_OR_PASSWORD: 'Tên đăng nhập hoặc mật khẩu không đúng.',
   INVALID_PHONE_NUMBER: 'Số điện thoại không đúng định dạng.',
   INVALID_EMAIL: 'Email không đúng định dạng.',
   USERNAME_ALREADY_EXIST: 'Tên đăng nhập đã tồn tại',
   USER_NOT_FOUND: 'Không tìm thấy tài khoản',
+  USER_NOT_ACTIVE: 'Tài khoản chưa được kích hoạt hoặc đã bị khóa',
   EMAIL_ALREADY_EXIST: 'Email đã tồn tại',
+  EMAIL_OR_PHONE_REQUIRED: 'Email hoặc số điện thoại không được để trống',
   PASSWORD_IS_REQUIRED: 'Mật khẩu không được để trống',
   PASSWORD_IS_STRING: 'Mật khẩu phải là chuỗi ký tự',
   PASSWORD_IS_MIN_LENGTH_6: 'Mật khẩu phải có ít nhất 6 ký tự',
@@ -78,7 +81,6 @@ export const mappingTranslate = {
   CUSTOMER_NAME_IS_STRING: 'Tên khách hàng phải là chuỗi ký tự',
   CUSTOMER_ID_MUST_BE_36_CHARACTERS: 'Mã khách hàng phải có 36 ký tự',
   CUSTOMER_ID_IS_ARRAY: 'Mã khách hàng phải là mảng',
-  CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
   CUSTOMER_STATUS_IS_ENUM: 'Trạng thái khách hàng không hợp lệ',
 
   // customer group
@@ -90,9 +92,8 @@ export const mappingTranslate = {
     'Mã nhóm khách hàng phải có 36 ký tự',
   CUSTOMER_GROUP_HAS_CUSTOMER: 'Nhóm khách hàng vẫn còn khách hàng',
   CUSTOMER_GROUP_CODE_EXIST: 'Mã nhóm khách hàng đã tồn tại',
-
-  // customer group detail
   CUSTOMER_ALREADY_IN_GROUP: 'Khách hàng đã tồn tại trong nhóm',
+  CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
 
   // image resource
   INVALID_IMAGE_URL: 'url ảnh không đúng định dạng',
@@ -119,6 +120,7 @@ export const mappingTranslate = {
   DISTRICT_TYPE_REQUIRED: 'Loại quận/huyện không được để trống',
   DISTRICT_CODE_ID_NUMBER: 'Mã quận/huyện phải là số',
   DISTRICT_CODE_ID_REQUIRED: 'Mã quận/huyện không được để trống',
+  DISTRICT_CODE_EXISTED: 'Mã quận/huyện đã tồn tại',
 
   // ward
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
@@ -144,9 +146,24 @@ export const mappingTranslate = {
   SEAT_TYPE_IS_STRING: 'Loại ghế phải là chuỗi ký tự',
   SEAT_TYPE_IS_ENUM: 'Loại ghế không hợp lệ',
   FLOOR_IS_NUMBER: 'Số tầng phải là số',
+  SEAT_CODE_ALREADY_EXIST: 'Mã ghế này đã tồn tại',
+  SEAT_FLOOR_MIN_MAX: 'Số tầng chỉ nhận 1 trong 2 giá trị: 1, 2',
+  SEAT_ID_IS_STRING: 'Id ghế phải là chuỗi ký tự',
+  SEAT_ID_IS_REQUIRED: 'Id ghế không được để trống',
+  SEAT_ID_IS_36_CHARACTERS: 'Id ghế phải có 36 ký tự',
+  SEAT_IDS_IS_ARRAY: 'danh sách id ghế phải là mảng',
+  SEAT_CODE_IS_STRING: 'Mã ghế phải là chuỗi ký tự',
+  SEAT_CODE_IS_REQUIRED: 'Mã ghế không được để trống',
+  SEAT_CODE_IS_36_CHARACTERS: 'Mã ghế phải có 36 ký tự',
+  SEAT_CODES_IS_ARRAY: 'danh sách mã ghế phải là mảng',
+  SEAT_IDS_OR_SEAT_CODES_REQUIRED:
+    'Danh sách id ghế hoặc danh sách mã ghế không được để trống',
+  SEAT_ID_OR_SEAT_CODE_REQUIRED: 'Id ghế hoặc mã ghế không được để trống',
+  SEAT_IS_SOLD: 'Ghế này đã được bán',
 
   // trip
   TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
+  TRIP_NOT_ACTIVE: 'Tuyến xe này không hoạt động',
   TRIP_ID_REQUIRED: 'Id của tuyến đi là không được để trống',
   TRIP_ID_IS_STRING: 'Id của tuyến đi phải là chuỗi ký tự',
   TRIP_ID_INVALID: 'Id của tuyến đi không hợp lệ',
@@ -187,6 +204,8 @@ export const mappingTranslate = {
   TRIP_DETAIL_ID_REQUIRED: 'Id của chuyến xe là không được để trống',
   TRIP_DETAIL_ID_IS_STRING: 'Id của chuyến xe phải là chuỗi ký tự',
   TRIP_DETAIL_ID_IS_36_CHARACTERS: 'Id của chuyến xe phải có 36 ký tự',
+  TRIP_DETAIL_HAS_PASSED: 'Chuyến xe đã khởi hành không thể đặt vé',
+  TRIP_DETAIL_NOT_ACTIVE: 'Chuyến xe không còn hoạt động',
 
   // vehicle
   VEHICLE_NOT_FOUND: 'Không tìm thấy xe',
@@ -194,7 +213,19 @@ export const mappingTranslate = {
   VEHICLE_ID_IS_STRING: 'Id của xe phải là chuỗi ký tự',
   VEHICLE_ID_INVALID: 'Id của xe không hợp lệ',
   LICENSE_PLATE_INVALID: 'Biển số xe không hợp lệ',
+  LICENSE_PLATE_REQUIRED: 'Biển số xe không hợp lệ',
+  LICENSE_PLATE_STRING: 'Biển số xe không hợp lệ',
+  LICENSE_PLATE_BETWEEN_1_20_CHARACTERS: 'Biển số xe phải có 1 đến 20 ký tự',
   FLOOR_NUMBER_INVALID: 'Số tầng không hợp lệ',
+  VEHICLE_TYPE_STRING: 'Loại xe phải là chuỗi',
+  VEHICLE_TYPE_IS_ENUM:
+    'Loại xe phải thuộc 1 trong cái loại sau: "xe limousine", "xe giường nằm", "xe ghế ngồi", "khác"',
+  VEHICLE_FLOOR_NUMBER_IS_NUMBER: 'Số tầng của xe phải là số',
+  VEHICLE_FLOOR_NUMBER_MIN_MAX: 'Số tầng của xe chỉ nhận 2 giá trị: 1, 2',
+  VEHICLE_TOTAL_SEAT_IS_REQUIRE: 'Tổng số ghế của xe không được để trống',
+  VEHICLE_TOTAL_SEAT_IS_NUMBER: 'Tổng số ghế của xe phải là số',
+  VEHICLE_TOTAL_SEAT_IS_ENUM:
+    'Tổng số ghế của xe phải thuộc 1 trong các giá trị sau: 34, 44, 28',
 
   // ticket group
   TICKET_GROUP_NOT_FOUND: 'Không tìm thấy nhóm vé',
@@ -211,9 +242,12 @@ export const mappingTranslate = {
   TICKET_END_DATE_GREATER_THAN_TICKET_START_DATE:
     'Ngày vé hết hiệu lực phải lớn hơn ngày vé có hiệu lực',
   TICKET_NOT_FOUND: 'Không tìm thấy thông tin vé',
-  TICKET_DETAIL_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
   TICKET_ID_IS_STRING: 'Id của vé phải là chuỗi ký tự',
+  TICKET_ID_IS_REQUIRED: 'Id của vé là không được để trống',
   TICKET_CODE_IS_STRING: 'Id của vé phải là chuỗi ký tự',
+  TICKET_STATUS_IS_STRING: 'trạng thái của vé phải là chuỗi',
+  TICKET_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
+  TICKET_ID_IS_36_CHARACTERS: 'Id của vé phải là 36 ký tự',
 
   // price list
   PRICE_LIST_STATUS_INVALID:
@@ -263,4 +297,16 @@ export const mappingTranslate = {
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
+
+  // order
+  ORDER_NOT_FOUND: 'Không tìm thấy đơn hàng',
+  ORDER_STATUS_IS_STRING: 'Trạng thái của đơn hàng phải là chuỗi ký tự',
+  ORDER_STATUS_IS_ENUM: 'Trạng thái của đơn hàng không hợp lệ',
+  ORDER_ID_IS_36_CHARACTERS: 'Id của đơn hàng phải là 36 ký tự',
+  ORDER_ID_IS_REQUIRED: 'Id của đơn hàng không được để trống',
+  ORDER_ID_IS_STRING: 'Id của đơn hàng phải là chuỗi ký tự',
+  ORDER_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết đơn hàng',
+  ORDER_IS_CANCELLED: 'Đơn hàng đã bị hủy',
+  ORDER_IS_PAID: 'Đơn hàng đã thanh toán',
+  ORDER_IS_PENDING: 'Đơn hàng đang chờ xử lý',
 };

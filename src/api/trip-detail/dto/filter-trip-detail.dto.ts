@@ -15,7 +15,7 @@ export class FilterTripDetailDto {
   departureTime: Date;
 
   @ApiPropertyOptional({
-    example: TripDetailStatusEnum.SALES,
+    example: TripDetailStatusEnum.NOT_SOLD_OUT,
     enum: TripDetailStatusEnum,
   })
   @IsOptional()

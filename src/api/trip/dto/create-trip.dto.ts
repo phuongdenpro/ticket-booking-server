@@ -12,8 +12,8 @@ import {
   Max,
 } from 'class-validator';
 
-export class SaveTripDto {
-  @ApiProperty({ example: 'Bến xe miền đông - Bến xe Đức Long Bảo Lộc' })
+export class CreateTripDto {
+  @ApiProperty({ example: 'MDBL' })
   @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
   @IsString({ message: 'CODE_IS_STRING' })
   @Length(1, 100, { message: 'CODE_BETWEEN_1_100_CHARACTERS' })

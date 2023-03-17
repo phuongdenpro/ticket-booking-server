@@ -1,5 +1,4 @@
-import { Ticket } from './ticket.entities';
-import { OrderRefund } from './order-refund.entities';
+import { OrderDetail, Ticket, OrderRefund } from '.';
 import {
   Column,
   Entity,
@@ -7,9 +6,10 @@ import {
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
-import { OrderDetail } from './order-detail.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 
 @Entity({ name: 'order_refund_detail' })
 export class OrderRefundDetail {

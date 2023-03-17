@@ -10,10 +10,10 @@ import {
 import { VehicleTypeEnum } from './../../../enums';
 
 export class FilterVehicleDto {
-  @ApiPropertyOptional({ example: 'Xe giường nằm Limousine số 1' })
-  @IsString({ message: 'Name is string' })
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'KEYWORDS_IS_STRING' })
   @IsOptional()
-  name: string;
+  keywords: string;
 
   @ApiPropertyOptional({
     example: VehicleTypeEnum.LIMOUSINE,
@@ -23,11 +23,6 @@ export class FilterVehicleDto {
   @IsString()
   @IsEnum(VehicleTypeEnum)
   type: VehicleTypeEnum;
-
-  @ApiPropertyOptional({ example: '51A-111.11' })
-  @IsString()
-  @IsOptional()
-  licensePlate: string;
 
   @ApiPropertyOptional({ example: 2 })
   @IsNumber()

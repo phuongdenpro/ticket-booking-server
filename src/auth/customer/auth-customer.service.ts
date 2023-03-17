@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { GenderEnum, RoleEnum } from '../../enums';
-import { EMAIL_REGEX, PHONE_REGEX } from '../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { CustomerLoginDto, CustomerRegisterDto } from './dto';
@@ -58,21 +57,19 @@ export class AuthCustomerService {
       if (birthday) {
         user.birthday = birthday;
       } else {
-        user.birthday = new Date('01-02-1970');
+        user.birthday = new Date('01-01-1970');
       }
       user.status = 0;
       await queryRunner.commitTransaction();
       // save and select return fields
-      const {
-        createdAt,
-        updatedAt,
-        deletedAt,
-        updatedBy,
-        password,
-        refreshToken,
-        accessToken,
-        ...saveUser
-      } = await this.userRepository.save(user);
+      const saveUser = await this.userRepository.save(user);
+      delete saveUser.createdAt;
+      delete saveUser.updatedAt;
+      delete saveUser.deletedAt;
+      delete saveUser.updatedBy;
+      delete saveUser.password;
+      delete saveUser.refreshToken;
+      delete saveUser.accessToken;
 
       return saveUser;
     } catch (err) {
@@ -86,7 +83,10 @@ export class AuthCustomerService {
   async login(dto: CustomerLoginDto) {
     const { email, password } = dto;
     const userExist = await this.customerService.findOneByEmail(email, {
-      select: ['password', 'id'],
+      select: {
+        id: true,
+        password: true,
+      },
     });
     if (!userExist) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');

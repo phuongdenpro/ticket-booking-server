@@ -7,8 +7,7 @@ import {
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { CustomerGroupDetail } from './customer-group-detail.entities';
-import { ApplicableCustomerGroup } from './applicable-customer-group.entities';
+import { Customer, ApplicableCustomerGroup } from '.';
 
 @Entity({ name: 'customer_group' })
 export class CustomerGroup {
@@ -36,11 +35,7 @@ export class CustomerGroup {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -52,11 +47,8 @@ export class CustomerGroup {
   public deletedAt?: Date;
 
   // Relations
-  @OneToMany(
-    () => CustomerGroupDetail,
-    (customerGroupDetail) => customerGroupDetail.customerGroup,
-  )
-  customerGroupDetail?: CustomerGroupDetail[];
+  @OneToMany(() => Customer, (customer) => customer.customerGroup)
+  customers?: Customer[];
 
   @OneToMany(
     () => ApplicableCustomerGroup,

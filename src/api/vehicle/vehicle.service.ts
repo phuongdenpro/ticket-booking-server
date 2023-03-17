@@ -1,4 +1,4 @@
-import { SaveSeatDto } from './../seat/dto';
+import { CreateSeatDto } from './../seat/dto';
 import {
   Injectable,
   BadRequestException,
@@ -10,7 +10,7 @@ import { LICENSE_PLATE_REGEX } from './../../utils';
 import { DataSource, Repository } from 'typeorm';
 import {
   FilterVehicleDto,
-  SaveVehicleDto,
+  CreateVehicleDto,
   UpdateVehicleDto,
   VehicleDeleteMultiInput,
 } from './dto';
@@ -57,6 +57,29 @@ export class VehicleService {
     });
   }
 
+  async findOneVehicleByCode(code: string, options?: any) {
+    return await this.vehicleService.findOne({
+      where: { code },
+      relations: ['images', 'seats'].concat(options?.relations || []),
+      select: {
+        seats: {
+          id: true,
+          name: true,
+          type: true,
+          floor: true,
+        },
+        images: {
+          id: true,
+          url: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        ...options?.select,
+      },
+      ...options,
+    });
+  }
+
   async getVehicleTypes() {
     return {
       dataResult: Object.keys(VehicleTypeEnum).map((key) => ({
@@ -67,8 +90,9 @@ export class VehicleService {
     };
   }
 
-  async saveVehicle(dto: SaveVehicleDto, userId: string) {
+  async createVehicle(dto: CreateVehicleDto, userId: string) {
     const {
+      code,
       name,
       description,
       type,
@@ -77,7 +101,15 @@ export class VehicleService {
       floorNumber,
       totalSeat,
     } = dto;
+    const vehicleExist = await this.findOneVehicleByCode(code, {
+      withDeleted: true,
+    });
+    if (vehicleExist) {
+      throw new BadRequestException('VEHICLE_CODE_EXIST');
+    }
+
     const vehicle = new Vehicle();
+    vehicle.code = code;
     vehicle.name = name;
     vehicle.description = description;
 
@@ -100,14 +132,17 @@ export class VehicleService {
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     vehicle.createdBy = adminExist.id;
 
     const newVehicle = await this.vehicleService.save(vehicle);
-    if (images.length > 0) {
+    if (images && images.length > 0) {
       const newImages = await images.map(async (image) => {
         image.createdBy = adminExist.id;
         const newImage = await this.imageResourceService.saveImageResource(
@@ -125,36 +160,49 @@ export class VehicleService {
       newVehicle.images = await Promise.all(newImages);
     }
 
+    // create seats
     const numOfSeat = Math.round(totalSeat / 2);
     for (let i = 1; i <= totalSeat; i++) {
-      const dto = new SaveSeatDto();
+      const dto = new CreateSeatDto();
       if (numOfSeat % 2 == 0) {
         if (numOfSeat >= i) {
+          dto.code = `${code}A${i}`;
           dto.name = `A${i}`;
           dto.floor = 1;
         } else {
+          dto.code = `${code}B${i}`;
           dto.name = `B${i - numOfSeat}`;
           dto.floor = 2;
         }
       } else {
         if (numOfSeat > i) {
+          dto.code = `${code}A${i - numOfSeat}`;
           dto.name = `A${i}`;
           dto.floor = 1;
         } else {
+          dto.code = `${code}B${i - numOfSeat}`;
           dto.name = `B${i - numOfSeat}`;
           dto.floor = 2;
         }
       }
-      dto.type = SeatTypeEnum.NON_SALES;
+      dto.type = SeatTypeEnum.NON_SOLD;
       dto.vehicleId = newVehicle.id;
-      await this.seatService.saveSeat(dto, userId);
+      await this.seatService.createSeat(dto, userId);
     }
     delete newVehicle.deletedAt;
     return newVehicle;
   }
 
-  async getVehicleById(id: string) {
-    const vehicle = await this.findOneVehicleById(id);
+  async getVehicleById(id: string, options?: any) {
+    const vehicle = await this.findOneVehicleById(id, options);
+    if (!vehicle) {
+      throw new BadRequestException('VEHICLE_NOT_FOUND');
+    }
+    return vehicle;
+  }
+
+  async getVehicleByCode(code: string, options?: any) {
+    const vehicle = await this.findOneVehicleByCode(code, options);
     if (!vehicle) {
       throw new BadRequestException('VEHICLE_NOT_FOUND');
     }
@@ -162,11 +210,15 @@ export class VehicleService {
   }
 
   async findAllVehicle(dto: FilterVehicleDto, pagination?: Pagination) {
-    const { name, type, licensePlate, floorNumber } = dto;
+    const { keywords, type, floorNumber } = dto;
     const query = this.vehicleService.createQueryBuilder('q');
 
-    if (name) {
-      query.andWhere('q.name like :name', { name: `%${name}%` });
+    if (keywords) {
+      query
+        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.licensePlate like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.description like :keywords', { keywords: `%${keywords}%` });
     }
     if (
       type == VehicleTypeEnum.LIMOUSINE ||
@@ -175,11 +227,6 @@ export class VehicleService {
       type == VehicleTypeEnum.OTHER
     ) {
       query.andWhere('q.type = :type', { type });
-    }
-    if (licensePlate && licensePlate.match(LICENSE_PLATE_REGEX)) {
-      query.andWhere('q.licensePlate like :licensePlate', {
-        licensePlate: `%${licensePlate}%`,
-      });
     }
     if (floorNumber == 1 || floorNumber == 2) {
       query.andWhere('q.floorNumber = :floorNumber', { floorNumber });
@@ -192,7 +239,7 @@ export class VehicleService {
       .limit(pagination.take)
       .getMany();
 
-    if (dataResult.length > 0) {
+    if (dataResult && dataResult.length > 0) {
       // query image for each vehicle
       const queryImage = this.dataSource
         .getRepository(ImageResource)
@@ -215,7 +262,7 @@ export class VehicleService {
     return { dataResult, pagination, total };
   }
 
-  async updateById(dto: UpdateVehicleDto, userId: string, id: string) {
+  async updateVehicleById(dto: UpdateVehicleDto, userId: string, id: string) {
     const {
       name,
       description,
@@ -278,7 +325,7 @@ export class VehicleService {
     return updateVehicle;
   }
 
-  async deleteById(userId: string, id: string) {
+  async deleteVehicleById(userId: string, id: string) {
     const hiddenVehicle = await this.vehicleService.findOne({ where: { id } });
     if (!hiddenVehicle) {
       throw new BadRequestException('VEHICLE_NOT_FOUND');
@@ -301,7 +348,9 @@ export class VehicleService {
       const { ids } = dto;
 
       const list = await Promise.all(
-        ids.map(async (id) => await (await this.deleteById(userId, id)).id),
+        ids.map(
+          async (id) => await (await this.deleteVehicleById(userId, id)).id,
+        ),
       );
       return list;
     } catch (err) {

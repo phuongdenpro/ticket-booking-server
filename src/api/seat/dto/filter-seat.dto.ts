@@ -1,4 +1,4 @@
-import { SeatTypeEnum } from './../../../enums/seat-type.enum';
+import { SeatTypeEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
@@ -11,18 +11,17 @@ import {
 
 export class FilterSeatDto {
   @ApiPropertyOptional({ example: 'A1' })
-  @IsString({ message: 'NAME_IS_STRING' })
+  @IsString({ message: 'KEYWORDS_IS_STRING' })
   @IsOptional()
-  name: string;
+  keywords: string;
 
-  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SALES, enum: SeatTypeEnum })
-  @IsOptional()
+  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SOLD, enum: SeatTypeEnum })
   @IsString({ message: 'SEAT_TYPE_IS_STRING' })
   @IsEnum(SeatTypeEnum, { message: 'SEAT_TYPE_IS_ENUM' })
+  @IsOptional()
   type: SeatTypeEnum;
 
   @ApiPropertyOptional({ example: 1, enum: [1, 2] })
-  @IsOptional()
   @IsNumber(
     {
       allowNaN: false,
@@ -31,7 +30,9 @@ export class FilterSeatDto {
     },
     { message: 'FLOOR_IS_NUMBER' },
   )
-  @Min(1)
-  @Max(2)
+  @Min(1, { message: 'SEAT_FLOOR_MIN_MAX' })
+  @Max(2, { message: 'SEAT_FLOOR_MIN_MAX' })
+  @IsEnum([1, 2], { message: 'SEAT_FLOOR_MIN_MAX' })
+  @IsOptional()
   floor: number;
 }

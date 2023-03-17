@@ -1,3 +1,6 @@
+import { AdminService } from './../admin/admin.service';
+import { CustomerService } from './../customer/customer.service';
+import { Customer } from './../../database/entities/customer.entities';
 import { WardService } from './../address/ward/ward.service';
 import { ProvinceService } from './../address/province/province.service';
 import { DistrictService } from './../address/district/district.service';
@@ -24,6 +27,7 @@ import {
       Province,
       ImageResource,
       Staff,
+      Customer,
     ]),
   ],
   controllers: [StationController],
@@ -33,6 +37,8 @@ import {
     WardService,
     DistrictService,
     ProvinceService,
+    CustomerService,
+    AdminService,
   ],
   exports: [StationService],
 })

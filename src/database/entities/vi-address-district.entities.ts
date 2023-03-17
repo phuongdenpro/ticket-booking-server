@@ -9,8 +9,7 @@ import {
   UpdateDateColumn,
   CreateDateColumn,
 } from 'typeorm';
-import { Province } from './vi-address-provide.entities';
-import { Ward } from './vi-address-ward.entities';
+import { Province, Ward } from '.';
 
 @Entity({ name: 'vi_address_district' })
 export class District {

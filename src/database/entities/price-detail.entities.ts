@@ -5,9 +5,11 @@ import {
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
 } from 'typeorm';
 import { PriceList, OrderDetail, TicketGroup, ApplicablePriceDetail } from '.';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
 
 @Entity({ name: 'price_detail' })
 export class PriceDetail {

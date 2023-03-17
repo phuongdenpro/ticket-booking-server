@@ -1,7 +1,8 @@
-import { OrderRefundDetail } from './order-refund-detail.entities';
-import { Order } from './order.entities';
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { OrderRefundDetail,  Order } from '.';
 import {
+  CreateDateColumn,
+  UpdateDateColumn,
+  DeleteDateColumn,
   Column,
   Entity,
   JoinColumn,

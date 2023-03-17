@@ -23,7 +23,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { VehicleService } from './vehicle.service';
 import {
   FilterVehicleDto,
-  SaveVehicleDto,
+  CreateVehicleDto,
   VehicleDeleteMultiInput,
   UpdateVehicleDto,
 } from './dto';
@@ -38,8 +38,8 @@ export class VehicleController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createNewVehicle(@Body() dto: SaveVehicleDto, @CurrentUser() user) {
-    return await this.vehicleService.saveVehicle(dto, user.id);
+  async createNewVehicle(@Body() dto: CreateVehicleDto, @CurrentUser() user) {
+    return await this.vehicleService.createVehicle(dto, user.id);
   }
 
   @Get('id/:id')
@@ -73,7 +73,7 @@ export class VehicleController {
     @Param('id') id: string,
     @Body() dto: UpdateVehicleDto,
   ) {
-    return await this.vehicleService.updateById(dto, user.id, id);
+    return await this.vehicleService.updateVehicleById(dto, user.id, id);
   }
 
   @Delete('id/:id')
@@ -82,7 +82,7 @@ export class VehicleController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.vehicleService.deleteById(user.id, id);
+    return await this.vehicleService.deleteVehicleById(user.id, id);
   }
 
   @Delete('multiple')

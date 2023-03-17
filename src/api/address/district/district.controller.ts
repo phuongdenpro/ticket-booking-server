@@ -70,7 +70,7 @@ export class DistrictController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async create(@Body() dto: SaveDistrictDto, @CurrentUser() user) {
-    return this.districtService.save(dto, user.id);
+    return this.districtService.createDistrict(dto, user.id);
   }
 
   @Patch('id/:id')

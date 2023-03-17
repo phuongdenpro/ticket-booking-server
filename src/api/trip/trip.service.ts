@@ -1,5 +1,5 @@
 import {
-  SaveTripDto,
+  CreateTripDto,
   FilterTripDto,
   UpdateTripDto,
   TripDeleteMultiInput,
@@ -40,19 +40,6 @@ export class TripService {
     'to.name',
   ];
 
-  private tripSelectFields = [
-    'id',
-    'name',
-    'note',
-    'startDate',
-    'endDate',
-    'createdBy',
-    'updatedBy',
-    'isActive',
-    'createdAt',
-    'updatedAt',
-  ];
-
   async findOneTripById(id: string, options?: any) {
     const trip = await this.tripRepository.findOne({
       where: { id },
@@ -79,7 +66,7 @@ export class TripService {
     });
   }
 
-  async createTrip(dto: SaveTripDto, userId: string) {
+  async createTrip(dto: CreateTripDto, userId: string) {
     const {
       code,
       name,
@@ -90,12 +77,14 @@ export class TripService {
       toStationId,
       isActive,
     } = dto;
+    // check permission
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId, isActive: true } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    // check trip code exist
     const tripExist = await this.tripRepository.findOne({
       where: { code },
     });
@@ -110,12 +99,13 @@ export class TripService {
     }
     trip.name = name;
     trip.note = note;
+    // check start date
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate < currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     trip.startDate = startDate;
-
+    // check end date
     if (endDate) {
       if (endDate < currentDate && endDate < startDate) {
         throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
@@ -123,7 +113,7 @@ export class TripService {
         trip.endDate = endDate;
       }
     }
-
+    // check from station
     const fromStation = await this.dataSource
       .getRepository(Station)
       .findOne({ where: { id: fromStationId } });
@@ -131,7 +121,7 @@ export class TripService {
       throw new BadRequestException('FROM_STATION_NOT_FOUND');
     }
     trip.fromStation = fromStation;
-
+    // check to station
     const toStation = await this.dataSource
       .getRepository(Station)
       .findOne({ where: { id: toStationId } });
@@ -150,25 +140,20 @@ export class TripService {
     }
 
     trip.createdBy = adminExist.id;
+    trip.updatedBy = adminExist.id;
     const saveTrip = await this.tripRepository.save(trip);
+    delete saveTrip.fromStation;
+    delete saveTrip.toStation;
+    delete saveTrip.deletedAt;
     return {
-      id: saveTrip.id,
-      name: saveTrip.name,
-      note: saveTrip.note,
-      startDate: saveTrip.startDate,
-      endDate: saveTrip.endDate,
-      isActive: saveTrip.isActive,
-      createdBy: saveTrip.createdBy,
-      updatedBy: saveTrip.updatedBy,
-      createdAt: saveTrip.createdAt,
-      updatedAt: saveTrip.updatedAt,
+      ...saveTrip,
       fromStation: {
-        id: saveTrip.fromStation.id,
-        name: saveTrip.fromStation.name,
+        id: fromStation.id,
+        name: fromStation.name,
       },
       toStation: {
-        id: saveTrip.toStation.id,
-        name: saveTrip.toStation.name,
+        id: toStation.id,
+        name: toStation.name,
       },
     };
   }

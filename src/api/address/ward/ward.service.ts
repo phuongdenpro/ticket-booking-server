@@ -1,10 +1,12 @@
+import { AdminService } from './../../admin/admin.service';
+import { SortEnum } from './../../../enums';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   Injectable,
   BadRequestException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Ward, District, Staff } from './../../../database/entities';
+import { Ward, District } from './../../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import { Pagination } from './../../../decorator';
 import {
@@ -20,15 +22,38 @@ export class WardService {
   constructor(
     @InjectRepository(Ward)
     private readonly wardRepository: Repository<Ward>,
+    private readonly adminService: AdminService,
     private dataSource: DataSource,
   ) {}
 
   async findOneById(id: string, options?: any) {
-    return await this.wardRepository.findOne({ where: { id }, ...options });
+    return await this.wardRepository.findOne({
+      where: { id, ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      orderBy: {
+        createdAt: SortEnum.DESC,
+        ...options?.orderBy,
+      },
+      ...options?.other,
+    });
   }
 
   async findOneByCode(code: number, options?: any) {
-    return await this.wardRepository.findOne({ where: { code }, ...options });
+    return await this.wardRepository.findOne({
+      where: { code, ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      orderBy: {
+        createdAt: SortEnum.DESC,
+        ...options?.orderBy,
+      },
+      ...options?.other,
+    });
   }
 
   async findByDistrictCode(districtCode: number, pagination?: Pagination) {
@@ -37,7 +62,7 @@ export class WardService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .orderBy('w.code', 'ASC')
+      .orderBy('w.code', SortEnum.DESC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -75,7 +100,7 @@ export class WardService {
     return { dataResult, pagination, total };
   }
 
-  async save(dto: SaveWardDto, userId: string) {
+  async createWard(dto: SaveWardDto, userId: string) {
     const district = await this.dataSource.getRepository(District).findOne({
       where: { code: dto.districtCode },
     });
@@ -99,11 +124,12 @@ export class WardService {
     ward.parentCode = district.id;
     ward.districtCode = district.code;
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.createdBy = adminExist.id;
 
@@ -139,11 +165,12 @@ export class WardService {
       ward.districtCode = dist.code;
       ward.parentCode = dist.id;
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
 
@@ -180,11 +207,12 @@ export class WardService {
       ward.districtCode = dist.code;
       ward.parentCode = dist.id;
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
 
@@ -197,11 +225,12 @@ export class WardService {
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
     ward.deletedAt = new Date();
@@ -216,11 +245,12 @@ export class WardService {
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ward.updatedBy = adminExist.id;
     ward.deletedAt = new Date();

@@ -1,21 +1,25 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
   IsNotEmpty,
   IsString,
-  Max,
-  MaxLength,
   MinLength,
+  IsOptional,
+  IsPhoneNumber,
 } from 'class-validator';
 
 export class AdminLoginDto {
-  @ApiProperty({ example: 'dangdan2807@gmail.com' })
-  @IsNotEmpty({ message: 'EMAIL_IS_REQUIRED' })
+  @ApiPropertyOptional({ example: 'dangdan2807@gmail.com' })
   @IsString({ message: 'EMAIL_IS_STRING' })
-  @MinLength(6, { message: 'EMAIL_LENGTH' })
-  @MaxLength(100, { message: 'EMAIL_LENGTH' })
   @IsEmail({}, { message: 'EMAIL_INVALID' })
+  @IsOptional()
   email: string;
+
+  @ApiPropertyOptional({ example: '0389324159' })
+  @IsString({ message: 'PHONE_IS_STRING' })
+  @IsPhoneNumber('VN', { message: 'INVALID_PHONE_NUMBER' })
+  @IsOptional()
+  phone: string;
 
   @ApiProperty({ example: '123456' })
   @IsNotEmpty()

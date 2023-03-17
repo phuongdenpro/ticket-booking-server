@@ -38,7 +38,10 @@ export class TripDetailController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createTripDetail(@Body() dto: CreateTripDetailDto, @CurrentUser() user) {
+  async createTripDetail(
+    @Body() dto: CreateTripDetailDto,
+    @CurrentUser() user,
+  ) {
     return await this.tripDetailService.createTripDetail(dto, user.id);
   }
 

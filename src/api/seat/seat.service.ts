@@ -6,11 +6,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Seat, Staff, Vehicle } from './../../database/entities';
+import { Customer, Seat, Staff, Vehicle } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import {
   FilterSeatDto,
-  SaveSeatDto,
+  CreateSeatDto,
   SeatDeleteMultiInput,
   UpdateSeatDto,
 } from './dto';
@@ -32,16 +32,32 @@ export class SeatService {
         deletedAt: false,
         ...options?.select,
       },
-      order: {
+      orderBy: {
         createdAt: SortEnum.DESC,
-        ...options?.order,
+        ...options?.orderBy,
       },
       ...options,
     });
   }
 
-  async saveSeat(dto: SaveSeatDto, userId: string) {
-    const { name, type, floor, vehicleId } = dto;
+  async findOneSeatByCode(code: string, options?: any) {
+    return await this.seatRepository.findOne({
+      where: { code, ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      orderBy: {
+        createdAt: SortEnum.DESC,
+        ...options?.orderBy,
+      },
+      ...options,
+    });
+  }
+
+  async createSeat(dto: CreateSeatDto, userId: string) {
+    const { code, name, type, floor, vehicleId } = dto;
     const vehicle = await this.dataSource
       .getRepository(Vehicle)
       .findOne({ where: { id: vehicleId } });
@@ -50,15 +66,25 @@ export class SeatService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    }
 
+    const seatExist = this.getSeatByCode(code, {
+      withDeleted: true,
+    });
+    if (!seatExist) {
+      throw new BadRequestException('SEAT_CODE_ALREADY_EXIST');
+    }
     const seat = new Seat();
+    seat.code = code;
     seat.name = name;
     if (!seat) {
-      seat.type = SeatTypeEnum.NON_SALES;
+      seat.type = SeatTypeEnum.NON_SOLD;
     } else {
       seat.type = type;
     }
@@ -77,11 +103,13 @@ export class SeatService {
   }
 
   async searchSeat(dto: FilterSeatDto, pagination?: Pagination) {
-    const { name, type, floor } = dto;
+    const { keywords, type, floor } = dto;
     const query = this.seatRepository.createQueryBuilder('q');
 
-    if (name) {
-      query.andWhere('q.name like :name', { name: `%${name}%` });
+    if (keywords) {
+      query
+        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` });
     }
     if (type) {
       query.andWhere('q.type = :type', { type });
@@ -115,12 +143,14 @@ export class SeatService {
     vehicleId: string,
     pagination?: Pagination,
   ) {
-    const { name, type, floor } = dto;
+    const { keywords, type, floor } = dto;
     const query = this.seatRepository.createQueryBuilder('q');
     query.where('q.vehicle = :vehicleId', { vehicleId });
 
-    if (name) {
-      query.andWhere('q.name like :name', { name: `%${name}%` });
+    if (keywords) {
+      query
+        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` });
     }
     if (type) {
       query.andWhere('q.type = :type', { type });
@@ -149,8 +179,16 @@ export class SeatService {
     return { dataResult, pagination, total };
   }
 
-  async getSeatById(id: string) {
-    const seat = await this.findOneSeatById(id);
+  async getSeatById(id: string, options?: any) {
+    const seat = await this.findOneSeatById(id, options);
+    if (!seat) {
+      throw new NotFoundException('SEAT_NOT_FOUND');
+    }
+    return seat;
+  }
+
+  async getSeatByCode(code: string, options?: any) {
+    const seat = await this.findOneSeatByCode(code, options);
     if (!seat) {
       throw new NotFoundException('SEAT_NOT_FOUND');
     }
@@ -189,16 +227,63 @@ export class SeatService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
-    if (!adminExist) {
+      .findOne({ where: { id: userId } });
+    const customerExist = await this.dataSource
+      .getRepository(Customer)
+      .findOne({ where: { id: userId } });
+    if (!adminExist || !customerExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive || customerExist.status == 0) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     if (name) {
       seat.name = name;
     }
     if (seat) {
-      seat.type = SeatTypeEnum.NON_SALES;
+      seat.type = SeatTypeEnum.NON_SOLD;
+    } else {
+      seat.type = type;
+    }
+    if (floor < 1 || floor > 2 || !floor) {
+      seat.floor = 1;
+    } else {
+      seat.floor = floor;
+    }
+    if (vehicleId) {
+      const vehicle = await this.dataSource
+        .getRepository(Vehicle)
+        .findOne({ where: { id: vehicleId } });
+      seat.vehicle = vehicle;
+    }
+    seat.updatedBy = adminExist.id;
+    delete seat.vehicle;
+
+    return await this.seatRepository.save(seat);
+  }
+
+  async updateSeatByCode(code: string, dto: UpdateSeatDto, userId: string) {
+    const { name, type, floor, vehicleId } = dto;
+    const seat = await this.seatRepository.findOne({ where: { code } });
+    if (!seat) {
+      throw new NotFoundException('SEAT_NOT_FOUND');
+    }
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    if (name) {
+      seat.name = name;
+    }
+    if (seat) {
+      seat.type = SeatTypeEnum.NON_SOLD;
     } else {
       seat.type = type;
     }

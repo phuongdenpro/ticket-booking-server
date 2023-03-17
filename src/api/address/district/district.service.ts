@@ -1,10 +1,12 @@
+import { AdminService } from './../../admin/admin.service';
+import { SortEnum } from './../../../enums';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { District, Province, Staff } from './../../../database/entities';
+import { District, Province } from './../../../database/entities';
 import { Pagination } from './../../../decorator';
 import { DataSource, Repository } from 'typeorm';
 import {
@@ -20,22 +22,42 @@ export class DistrictService {
   constructor(
     @InjectRepository(District)
     private readonly districtRepository: Repository<District>,
+    private readonly adminService: AdminService,
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string) {
-    const query = this.districtRepository.createQueryBuilder('d');
-    query.where('d.id = :id', { id });
+  async findOneDistrict(options: any) {
+    return await this.districtRepository.findOne({
+      where: { ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options?.other,
+    });
+  }
 
-    const dataResult = await query.getOne();
-    return { dataResult };
+  async findOneById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneDistrict(options);
   }
 
   async findOneByCode(code: number, options?: any) {
-    return await this.districtRepository.findOne({
-      where: { code },
-      ...options,
-    });
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneDistrict(options);
   }
 
   async findByProvinceCode(provinceCode: number, pagination?: Pagination) {
@@ -82,12 +104,16 @@ export class DistrictService {
     return { dataResult, pagination, total };
   }
 
-  async save(dto: SaveDistrictDto, userId: string) {
+  async createDistrict(dto: SaveDistrictDto, userId: string) {
     const province = await this.dataSource.getRepository(Province).findOne({
       where: { code: dto.provinceCode },
     });
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
+    }
+    const districtExist = await this.findOneByCode(dto.code);
+    if (districtExist) {
+      throw new BadRequestException('DISTRICT_CODE_EXISTED');
     }
 
     const district = new District();
@@ -97,11 +123,12 @@ export class DistrictService {
     district.codename = dto.codename;
     district.provinceCode = province.code;
     district.parentCode = province.id;
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     district.createdBy = adminExist.id;
 
@@ -121,9 +148,6 @@ export class DistrictService {
     if (dto.type) {
       district.type = dto.type;
     }
-    if (dto.code) {
-      district.code = dto.code;
-    }
     if (dto.codename) {
       district.codename = dto.codename;
     }
@@ -138,11 +162,12 @@ export class DistrictService {
       district.parentCode = province.id;
     }
 
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     district.updatedBy = adminExist.id;
 
@@ -162,9 +187,6 @@ export class DistrictService {
     if (dto.type) {
       district.type = dto.type;
     }
-    if (dto.code) {
-      district.code = dto.code;
-    }
     if (dto.codename) {
       district.codename = dto.codename;
     }
@@ -178,11 +200,12 @@ export class DistrictService {
       district.provinceCode = province.code;
       district.parentCode = province.id;
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     district.updatedBy = adminExist.id;
 
@@ -196,11 +219,12 @@ export class DistrictService {
     if (!district) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     district.updatedBy = adminExist.id;
     district.deletedAt = new Date();
@@ -215,11 +239,12 @@ export class DistrictService {
     if (!district) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+    const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (adminExist && !adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     district.updatedBy = adminExist.id;
     district.deletedAt = new Date();
