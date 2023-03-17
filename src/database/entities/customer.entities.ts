@@ -1,6 +1,6 @@
 import { GenderEnum } from './../../enums';
 import { Entity, OneToMany, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Order, Ward, CustomerGroupDetail } from '.';
+import { Order, Ward, CustomerGroup } from '.';
 import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
@@ -79,11 +79,8 @@ export class Customer {
   @JoinColumn({ name: 'ward_id', referencedColumnName: 'id' })
   ward: Ward;
 
-  @OneToMany(
-    () => CustomerGroupDetail,
-    (customerGroupDetail) => customerGroupDetail.customer,
-  )
-  customerGroupDetail?: CustomerGroupDetail[];
+  @ManyToOne(() => CustomerGroup, (customerGroup) => customerGroup.customers)
+  customerGroup?: CustomerGroup;
 
   @OneToMany(() => Order, (order) => order.customer)
   orders?: Order[];

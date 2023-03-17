@@ -12,7 +12,7 @@ export class RemoveMultiCustomerDto {
   })
   @IsArray()
   @IsNotEmpty({ message: 'CUSTOMER_ID_IS_REQUIRED' })
-  public ids: string[];
+  customerIds: string[];
 
   @ApiProperty({ example: '2a5147d9-8449-4fca-83c0-e3fa29af596d' })
   @IsNotEmpty({ message: 'CUSTOMER_GROUP_ID_IS_REQUIRED' })

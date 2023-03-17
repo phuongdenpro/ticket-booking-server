@@ -78,10 +78,7 @@ export class OrderService {
     if (!customer && !admin) {
       throw new NotFoundException('USER_NOT_FOUND');
     }
-    if (customer && customer.status === 0) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-    if (admin && !admin.isActive) {
+    if ((customer && customer.status === 0) || (admin && !admin.isActive)) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
@@ -281,9 +278,12 @@ export class OrderService {
   async createOrderDetail(dto: CreateOrderDetailDto, userId: string) {
     // check permission
     const customer = await this.customerService.findOneById(userId);
-    const staff = await this.adminService.findOneBydId(userId);
-    if (!customer && !staff) {
+    const admin = await this.adminService.findOneBydId(userId);
+    if (!customer && !admin) {
       throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if ((customer && customer.status === 0) || (admin && !admin.isActive)) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const { note, orderId, seatId, seatCode, tripDetailId } = dto;
@@ -303,8 +303,8 @@ export class OrderService {
     orderDetail.order = orderExist;
     if (customer) {
       orderDetail.createdBy = customer.id;
-    } else if (staff) {
-      orderDetail.createdBy = staff.id;
+    } else if (admin) {
+      orderDetail.createdBy = admin.id;
     }
     // get ticket detail
     if (!seatId && !seatCode) {
@@ -338,6 +338,11 @@ export class OrderService {
       orderDetail.ticketDetail = ticketDetail;
     } else if (seatCode) {
       const seat = await this.seatService.getSeatByCode(seatCode);
+      if (seat.type === SeatTypeEnum.SOLD) {
+        throw new BadRequestException('SEAT_IS_SOLD');
+      } else if (seat.type === SeatTypeEnum.PENDING) {
+        throw new BadRequestException('SEAT_IS_SOLD');
+      }
       ticketDetail = await this.ticketService.findOneTicketDetailBy({
         where: {
           seat: {

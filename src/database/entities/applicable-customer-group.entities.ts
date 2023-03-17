@@ -20,7 +20,7 @@ export class ApplicableCustomerGroup {
 
   @ManyToOne(
     () => CustomerGroup,
-    (customerGroup) => customerGroup.customerGroupDetail,
+    (customerGroup) => customerGroup.applicableCustomerGroup,
   )
   @JoinColumn([{ name: 'customer_group_id', referencedColumnName: 'id' }])
   customerGroups: CustomerGroup;

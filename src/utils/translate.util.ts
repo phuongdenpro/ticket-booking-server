@@ -46,6 +46,7 @@ export const mappingTranslate = {
 
   // User 21-30
   UNAUTHORIZED: 'Không có quyền truy cập',
+  Unauthorized: 'Không có quyền truy cập',
   INVALID_USERNAME_OR_PASSWORD: 'Tên đăng nhập hoặc mật khẩu không đúng.',
   INVALID_PHONE_NUMBER: 'Số điện thoại không đúng định dạng.',
   INVALID_EMAIL: 'Email không đúng định dạng.',
@@ -53,6 +54,7 @@ export const mappingTranslate = {
   USER_NOT_FOUND: 'Không tìm thấy tài khoản',
   USER_NOT_ACTIVE: 'Tài khoản chưa được kích hoạt hoặc đã bị khóa',
   EMAIL_ALREADY_EXIST: 'Email đã tồn tại',
+  EMAIL_OR_PHONE_REQUIRED: 'Email hoặc số điện thoại không được để trống',
   PASSWORD_IS_REQUIRED: 'Mật khẩu không được để trống',
   PASSWORD_IS_STRING: 'Mật khẩu phải là chuỗi ký tự',
   PASSWORD_IS_MIN_LENGTH_6: 'Mật khẩu phải có ít nhất 6 ký tự',
@@ -79,7 +81,6 @@ export const mappingTranslate = {
   CUSTOMER_NAME_IS_STRING: 'Tên khách hàng phải là chuỗi ký tự',
   CUSTOMER_ID_MUST_BE_36_CHARACTERS: 'Mã khách hàng phải có 36 ký tự',
   CUSTOMER_ID_IS_ARRAY: 'Mã khách hàng phải là mảng',
-  CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
   CUSTOMER_STATUS_IS_ENUM: 'Trạng thái khách hàng không hợp lệ',
 
   // customer group
@@ -91,9 +92,8 @@ export const mappingTranslate = {
     'Mã nhóm khách hàng phải có 36 ký tự',
   CUSTOMER_GROUP_HAS_CUSTOMER: 'Nhóm khách hàng vẫn còn khách hàng',
   CUSTOMER_GROUP_CODE_EXIST: 'Mã nhóm khách hàng đã tồn tại',
-
-  // customer group detail
   CUSTOMER_ALREADY_IN_GROUP: 'Khách hàng đã tồn tại trong nhóm',
+  CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
 
   // image resource
   INVALID_IMAGE_URL: 'url ảnh không đúng định dạng',

@@ -8,7 +8,10 @@ export class FilterCustomerDto {
   @IsString({ message: 'KEYWORDS_IS_STRING' })
   keywords?: string;
 
-  @ApiPropertyOptional({ example: GenderEnum.MALE, enum: GenderEnum })
+  @ApiPropertyOptional({
+    example: GenderEnum.MALE,
+    enum: ['', GenderEnum.MALE, GenderEnum.FEMALE, GenderEnum.OTHER],
+  })
   @IsOptional()
   @IsString({ message: 'GENDER_IS_STRING' })
   @IsEnum(GenderEnum, { message: 'GENDER_IS_ENUM' })

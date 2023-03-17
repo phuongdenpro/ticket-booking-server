@@ -1,18 +1,23 @@
 import { SortEnum, UserStatusEnum } from './../../enums';
 import { Pagination } from '../../decorator';
-import { Customer } from '../../database/entities';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Customer, CustomerGroup, Staff } from '../../database/entities';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { FilterCustomerDto } from './dto';
-import * as bcrypt from 'bcrypt';
 import { UserUpdatePasswordDto } from '../user/dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
+    private readonly dataSource: DataSource,
   ) {}
 
   private selectFieldsWithQ = [
@@ -95,15 +100,6 @@ export class CustomerService {
     return await this.findOneCustomer(options);
   }
 
-  async getCustomerByEmail(email: string, options?: any) {
-    const userExist = await this.findOneByEmail(email, options);
-
-    if (!userExist) {
-      throw new BadRequestException('USER_NOT_FOUND');
-    }
-    return userExist;
-  }
-
   async findCustomerByRefreshToken(refreshToken: string, options?: any) {
     if (options) {
       options.where = { refreshToken, ...options?.where };
@@ -144,8 +140,17 @@ export class CustomerService {
     return { dataResult, pagination, total };
   }
 
-  async getCustomerById(id: string) {
-    const userExist = await this.findOneById(id);
+  async getCustomerByEmail(email: string, options?: any) {
+    const userExist = await this.findOneByEmail(email, options);
+
+    if (!userExist) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    return userExist;
+  }
+
+  async getCustomerById(id: string, options?: any) {
+    const userExist = await this.findOneById(id, options);
 
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
     return userExist;
@@ -176,6 +181,65 @@ export class CustomerService {
       { id: userExist.id },
       { password: passwordHash, updatedBy: userExist.id },
     );
+  }
+
+  async addCustomerToCustomerGroup(
+    customerId: string,
+    groupId: string,
+    adminId: string,
+  ) {
+    const customer = await this.getCustomerById(customerId);
+    const customerGroup = await this.dataSource
+      .getRepository(CustomerGroup)
+      .findOne({
+        where: { id: groupId },
+      });
+    if (!customerGroup) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+
+    const adminExist = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: adminId },
+    });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    customer.customerGroup = customerGroup;
+    customer.updatedBy = adminExist.id;
+    return await this.customerRepository.save(customer);
+  }
+
+  async removeCustomerFromCustomerGroup(
+    customerId: string,
+    groupId: string,
+    adminId: string,
+  ) {
+    const customer = await this.getCustomerById(customerId);
+    const customerGroup = await this.dataSource
+      .getRepository(CustomerGroup)
+      .findOne({
+        where: { id: groupId },
+      });
+    if (!customerGroup) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+
+    const adminExist = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: adminId },
+    });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    customer.customerGroup = null;
+    customer.updatedBy = adminExist.id;
+    return await this.customerRepository.save(customer);
   }
 
   async getCustomerStatus() {

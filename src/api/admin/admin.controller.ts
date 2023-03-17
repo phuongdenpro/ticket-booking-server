@@ -25,7 +25,7 @@ export class AdminController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async profile(@CurrentUser() user) {
-    return this.adminService.profile(user?.['id']);
+    return this.adminService.profile(user?.id);
   }
 
   @Patch('password')
@@ -37,6 +37,6 @@ export class AdminController {
     @CurrentUser() user,
     @Body() dto: AdminUpdatePasswordDto,
   ) {
-    return this.adminService.updatePassword(user.id, dto);
+    return this.adminService.updatePassword(user?.id, dto);
   }
 }

@@ -32,7 +32,9 @@ export class UserService {
 
   async updatePassword(id: string, dto: UserUpdatePasswordDto) {
     const userExist = await this.customerService.getCustomerById(id);
-    if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
+    if (!userExist) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
 
     const isPasswordMatches = await this.authService.comparePassword(
       dto?.oldPassword,

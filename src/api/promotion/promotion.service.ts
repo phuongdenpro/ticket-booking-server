@@ -2,7 +2,11 @@ import { PromotionStatusEnum } from './../../enums/promotion-status.enum';
 import { IMAGE_REGEX } from './../../utils/regex.util';
 import { CreatePromotionDto } from './dto';
 import { Promotion, Staff } from './../../database/entities';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
@@ -19,13 +23,16 @@ export class PromotionService {
       dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+    }
     const oldPromotionExist = await this.findOnePromotionByCode(code, {});
     if (oldPromotionExist) {
-      throw new UnauthorizedException('PROMOTION_CODE_EXISTED');
+      throw new BadRequestException('PROMOTION_CODE_EXISTED');
     }
 
     const promotion = new Promotion();
@@ -34,23 +41,23 @@ export class PromotionService {
     promotion.note = note;
     if (image) {
       if (!image.match(IMAGE_REGEX)) {
-        throw new UnauthorizedException('INVALID_IMAGE_URL');
+        throw new BadRequestException('INVALID_IMAGE_URL');
       }
       promotion.image = image;
     }
     if (!startDate) {
-      throw new UnauthorizedException('START_DATE_IS_REQUIRED');
+      throw new BadRequestException('START_DATE_IS_REQUIRED');
     }
     if (startDate > endDate) {
-      throw new UnauthorizedException('START_DATE_MUST_BE_LESS_THAN_END_DATE');
+      throw new BadRequestException('START_DATE_MUST_BE_LESS_THAN_END_DATE');
     }
     const currentDate: Date = new Date(`${new Date().toDateString()}`);
     if (startDate < currentDate) {
-      throw new UnauthorizedException('START_DATE_GREATER_THAN_NOW');
+      throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     promotion.startDate = startDate;
     if (!endDate) {
-      throw new UnauthorizedException('END_DATE_IS_REQUIRED');
+      throw new BadRequestException('END_DATE_IS_REQUIRED');
     }
     promotion.endDate = endDate;
     if (status) {

@@ -1,17 +1,13 @@
 import { AdminService } from './../admin/admin.service';
 import { SortEnum } from './../../enums';
-import {
-  Customer,
-  CustomerGroup,
-  CustomerGroupDetail,
-} from './../../database/entities';
+import { CustomerGroup } from './../../database/entities';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   SaveCustomerGroupDto,
   AddCustomerDto,
@@ -24,21 +20,21 @@ import {
   RemoveMultiCustomerDto,
 } from './dto';
 import { Pagination } from './../../decorator';
+import { CustomerService } from '../customer/customer.service';
 
 @Injectable()
 export class CustomerGroupService {
   constructor(
     @InjectRepository(CustomerGroup)
     private readonly customerGroupRepository: Repository<CustomerGroup>,
-    @InjectRepository(CustomerGroupDetail)
-    private readonly customerGDRepository: Repository<CustomerGroupDetail>,
     private readonly adminService: AdminService,
-    private dataSource: DataSource,
+    private readonly customerService: CustomerService,
   ) {}
 
   async findOneCustomerGroup(options: any) {
     return await this.customerGroupRepository.findOne({
       where: { ...options?.where },
+      relations: [].concat(options?.relations || []),
       select: {
         deletedAt: false,
         ...options?.select,
@@ -103,7 +99,7 @@ export class CustomerGroupService {
     return newCustomerGroup;
   }
 
-  async getCustomerGroupById(id: string, adminId: string) {
+  async getCustomerGroupById(id: string, adminId: string, options?: any) {
     const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -112,7 +108,7 @@ export class CustomerGroupService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const customerGroup = await this.findCustomerGroupById(id);
+    const customerGroup = await this.findCustomerGroupById(id, options);
 
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
@@ -120,7 +116,7 @@ export class CustomerGroupService {
     return customerGroup;
   }
 
-  async getCustomerGroupByCode(code: string, adminId: string) {
+  async getCustomerGroupByCode(code: string, adminId: string, options?: any) {
     const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -129,7 +125,7 @@ export class CustomerGroupService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const customerGroup = await this.findCustomerGroupByCode(code);
+    const customerGroup = await this.findCustomerGroupByCode(code, options);
 
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
@@ -358,33 +354,48 @@ export class CustomerGroupService {
     }
 
     const { keywords, gender, sort } = dto;
+    const query = this.customerGroupRepository.createQueryBuilder('q');
+    query.leftJoinAndSelect('q.customers', 'c');
 
-    const queryCGD = this.customerGDRepository.createQueryBuilder('q1');
-    queryCGD.where('q1.customer_group_id = :groupId', {
-      groupId,
-    });
     if (keywords) {
-      queryCGD
+      query
         .orWhere('c.fullName LIKE :customerName', {
           customerName: `%${keywords}%`,
         })
         .orWhere('c.phone LIKE :phone', { phone: `%${keywords}%` })
-        .orWhere('c.email LIKE :email', { email: `%${keywords}%` });
+        .orWhere('c.email LIKE :email', { email: `%${keywords}%` })
+        .orWhere('c.address LIKE :email', { email: `%${keywords}%` })
+        .orWhere('c.fullAddress LIKE :email', { email: `%${keywords}%` });
     }
+    query.andWhere('q.id = :groupId', {
+      groupId,
+    });
+
     if (gender) {
-      queryCGD.andWhere('c.gender = :gender', { gender });
+      query.andWhere('c.gender = :gender', { gender });
     }
     if (sort) {
-      queryCGD.orderBy('q1.createdAt', sort);
+      query
+        .orderBy('c.fullName', SortEnum.ASC)
+        .orderBy('c.email', sort)
+        .orderBy('c.phone', sort)
+        .addOrderBy('c.createdAt', sort);
     } else {
-      queryCGD.orderBy('q1.createdAt', SortEnum.DESC);
+      query
+        .orderBy('c.fullName', SortEnum.ASC)
+        .orderBy('c.email', SortEnum.ASC)
+        .orderBy('c.phone', SortEnum.ASC)
+        .addOrderBy('c.createdAt', SortEnum.DESC);
     }
-
-    queryCGD.leftJoinAndSelect('q1.customer', 'c');
-    const dataResultGD = await queryCGD
+    const dataResult = await query
       .select([
-        'q1.id',
-        'q1.createdAt',
+        'q.id',
+        'q.name',
+        'q.code',
+        'q.description',
+        'q.note',
+        'q.createdAt',
+        'q.createdBy',
         'c.id',
         'c.status',
         'c.phone',
@@ -399,42 +410,45 @@ export class CustomerGroupService {
       .take(pagination.take)
       .skip(pagination.skip)
       .getMany();
+    console.log(query.getSql());
 
-    customerGroup['customers'] = dataResultGD.map((item) => {
-      return { ...item.customer };
-    });
-
-    const total = await queryCGD.clone().getCount();
-    return { dataResult: customerGroup, pagination, total };
+    const total = await query.clone().getCount();
+    return { dataResult, pagination, total };
   }
 
   async addCustomer(dto: AddCustomerDto, adminId: string) {
     const { customerId, customerGroupId } = dto;
-    const customerGroupExist = await this.dataSource
-      .getRepository(CustomerGroup)
-      .findOne({
-        where: { id: customerGroupId },
-      });
-    if (!customerGroupExist) {
-      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
-    }
-
-    const customer = await this.dataSource.getRepository(Customer).findOne({
-      where: { id: customerId },
+    // check exist
+    const customerGroupExist = await this.getCustomerGroupById(
+      customerGroupId,
+      adminId,
+    );
+    const customer = await this.customerService.getCustomerById(customerId);
+    const customerGroup = await this.findCustomerGroupById(customerGroupId, {
+      where: {
+        id: customerGroupId,
+        customers: {
+          id: customerId,
+        },
+      },
+      relations: ['customers'],
+      select: {
+        customers: {
+          id: true,
+          lastLogin: true,
+          status: true,
+          phone: true,
+          email: true,
+          fullName: true,
+          gender: true,
+          address: true,
+          note: true,
+          birthday: true,
+          createdAt: true,
+        },
+      },
     });
-    if (!customer) {
-      throw new BadRequestException('CUSTOMER_NOT_FOUND');
-    }
-
-    const query = this.customerGDRepository.createQueryBuilder('q');
-    query
-      .where('q.customer_id = :customerId', { customerId: customerId })
-      .andWhere('q.customer_group_id = :customerGroupId', {
-        customerGroupId,
-      });
-
-    const customerGDExist = await query.getOne();
-    if (customerGDExist) {
+    if (customerGroup) {
       throw new BadRequestException('CUSTOMER_ALREADY_IN_GROUP');
     }
 
@@ -446,31 +460,25 @@ export class CustomerGroupService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const customerGroupDetail = new CustomerGroupDetail();
-    customerGroupDetail.customer = customer;
-    customerGroupDetail.customerGroup = customerGroupExist;
-    const saveCGDetail = await this.customerGDRepository.save(
-      customerGroupDetail,
+    customer.customerGroup = customerGroupExist;
+    await this.customerService.addCustomerToCustomerGroup(
+      customer.id,
+      customerGroupExist.id,
+      adminId,
     );
+
     return {
-      id: saveCGDetail.id,
-      createdAt: saveCGDetail.createdAt,
-      updatedAt: saveCGDetail.updatedAt,
-      customer: { id: saveCGDetail.customer.id },
-      customerGroup: { id: saveCGDetail.customerGroup.id },
+      customer: { id: customer.id },
+      customerGroup: { id: customerGroupExist.id },
     };
   }
 
   async addCustomers(dto: AddMultiCustomerDto, adminId: string) {
     const { customerIds, customerGroupId } = dto;
-    const customerGroupExist = await this.dataSource
-      .getRepository(CustomerGroup)
-      .findOne({
-        where: { id: customerGroupId },
-      });
-    if (!customerGroupExist) {
-      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
-    }
+    const customerGroupExist = await this.getCustomerGroupById(
+      customerGroupId,
+      adminId,
+    );
 
     const adminExist = await this.adminService.findOneBydId(adminId);
     if (!adminExist) {
@@ -479,62 +487,86 @@ export class CustomerGroupService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-
-    const customerGroupDetails = await customerIds.map(async (customerId) => {
-      const customer = await this.dataSource.getRepository(Customer).findOne({
-        where: { id: customerId },
+    const newCustomerIds = customerIds.map(async (customerId) => {
+      const customer = await this.customerService.getCustomerById(customerId);
+      const customerGroup = await this.findCustomerGroupById(customerGroupId, {
+        where: {
+          id: customerGroupId,
+          customers: {
+            id: customerId,
+          },
+        },
+        relations: ['customers'],
+        select: {
+          customers: {
+            id: true,
+            lastLogin: true,
+            status: true,
+            phone: true,
+            email: true,
+            fullName: true,
+            gender: true,
+            address: true,
+            note: true,
+            birthday: true,
+            createdAt: true,
+          },
+        },
       });
-      if (!customer) {
-        throw new BadRequestException('CUSTOMER_NOT_FOUND');
-      }
-
-      const query = this.customerGDRepository.createQueryBuilder('q');
-      query
-        .where('q.customer_id = :customerId', { customerId: customerId })
-        .andWhere('q.customer_group_id = :customerGroupId', {
-          customerGroupId,
-        });
-
-      const customerGDExist = await query.getOne();
-      if (customerGDExist) {
+      if (customerGroup) {
         return {
-          customer: { id: customerId },
+          id: customerId,
           message: 'Khách hàng đã tồn tại trong nhóm',
         };
-      } else {
-        const customerGroupDetail = new CustomerGroupDetail();
-        customerGroupDetail.customer = customer;
-        customerGroupDetail.customerGroup = customerGroupExist;
-        const saveCGDetail = await this.customerGDRepository.save(
-          customerGroupDetail,
-        );
-        return {
-          id: saveCGDetail.id,
-          createdAt: saveCGDetail.createdAt,
-          updatedAt: saveCGDetail.updatedAt,
-          customer: { id: saveCGDetail.customer.id },
-          customerGroup: { id: saveCGDetail.customerGroup.id },
-        };
       }
+
+      const saveCustomer =
+        await this.customerService.addCustomerToCustomerGroup(
+          customer.id,
+          customerGroupExist.id,
+          adminId,
+        );
+      return { id: saveCustomer.id, message: 'Thêm thành công' };
     });
-    return await Promise.all(customerGroupDetails);
+    return {
+      customerIds: await Promise.all(newCustomerIds),
+      customerGroup: customerGroupExist,
+    };
   }
 
   async removeCustomer(dto: RemoveCustomerDto, adminId: string) {
     const { customerId, customerGroupId } = dto;
-    const customer = await this.dataSource.getRepository(Customer).findOne({
-      where: { id: customerId },
-    });
-    if (!customer) {
-      throw new BadRequestException('CUSTOMER_NOT_FOUND');
-    }
-
-    const customerGroup = await this.getCustomerGroupById(
+    const customer = await this.customerService.getCustomerById(customerId);
+    const customerGroupExist = await this.getCustomerGroupById(
       customerGroupId,
       adminId,
     );
+    const customerGroup = await this.findCustomerGroupById(customerGroupId, {
+      where: {
+        id: customerGroupId,
+        customers: {
+          id: customerId,
+        },
+      },
+      relations: ['customers'],
+      select: {
+        customers: {
+          id: true,
+          lastLogin: true,
+          status: true,
+          phone: true,
+          email: true,
+          fullName: true,
+          gender: true,
+          address: true,
+          note: true,
+          birthday: true,
+          createdAt: true,
+        },
+      },
+    });
     if (!customerGroup) {
-      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+      throw new BadRequestException('CUSTOMER_NOT_IN_GROUP');
     }
 
     const adminExist = await this.adminService.findOneBydId(adminId);
@@ -545,41 +577,76 @@ export class CustomerGroupService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const query = this.customerGDRepository
-      .createQueryBuilder('q')
-      .where('q.customer_id = :customerId', { customerId })
-      .andWhere('q.customer_group_id = :customerGroupId', { customerGroupId });
-    const customerGDExist = await query.getOne();
-    if (!customerGDExist) {
-      throw new BadRequestException('CUSTOMER_NOT_IN_GROUP');
-    }
-
-    customerGDExist.deletedAt = new Date();
-    const saveCustomer = await this.customerGDRepository.save(customerGDExist);
+    await this.customerService.removeCustomerFromCustomerGroup(
+      customer.id,
+      customerGroupExist.id,
+      adminId,
+    );
     return {
-      id: saveCustomer.id,
-      message: 'Xóa khách hàng khỏi nhóm thành công',
+      customer: { id: customer.id },
+      message: 'Xóa thành công',
     };
   }
 
   async removeCustomers(adminId: string, dto: RemoveMultiCustomerDto) {
-    try {
-      const { ids } = dto;
+    const { customerIds, customerGroupId } = dto;
+    const customerGroupExist = await this.getCustomerGroupById(
+      customerGroupId,
+      adminId,
+    );
 
-      const list = await Promise.all(
-        ids.map(async (id) => {
-          return await this.removeCustomer(
-            {
-              customerId: id,
-              customerGroupId: dto.customerGroupId,
-            },
-            adminId,
-          );
-        }),
-      );
-      return list;
-    } catch (err) {
-      throw new BadRequestException(err.message);
+    const adminExist = await this.adminService.findOneBydId(adminId);
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const newCustomerIds = customerIds.map(async (customerId) => {
+      const customer = await this.customerService.getCustomerById(customerId);
+      const customerGroup = await this.findCustomerGroupById(customerGroupId, {
+        where: {
+          id: customerGroupId,
+          customers: {
+            id: customerId,
+          },
+        },
+        relations: ['customers'],
+        select: {
+          customers: {
+            id: true,
+            lastLogin: true,
+            status: true,
+            phone: true,
+            email: true,
+            fullName: true,
+            gender: true,
+            address: true,
+            note: true,
+            birthday: true,
+            createdAt: true,
+          },
+        },
+      });
+      if (!customerGroup) {
+        return {
+          id: customerId,
+          message: 'Khách hàng không thuộc trong nhóm này',
+        };
+      }
+
+      const saveCustomer =
+        await this.customerService.removeCustomerFromCustomerGroup(
+          customer.id,
+          customerGroupExist.id,
+          adminId,
+        );
+      return { id: saveCustomer.id, message: 'Xoá thành công' };
+    });
+    return {
+      customerIds: await Promise.all(newCustomerIds),
+      customerGroup: customerGroupExist,
+    };
   }
 }
