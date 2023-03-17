@@ -35,7 +35,6 @@ export class CustomerService {
     'u.createdAt',
     'u.updatedAt',
     'u.updatedBy',
-    'cgd.id',
     'cg.id',
     'cg.name',
     'cg.code',
@@ -129,8 +128,7 @@ export class CustomerService {
     const total = await query.clone().getCount();
 
     const dataResult = await query
-      .leftJoinAndSelect('u.customerGroupDetail', 'cgd')
-      .leftJoinAndSelect('cgd.customerGroup', 'cg')
+      .leftJoinAndSelect('u.customerGroup', 'cg')
       .offset(pagination.skip)
       .limit(pagination.take)
       .orderBy('u.createdAt', SortEnum.DESC)
