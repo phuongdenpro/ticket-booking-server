@@ -37,9 +37,9 @@ export class TripDetailService {
     'v.totalSeat',
   ];
 
-  async findTripDetailById(id: string, options?: any) {
+  async findOneTripDetail(options: any) {
     return await this.tripDetailRepository.findOne({
-      where: { id, ...options?.where },
+      where: { ...options?.where },
       relations: ['vehicle'].concat(options?.relations || []),
       select: {
         deletedAt: false,
@@ -58,24 +58,22 @@ export class TripDetailService {
     });
   }
 
+  async findTripDetailById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneTripDetail(options);
+  }
+
   async findTripDetailByCode(code: string, options?: any) {
-    return await this.tripDetailRepository.findOne({
-      where: { code, ...options?.where },
-      relations: ['vehicle'].concat(options?.relations || []),
-      select: {
-        vehicle: {
-          id: true,
-          name: true,
-          description: true,
-          type: true,
-          licensePlate: true,
-          floorNumber: true,
-          totalSeat: true,
-        },
-        ...options.select,
-      },
-      ...options,
-    });
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneTripDetail(options);
   }
 
   async createTripDetail(dto: CreateTripDetailDto, userId: string) {

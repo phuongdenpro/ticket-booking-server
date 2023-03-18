@@ -20,7 +20,7 @@ import {
   SeatTypeEnum,
   TicketStatusEnum,
 } from './../../enums';
-import { generateOrderId } from './../../utils';
+import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
 import { AdminService } from '../admin/admin.service';
 import { SeatService } from '../seat/seat.service';
@@ -44,12 +44,12 @@ export class OrderService {
   ) {}
 
   // order
-  async findOrderById(id: string, options?: any) {
+  async findOneOrder(options: any) {
     return await this.orderRepository.findOne({
-      where: { id, ...options?.where },
+      where: { ...options?.where },
       relations: ['orderDetails'].concat(options?.relations || []),
       select: { deletedAt: false, ...options?.select },
-      orderBy: {
+      order: {
         createdAt: SortEnum.DESC,
         ...options?.orderBy,
       },
@@ -57,17 +57,22 @@ export class OrderService {
     });
   }
 
-  async findOrderByCode(code: string, options?: any) {
-    return await this.orderRepository.findOne({
-      where: { code, ...options?.where },
-      relations: ['orderDetails'].concat(options?.relations || []),
-      select: { deletedAt: false, ...options?.select },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
+  async findOneOrderById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneOrder(options);
+  }
+
+  async findOneOrderByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneOrder(options);
   }
 
   async createOrder(dto: CreateOrderDto, userId: string) {
@@ -96,14 +101,14 @@ export class OrderService {
     if (!tripDetail.isActive) {
       throw new UnauthorizedException('TRIP_DETAIL_NOT_ACTIVE');
     }
-    console.log(tripDetail.trip);
 
     // check trip
     const trip = tripDetail.trip;
-    if (!trip.isActive || trip.startDate > currentDate) {
-      throw new BadRequestException('TRIP_NOT_ACTIVE');
-    }
-    if (trip.endDate < currentDate) {
+    if (
+      !trip.isActive ||
+      trip.startDate > currentDate ||
+      trip.endDate < currentDate
+    ) {
       throw new BadRequestException('TRIP_NOT_ACTIVE');
     }
 
@@ -131,24 +136,25 @@ export class OrderService {
     } else {
       order.status = OrderStatusEnum.UNPAID;
     }
-    let code = generateOrderId();
+    // generate order code
+    let code = generateOrderCode();
     let flag = true;
     while (flag) {
-      const orderExist = await this.findOrderByCode(code);
+      const orderExist = await this.findOneOrderByCode(code);
       if (!orderExist) {
         flag = false;
       } else {
-        code = generateOrderId();
+        code = generateOrderCode();
       }
     }
     order.code = code;
     order.total = 0;
     order.finalTotal = 0;
+    const createOrder = await this.orderRepository.save(order);
 
     if (!seatIds && !seatCodes) {
       throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
     }
-    const createOrder = await this.orderRepository.save(order);
     if (seatIds && seatIds.length > 0) {
       const orderDetails = await seatIds.map(async (seatId) => {
         const dto = new CreateOrderDetailDto();
@@ -186,7 +192,7 @@ export class OrderService {
   }
 
   async getOrderById(id: string, options?: any) {
-    const order = await this.findOrderById(id, options);
+    const order = await this.findOneOrderById(id, options);
     if (!order) {
       throw new UnauthorizedException('ORDER_NOT_FOUND');
     }
@@ -194,7 +200,7 @@ export class OrderService {
   }
 
   async getOrderByCode(code: string, options?: any) {
-    const order = await this.findOrderByCode(code, options);
+    const order = await this.findOneOrderByCode(code, options);
     if (!order) {
       throw new UnauthorizedException('ORDER_NOT_FOUND');
     }
@@ -249,9 +255,9 @@ export class OrderService {
   // async updateOrderByCode(id: string, dto: CreateOrderDto, userId: string) {}
 
   // order detail
-  async findOrderDetailById(id: string, options?: any) {
+  async findOrderDetail(options?: any) {
     return await this.orderDetailRepository.findOne({
-      where: { id, ...options?.where },
+      where: { ...options?.where },
       relations: ['orderDetails'].concat(options?.relations),
       select: { deletedAt: false, ...options?.select },
       orderBy: {
@@ -262,17 +268,22 @@ export class OrderService {
     });
   }
 
+  async findOrderDetailById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneOrder(options);
+  }
+
   async findOrderDetailByCode(code: string, options?: any) {
-    return await this.orderDetailRepository.findOne({
-      where: { code, ...options?.where },
-      relations: options?.relations,
-      select: { deletedAt: false, ...options?.select },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneOrder(options);
   }
 
   async createOrderDetail(dto: CreateOrderDetailDto, userId: string) {
@@ -287,7 +298,7 @@ export class OrderService {
     }
 
     const { note, orderId, seatId, seatCode, tripDetailId } = dto;
-    const orderExist = await this.findOrderById(orderId);
+    const orderExist = await this.findOneOrderById(orderId);
     if (!orderExist) {
       throw new NotFoundException('ORDER_NOT_FOUND');
     }
@@ -313,9 +324,10 @@ export class OrderService {
     let ticketDetail;
     if (seatId) {
       const seat = await this.seatService.getSeatById(seatId);
-      if (seat.type === SeatTypeEnum.SOLD) {
-        throw new BadRequestException('SEAT_IS_SOLD');
-      } else if (seat.type === SeatTypeEnum.PENDING) {
+      if (
+        seat.type === SeatTypeEnum.SOLD ||
+        seat.type === SeatTypeEnum.PENDING
+      ) {
         throw new BadRequestException('SEAT_IS_SOLD');
       }
       ticketDetail = await this.ticketService.findOneTicketDetailBy({
@@ -395,7 +407,8 @@ export class OrderService {
         'priceList',
       ],
       orderBy: {
-        createdAt: SortEnum.DESC,
+        startDate: SortEnum.ASC,
+        createdAt: SortEnum.ASC,
       },
     });
     if (!priceDetail) {
@@ -404,7 +417,6 @@ export class OrderService {
     console.log(priceDetail);
     orderDetail.priceDetail = priceDetail;
     orderDetail.total = priceDetail.price;
-    console.log(priceDetail);
 
     // const createOrderDetail = await this.orderDetailRepository.save(
     //   orderDetail,

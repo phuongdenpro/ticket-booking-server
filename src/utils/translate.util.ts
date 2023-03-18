@@ -94,6 +94,7 @@ export const mappingTranslate = {
   CUSTOMER_GROUP_CODE_EXIST: 'Mã nhóm khách hàng đã tồn tại',
   CUSTOMER_ALREADY_IN_GROUP: 'Khách hàng đã tồn tại trong nhóm',
   CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
+  CUSTOMER_GROUP_HAS_CUSTOMERS: 'Nhóm khách hàng vẫn còn khách hàng',
 
   // image resource
   INVALID_IMAGE_URL: 'url ảnh không đúng định dạng',

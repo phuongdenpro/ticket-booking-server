@@ -1,6 +1,6 @@
 import * as shortId from 'shortid';
 
-export function generateOrderId() {
+export function generateOrderCode() {
   const date = new Date();
   const year = date.getFullYear();
   const month = `0${date.getMonth() + 1}`.slice(-2);
