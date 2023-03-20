@@ -26,14 +26,14 @@ export class WardService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneById(id: string, options?: any) {
+  async findOneWard(options: any) {
     return await this.wardRepository.findOne({
-      where: { id, ...options?.where },
+      where: { ...options?.where },
       select: {
         deletedAt: false,
         ...options?.select,
       },
-      orderBy: {
+      order: {
         createdAt: SortEnum.DESC,
         ...options?.orderBy,
       },
@@ -41,19 +41,22 @@ export class WardService {
     });
   }
 
+  async findOneById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneWard(options);
+  }
+
   async findOneByCode(code: number, options?: any) {
-    return await this.wardRepository.findOne({
-      where: { code, ...options?.where },
-      select: {
-        deletedAt: false,
-        ...options?.select,
-      },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneWard(options);
   }
 
   async findByDistrictCode(districtCode: number, pagination?: Pagination) {
@@ -121,7 +124,7 @@ export class WardService {
     if (dto.codename) {
       ward.codename = dto.codename;
     }
-    ward.parentCode = district.id;
+    ward.district = district;
     ward.districtCode = district.code;
 
     const adminExist = await this.adminService.findOneBydId(userId);
@@ -163,7 +166,7 @@ export class WardService {
         throw new BadRequestException('district is not exist');
       }
       ward.districtCode = dist.code;
-      ward.parentCode = dist.id;
+      ward.district = dist;
     }
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
@@ -205,7 +208,7 @@ export class WardService {
         throw new BadRequestException('district is not exist');
       }
       ward.districtCode = dist.code;
-      ward.parentCode = dist.id;
+      ward.district = dist;
     }
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {

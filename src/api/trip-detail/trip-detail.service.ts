@@ -138,8 +138,8 @@ export class TripDetailService {
       });
       // ref from province and to province
       if (trip) {
-        const fromProvince = trip.fromStation.ward.parentCode['parentCode'];
-        const toProvince = trip.toStation.ward.parentCode['parentCode'];
+        const fromProvince = trip.fromStation.ward.district['province'];
+        const toProvince = trip.toStation.ward.district['province'];
 
         tripDetail.trip = trip;
         tripDetail.fromProvince = fromProvince;

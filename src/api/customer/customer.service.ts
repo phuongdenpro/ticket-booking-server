@@ -1,16 +1,18 @@
-import { SortEnum, UserStatusEnum } from './../../enums';
+import { GenderEnum, SortEnum, UserStatusEnum } from './../../enums';
 import { Pagination } from '../../decorator';
-import { Customer, CustomerGroup, Staff } from '../../database/entities';
+import { Customer, CustomerGroup, Staff, Ward } from '../../database/entities';
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { FilterCustomerDto } from './dto';
+import { FilterCustomerDto, UpdateCustomerDto } from './dto';
 import { UserUpdatePasswordDto } from '../user/dto';
 import * as bcrypt from 'bcrypt';
+import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
 
 @Injectable()
 export class CustomerService {
@@ -181,17 +183,155 @@ export class CustomerService {
     );
   }
 
-  async addCustomerToCustomerGroup(
-    customerId: string,
-    groupId: string,
-    adminId: string,
+  async updateCustomer(
+    id: string,
+    dto: UpdateCustomerDto,
+    userId?: string,
+    adminId?: string,
   ) {
-    const customer = await this.getCustomerById(customerId);
-    const customerGroup = await this.dataSource
-      .getRepository(CustomerGroup)
-      .findOne({
-        where: { id: groupId },
+    const { fullName, address, gender, birthDate, wardId, wardCode } = dto;
+    const admin = await this.dataSource.getRepository(Staff).findOne({
+      where: {
+        id: adminId || '',
+      },
+    });
+    const customer = await this.findOneById(userId || '');
+    if (!customer && !admin) {
+      throw new NotFoundException('USER_NOT_FOUND');
+    }
+
+    if (
+      (userId && customer && customer.status === 0) ||
+      (adminId && admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const oldCustomer = await this.findOneById(id, {
+      select: {
+        ward: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+          districtCode: true,
+          createdBy: false,
+          updatedBy: false,
+          createdAt: false,
+          updatedAt: false,
+          district: {
+            id: true,
+            name: true,
+            type: true,
+            codename: true,
+            code: true,
+            provinceCode: true,
+            createdBy: false,
+            updatedBy: false,
+            createdAt: false,
+            updatedAt: false,
+            province: {
+              id: true,
+              name: true,
+              type: true,
+              codename: true,
+              code: true,
+              createdBy: false,
+              updatedBy: false,
+              createdAt: false,
+              updatedAt: false,
+            },
+          },
+        },
+      },
+      relations: ['ward', 'ward.district', 'ward.district.province'],
+    });
+    if (fullName) {
+      oldCustomer.fullName = fullName;
+    }
+    if (address) {
+      oldCustomer.address = address;
+    }
+    if (gender) {
+      switch (gender) {
+        case GenderEnum.MALE:
+          oldCustomer.gender = GenderEnum.MALE;
+          break;
+        case GenderEnum.FEMALE:
+          oldCustomer.gender = GenderEnum.FEMALE;
+          break;
+        case GenderEnum.OTHER:
+          oldCustomer.gender = GenderEnum.OTHER;
+          break;
+        default:
+          oldCustomer.gender = GenderEnum.OTHER;
+          break;
+      }
+    }
+    if (birthDate) {
+      oldCustomer.birthday = birthDate;
+    }
+    if (wardId) {
+      const ward = await this.dataSource.getRepository(Ward).findOne({
+        where: {
+          id: wardId,
+        },
+        relations: ['district', 'district.province'],
       });
+      if (!ward) {
+        throw new NotFoundException('WARD_NOT_FOUND');
+      }
+      oldCustomer.ward = ward;
+    } else if (wardCode) {
+      const ward = await this.dataSource.getRepository(Ward).findOne({
+        where: {
+          code: wardCode,
+        },
+        relations: ['district', 'district.province'],
+      });
+      if (!ward) {
+        throw new NotFoundException('WARD_NOT_FOUND');
+      }
+      oldCustomer.ward = ward;
+    }
+    const district = oldCustomer.ward.district;
+    const province = district.province;
+    oldCustomer.fullAddress = `${oldCustomer.address}, ${oldCustomer.ward.name}, ${district.name}, ${province.name}`;
+
+    const saveCustomer = await this.customerRepository.save(oldCustomer);
+    delete oldCustomer.ward.district;
+    delete district.province;
+    saveCustomer['district'] = district;
+    saveCustomer['province'] = province;
+    return saveCustomer;
+  }
+
+  async addCustomerToCustomerGroup(dto: AddCustomerDto, adminId: string) {
+    const { customerId, customerGroupId, customerGroupCode } = dto;
+    if (!customerGroupId && !customerGroupCode) {
+      throw new BadRequestException(
+        'CUSTOMER_GROUP_ID_OR_CUSTOMER_GROUP_CODE_REQUIRED',
+      );
+    }
+    const customer = await this.getCustomerById(customerId);
+    if (!customer) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    let customerGroup;
+    if (customerGroupId) {
+      customerGroup = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { id: customerGroupId },
+        });
+    } else if (customerGroupCode) {
+      customerGroup = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { code: customerGroupCode },
+        });
+    }
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
@@ -207,20 +347,46 @@ export class CustomerService {
     }
     customer.customerGroup = customerGroup;
     customer.updatedBy = adminExist.id;
-    return await this.customerRepository.save(customer);
+    await this.customerRepository.save(customer);
+    return {
+      customer: {
+        id: customerId,
+      },
+      customerGroup: {
+        id: customerGroupId,
+      },
+      message: 'Thêm khách hàng vào nhóm thành công',
+    };
   }
 
   async removeCustomerFromCustomerGroup(
-    customerId: string,
-    groupId: string,
+    dto: RemoveCustomerDto,
     adminId: string,
   ) {
+    const { customerId, customerGroupId, customerGroupCode } = dto;
+    if (!customerGroupId && !customerGroupCode) {
+      throw new BadRequestException(
+        'CUSTOMER_GROUP_ID_OR_CUSTOMER_GROUP_CODE_REQUIRED',
+      );
+    }
     const customer = await this.getCustomerById(customerId);
-    const customerGroup = await this.dataSource
-      .getRepository(CustomerGroup)
-      .findOne({
-        where: { id: groupId },
-      });
+    if (!customer) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    let customerGroup;
+    if (customerGroupId) {
+      customerGroup = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { id: customerGroupId },
+        });
+    } else if (customerGroupCode) {
+      customerGroup = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { code: customerGroupCode },
+        });
+    }
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
     }
@@ -237,7 +403,16 @@ export class CustomerService {
 
     customer.customerGroup = null;
     customer.updatedBy = adminExist.id;
-    return await this.customerRepository.save(customer);
+    await this.customerRepository.save(customer);
+    return {
+      customer: {
+        id: customerId,
+      },
+      customerGroup: {
+        id: customerGroupId,
+      },
+      message: 'Xoá khách hàng khỏi nhóm thành công',
+    };
   }
 
   async getCustomerStatus() {

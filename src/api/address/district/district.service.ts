@@ -122,7 +122,7 @@ export class DistrictService {
     district.code = dto.code;
     district.codename = dto.codename;
     district.provinceCode = province.code;
-    district.parentCode = province.id;
+    district.province = province;
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -159,7 +159,7 @@ export class DistrictService {
         throw new BadRequestException('PROVINCE_NOT_FOUND');
       }
       district.provinceCode = province.code;
-      district.parentCode = province.id;
+      district.province = province;
     }
 
     const adminExist = await this.adminService.findOneBydId(userId);
@@ -198,7 +198,7 @@ export class DistrictService {
         throw new BadRequestException('PROVINCE_NOT_FOUND');
       }
       district.provinceCode = province.code;
-      district.parentCode = province.id;
+      district.province = province;
     }
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {

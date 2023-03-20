@@ -1,11 +1,20 @@
-import { GetPagination, Pagination, Roles } from '../../decorator';
 import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Role,
+  Roles,
+} from '../../decorator';
+import {
+  Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
-  ParseUUIDPipe,
+  Patch,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -13,8 +22,9 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
 import { RoleEnum } from '../../enums';
 
-import { FilterCustomerDto } from './dto';
+import { FilterCustomerDto, UpdateCustomerDto } from './dto';
 import { CustomerService } from './customer.service';
+import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
 
 @Controller('customer')
 @ApiTags('Customer')
@@ -29,7 +39,7 @@ export class CustomerController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF)
+  @Role(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findAll(
@@ -39,12 +49,46 @@ export class CustomerController {
     return await this.customerService.findAll(dto, pagination);
   }
 
-  @Get(':id')
+  @Patch(':id')
+  @Role(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async findCustomerOneById(@Param('id', ParseUUIDPipe) id: string) {
+  async updateUser(
+    @CurrentUser() user,
+    @Param('id') id: string,
+    @Body() dto: UpdateCustomerDto,
+  ) {
+    return this.customerService.updateCustomer(id, dto, null, user.id);
+  }
+
+  @Get(':id')
+  @HttpCode(HttpStatus.OK)
+  @Role(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findCustomerOneById(@Param('id') id: string) {
     return await this.customerService.getCustomerById(id);
+  }
+
+  @Post('customer-group/add-customer')
+  @HttpCode(HttpStatus.CREATED)
+  @Role(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async addCustomer(@CurrentUser() user, @Body() dto: AddCustomerDto) {
+    return await this.customerService.addCustomerToCustomerGroup(dto, user.id);
+  }
+
+  @Delete('customer-group/remove-customer')
+  @HttpCode(HttpStatus.OK)
+  @Role(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async removeCustomer(@Body() dto: RemoveCustomerDto, @CurrentUser() user) {
+    return await this.customerService.removeCustomerFromCustomerGroup(
+      dto,
+      user.id,
+    );
   }
 }

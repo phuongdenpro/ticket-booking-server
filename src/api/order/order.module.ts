@@ -41,8 +41,8 @@ import { TicketService } from '../ticket/ticket.service';
   controllers: [OrderController],
   providers: [
     OrderService,
-    CustomerService,
     AdminService,
+    CustomerService,
     SeatService,
     TicketService,
     TicketGroupService,

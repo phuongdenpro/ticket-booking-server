@@ -56,7 +56,7 @@ export class Staff {
 
   @Column({
     name: 'birthday',
-    type: 'timestamp',
+    type: 'date',
     default: null,
     nullable: true,
   })

@@ -334,17 +334,18 @@ export class OrderService {
         where: {
           seat: {
             id: seat.id,
-            vehicle: {
-              tripDetails: {
-                id: tripDetailId,
-              },
+          },
+          ticket: {
+            tripDetail: {
+              id: tripDetailId,
             },
           },
         },
         relations: ['seat.vehicle.tripDetails'],
       });
+
       if (!ticketDetail) {
-        throw new NotFoundException('TICKET_DETAIL_NOT_FOUND');
+        throw new NotFoundException('TICKET_NOT_FOUND');
       }
       delete ticketDetail.seat;
       orderDetail.ticketDetail = ticketDetail;
@@ -376,6 +377,8 @@ export class OrderService {
     }
     // get price detail
     const ticketDetailId = ticketDetail.id;
+    console.log(ticketDetailId);
+
     const currentDate = new Date(`${new Date().toDateString()}`);
     const priceDetail = await this.priceListService.findOnePriceDetailBy({
       where: {
@@ -411,52 +414,51 @@ export class OrderService {
         createdAt: SortEnum.ASC,
       },
     });
+    console.log(priceDetail);
     if (!priceDetail) {
       throw new NotFoundException('PRICE_DETAIL_NOT_FOUND');
     }
-    console.log(priceDetail);
     orderDetail.priceDetail = priceDetail;
     orderDetail.total = priceDetail.price;
 
-    // const createOrderDetail = await this.orderDetailRepository.save(
-    //   orderDetail,
-    // );
-    // // update ticket detail status
-    // const ticketDetailDto = new UpdateTicketDetailDto();
-    // ticketDetailDto.status = TicketStatusEnum.PENDING;
-    // await this.ticketService.updateTicketDetailById(
-    //   ticketDetailId,
-    //   ticketDetailDto,
-    //   userId,
-    // );
+    const createOrderDetail = await this.orderDetailRepository.save(
+      orderDetail,
+    );
+    // update ticket detail status
+    const ticketDetailDto = new UpdateTicketDetailDto();
+    ticketDetailDto.status = TicketStatusEnum.PENDING;
+    await this.ticketService.updateTicketDetailById(
+      ticketDetailId,
+      ticketDetailDto,
+      userId,
+    );
 
     // // update seat status
-    // if (seatId) {
-    //   await this.seatService.updateSeatById(
-    //     seatId,
-    //     {
-    //       name: undefined,
-    //       type: SeatTypeEnum.PENDING,
-    //       floor: undefined,
-    //       vehicleId: undefined,
-    //     },
-    //     userId,
-    //   );
-    // } else if (seatCode) {
-    //   await this.seatService.updateSeatByCode(
-    //     seatCode,
-    //     {
-    //       name: undefined,
-    //       type: SeatTypeEnum.PENDING,
-    //       floor: undefined,
-    //       vehicleId: undefined,
-    //     },
-    //     userId,
-    //   );
-    // }
-    // delete createOrderDetail.deletedAt;
-    // return createOrderDetail;
-    return new OrderDetail();
+    if (seatId) {
+      await this.seatService.updateSeatById(
+        seatId,
+        {
+          name: undefined,
+          type: SeatTypeEnum.PENDING,
+          floor: undefined,
+          vehicleId: undefined,
+        },
+        userId,
+      );
+    } else if (seatCode) {
+      await this.seatService.updateSeatByCode(
+        seatCode,
+        {
+          name: undefined,
+          type: SeatTypeEnum.PENDING,
+          floor: undefined,
+          vehicleId: undefined,
+        },
+        userId,
+      );
+    }
+    delete createOrderDetail.deletedAt;
+    return createOrderDetail;
   }
 
   // async updateOrderDetailById(dto: UpdateOrderDetailDto, userId: string) {}

@@ -63,19 +63,13 @@ export class Ward {
   // Relationships
   @ManyToOne(() => District, (district) => district.wards)
   @JoinColumn({ name: 'parent_code_id', referencedColumnName: 'id' })
-  parentCode: string;
+  district: District;
 
   @OneToMany(() => Customer, (customer) => customer.ward)
   customers?: Customer[];
 
   @OneToMany(() => Staff, (staff) => staff.ward)
   staffs?: Staff[];
-
-  // @OneToMany(
-  //   () => PassengerCarCompany,
-  //   (passengerCarCompany) => passengerCarCompany.ward,
-  // )
-  // passengerCarCompanies: PassengerCarCompany[];
 
   @OneToMany(() => Station, (station) => station.ward)
   stations?: Station[];

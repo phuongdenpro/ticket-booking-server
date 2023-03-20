@@ -47,7 +47,9 @@ export class CustomerRegisterDto {
   birthday?: Date;
 
   @ApiPropertyOptional({ example: GenderEnum.OTHER, enum: GenderEnum })
-  @IsEnum(GenderEnum, { message: 'GENDER_IS_ENUM' })
+  @IsEnum(['', GenderEnum.MALE, GenderEnum.FEMALE, GenderEnum.OTHER], {
+    message: 'GENDER_IS_ENUM',
+  })
   @IsString({ message: 'GENDER_IS_STRING' })
   @IsOptional()
   gender?: GenderEnum;

@@ -37,7 +37,7 @@ export class SaveStationDto {
   @IsNotEmpty({ message: 'WARD_ID_IS_REQUIRED' })
   @IsNumber(
     { allowInfinity: false, allowNaN: false },
-    { message: 'WARD_ID_IS_NUMBER' },
+    { message: 'WARD_CODE_IS_NUMBER' },
   )
   wardCode: number;
 

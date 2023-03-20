@@ -37,8 +37,8 @@ import {
     WardService,
     DistrictService,
     ProvinceService,
-    CustomerService,
     AdminService,
+    CustomerService,
   ],
   exports: [StationService],
 })

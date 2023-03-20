@@ -85,16 +85,19 @@ export const mappingTranslate = {
 
   // customer group
   CUSTOMER_GROUP_NOT_FOUND: 'Không tìm thấy nhóm khách hàng',
-  CUSTOMER_GROUP_ID_IS_REQUIRED: 'Mã nhóm khách hàng không được để trống',
-  CUSTOMER_GROUP_ID_IS_STRING: 'Mã nhóm khách hàng phải là chuỗi ký tự',
+  CUSTOMER_GROUP_ID_IS_REQUIRED: 'Id nhóm khách hàng không được để trống',
+  CUSTOMER_GROUP_ID_IS_STRING: 'Id nhóm khách hàng phải là chuỗi ký tự',
+  CUSTOMER_GROUP_CODE_IS_STRING: 'Mã nhóm khách hàng phải là chuỗi ký tự',
   CUSTOMER_GROUP_NAME_IS_STRING: 'Tên nhóm khách hàng phải là chuỗi ký tự',
   CUSTOMER_GROUP_ID_MUST_BE_36_CHARACTERS:
     'Mã nhóm khách hàng phải có 36 ký tự',
   CUSTOMER_GROUP_HAS_CUSTOMER: 'Nhóm khách hàng vẫn còn khách hàng',
-  CUSTOMER_GROUP_CODE_EXIST: 'Mã nhóm khách hàng đã tồn tại',
+  CUSTOMER_GROUP_CODE_EXIST: 'Id nhóm khách hàng đã tồn tại',
   CUSTOMER_ALREADY_IN_GROUP: 'Khách hàng đã tồn tại trong nhóm',
   CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
   CUSTOMER_GROUP_HAS_CUSTOMERS: 'Nhóm khách hàng vẫn còn khách hàng',
+  CUSTOMER_GROUP_ID_OR_CUSTOMER_GROUP_CODE_REQUIRED:
+    'Id nhóm khách hàng hoặc mã nhóm khách hàng không được để trống',
 
   // image resource
   INVALID_IMAGE_URL: 'url ảnh không đúng định dạng',
@@ -125,8 +128,9 @@ export const mappingTranslate = {
 
   // ward
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
-  WARD_ID_IS_REQUIRED: 'Mã phường/xã không được để trống',
-  WARD_ID_IS_NUMBER: 'Mã phường/xã phải là số',
+  WARD_ID_IS_REQUIRED: 'Id phường/xã không được để trống',
+  WARD_ID_IS_NUMBER: 'Id phường/xã phải là số',
+  WARD_CODE_IS_NUMBER: 'Mã phường/xã phải là số',
   WARD_TYPE_IS_STRING: 'Loại phường/xã phải là chuỗi ký tự',
   WARD_TYPE_BETWEEN_1_50_CHARACTERS: 'loại phường/xã phải từ 1 đến 50 ký tự',
   WARD_TYPE_IS_REQUIRED: 'loại phường/xã không được để trống',
@@ -249,6 +253,7 @@ export const mappingTranslate = {
   TICKET_STATUS_IS_STRING: 'trạng thái của vé phải là chuỗi',
   TICKET_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
   TICKET_ID_IS_36_CHARACTERS: 'Id của vé phải là 36 ký tự',
+  TICKET_DETAIL_IS_SOLD: 'Vé này đã được bán',
 
   // price list
   PRICE_LIST_STATUS_INVALID:
@@ -263,7 +268,7 @@ export const mappingTranslate = {
   PRICE_LIST_CODE_IS_EXIST: 'mã của bảng giá đã tồn tại',
 
   // price details
-  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết giá',
+  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết bảng giá',
   PRICE_IS_NUMBER: 'Giá phải là số',
   PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Giá phải lớn hơn hoặc bằng 0',
   PRICE_IS_TOO_BIG: 'Giá lớn hơn miền giá trị của double',
@@ -300,7 +305,7 @@ export const mappingTranslate = {
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
 
   // order
-  ORDER_NOT_FOUND: 'Không tìm thấy đơn hàng',
+  ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',
   ORDER_STATUS_IS_STRING: 'Trạng thái của đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_ENUM: 'Trạng thái của đơn hàng không hợp lệ',
   ORDER_ID_IS_36_CHARACTERS: 'Id của đơn hàng phải là 36 ký tự',
