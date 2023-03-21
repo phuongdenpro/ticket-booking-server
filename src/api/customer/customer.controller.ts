@@ -81,7 +81,15 @@ export class CustomerController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findCustomerOneById(@Param('id') id: string) {
-    return await this.customerService.getCustomerById(id);
+    const options = {
+      relations: ['ward', 'ward.district', 'ward.district.province'],
+    };
+    const customer = await this.customerService.getCustomerById(id, options);
+    customer['province'] = customer.ward.district.province;
+    delete customer.ward.district.province;
+    customer['district'] = customer.ward.district;
+    delete customer.ward.district;
+    return customer;
   }
 
   @Post('customer-group/add-customer')
