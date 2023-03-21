@@ -55,6 +55,11 @@ export class CreateCustomerForAdminDto {
   @IsOptional()
   birthday?: Date;
 
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'NOTE_IS_STRING' })
+  @IsOptional()
+  note?: string;
+
   @ApiPropertyOptional({ example: GenderEnum.OTHER, enum: GenderEnum })
   @IsEnum(GenderEnum, { message: 'GENDER_IS_ENUM' })
   @IsString({ message: 'GENDER_IS_STRING' })

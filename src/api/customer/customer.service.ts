@@ -12,9 +12,9 @@ import { DataSource, Repository } from 'typeorm';
 import {
   CreateCustomerForAdminDto,
   FilterCustomerDto,
-  UpdateCustomerDto,
+  UpdateCustomerForAdminDto,
 } from './dto';
-import { UserUpdatePasswordDto } from '../user/dto';
+import { UpdateCustomerDto, UserUpdatePasswordDto } from '../user/dto';
 import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
 import { AuthService } from '../../auth/auth.service';
@@ -95,109 +95,8 @@ export class CustomerService {
     relations: ['ward', 'ward.district', 'ward.district.province'],
   };
 
-  async createCustomerForAdmin(userId: string, dto: CreateCustomerForAdminDto) {
-    const {
-      email,
-      fullName,
-      wardCode,
-      gender,
-      birthday,
-      phone,
-      customerGroupId,
-      customerGroupCode,
-      address,
-    } = dto;
-    const adminExist = await this.dataSource.getRepository(Staff).findOne({
-      where: { id: userId },
-    });
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-
-    const customer = new Customer();
-    customer.fullName = fullName;
-    switch (gender) {
-      case GenderEnum.FEMALE:
-        customer.gender = GenderEnum.FEMALE;
-        break;
-      case GenderEnum.MALE:
-        customer.gender = GenderEnum.MALE;
-        break;
-      case GenderEnum.OTHER:
-        customer.gender = GenderEnum.OTHER;
-        break;
-      default:
-        customer.gender = GenderEnum.OTHER;
-        break;
-    }
-    if (birthday) {
-      customer.birthday = birthday;
-    } else {
-      customer.birthday = new Date(moment().format('YYYY-MM-DD'));
-    }
-
-    if (email) {
-      const userEmailExist = await this.findOneByEmail(email);
-      if (userEmailExist) {
-        throw new BadRequestException('EMAIL_ALREADY_EXIST');
-      }
-      customer.email = email;
-    }
-
-    const userPhoneExist = await this.findOneByPhone(phone);
-    if (userPhoneExist) {
-      throw new BadRequestException('PHONE_ALREADY_EXIST');
-    }
-    customer.phone = phone;
-
-    const ward = await this.dataSource.getRepository(Ward).findOne({
-      where: {
-        code: wardCode,
-      },
-      select: {
-        ...this.selectFieldsAddress.select.ward,
-      },
-      relations: this.selectFieldsAddress.relations,
-    });
-    if (!ward) {
-      throw new BadRequestException('WARD_NOT_FOUND');
-    }
-    customer.ward = ward;
-    customer.address = address;
-    customer.fullAddress = `${address}, ${ward.name}, ${ward.district.name}, ${ward.district.province.name}`;
-    delete customer.ward.district;
-
-    let customerGroupExist;
-    if (customerGroupId) {
-      customerGroupExist = await this.dataSource
-        .getRepository(CustomerGroup)
-        .findOne({
-          where: { id: customerGroupId },
-        });
-    } else if (customerGroupCode) {
-      customerGroupExist = await this.dataSource
-        .getRepository(CustomerGroup)
-        .findOne({
-          where: { code: customerGroupCode },
-        });
-    } else {
-      customerGroupExist = await this.dataSource
-        .getRepository(CustomerGroup)
-        .findOne({
-          where: { code: 'DEFAULT' },
-        });
-    }
-    if (!customerGroupExist) {
-      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
-    }
-    customer.customerGroup = customerGroupExist;
-
-    customer.createdBy = adminExist.id;
-    customer.status = UserStatusEnum.ACTIVE;
-    return await this.customerRepository.save(customer);
+  async getCustomerStatus() {
+    return Object.keys(UserStatusEnum).map((key) => UserStatusEnum[key]);
   }
 
   async findOneCustomer(options: any) {
@@ -212,8 +111,8 @@ export class CustomerService {
         fullName: true,
         gender: true,
         address: true,
-        fullAddress: true,
         note: true,
+        fullAddress: true,
         birthday: true,
         createdAt: true,
         updatedBy: true,
@@ -223,6 +122,7 @@ export class CustomerService {
         createdAt: SortEnum.DESC,
         ...options?.order,
       },
+      relations: ['customerGroup'].concat(options?.relations || []),
       ...options?.other,
     });
   }
@@ -427,6 +327,242 @@ export class CustomerService {
     return saveCustomer;
   }
 
+  async createCustomerForAdmin(userId: string, dto: CreateCustomerForAdminDto) {
+    const {
+      email,
+      fullName,
+      wardCode,
+      gender,
+      birthday,
+      phone,
+      customerGroupId,
+      customerGroupCode,
+      address,
+      note,
+    } = dto;
+    const adminExist = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: userId },
+    });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const customer = new Customer();
+    customer.fullName = fullName;
+    customer.note = note;
+    switch (gender) {
+      case GenderEnum.FEMALE:
+        customer.gender = GenderEnum.FEMALE;
+        break;
+      case GenderEnum.MALE:
+        customer.gender = GenderEnum.MALE;
+        break;
+      case GenderEnum.OTHER:
+        customer.gender = GenderEnum.OTHER;
+        break;
+      default:
+        customer.gender = GenderEnum.OTHER;
+        break;
+    }
+    if (birthday) {
+      customer.birthday = birthday;
+    } else {
+      customer.birthday = new Date(moment().format('YYYY-MM-DD'));
+    }
+
+    if (email) {
+      const userEmailExist = await this.findOneByEmail(email);
+      if (userEmailExist) {
+        throw new BadRequestException('EMAIL_ALREADY_EXIST');
+      }
+      customer.email = email;
+    }
+
+    const userPhoneExist = await this.findOneByPhone(phone);
+    if (userPhoneExist) {
+      throw new BadRequestException('PHONE_ALREADY_EXIST');
+    }
+    customer.phone = phone;
+    const ward = await this.dataSource.getRepository(Ward).findOne({
+      where: {
+        code: wardCode,
+      },
+      select: {
+        ...this.selectFieldsAddress.select.ward,
+      },
+      relations: ['district', 'district.province'],
+    });
+    if (!ward) {
+      throw new BadRequestException('WARD_NOT_FOUND');
+    }
+    customer.ward = ward;
+    customer.address = address;
+    customer.fullAddress = `${address}, ${ward.name}, ${ward.district.name}, ${ward.district.province.name}`;
+    delete customer.ward.district;
+
+    let customerGroupExist;
+    if (customerGroupId) {
+      customerGroupExist = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { id: customerGroupId },
+        });
+    } else if (customerGroupCode) {
+      customerGroupExist = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { code: customerGroupCode },
+        });
+    } else {
+      customerGroupExist = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { code: 'DEFAULT' },
+        });
+    }
+    if (!customerGroupExist) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+    customer.customerGroup = customerGroupExist;
+
+    customer.createdBy = adminExist.id;
+    customer.status = UserStatusEnum.ACTIVE;
+    const saveCustomer = await this.customerRepository.save(customer);
+    delete saveCustomer.lastLogin;
+    delete saveCustomer.refreshToken;
+    delete saveCustomer.accessToken;
+    delete saveCustomer.password;
+    delete customer.deletedAt;
+    return saveCustomer;
+  }
+
+  async updateCustomerForAdmin(
+    id: string,
+    dto: UpdateCustomerForAdminDto,
+    userId: string,
+  ) {
+    const {
+      fullName,
+      wardCode,
+      gender,
+      birthday,
+      customerGroupId,
+      customerGroupCode,
+      address,
+      status,
+      note,
+    } = dto;
+    const adminExist = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: userId },
+    });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const customer = await this.findOneById(id, {
+      select: {
+        ...this.selectFieldsAddress.select,
+      },
+      relations: this.selectFieldsAddress.relations,
+    });
+    if (fullName) {
+      customer.fullName = fullName;
+    }
+    if (note) {
+      customer.note = note;
+    }
+    if (gender) {
+      switch (gender) {
+        case GenderEnum.FEMALE:
+          customer.gender = GenderEnum.FEMALE;
+          break;
+        case GenderEnum.MALE:
+          customer.gender = GenderEnum.MALE;
+          break;
+        case GenderEnum.OTHER:
+          customer.gender = GenderEnum.OTHER;
+          break;
+      }
+    }
+    if (status) {
+      switch (status) {
+        case UserStatusEnum.ACTIVE:
+          customer.status = UserStatusEnum.ACTIVE;
+          break;
+        case UserStatusEnum.INACTIVATE:
+          customer.status = UserStatusEnum.INACTIVATE;
+          break;
+        case UserStatusEnum.SUSPENSION:
+          customer.status = UserStatusEnum.SUSPENSION;
+          break;
+      }
+    }
+    if (birthday) {
+      customer.birthday = birthday;
+    }
+    let customerGroupExist;
+    if (customerGroupId) {
+      customerGroupExist = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { id: customerGroupId },
+        });
+    } else if (customerGroupCode) {
+      customerGroupExist = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { code: customerGroupCode },
+        });
+    } else {
+      customerGroupExist = await this.dataSource
+        .getRepository(CustomerGroup)
+        .findOne({
+          where: { code: 'DEFAULT' },
+        });
+    }
+    if (!customerGroupExist) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+    customer.customerGroup = customerGroupExist;
+
+    if (address) {
+      customer.address = address;
+    }
+    if (wardCode) {
+      const ward = await this.dataSource.getRepository(Ward).findOne({
+        where: {
+          code: wardCode,
+        },
+        relations: ['district', 'district.province'],
+      });
+      if (!ward) {
+        throw new NotFoundException('WARD_NOT_FOUND');
+      }
+      customer.ward = ward;
+    }
+    const district = customer.ward.district;
+    const province = district.province;
+    customer.fullAddress = `${customer.address}, ${customer.ward.name}, ${district.name}, ${province.name}`;
+    customer.updatedBy = adminExist.id;
+
+    const saveCustomer = await this.customerRepository.save(customer);
+    delete customer.refreshToken;
+    delete customer.accessToken;
+    delete customer.deletedAt;
+    delete customer.password;
+    delete customer.ward.district;
+    delete district.province;
+    saveCustomer['district'] = district;
+    saveCustomer['province'] = province;
+    return saveCustomer;
+  }
+
   async addCustomerToCustomerGroup(dto: AddCustomerDto, adminId: string) {
     const { customerId, customerGroupId, customerGroupCode } = dto;
     if (!customerGroupId && !customerGroupCode) {
@@ -533,9 +669,5 @@ export class CustomerService {
       },
       message: 'Xoá khách hàng khỏi nhóm thành công',
     };
-  }
-
-  async getCustomerStatus() {
-    return Object.keys(UserStatusEnum).map((key) => UserStatusEnum[key]);
   }
 }

@@ -22,6 +22,7 @@ export class Customer {
   @Column({
     name: 'status',
     type: 'varchar',
+    length: 100,
     default: UserStatusEnum.INACTIVATE,
     nullable: false,
   })

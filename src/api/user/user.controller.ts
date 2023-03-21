@@ -12,8 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UserUpdatePasswordDto } from './dto';
-import { UpdateCustomerDto } from '../customer/dto';
+import { UpdateCustomerDto, UserUpdatePasswordDto } from './dto';
 
 @Controller('user')
 @ApiTags('User')

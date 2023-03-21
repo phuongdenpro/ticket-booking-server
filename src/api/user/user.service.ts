@@ -8,9 +8,8 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { CustomerService } from '../customer/customer.service';
 import { Repository } from 'typeorm';
-import { UserUpdatePasswordDto } from './dto';
+import { UpdateCustomerDto, UserUpdatePasswordDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { UpdateCustomerDto } from '../customer/dto';
 
 @Injectable()
 @ApiTags('User')

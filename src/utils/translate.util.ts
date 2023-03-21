@@ -82,6 +82,7 @@ export const mappingTranslate = {
   CUSTOMER_ID_MUST_BE_36_CHARACTERS: 'Mã khách hàng phải có 36 ký tự',
   CUSTOMER_ID_IS_ARRAY: 'Mã khách hàng phải là mảng',
   CUSTOMER_STATUS_IS_ENUM: 'Trạng thái khách hàng không hợp lệ',
+  CUSTOMER_STATUS_IS_STRING: 'Trạng thái khách hàng phải là chuỗi',
 
   // customer group
   CUSTOMER_GROUP_NOT_FOUND: 'Không tìm thấy nhóm khách hàng',

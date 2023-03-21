@@ -24,8 +24,8 @@ import { RoleEnum } from '../../enums';
 
 import {
   FilterCustomerDto,
-  UpdateCustomerDto,
   CreateCustomerForAdminDto,
+  UpdateCustomerForAdminDto,
 } from './dto';
 import { CustomerService } from './customer.service';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
@@ -70,9 +70,9 @@ export class CustomerController {
   async updateUser(
     @CurrentUser() user,
     @Param('id') id: string,
-    @Body() dto: UpdateCustomerDto,
+    @Body() dto: UpdateCustomerForAdminDto,
   ) {
-    return this.customerService.updateCustomer(id, dto, null, user.id);
+    return this.customerService.updateCustomerForAdmin(id, dto, user.id);
   }
 
   @Get(':id')
