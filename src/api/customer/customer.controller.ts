@@ -92,6 +92,15 @@ export class CustomerController {
     return customer;
   }
 
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Role(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async delete(@CurrentUser() user, @Param('id') id: string) {
+    return await this.customerService.deleteCustomerById(user.id, id);
+  }
+
   @Post('customer-group/add-customer')
   @HttpCode(HttpStatus.CREATED)
   @Role(RoleEnum.STAFF)
