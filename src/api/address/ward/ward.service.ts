@@ -41,7 +41,7 @@ export class WardService {
     });
   }
 
-  async findOneById(id: string, options?: any) {
+  async findOneById(id: number, options?: any) {
     if (options) {
       options.where = { id, ...options?.where };
     } else {
@@ -72,7 +72,22 @@ export class WardService {
     return { dataResult, pagination, total };
   }
 
-  // find all
+  async getWardById(id: number) {
+    const ward = await this.findOneById(id);
+    if (!ward) {
+      throw new BadRequestException('WARD_NOT_FOUND');
+    }
+    return ward;
+  }
+
+  async getWardByCode(code: number) {
+    const ward = await this.findOneByCode(code);
+    if (!ward) {
+      throw new BadRequestException('WARD_NOT_FOUND');
+    }
+    return ward;
+  }
+
   async findAll(dto: FilterWardDto, pagination?: Pagination) {
     const { name, type, codename, districtCode } = dto;
 
@@ -104,26 +119,25 @@ export class WardService {
   }
 
   async createWard(dto: SaveWardDto, userId: string) {
+    const { code, codename, type, districtCode, name } = dto;
     const district = await this.dataSource.getRepository(District).findOne({
-      where: { code: dto.districtCode },
+      where: { code: districtCode },
     });
     if (!district) {
       throw new BadRequestException('DISTRICT_NOT_FOUND');
     }
+    const wardExists = await this.findOneByCode(code, {
+      withDeleted: true,
+    });
+    if (!wardExists) {
+      throw new BadRequestException('WARD_CODE_ALREADY_EXIST');
+    }
 
     const ward = new Ward();
-    if (dto.name) {
-      ward.name = dto.name;
-    }
-    if (dto.type) {
-      ward.type = dto.type;
-    }
-    if (dto.code) {
-      ward.code = dto.code;
-    }
-    if (dto.codename) {
-      ward.codename = dto.codename;
-    }
+    ward.name = name;
+    ward.type = type;
+    ward.code = code;
+    ward.codename = codename;
     ward.district = district;
     ward.districtCode = district.code;
 
@@ -141,29 +155,26 @@ export class WardService {
 
   // update a record by id
   async updateById(id: number, dto: UpdateWardDto, userId: string) {
-    const ward = await this.wardRepository.findOne({ where: { id } });
-
+    const { type, name, codename, districtCode } = dto;
+    const ward = await this.findOneById(id);
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    if (dto.name) {
-      ward.name = dto.name;
+    if (name) {
+      ward.name = name;
     }
-    if (dto.type) {
-      ward.type = dto.type;
+    if (type) {
+      ward.type = type;
     }
-    if (dto.code) {
-      ward.code = dto.code;
+    if (codename) {
+      ward.codename = codename;
     }
-    if (dto.codename) {
-      ward.codename = dto.codename;
-    }
-    if (dto.districtCode) {
+    if (districtCode) {
       const dist = await this.dataSource
         .getRepository(District)
-        .findOne({ where: { code: dto.districtCode } });
+        .findOne({ where: { code: districtCode } });
       if (!dist) {
-        throw new BadRequestException('district is not exist');
+        throw new BadRequestException('DISTRICT_NOT_FOUND');
       }
       ward.districtCode = dist.code;
       ward.district = dist;
@@ -182,30 +193,27 @@ export class WardService {
 
   // update a record by code
   async updateByCode(code: number, dto: UpdateWardDto, userId: string) {
-    const query = this.wardRepository.createQueryBuilder('w');
-    const ward = await query.where('w.code = :code', { code }).getOne();
+    const { type, name, codename, districtCode } = dto;
+    const ward = await this.findOneByCode(code);
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
 
-    if (dto.name) {
-      ward.name = dto.name;
+    if (name) {
+      ward.name = name;
     }
-    if (dto.type) {
-      ward.type = dto.type;
+    if (type) {
+      ward.type = type;
     }
-    if (dto.code) {
-      ward.code = code;
+    if (codename) {
+      ward.codename = codename;
     }
-    if (dto.codename) {
-      ward.codename = dto.codename;
-    }
-    if (dto.districtCode) {
+    if (districtCode) {
       const dist = await this.dataSource
         .getRepository(District)
-        .findOne({ where: { code: dto.districtCode } });
+        .findOne({ where: { code: districtCode } });
       if (!dist) {
-        throw new BadRequestException('district is not exist');
+        throw new BadRequestException('DISTRICT_NOT_FOUND');
       }
       ward.districtCode = dist.code;
       ward.district = dist;
@@ -224,7 +232,7 @@ export class WardService {
 
   // delete a record by id
   async deleteById(id: number, userId: string) {
-    const ward = await this.wardRepository.findOne({ where: { id } });
+    const ward = await this.findOneById(id);
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
@@ -243,8 +251,7 @@ export class WardService {
 
   // delete a record by code
   async deleteByCode(code: number, userId: string) {
-    const query = this.wardRepository.createQueryBuilder('w');
-    const ward = await query.where('w.code = :code', { code }).getOne();
+    const ward = await this.findOneByCode(code);
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }

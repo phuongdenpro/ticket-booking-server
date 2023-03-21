@@ -1,4 +1,4 @@
-import { SeatTypeEnum, SortEnum } from './../../enums';
+import { SeatTypeEnum, SortEnum, UserStatusEnum } from './../../enums';
 import {
   BadRequestException,
   Injectable,
@@ -234,7 +234,10 @@ export class SeatService {
     if (!adminExist || !customerExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (!adminExist.isActive || customerExist.status == 0) {
+    if (
+      !adminExist.isActive ||
+      customerExist.status === UserStatusEnum.INACTIVATE
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 

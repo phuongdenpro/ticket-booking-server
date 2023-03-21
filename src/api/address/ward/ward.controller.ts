@@ -48,14 +48,14 @@ export class WardController {
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
-  async findOneById(@Param('id') id: string) {
-    return await this.wardService.findOneById(id);
+  async findOneById(@Param('id') id: number) {
+    return await this.wardService.getWardById(id);
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
   async findOneByCode(@Param('code') code: number) {
-    return await this.wardService.findOneByCode(code);
+    return await this.wardService.getWardByCode(code);
   }
 
   @Get('district-code/:districtCode')

@@ -19,6 +19,7 @@ import {
   SortEnum,
   SeatTypeEnum,
   TicketStatusEnum,
+  UserStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -27,6 +28,8 @@ import { SeatService } from '../seat/seat.service';
 import { TicketService } from '../ticket/ticket.service';
 import { PriceListService } from '../price-list/price-list.service';
 import { UpdateTicketDetailDto } from '../ticket/dto';
+import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class OrderService {
@@ -83,7 +86,10 @@ export class OrderService {
     if (!customer && !admin) {
       throw new NotFoundException('USER_NOT_FOUND');
     }
-    if ((customer && customer.status === 0) || (admin && !admin.isActive)) {
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
@@ -94,7 +100,7 @@ export class OrderService {
         relations: ['trip'],
       },
     );
-    const currentDate = new Date();
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (currentDate > tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
     }
@@ -293,7 +299,10 @@ export class OrderService {
     if (!customer && !admin) {
       throw new UnauthorizedException('USER_NOT_FOUND');
     }
-    if ((customer && customer.status === 0) || (admin && !admin.isActive)) {
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
@@ -379,7 +388,7 @@ export class OrderService {
     const ticketDetailId = ticketDetail.id;
     console.log(ticketDetailId);
 
-    const currentDate = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     const priceDetail = await this.priceListService.findOnePriceDetailBy({
       where: {
         applicablePriceDetails: {

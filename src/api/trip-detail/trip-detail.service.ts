@@ -16,6 +16,8 @@ import {
 import { SortEnum, TripDetailStatusEnum } from './../../enums';
 import { Pagination } from './../../decorator';
 import { TicketService } from '../ticket/ticket.service';
+import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class TripDetailService {
@@ -90,7 +92,7 @@ export class TripDetailService {
     const tripDetail = new TripDetail();
     tripDetail.code = code;
     // check time
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (!departureTime) {
       throw new BadRequestException('DEPARTURE_DATE_REQUIRED');
     }
@@ -206,7 +208,7 @@ export class TripDetailService {
     const query = this.tripDetailRepository.createQueryBuilder('q');
     query.where('q.isActive = :isActive', { isActive: true });
 
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (departureTime) {
       departureTime = new Date(`${departureTime.toDateString()}`);
       const departureTime1 = new Date(`${departureTime.toDateString()}`);
@@ -287,7 +289,7 @@ export class TripDetailService {
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
     }
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (departureTime) {
       departureTime = new Date(departureTime);
       if (departureTime >= currentDate) {
@@ -386,7 +388,8 @@ export class TripDetailService {
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
     }
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (departureTime) {
       departureTime = new Date(departureTime);
       if (departureTime >= currentDate) {

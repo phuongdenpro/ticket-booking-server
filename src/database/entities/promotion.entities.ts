@@ -27,10 +27,10 @@ export class Promotion {
   @Column({ name: 'note', type: 'text', nullable: true })
   note: string;
 
-  @Column({ name: 'start_date', type: 'timestamp', nullable: true })
+  @Column({ name: 'start_date', type: 'date', nullable: false })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
+  @Column({ name: 'end_date', type: 'date', nullable: false })
   endDate: Date;
 
   @Column({ name: 'status', type: 'varchar', nullable: true })

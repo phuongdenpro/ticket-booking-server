@@ -11,15 +11,12 @@ import {
   IsDate,
   IsNumber,
 } from 'class-validator';
-import { SortEnum } from '../../../enums';
 import { GenderEnum } from '../../../enums/gender.enum';
 import { Length } from 'class-validator';
 
-export class CreateCustomerDto {
+export class CreateCustomerForAdminDto {
   @ApiPropertyOptional({ example: 'superman@gmail.com' })
   @IsString({ message: 'EMAIL_IS_STRING' })
-  @MinLength(6, { message: 'EMAIL_LENGTH' })
-  @MaxLength(100, { message: 'EMAIL_LENGTH' })
   @IsEmail({}, { message: 'EMAIL_INVALID' })
   @IsOptional()
   email?: string;
@@ -30,13 +27,6 @@ export class CreateCustomerDto {
   @IsString({ message: 'PHONE_IS_STRING' })
   phone: string;
 
-  @ApiProperty({ example: '12345678' })
-  @IsOptional()
-  @IsString({ message: 'PASSWORD_IS_STRING' })
-  @MinLength(6, { message: 'PASSWORD_IS_MIN_LENGTH_6' })
-  @MaxLength(255, { message: 'PASSWORD_IS_MAX_LENGTH_255' })
-  password?: string;
-
   @ApiProperty({ example: 'superman' })
   @IsNotEmpty({ message: 'FULL_NAME_IS_REQUIRED' })
   @IsString({ message: 'FULL_NAME_IS_STRING' })
@@ -45,15 +35,15 @@ export class CreateCustomerDto {
   fullName: string;
 
   @ApiProperty({ example: 26914 })
-  @IsNotEmpty({ message: 'WARD_ID_IS_REQUIRED' })
   @IsNumber(
-    { allowInfinity: false, allowNaN: false },
+    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
     { message: 'WARD_CODE_IS_NUMBER' },
   )
-  wardCode: number;
+  @IsOptional()
+  wardCode?: number;
 
   @ApiProperty({
-    example: 'Demo, Phường 26, Bình Thạnh, Thành phố Hồ Chí Minh',
+    example: 'Demo',
   })
   @IsNotEmpty({ message: 'ADDRESS_IS_REQUIRED' })
   @IsString({ message: 'ADDRESS_IS_STRING' })
@@ -66,15 +56,18 @@ export class CreateCustomerDto {
   birthday?: Date;
 
   @ApiPropertyOptional({ example: GenderEnum.OTHER, enum: GenderEnum })
-  @IsEnum(['', GenderEnum.MALE, GenderEnum.FEMALE, GenderEnum.OTHER], {
-    message: 'GENDER_IS_ENUM',
-  })
+  @IsEnum(GenderEnum, { message: 'GENDER_IS_ENUM' })
   @IsString({ message: 'GENDER_IS_STRING' })
   @IsOptional()
   gender?: GenderEnum;
 
-  @ApiPropertyOptional({ example: '0ade8728-4647-4985-8b34-f59a21b0baf5' })
-  @IsString({ message: 'EMAIL_IS_STRING' })
+  @ApiPropertyOptional({ example: 'e80fcd4f-acad-4b04-b862-f66468348bb3' })
+  @IsString({ message: 'CUSTOMER_GROUP_ID_IS_STRING' })
   @IsOptional()
   customerGroupId?: string;
+
+  @ApiPropertyOptional({ example: 5514 })
+  @IsString({ message: 'CUSTOMER_GROUP_CODE_IS_STRING' })
+  @IsOptional()
+  customerGroupCode?: string;
 }

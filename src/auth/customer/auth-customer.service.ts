@@ -6,7 +6,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GenderEnum, RoleEnum } from '../../enums';
+import { GenderEnum, RoleEnum, UserStatusEnum } from '../../enums';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { CustomerLoginDto, CustomerRegisterDto } from './dto';
@@ -59,7 +59,7 @@ export class AuthCustomerService {
       } else {
         user.birthday = new Date('01-01-1970');
       }
-      user.status = 0;
+      user.status = UserStatusEnum.INACTIVATE;
       await queryRunner.commitTransaction();
       // save and select return fields
       const saveUser = await this.userRepository.save(user);

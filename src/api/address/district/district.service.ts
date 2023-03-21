@@ -105,22 +105,25 @@ export class DistrictService {
   }
 
   async createDistrict(dto: SaveDistrictDto, userId: string) {
+    const { code, codename, name, provinceCode, type } = dto;
     const province = await this.dataSource.getRepository(Province).findOne({
-      where: { code: dto.provinceCode },
+      where: { code: provinceCode },
     });
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    const districtExist = await this.findOneByCode(dto.code);
+    const districtExist = await this.findOneByCode(code, {
+      withDeleted: true,
+    });
     if (districtExist) {
       throw new BadRequestException('DISTRICT_CODE_EXISTED');
     }
 
     const district = new District();
-    district.name = dto.name;
-    district.type = dto.type;
-    district.code = dto.code;
-    district.codename = dto.codename;
+    district.name = name;
+    district.type = type;
+    district.code = code;
+    district.codename = codename;
     district.provinceCode = province.code;
     district.province = province;
     const adminExist = await this.adminService.findOneBydId(userId);
@@ -137,23 +140,23 @@ export class DistrictService {
 
   // update a record by id
   async updateById(id: string, dto: UpdateDistrictDto, userId: string) {
-    const query = this.districtRepository.createQueryBuilder('d');
-    const district = await query.where('d.id = :id', { id }).getOne();
+    const { codename, name, provinceCode, type } = dto;
+    const district = await this.findOneById(id);
     if (!district) {
       throw new BadRequestException('DISTRICT_NOT_FOUND');
     }
     if (district.name) {
-      district.name = dto.name;
+      district.name = name;
     }
-    if (dto.type) {
-      district.type = dto.type;
+    if (type) {
+      district.type = type;
     }
-    if (dto.codename) {
-      district.codename = dto.codename;
+    if (codename) {
+      district.codename = codename;
     }
-    if (dto.provinceCode) {
+    if (provinceCode) {
       const province = await this.dataSource.getRepository(Province).findOne({
-        where: { code: dto.provinceCode },
+        where: { code: provinceCode },
       });
       if (!province) {
         throw new BadRequestException('PROVINCE_NOT_FOUND');
@@ -176,23 +179,23 @@ export class DistrictService {
 
   // update a record by code
   async updateByCode(code: number, dto: UpdateDistrictDto, userId: string) {
-    const query = this.districtRepository.createQueryBuilder('d');
-    const district = await query.where('d.code = :code', { code }).getOne();
+    const { codename, name, provinceCode, type } = dto;
+    const district = await this.findOneByCode(code);
     if (!district) {
       throw new BadRequestException('DISTRICT_NOT_FOUND');
     }
     if (district.name) {
-      district.name = dto.name;
+      district.name = name;
     }
-    if (dto.type) {
-      district.type = dto.type;
+    if (type) {
+      district.type = type;
     }
-    if (dto.codename) {
-      district.codename = dto.codename;
+    if (codename) {
+      district.codename = codename;
     }
-    if (dto.provinceCode) {
+    if (provinceCode) {
       const province = await this.dataSource.getRepository(Province).findOne({
-        where: { code: dto.provinceCode },
+        where: { code: provinceCode },
       });
       if (!province) {
         throw new BadRequestException('PROVINCE_NOT_FOUND');
@@ -214,8 +217,7 @@ export class DistrictService {
 
   // delete a record by id
   async deleteById(id: string, userId: string) {
-    const query = this.districtRepository.createQueryBuilder('d');
-    const district = await query.where('d.id = :id', { id }).getOne();
+    const district = await this.findOneById(id);
     if (!district) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
@@ -234,8 +236,7 @@ export class DistrictService {
 
   // delete a record by code
   async deleteByCode(code: number, userId: string) {
-    const query = this.districtRepository.createQueryBuilder('d');
-    const district = await query.where('d.code = :code', { code }).getOne();
+    const district = await this.findOneByCode(code);
     if (!district) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }

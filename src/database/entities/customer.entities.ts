@@ -1,4 +1,4 @@
-import { GenderEnum } from './../../enums';
+import { GenderEnum, UserStatusEnum } from './../../enums';
 import { Entity, OneToMany, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Order, Ward, CustomerGroup } from '.';
 import {
@@ -21,11 +21,11 @@ export class Customer {
 
   @Column({
     name: 'status',
-    type: 'int',
-    default: 0,
+    type: 'varchar',
+    default: UserStatusEnum.INACTIVATE,
     nullable: false,
   })
-  status?: number;
+  status?: UserStatusEnum;
 
   @Column({ name: 'phone', type: 'varchar', nullable: true })
   phone?: string;
@@ -50,6 +50,9 @@ export class Customer {
 
   @Column({ name: 'birthday', type: 'date', nullable: true })
   birthday?: Date;
+
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;

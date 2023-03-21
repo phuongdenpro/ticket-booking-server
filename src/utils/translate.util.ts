@@ -116,6 +116,7 @@ export const mappingTranslate = {
   PROVINCE_TYPE_IS_REQUIRED: 'loại tỉnh thành không được để trống',
   PROVINCE_TYPE_BETWEEN_1_50_CHARACTERS:
     'loại tỉnh thành phải từ 1 đến 50 ký tự',
+  PROVINCE_CODE_ALREADY_EXIST: 'mã tỉnh/thành phố đã tồn tại',
 
   // district
   DISTRICT_NOT_FOUND: 'Không tìm thấy quận/huyện',
@@ -134,6 +135,7 @@ export const mappingTranslate = {
   WARD_TYPE_IS_STRING: 'Loại phường/xã phải là chuỗi ký tự',
   WARD_TYPE_BETWEEN_1_50_CHARACTERS: 'loại phường/xã phải từ 1 đến 50 ký tự',
   WARD_TYPE_IS_REQUIRED: 'loại phường/xã không được để trống',
+  WARD_CODE_ALREADY_EXIST: 'mã phường/xã đã tồn tại',
 
   // station
   STATION_CODE_EXISTED: 'Mã bến xe đã tồn tại ở một bến xe khác',
@@ -277,7 +279,11 @@ export const mappingTranslate = {
   // promotion
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
-  BUDGET_MIN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
+  BUDGET_GREATER_THAN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
+  BUDGET_LESS_THAN_1_000_000_000: 'Ngân sách phải nhỏ hơn 1.000.000.000',
+  PROMOTION_STATUS_IS_ON_ACTIVE:
+    'Chương trình khuyến mãi đang kích hoạt nên không thể cập nhật ngày bắt đầu',
+  PROMOTION_NOT_FOUND: 'Không tìm thấy chương trình khuyến mãi',
   PROMOTION_CODE_EXISTED: 'Mã khuyến mãi đã tồn tại',
   PROMOTION_TYPE_IS_STRING: 'Loại chương trình khuyến mãi phải là chuỗi ký tự',
   PROMOTION_TYPE_IS_REQUIRED: 'Chương trình khuyến mãi không được để trống',

@@ -1,4 +1,4 @@
-import { CreatePromotionDto } from './dto';
+import { CreatePromotionDto, UpdatePromotionDto } from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { CurrentUser, Roles } from './../../decorator';
 import { RoleEnum } from './../../enums';
@@ -22,19 +22,22 @@ export class PromotionController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  // @Roles(RoleEnum.STAFF)
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async createPromotion(@Body() dto: CreatePromotionDto, @CurrentUser() user) {
     return await this.promotionService.createPromotion(dto, user.id);
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async getPriceListById(@Param('code') code: string) {
+  async getPromotionByCode(@Param('code') code: string) {
     return await this.promotionService.findOnePromotionByCode(code);
+  }
+
+  @Get('id/:id')
+  @HttpCode(HttpStatus.OK)
+  async getPromotionById(@Param('id') id: string) {
+    return await this.promotionService.findOnePromotionById(id);
   }
 }

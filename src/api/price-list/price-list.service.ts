@@ -19,6 +19,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Pagination } from './../../decorator';
 import { DataSource, Repository } from 'typeorm';
 import { TicketGroupService } from '../ticket-group/ticket-group.service';
+import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class PriceListService {
@@ -109,7 +111,7 @@ export class PriceListService {
     if (startDate > endDate) {
       throw new BadRequestException('START_DATE_MUST_BE_LESS_THAN_END_DATE');
     }
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate < currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
@@ -225,7 +227,7 @@ export class PriceListService {
     if (note) {
       priceList.note = note;
     }
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate !== undefined || startDate !== null) {
       if (startDate < currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -278,7 +280,7 @@ export class PriceListService {
     if (note) {
       priceList.note = note;
     }
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate) {
       if (startDate < currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');

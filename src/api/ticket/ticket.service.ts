@@ -1,5 +1,5 @@
 import { Pagination } from './../../decorator';
-import { ActiveStatusEnum, SortEnum, TicketStatusEnum } from './../../enums';
+import { ActiveStatusEnum, SortEnum, TicketStatusEnum, UserStatusEnum } from './../../enums';
 import {
   CreateTicketDto,
   FilterTicketDto,
@@ -23,6 +23,8 @@ import {
 } from '@nestjs/common';
 import { Repository, DataSource } from 'typeorm';
 import { SeatService } from '../seat/seat.service';
+import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class TicketService {
@@ -148,7 +150,7 @@ export class TicketService {
     ticket.code = code;
     ticket.note = note;
 
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (!startDate) {
       throw new BadRequestException('TICKET_START_DATE_IS_REQUIRED');
     }
@@ -213,7 +215,7 @@ export class TicketService {
         .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
     }
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (startDate && startDate >= currentDate) {
       startDate = new Date(startDate);
       query.andWhere('q.startDate >= :startDate', { startDate });
@@ -255,7 +257,7 @@ export class TicketService {
       }
       ticket.tripDetail = tripDetail;
     }
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (startDate) {
       if (startDate <= currentDate) {
         throw new BadRequestException(
@@ -304,7 +306,7 @@ export class TicketService {
       }
       ticket.tripDetail = tripDetail;
     }
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (startDate) {
       if (startDate <= currentDate) {
         throw new BadRequestException(
@@ -455,7 +457,7 @@ export class TicketService {
     if (!admin && !customer) {
       throw new UnauthorizedException('USER_NOT_FOUND');
     }
-    if (!admin.isActive || customer.status === 0) {
+    if (!admin.isActive || customer.status === UserStatusEnum.INACTIVATE) {
       throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
 

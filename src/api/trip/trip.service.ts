@@ -14,6 +14,8 @@ import { Staff, Station, Trip } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import { SortEnum, TripStatusEnum } from './../../enums';
 import { Pagination } from './../../decorator';
+import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class TripService {
@@ -100,7 +102,7 @@ export class TripService {
     trip.name = name;
     trip.note = note;
     // check start date
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate < currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
@@ -170,7 +172,7 @@ export class TripService {
         .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
     }
 
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate && startDate >= currentDate) {
       startDate = new Date(startDate);
       query.andWhere('q.startDate >= :startDate', { startDate });
@@ -244,7 +246,7 @@ export class TripService {
       trip.note = note;
     }
 
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate !== undefined || startDate !== null) {
       if (startDate < currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -335,7 +337,7 @@ export class TripService {
       trip.note = note;
     }
 
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate !== undefined || startDate !== null) {
       if (startDate < currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');

@@ -1,4 +1,4 @@
-import { OrderRefundDetail,  Order } from '.';
+import { OrderRefundDetail, Order } from '.';
 import {
   CreateDateColumn,
   UpdateDateColumn,
@@ -25,16 +25,6 @@ export class OrderRefund {
   @Column({ name: 'total', type: 'double', nullable: true, default: 0.0 })
   total: number;
 
-  @OneToOne(() => Order, (order) => order.orderRefund)
-  @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
-  order: Order;
-
-  @ManyToOne(
-    () => OrderRefundDetail,
-    (orderRefundDetail) => orderRefundDetail.orderRefund,
-  )
-  orderRefundDetails: OrderRefundDetail;
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -53,4 +43,16 @@ export class OrderRefund {
     select: false,
   })
   public deletedAt?: Date;
+
+  // relationships
+  @OneToOne(() => Order, (order) => order.orderRefund)
+  @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
+  order: Order;
+
+  @ManyToOne(
+    () => OrderRefundDetail,
+    (orderRefundDetail) => orderRefundDetail.orderRefund,
+  )
+  @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
+  orderRefundDetails: OrderRefundDetail;
 }

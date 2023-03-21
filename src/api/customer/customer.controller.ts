@@ -22,10 +22,13 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards';
 import { RoleEnum } from '../../enums';
 
-import { FilterCustomerDto, UpdateCustomerDto } from './dto';
+import {
+  FilterCustomerDto,
+  UpdateCustomerDto,
+  CreateCustomerForAdminDto,
+} from './dto';
 import { CustomerService } from './customer.service';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
-import { CreateCustomerDto } from './dto/create-customer.dto';
 
 @Controller('customer')
 @ApiTags('Customer')
@@ -37,8 +40,8 @@ export class CustomerController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async create(@CurrentUser() user, @Body() dto: CreateCustomerDto) {
-    return this.customerService.create(user.id, dto);
+  async create(@CurrentUser() user, @Body() dto: CreateCustomerForAdminDto) {
+    return this.customerService.createCustomerForAdmin(user.id, dto);
   }
 
   @Get('status')
