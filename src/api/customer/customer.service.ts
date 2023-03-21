@@ -13,12 +13,17 @@ import { FilterCustomerDto, UpdateCustomerDto } from './dto';
 import { UserUpdatePasswordDto } from '../user/dto';
 import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
+import { CreateCustomerDto } from './dto/create-customer.dto';
+import { AuthService } from '../../auth/auth.service';
+import { District } from '../../database/entities/vi-address-district.entities';
+import { Province } from '../../database/entities/vi-address-provide.entities';
 
 @Injectable()
 export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
+    private readonly authService: AuthService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -46,6 +51,133 @@ export class CustomerService {
     'cg.createdAt',
     'cg.updatedAt',
   ];
+
+  async create(userId: string, dto: CreateCustomerDto) {
+    const {
+      email,
+      fullName,
+      wardCode,
+      gender,
+      birthday,
+      phone,
+      customerGroupId,
+      address,
+    } = dto;
+
+    if (email) {
+      const userEmailExist = await this.findOneByEmail(email);
+      if (userEmailExist) {
+        throw new BadRequestException('EMAIL_ALREADY_EXIST');
+      }
+    }
+
+    const userPhoneExist = await this.findOneByPhone(phone);
+    if (userPhoneExist) {
+      throw new BadRequestException('PHONE_ALREADY_EXIST');
+    }
+    const ward = await this.dataSource.getRepository(Ward).findOne({
+      where: {
+        code: wardCode,
+      },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        codename: true,
+        code: true,
+        districtCode: true,
+      },
+    });
+    if (!ward) {
+      throw new BadRequestException('WARD_NOT_FOUND');
+    }
+
+    const customerGroupExist = await this.dataSource
+      .getRepository(CustomerGroup)
+      .findOne({
+        where: {
+          id: customerGroupId,
+        },
+      });
+    if (!customerGroupExist) {
+      throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+
+    const queryRunner = await this.dataSource.createQueryRunner();
+    try {
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      const user = new Customer();
+
+      user.fullName = fullName;
+      user.phone = phone;
+      user.address = address;
+      user.email = email;
+      user.ward = ward;
+      user.customerGroup = customerGroupExist;
+      if (dto?.password) {
+        const passwordHashed = await this.authService.hashData(dto?.password);
+        user.password = passwordHashed;
+      }
+      if (!gender) {
+        user.gender = GenderEnum.OTHER;
+      } else {
+        user.gender = gender;
+      }
+      if (birthday) {
+        user.birthday = birthday;
+      } else {
+        user.birthday = new Date('01-01-1970');
+      }
+      user.status = 0;
+      const district = await this.dataSource.getRepository(District).findOne({
+        where: {
+          code: user.ward.districtCode,
+        },
+        select: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+          provinceCode: true,
+        },
+      });
+      const province = await await this.dataSource
+        .getRepository(Province)
+        .findOne({
+          where: {
+            code: district.provinceCode,
+          },
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            codename: true,
+            code: true,
+          },
+        });
+      user.fullAddress = `${user.address}, ${user.ward.name}, ${district.name}, ${province.name}`;
+      await queryRunner.commitTransaction();
+      // save and select return fields
+      const saveUser = await this.customerRepository.save(user);
+      delete saveUser.createdAt;
+      delete saveUser.updatedAt;
+      delete saveUser.deletedAt;
+      delete saveUser.updatedBy;
+      delete saveUser.password;
+      delete saveUser.refreshToken;
+      delete saveUser.accessToken;
+
+      return saveUser;
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      return err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
 
   async findOneCustomer(options: any) {
     return await this.customerRepository.findOne({
@@ -113,6 +245,8 @@ export class CustomerService {
 
   async findAll(dto: FilterCustomerDto, pagination: Pagination) {
     const { keywords, status } = dto;
+    console.log(status);
+    
     const query = this.customerRepository.createQueryBuilder('u');
     if (keywords) {
       query

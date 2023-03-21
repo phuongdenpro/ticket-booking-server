@@ -25,11 +25,21 @@ import { RoleEnum } from '../../enums';
 import { FilterCustomerDto, UpdateCustomerDto } from './dto';
 import { CustomerService } from './customer.service';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
+import { CreateCustomerDto } from './dto/create-customer.dto';
 
 @Controller('customer')
 @ApiTags('Customer')
 export class CustomerController {
   constructor(private customerService: CustomerService) {}
+
+  @Post('')
+  @Roles(RoleEnum.STAFF)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async create(@CurrentUser() user, @Body() dto: CreateCustomerDto) {
+    return this.customerService.create(user.id, dto);
+  }
 
   @Get('status')
   @HttpCode(HttpStatus.OK)
