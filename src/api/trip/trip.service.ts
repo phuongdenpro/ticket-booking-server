@@ -42,30 +42,41 @@ export class TripService {
     'to.name',
   ];
 
-  async findOneTripById(id: string, options?: any) {
+  async findOneTrip(options?: any) {
     const trip = await this.tripRepository.findOne({
-      where: { id },
-      relations: ['fromStation', 'toStation'],
+      where: { ...options?.where },
+      relations: ['fromStation', 'toStation'].concat(options?.relations || []),
       select: {
         fromStation: { id: true, name: true, code: true },
         toStation: { id: true, name: true, code: true },
+        ...options?.select,
       },
-      ...options,
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options.other,
     });
 
     return trip;
   }
 
+  async findOneTripById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneTrip(options);
+  }
+
   async findOneTripByCode(code: string, options?: any) {
-    return await this.tripRepository.findOne({
-      where: { code },
-      relations: ['fromStation', 'toStation'],
-      select: {
-        fromStation: { id: true, name: true, code: true },
-        toStation: { id: true, name: true, code: true },
-      },
-      ...options,
-    });
+    if (options) {
+      options.where = { code, ...options.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneTrip(options);
   }
 
   async createTrip(dto: CreateTripDto, userId: string) {

@@ -7,10 +7,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -39,5 +41,56 @@ export class PromotionController {
   @HttpCode(HttpStatus.OK)
   async getPromotionById(@Param('id') id: string) {
     return await this.promotionService.findOnePromotionById(id);
+  }
+
+  @Patch(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async UpdatePromotionById(
+    @Param('id') id: string,
+    @Body() dto: UpdatePromotionDto,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionService.updatePromotionById(id, dto, user.id);
+  }
+
+  @Patch(':code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async UpdatePromotionByCode(
+    @Param('code') code: string,
+    @Body() dto: UpdatePromotionDto,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionService.updatePromotionByCode(
+      code,
+      dto,
+      user.id,
+    );
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deletePromotionById(@Param('id') id: string, @CurrentUser() user) {
+    return await this.promotionService.deletePromotionById(id, user.id);
+  }
+
+  @Delete(':code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deletePromotionByCode(
+    @Param('code') code: string,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionService.deletePromotionByCode(code, user.id);
   }
 }

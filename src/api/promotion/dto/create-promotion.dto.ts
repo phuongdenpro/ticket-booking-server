@@ -10,7 +10,6 @@ import {
   MinDate,
   IsNumber,
   Min,
-  Max,
 } from 'class-validator';
 
 export class CreatePromotionDto {
@@ -73,7 +72,6 @@ export class CreatePromotionDto {
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 3 },
     { message: 'BUDGET_IS_NUMBER' },
   )
-  @Min(0, { message: 'BUDGET_GREATER_THAN_0' })
-  @Max(1_000_000_000, { message: 'BUDGET_LESS_THAN_1_000_000_000' })
+  @Min(0, { message: 'BUDGET_MUST_BE_GREATER_THAN_0' })
   budget: number;
 }

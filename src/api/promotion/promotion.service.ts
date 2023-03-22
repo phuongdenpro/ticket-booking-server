@@ -80,7 +80,7 @@ export class PromotionService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const oldPromotionExist = await this.findOnePromotionByCode(code, {
@@ -107,7 +107,6 @@ export class PromotionService {
       throw new BadRequestException('START_DATE_MUST_BE_LESS_THAN_END_DATE');
     }
 
-    // get current date by moment js\
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate < currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -143,13 +142,10 @@ export class PromotionService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const promotion = await this.findOnePromotionById(id);
-    if (!promotion) {
-      throw new BadRequestException('PROMOTION_NOT_FOUND');
-    }
+    const promotion = await this.getPromotionById(id);
     if (name) {
       promotion.name = name;
     }
@@ -162,26 +158,25 @@ export class PromotionService {
     if (image) {
       promotion.image = image;
     }
-    if (status) {
-      switch (status) {
-        case PromotionStatusEnum.ACTIVE:
-          promotion.status = PromotionStatusEnum.ACTIVE;
-          break;
-        case PromotionStatusEnum.INACTIVE:
-          promotion.status = PromotionStatusEnum.INACTIVE;
-          break;
-        case PromotionStatusEnum.OUT_OF_BUDGET:
-          promotion.status = PromotionStatusEnum.OUT_OF_BUDGET;
-          break;
-        case PromotionStatusEnum.OUT_OF_QUANTITY:
-          promotion.status = PromotionStatusEnum.OUT_OF_QUANTITY;
-          break;
-        case PromotionStatusEnum.OUT_OR_DATE:
-          promotion.status = PromotionStatusEnum.OUT_OR_DATE;
-          break;
-        default:
-          break;
-      }
+    switch (status) {
+      case PromotionStatusEnum.ACTIVE:
+        promotion.status = PromotionStatusEnum.ACTIVE;
+        break;
+      case PromotionStatusEnum.INACTIVE:
+        promotion.status = PromotionStatusEnum.INACTIVE;
+        break;
+      case PromotionStatusEnum.OUT_OF_BUDGET:
+        promotion.status = PromotionStatusEnum.OUT_OF_BUDGET;
+        break;
+      case PromotionStatusEnum.OUT_OF_QUANTITY:
+        promotion.status = PromotionStatusEnum.OUT_OF_QUANTITY;
+        break;
+      case PromotionStatusEnum.OUT_OR_DATE:
+        promotion.status = PromotionStatusEnum.OUT_OR_DATE;
+        break;
+      default:
+        promotion.status = PromotionStatusEnum.ACTIVE;
+        break;
     }
 
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
@@ -220,5 +215,137 @@ export class PromotionService {
       }
       promotion.endDate = endDate;
     }
+
+    promotion.updatedBy = adminExist.id;
+    const savePromotion = await this.promotionRepository.save(promotion);
+    delete promotion.deletedAt;
+    return savePromotion;
+  }
+
+  async updatePromotionByCode(
+    code: string,
+    dto: UpdatePromotionDto,
+    adminId: string,
+  ) {
+    const { name, description, note, image, startDate, endDate, status } = dto;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const promotion = await this.getPromotionByCode(code);
+    if (name) {
+      promotion.name = name;
+    }
+    if (description) {
+      promotion.description = description;
+    }
+    if (note) {
+      promotion.note = note;
+    }
+    if (image) {
+      promotion.image = image;
+    }
+    switch (status) {
+      case PromotionStatusEnum.ACTIVE:
+        promotion.status = PromotionStatusEnum.ACTIVE;
+        break;
+      case PromotionStatusEnum.INACTIVE:
+        promotion.status = PromotionStatusEnum.INACTIVE;
+        break;
+      case PromotionStatusEnum.OUT_OF_BUDGET:
+        promotion.status = PromotionStatusEnum.OUT_OF_BUDGET;
+        break;
+      case PromotionStatusEnum.OUT_OF_QUANTITY:
+        promotion.status = PromotionStatusEnum.OUT_OF_QUANTITY;
+        break;
+      case PromotionStatusEnum.OUT_OR_DATE:
+        promotion.status = PromotionStatusEnum.OUT_OR_DATE;
+        break;
+      default:
+        promotion.status = PromotionStatusEnum.ACTIVE;
+        break;
+    }
+
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    if (startDate) {
+      if (!endDate) {
+        if (startDate > promotion.endDate) {
+          throw new BadRequestException(
+            'START_DATE_MUST_BE_LESS_THAN_END_DATE',
+          );
+        }
+      }
+      if (startDate < currentDate) {
+        throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
+      }
+      if (promotion.status === PromotionStatusEnum.ACTIVE) {
+        throw new BadRequestException('PROMOTION_STATUS_IS_ON_ACTIVE');
+      }
+      promotion.startDate = startDate;
+    }
+    if (endDate) {
+      if (!startDate) {
+        if (promotion.startDate > endDate) {
+          throw new BadRequestException(
+            'START_DATE_MUST_BE_LESS_THAN_END_DATE',
+          );
+        }
+      } else {
+        if (startDate > endDate) {
+          throw new BadRequestException(
+            'START_DATE_MUST_BE_LESS_THAN_END_DATE',
+          );
+        }
+      }
+      if (endDate < currentDate) {
+        throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
+      }
+      promotion.endDate = endDate;
+    }
+
+    promotion.updatedBy = adminExist.id;
+    const savePromotion = await this.promotionRepository.save(promotion);
+    delete promotion.deletedAt;
+    return savePromotion;
+  }
+
+  async deletePromotionById(id: string, adminId: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const promotion = await this.getPromotionById(id);
+    promotion.deletedAt = new Date();
+    promotion.updatedBy = adminExist.id;
+    return await this.promotionRepository.save(promotion);
+  }
+
+  async deletePromotionByCode(code: string, adminId: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const promotion = await this.getPromotionByCode(code);
+    promotion.deletedAt = new Date();
+    promotion.updatedBy = adminExist.id;
+    return await this.promotionRepository.save(promotion);
   }
 }

@@ -19,7 +19,6 @@ import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
 import { AuthService } from '../../auth/auth.service';
 import * as moment from 'moment';
-import { AdminService } from '../admin/admin.service';
 
 @Injectable()
 export class CustomerService {
@@ -175,6 +174,7 @@ export class CustomerService {
         .orWhere('u.email like :query')
         .orWhere('u.phone like :query')
         .orWhere('u.address like :query')
+        .orWhere('u.fullAddress like :query')
         .orWhere('u.note like :query')
         .setParameter('query', `%${keywords}%`);
     }
@@ -673,14 +673,14 @@ export class CustomerService {
   }
 
   async deleteCustomerById(adminId: string, id: string) {
-    const customer = await this.getCustomerById(id)
+    const customer = await this.getCustomerById(id);
     if (!customer) {
       throw new BadRequestException('CUSTOMER_NOT_FOUND');
     }
     const adminExist = await this.dataSource.getRepository(Staff).findOne({
-      where:{
-        id: adminId
-      }
+      where: {
+        id: adminId,
+      },
     });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -690,9 +690,7 @@ export class CustomerService {
     }
     customer.updatedBy = adminExist.id;
     customer.deletedAt = new Date();
-    const saveCustomer = await this.customerRepository.save(
-      customer,
-    );
+    await this.customerRepository.save(customer);
     return {
       id: customer.id,
       message: 'Xoá khách hàng thành công',

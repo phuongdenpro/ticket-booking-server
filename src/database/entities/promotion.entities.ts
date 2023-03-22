@@ -1,4 +1,4 @@
-import { PromotionDetail, ApplicableCustomerGroup, PromotionLine } from '.';
+import { ApplicableCustomerGroup, PromotionLine } from '.';
 import {
   Column,
   Entity,
@@ -33,11 +33,13 @@ export class Promotion {
   @Column({ name: 'end_date', type: 'date', nullable: false })
   endDate: Date;
 
-  @Column({ name: 'status', type: 'varchar', nullable: true })
+  @Column({
+    name: 'status',
+    type: 'varchar',
+    nullable: false,
+    default: 'Tạm ngưng',
+  })
   status: string;
-
-  @Column({ name: 'budget', type: 'double', nullable: true })
-  budget: number;
 
   @Column({ name: 'image', type: 'text', nullable: true })
   image: string;
@@ -69,12 +71,6 @@ export class Promotion {
       applicableCustomerGroup.applicableCustomerGroups,
   )
   applicableCustomerGroups: ApplicableCustomerGroup[];
-
-  @OneToMany(
-    () => PromotionDetail,
-    (promotionDetail) => promotionDetail.promotion,
-  )
-  promotionDetail: PromotionDetail[];
 
   @OneToMany(() => PromotionLine, (promotionLine) => promotionLine.promotion)
   promotionLines: PromotionLine[];

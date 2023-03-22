@@ -88,7 +88,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     const priceListExist = await this.findOnePriceListByCode(code);
     if (priceListExist) {
@@ -213,7 +213,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const priceList = await this.findOnePriceListById(id);
@@ -267,7 +267,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     const priceList = await this.findOnePriceListByCode(code);
     if (!priceList) {
@@ -324,7 +324,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     const priceList = await this.priceListRepository.findOne({
       where: { id: id },
@@ -350,7 +350,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const priceList = await this.findOnePriceListByCode(code);
@@ -377,7 +377,7 @@ export class PriceListService {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
       if (!adminExist.isActive) {
-        throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+        throw new BadRequestException('USER_NOT_ACTIVE');
       }
 
       const list = await Promise.all(
@@ -417,7 +417,7 @@ export class PriceListService {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
       if (!adminExist.isActive) {
-        throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+        throw new BadRequestException('USER_NOT_ACTIVE');
       }
 
       const list = await Promise.all(
@@ -458,7 +458,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     const priceDetailExist = await this.priceDetailRepository.findOne({
       where: { code: code },
@@ -581,7 +581,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const priceDetail = await this.getPriceDetailById(id);
@@ -645,7 +645,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const priceDetail = await this.getPriceDetailByCode(code);
@@ -703,7 +703,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const priceDetail = await this.getPriceDetailById(id);
@@ -724,7 +724,7 @@ export class PriceListService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (!adminExist.isActive) {
-      throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const priceDetail = await this.getPriceDetailByCode(code);
@@ -750,7 +750,7 @@ export class PriceListService {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
       if (!adminExist.isActive) {
-        throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+        throw new BadRequestException('USER_NOT_ACTIVE');
       }
 
       const list = await Promise.all(
@@ -795,7 +795,7 @@ export class PriceListService {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
       if (!adminExist.isActive) {
-        throw new BadRequestException('ACCOUNT_IS_NOT_ACTIVE');
+        throw new BadRequestException('USER_NOT_ACTIVE');
       }
 
       const list = await Promise.all(

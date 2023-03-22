@@ -280,8 +280,7 @@ export const mappingTranslate = {
   // promotion
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
-  BUDGET_GREATER_THAN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
-  BUDGET_LESS_THAN_1_000_000_000: 'Ngân sách phải nhỏ hơn 1.000.000.000',
+  BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
   PROMOTION_STATUS_IS_ON_ACTIVE:
     'Chương trình khuyến mãi đang kích hoạt nên không thể cập nhật ngày bắt đầu',
   PROMOTION_NOT_FOUND: 'Không tìm thấy chương trình khuyến mãi',
