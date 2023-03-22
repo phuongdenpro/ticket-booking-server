@@ -50,7 +50,10 @@ export class OrderService {
   async findOneOrder(options: any) {
     return await this.orderRepository.findOne({
       where: { ...options?.where },
-      relations: ['orderDetails'].concat(options?.relations || []),
+      relations: {
+        orderDetails: true,
+        ...options?.relations,
+      },
       select: { deletedAt: false, ...options?.select },
       order: {
         createdAt: SortEnum.DESC,

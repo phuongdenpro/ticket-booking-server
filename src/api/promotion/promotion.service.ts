@@ -23,7 +23,9 @@ export class PromotionService {
   async findOnePromotion(options: any) {
     return await this.promotionRepository.findOne({
       where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
+      relations: {
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,

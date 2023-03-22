@@ -9,7 +9,7 @@ import {
   UpdatePriceDetailDto,
   DeletePriceDetailDto,
 } from './dto';
-import { PriceDetail, PriceList, Staff } from './../../database/entities';
+import { PriceDetail, PriceList, Staff, Trip } from './../../database/entities';
 import {
   BadRequestException,
   Injectable,
@@ -71,7 +71,9 @@ export class PriceListService {
       select: {
         deletedAt: false,
       },
-      relations: [].concat(options?.relations || []),
+      relations: {
+        ...options?.relations,
+      },
       order: { createdAt: SortEnum.DESC, ...options?.order },
       ...options?.other,
     });
@@ -123,6 +125,7 @@ export class PriceListService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
     const priceListExist = await this.findOnePriceListByCode(code, {
       other: {
         withDeleted: true,
@@ -160,7 +163,6 @@ export class PriceListService {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     priceList.startDate = startDate;
-
     if (!endDate) {
       throw new BadRequestException('END_DATE_IS_REQUIRED');
     }
@@ -481,7 +483,17 @@ export class PriceListService {
   }
 
   async createPriceDetail(dto: CreatePriceDetailDto, adminId: string) {
-    const { code, price, note, priceListId, ticketGroupId } = dto;
+    const {
+      code,
+      price,
+      note,
+      priceListId,
+      priceListCode,
+      ticketGroupId,
+      ticketGroupCode,
+      tripId,
+      tripCode,
+    } = dto;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -499,41 +511,66 @@ export class PriceListService {
       throw new BadRequestException('PRICE_DETAIL_CODE_EXISTED');
     }
 
-    const priceList = await this.findOnePriceListById(priceListId, {
-      select: [
-        'id',
-        'name',
-        'note',
-        'startDate',
-        'endDate',
-        'status',
-        'createdAt',
-        'createdBy',
-      ],
-    });
+    if (!priceListId && !priceListCode) {
+      throw new BadRequestException('PRICE_LIST_ID_OR_CODE_REQUIRED');
+    }
+    let priceList;
+    if (priceListId) {
+      priceList = await this.findOnePriceListById(priceListId);
+    } else {
+      priceList = await this.findOnePriceListByCode(priceListCode);
+    }
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
 
-    const ticketGroup = await this.ticketGroupService.findOneTicketGroupById(
-      ticketGroupId,
-      {
-        select: ['id', 'name', 'note', 'description', 'createdAt', 'createdBy'],
-      },
-    );
+    if (!ticketGroupId && !ticketGroupCode) {
+      throw new BadRequestException('TICKET_GROUP_ID_OR_CODE_REQUIRED');
+    }
+    let ticketGroup;
+    if (ticketGroupId) {
+      ticketGroup = await this.ticketGroupService.findOneTicketGroupById(
+        ticketGroupId,
+      );
+    } else {
+      ticketGroup = await this.ticketGroupService.findOneTicketGroupByCode(
+        ticketGroupCode,
+      );
+    }
     if (!ticketGroup) {
       throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
     }
-    const priceDetail = new PriceDetail();
 
+    if (!tripCode && !tripId) {
+      throw new BadRequestException('TRIP_ID_OR_CODE_REQUIRED');
+    }
+    let trip;
+    if (tripCode) {
+      trip = await this.dataSource.getRepository(Trip).findOne({
+        where: {
+          code: tripCode,
+        },
+      });
+    } else {
+      trip = await this.dataSource.getRepository(Trip).findOne({
+        where: {
+          id: tripId,
+        },
+      });
+    }
+    if (!trip) {
+      throw new BadRequestException('TRIP_NOT_FOUND');
+    }
+    const priceDetail = new PriceDetail();
     if (price < 0) {
       throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
     }
-    priceDetail.code = code;
     priceDetail.price = price;
+    priceDetail.code = code;
     priceDetail.note = note;
     priceDetail.priceList = priceList;
     priceDetail.ticketGroup = ticketGroup;
+    priceDetail.trip = trip;
     priceDetail.createdBy = adminExist.id;
 
     const savePriceDetail = await this.priceDetailRepository.save(priceDetail);
@@ -604,7 +641,7 @@ export class PriceListService {
     id: string,
     dto: UpdatePriceDetailDto,
   ) {
-    const { price, note, priceListId, ticketGroupId } = dto;
+    const { price, note, ticketGroupId, ticketGroupCode } = dto;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -633,22 +670,17 @@ export class PriceListService {
     if (note) {
       priceDetail.note = note;
     }
-    if (priceListId) {
-      const priceList = await this.findOnePriceListById(priceListId, {
-        select: ['id', 'name', 'note', 'startDate', 'endDate', 'status'],
-      });
-      if (!priceList) {
-        throw new BadRequestException('PRICE_LIST_NOT_FOUND');
-      }
-      priceDetail.priceList = priceList;
-    }
     if (ticketGroupId) {
       const ticketGroup = await this.ticketGroupService.findOneTicketGroupById(
         ticketGroupId,
-        {
-          select: ['id', 'name', 'note', 'description'],
-        },
       );
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+      priceDetail.ticketGroup = ticketGroup;
+    } else if (ticketGroupCode) {
+      const ticketGroup =
+        await this.ticketGroupService.findOneTicketGroupByCode(ticketGroupCode);
       if (!ticketGroup) {
         throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
       }
@@ -668,7 +700,7 @@ export class PriceListService {
     code: string,
     dto: UpdatePriceDetailDto,
   ) {
-    const { price, note, priceListId, ticketGroupId } = dto;
+    const { price, note, ticketGroupId, ticketGroupCode } = dto;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -697,22 +729,17 @@ export class PriceListService {
     if (note) {
       priceDetail.note = note;
     }
-    if (priceListId) {
-      const priceList = await this.findOnePriceListById(priceListId, {
-        select: ['id', 'name', 'note', 'startDate', 'endDate', 'status'],
-      });
-      if (!priceList) {
-        throw new BadRequestException('PRICE_LIST_NOT_FOUND');
-      }
-      priceDetail.priceList = priceList;
-    }
     if (ticketGroupId) {
       const ticketGroup = await this.ticketGroupService.findOneTicketGroupById(
         ticketGroupId,
-        {
-          select: ['id', 'name', 'note', 'description'],
-        },
       );
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+      priceDetail.ticketGroup = ticketGroup;
+    } else if (ticketGroupCode) {
+      const ticketGroup =
+        await this.ticketGroupService.findOneTicketGroupByCode(ticketGroupCode);
       if (!ticketGroup) {
         throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
       }

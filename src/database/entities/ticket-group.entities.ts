@@ -7,7 +7,7 @@ import {
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { ApplicableTicketGroup, PriceDetail, TicketGroupDetail } from '.';
+import { ApplicableTicketGroup, PriceDetail, Ticket, Trip } from '.';
 
 @Entity({ name: 'ticket_group' })
 export class TicketGroup {
@@ -53,11 +53,11 @@ export class TicketGroup {
   )
   applicableTicketGroups: ApplicableTicketGroup[];
 
-  @OneToMany(
-    () => TicketGroupDetail,
-    (ticketGroupDetail) => ticketGroupDetail.ticketGroup,
-  )
-  ticketGroupDetail: TicketGroupDetail[];
+  @OneToMany(() => Ticket, (ticket) => ticket.ticketGroup)
+  tickets: Ticket[];
+
+  @OneToMany(() => Trip, (trip) => trip.ticketGroup)
+  trips: Trip[];
 
   @OneToMany(() => PriceDetail, (priceDetail) => priceDetail.ticketGroup)
   priceDetail: PriceDetail[];

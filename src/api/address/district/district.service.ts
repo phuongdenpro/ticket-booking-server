@@ -29,7 +29,9 @@ export class DistrictService {
   async findOneDistrict(options: any) {
     return await this.districtRepository.findOne({
       where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
+      relations: {
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,

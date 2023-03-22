@@ -1,6 +1,7 @@
+import { CreatePromotionLineDto } from './dto';
 import { SortEnum } from './../../enums';
 import { PromotionLine } from './../../database/entities';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 
@@ -15,7 +16,9 @@ export class PromotionLineService {
   async findOnePromotionLine(options: any) {
     return await this.promotionRepository.findOne({
       where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
+      relations: {
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,
@@ -45,4 +48,22 @@ export class PromotionLineService {
     }
     return await this.findOnePromotionLine(options);
   }
+
+  async getPromotionLineById(id: string, options?: any) {
+    const line = await this.findOnePromotionLineById(id, options);
+    if (!line) {
+      throw new NotFoundException('PROMOTION_LINE_NOT_FOUND');
+    }
+    return line;
+  }
+
+  async getPromotionLineByCode(code: string, options?: any) {
+    const line = await this.findOnePromotionLineByCode(code, options);
+    if (!line) {
+      throw new NotFoundException('PROMOTION_LINE_NOT_FOUND');
+    }
+    return line;
+  }
+
+  async createPromotionLine(dto: CreatePromotionLineDto, adminId: string) {}
 }

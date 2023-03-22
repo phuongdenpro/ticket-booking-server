@@ -30,7 +30,9 @@ export class CustomerGroupService {
   async findOneCustomerGroup(options: any) {
     return await this.customerGroupRepository.findOne({
       where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
+      relations: {
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,

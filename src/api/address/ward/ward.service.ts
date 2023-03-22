@@ -33,6 +33,9 @@ export class WardService {
         deletedAt: false,
         ...options?.select,
       },
+      relations: {
+        ...options?.relations,
+      },
       order: {
         createdAt: SortEnum.DESC,
         ...options?.orderBy,

@@ -175,8 +175,10 @@ export const mappingTranslate = {
   TRIP_ID_REQUIRED: 'Id của tuyến đi là không được để trống',
   TRIP_ID_IS_STRING: 'Id của tuyến đi phải là chuỗi ký tự',
   TRIP_ID_INVALID: 'Id của tuyến đi không hợp lệ',
-  TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
+  TRIP_CODE_IS_STRING: 'Mã của tuyến đi phải là chuỗi ký tự',
   TRIP_CODE_EXIST: 'Mã tuyến đi đã tồn tại',
+  TRIP_ID_OR_CODE_REQUIRED: 'Id hoặc mã của tuyến đi không được để trống',
+  TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
@@ -221,6 +223,7 @@ export const mappingTranslate = {
   VEHICLE_ID_REQUIRED: 'Id của xe là không được để trống',
   VEHICLE_ID_IS_STRING: 'Id của xe phải là chuỗi ký tự',
   VEHICLE_ID_INVALID: 'Id của xe không hợp lệ',
+  VEHICLE_CODE_ALREADY_EXIST: 'Mã xe đã tồn tại',
   LICENSE_PLATE_INVALID: 'Biển số xe không hợp lệ',
   LICENSE_PLATE_REQUIRED: 'Biển số xe không hợp lệ',
   LICENSE_PLATE_STRING: 'Biển số xe không hợp lệ',
@@ -242,6 +245,7 @@ export const mappingTranslate = {
   TICKET_GROUP_ID_IS_STRING: 'Id của nhóm vé phải là chuỗi ký tự',
   TICKET_GROUP_ID_IS_36_CHARACTERS: 'Id của nhóm vé phải là 36 ký tự',
   TICKET_GROUP_CODE_ALREADY_EXIST: 'Mã nhóm vé đã tồn tại',
+  TICKET_GROUP_CODE_IS_STRING: 'Mã nhóm vé phải là chuỗi ký tự',
 
   // ticket
   TICKET_CODE_EXISTED: 'Mã vé đã tồn tại',
@@ -254,11 +258,15 @@ export const mappingTranslate = {
   TICKET_NOT_FOUND: 'Không tìm thấy thông tin vé',
   TICKET_ID_IS_STRING: 'Id của vé phải là chuỗi ký tự',
   TICKET_ID_IS_REQUIRED: 'Id của vé là không được để trống',
-  TICKET_CODE_IS_STRING: 'Id của vé phải là chuỗi ký tự',
+  TICKET_CODE_IS_REQUIRED: 'Mã vé là không được để trống',
+  TICKET_CODE_IS_STRING: 'Mã của vé phải là chuỗi ký tự',
+  TICKET_CODE_BETWEEN_1_100_CHARACTERS: 'Mã vé phải có 1 đến 100 ký tự',
   TICKET_STATUS_IS_STRING: 'trạng thái của vé phải là chuỗi',
   TICKET_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
   TICKET_ID_IS_36_CHARACTERS: 'Id của vé phải là 36 ký tự',
   TICKET_DETAIL_IS_SOLD: 'Vé này đã được bán',
+  TICKET_GROUP_ID_OR_CODE_REQUIRED:
+    'Id hoặc mã của nhóm vé không được để trống',
 
   // price list
   PRICE_LIST_STATUS_INVALID:
@@ -270,6 +278,7 @@ export const mappingTranslate = {
   PRICE_LIST_ID_IS_STRING: 'Id của bảng giá phải là chuỗi ký tự',
   PRICE_LIST_ID_IS_REQUIRED: 'Id của bảng giá không được để trống',
   PRICE_LIST_ID_IS_36_CHARACTERS: 'Id của bảng giá phải là 36 ký tự',
+  PRICE_LIST_ID_OR_CODE_REQUIRED: 'Id hoặc mã của bảng giá không được để trống',
   PRICE_LIST_CODE_IS_EXIST: 'mã của bảng giá đã tồn tại',
 
   // price details
@@ -311,6 +320,9 @@ export const mappingTranslate = {
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
+
+  // promotion line
+  PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy chi tiết khuyến mãi',
 
   // order
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',

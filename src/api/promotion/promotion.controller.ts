@@ -34,13 +34,13 @@ export class PromotionController {
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
   async getPromotionByCode(@Param('code') code: string) {
-    return await this.promotionService.findOnePromotionByCode(code);
+    return await this.promotionService.getPromotionByCode(code);
   }
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
   async getPromotionById(@Param('id') id: string) {
-    return await this.promotionService.findOnePromotionById(id);
+    return await this.promotionService.getPromotionById(id);
   }
 
   @Patch(':id')

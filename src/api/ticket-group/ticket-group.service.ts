@@ -38,6 +38,10 @@ export class TicketGroupService {
   async findOneTicketGroup(options: any) {
     return await this.tickerGroupRepository.findOne({
       where: { ...options?.where },
+      relations: {
+        deletedAt: false,
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,
@@ -56,7 +60,6 @@ export class TicketGroupService {
     } else {
       options = { where: { id } };
     }
-    console.log(options);
     return await this.findOneTicketGroup(options);
   }
 

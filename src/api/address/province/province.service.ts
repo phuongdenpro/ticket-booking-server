@@ -28,6 +28,9 @@ export class ProvinceService {
   async findOneProvince(options: any) {
     return await this.provinceRepository.findOne({
       where: { ...options?.where },
+      relations: {
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,

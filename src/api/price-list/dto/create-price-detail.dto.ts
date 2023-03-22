@@ -30,13 +30,31 @@ export class CreatePriceDetailDto {
 
   @ApiProperty({ example: '1fbaba64-77c4-4403-9d14-73c03e3d0954' })
   @IsString({ message: 'PRICE_LIST_ID_IS_STRING' })
-  @IsNotEmpty({ message: 'PRICE_LIST_ID_IS_REQUIRED' })
-  @Length(36, 36, { message: 'PRICE_LIST_ID_IS_36_CHARACTERS' })
+  @IsOptional()
   priceListId: string;
 
-  @ApiProperty({ example: 'd0adc2a4-386a-45de-bbf3-46d672b0a493' })
+  @ApiProperty({ example: '1fbaba64-77c4-4403-9d14-73c03e3d0954' })
+  @IsString({ message: 'PRICE_LIST_ID_IS_STRING' })
+  @IsOptional()
+  priceListCode: string;
+
+  @ApiPropertyOptional({ example: 'd0adc2a4-386a-45de-bbf3-46d672b0a493' })
   @IsString({ message: 'TICKET_GROUP_ID_IS_STRING' })
-  @IsNotEmpty({ message: 'TICKET_GROUP_ID_IS_REQUIRED' })
-  @Length(36, 36, { message: 'TICKET_GROUP_ID_IS_36_CHARACTERS' })
+  @IsOptional()
   ticketGroupId: string;
+
+  @ApiPropertyOptional({ example: 'BGT32023' })
+  @IsString({ message: 'TICKET_GROUP_CODE_IS_STRING' })
+  @IsOptional()
+  ticketGroupCode: string;
+
+  @ApiPropertyOptional({ example: 'd0adc2a4-386a-45de-bbf3-46d672b0a493' })
+  @IsString({ message: 'TRIP_ID_IS_STRING' })
+  @IsOptional()
+  tripId: string;
+
+  @ApiPropertyOptional({ example: 'BGT32023' })
+  @IsString({ message: 'TRIP_CODE_IS_STRING' })
+  @IsOptional()
+  tripCode: string;
 }

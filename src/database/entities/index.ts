@@ -18,7 +18,6 @@ export * from './seat.entities';
 export * from './staff.entities';
 export * from './station.entities';
 export * from './ticket-detail.entities';
-export * from './ticket-group-detail.entities';
 export * from './ticket-group.entities';
 export * from './ticket.entities';
 export * from './trip-detail.entities';

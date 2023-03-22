@@ -47,13 +47,44 @@ export class StationController {
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
   async getStationById(@Param('id') id: string) {
-    return await this.stationService.findOneStationById(id);
+    const options = {
+      relations: {
+        ward: {
+          district: {
+            province: true,
+          },
+        },
+      },
+    };
+    const station = await this.stationService.getOneStationById(id, options);
+    station['province'] = station.ward.district.province;
+    delete station.ward.district.province;
+    station['district'] = station.ward.district;
+    delete station.ward.district;
+    return station;
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
   async getStationByCode(@Param('code') code: string) {
-    return await this.stationService.findOneStationByCode(code);
+    const options = {
+      relations: {
+        ward: {
+          district: {
+            province: true,
+          },
+        },
+      },
+    };
+    const station = await this.stationService.getOneStationByCode(
+      code,
+      options,
+    );
+    station['province'] = station.ward.district.province;
+    delete station.ward.district.province;
+    station['district'] = station.ward.district;
+    delete station.ward.district;
+    return station;
   }
 
   @Get()

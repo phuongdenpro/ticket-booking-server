@@ -63,10 +63,6 @@ export class CustomerService {
         codename: true,
         code: true,
         districtCode: true,
-        createdBy: false,
-        updatedBy: false,
-        createdAt: false,
-        updatedAt: false,
         district: {
           id: true,
           name: true,
@@ -74,25 +70,23 @@ export class CustomerService {
           codename: true,
           code: true,
           provinceCode: true,
-          createdBy: false,
-          updatedBy: false,
-          createdAt: false,
-          updatedAt: false,
           province: {
             id: true,
             name: true,
             type: true,
             codename: true,
             code: true,
-            createdBy: false,
-            updatedBy: false,
-            createdAt: false,
-            updatedAt: false,
           },
         },
       },
     },
-    relations: ['ward', 'ward.district', 'ward.district.province'],
+    relations: {
+      ward: {
+        district: {
+          province: true,
+        },
+      },
+    },
   };
 
   async getCustomerStatus() {
@@ -122,7 +116,10 @@ export class CustomerService {
         createdAt: SortEnum.DESC,
         ...options?.order,
       },
-      relations: ['customerGroup'].concat(options?.relations || []),
+      relations: {
+        customerGroup: true,
+        ...options?.relations,
+      },
       ...options?.other,
     });
   }

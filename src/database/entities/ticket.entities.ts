@@ -10,12 +10,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import {
-  TicketDetail,
-  TicketGroupDetail,
-  OrderRefundDetail,
-  TripDetail,
-} from '.';
+import { TicketDetail, OrderRefundDetail, TripDetail, TicketGroup } from '.';
 
 @Entity({ name: 'ticket' })
 export class Ticket {
@@ -58,11 +53,9 @@ export class Ticket {
   public deletedAt?: Date;
 
   // relationship
-  @OneToMany(
-    () => TicketGroupDetail,
-    (ticketGroupDetail) => ticketGroupDetail.ticket,
-  )
-  ticketGroupDetails: TicketGroupDetail[];
+  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.tickets)
+  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
+  ticketGroup: TicketGroup;
 
   @OneToMany(() => TicketDetail, (ticketDetail) => ticketDetail.ticket)
   ticketDetails: TicketDetail[];
