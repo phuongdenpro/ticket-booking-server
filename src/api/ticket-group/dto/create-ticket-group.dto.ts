@@ -2,6 +2,12 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsNotEmpty, IsString, IsOptional, Length } from 'class-validator';
 
 export class CreateTicketGroupDto {
+  @ApiProperty({ example: 'SGDL' })
+  @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
+  @IsString({ message: 'CODE_IS_STRING' })
+  @Length(1, 100, { message: 'CODE_BETWEEN_1_100_CHARACTERS' })
+  code: string;
+
   @ApiProperty({ example: 'Chuyến Sài Gòn - Đà Lạt' })
   @IsNotEmpty({ message: 'NAME_IS_REQUIRED' })
   @IsString({ message: 'NAME_IS_STRING' })

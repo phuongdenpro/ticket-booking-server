@@ -57,7 +57,13 @@ export class TicketGroupController {
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
   async getTickerGroupById(@Param('id') id: string) {
-    return await this.ticketGroupService.findOneTicketGroupById(id);
+    return await this.ticketGroupService.getTicketGroupById(id);
+  }
+
+  @Get('id/:id')
+  @HttpCode(HttpStatus.OK)
+  async getTickerGroupByCode(@Param('code') code: string) {
+    return await this.ticketGroupService.getTicketGroupByCode(code);
   }
 
   @Patch('id/:id')
@@ -65,13 +71,30 @@ export class TicketGroupController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateStationById(
+  async updateTicketGroupById(
     @CurrentUser() user,
     @Param('id') id: string,
     @Body() dto: UpdateTicketGroupDto,
   ) {
     return await this.ticketGroupService.updateTicketGroupById(
       id,
+      dto,
+      user.id,
+    );
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateTickerGroupByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdateTicketGroupDto,
+  ) {
+    return await this.ticketGroupService.updateTicketGroupByCode(
+      code,
       dto,
       user.id,
     );
@@ -86,16 +109,43 @@ export class TicketGroupController {
     return await this.ticketGroupService.deleteTicketGroupById(id, user.id);
   }
 
-  @Delete('multiple')
+  @Delete('code/:code')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteMultiple(
+  async deleteTicketGroupByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+  ) {
+    return await this.ticketGroupService.deleteTicketGroupByCode(code, user.id);
+  }
+
+  @Delete('multiple/ids')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleByIds(
     @CurrentUser() user,
     @Body() dto: DeleteMultiTicketGroupDto,
   ) {
-    return await this.ticketGroupService.deleteMultipleTicketGroups(
+    return await this.ticketGroupService.deleteMultipleTicketGroupsByIds(
+      user.id,
+      dto,
+    );
+  }
+
+  @Delete('multiple/codes')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleByCodes(
+    @CurrentUser() user,
+    @Body() dto: DeleteMultiTicketGroupDto,
+  ) {
+    return await this.ticketGroupService.deleteMultipleTicketGroupsByCodes(
       user.id,
       dto,
     );

@@ -240,6 +240,7 @@ export const mappingTranslate = {
   TICKET_GROUP_ID_IS_REQUIRED: 'Id của nhóm vé là không được để trống',
   TICKET_GROUP_ID_IS_STRING: 'Id của nhóm vé phải là chuỗi ký tự',
   TICKET_GROUP_ID_IS_36_CHARACTERS: 'Id của nhóm vé phải là 36 ký tự',
+  TICKET_GROUP_CODE_ALREADY_EXIST: 'Mã nhóm vé đã tồn tại',
 
   // ticket
   TICKET_CODE_EXISTED: 'Mã vé đã tồn tại',

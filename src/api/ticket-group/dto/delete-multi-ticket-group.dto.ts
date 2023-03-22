@@ -4,9 +4,9 @@ import { IsArray } from 'class-validator';
 export class DeleteMultiTicketGroupDto {
   @ApiProperty({
     example: ['', ''],
-    description: 'list id',
+    description: 'list id/code',
     type: Array<string>,
   })
   @IsArray()
-  public ids: string[];
+  public data: string[];
 }

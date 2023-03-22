@@ -33,44 +33,85 @@ export class TicketGroupService {
     'q.createdAt',
     'q.updatedAt',
   ];
-  private selectFields = [
-    'id',
-    'name',
-    'description',
-    'note',
-    'createdBy',
-    'updatedBy',
-    'createdAt',
-    'updatedAt',
-  ];
+
+  async findOneTicketGroup(options: any) {
+    return await this.tickerGroupRepository.findOne({
+      where: { ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.ASC,
+        ...options?.order,
+      },
+      ...options.other,
+    });
+  }
+
+  async findOneTicketGroupById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneTicketGroup(options);
+  }
+
+  async findOneTicketGroupByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneTicketGroup(options);
+  }
+
+  async getTicketGroupById(id: string, options?: any) {
+    const ticketGroup = await this.findOneTicketGroupById(id, options);
+    if (!ticketGroup) {
+      throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+    }
+    return ticketGroup;
+  }
+
+  async getTicketGroupByCode(code: string, options?: any) {
+    const ticketGroup = await this.findOneTicketGroupByCode(code, options);
+    if (!ticketGroup) {
+      throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+    }
+    return ticketGroup;
+  }
 
   async createTicketGroup(dto: CreateTicketGroupDto, adminId: string) {
-    const { name, description, note } = dto;
+    const { name, description, note, code } = dto;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    const ticketGroupExist = await this.findOneTicketGroupByCode(code, {
+      other: { withDeleted: true },
+    });
+    if (ticketGroupExist) {
+      throw new BadRequestException('TICKET_GROUP_CODE_ALREADY_EXIST');
+    }
 
     const ticketGroup = new TicketGroup();
+    ticketGroup.code = code;
     ticketGroup.name = name;
     ticketGroup.description = description;
     ticketGroup.note = note;
     ticketGroup.createdBy = adminExist.id;
 
-    const { deletedAt, ...saveTicketGroup } =
-      await this.tickerGroupRepository.save(ticketGroup);
+    const saveTicketGroup = await this.tickerGroupRepository.save(ticketGroup);
+    delete saveTicketGroup.deletedAt;
     return saveTicketGroup;
-  }
-
-  async findOneTicketGroupById(id: string, options?: any) {
-    return await this.tickerGroupRepository.findOne({
-      where: { id },
-      select: this.selectFields,
-      ...options,
-    });
   }
 
   async findAllTicketGroup(dto: FilterTicketGroupDto, pagination?: Pagination) {
@@ -79,6 +120,7 @@ export class TicketGroupService {
 
     if (keywords) {
       query
+        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.description LIKE :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` });
@@ -110,14 +152,15 @@ export class TicketGroupService {
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
 
-    const ticketGroup = await this.tickerGroupRepository.findOne({
-      where: { id },
-    });
+    const ticketGroup = await this.getTicketGroupById(id);
     if (name) {
       ticketGroup.name = name;
     }
@@ -129,25 +172,58 @@ export class TicketGroupService {
     }
     ticketGroup.updatedBy = adminExist.id;
 
-    const { deletedAt, ...saveTicketGroup } =
-      await this.tickerGroupRepository.save(ticketGroup);
+    const saveTicketGroup = await this.tickerGroupRepository.save(ticketGroup);
+    delete saveTicketGroup.deletedAt;
+    return saveTicketGroup;
+  }
+
+  async updateTicketGroupByCode(
+    code: string,
+    dto: UpdateTicketGroupDto,
+    adminId: string,
+  ) {
+    const { name, description, note } = dto;
+
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const ticketGroup = await this.getTicketGroupByCode(code);
+
+    if (name) {
+      ticketGroup.name = name;
+    }
+    if (description) {
+      ticketGroup.description = description;
+    }
+    if (note) {
+      ticketGroup.note = note;
+    }
+    ticketGroup.updatedBy = adminExist.id;
+
+    const saveTicketGroup = await this.tickerGroupRepository.save(ticketGroup);
+    delete saveTicketGroup.deletedAt;
     return saveTicketGroup;
   }
 
   async deleteTicketGroupById(id: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const ticketGroup = await this.tickerGroupRepository.findOne({
-      where: { id },
-    });
-    if (!ticketGroup) {
-      throw new BadRequestException('TICKET_GROUP_NOT_FOUND', ticketGroup.id);
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const ticketGroup = await this.getTicketGroupById(id);
     ticketGroup.updatedBy = adminExist.id;
     ticketGroup.deletedAt = new Date();
 
@@ -155,15 +231,92 @@ export class TicketGroupService {
     return { id: saveTicketGroup.id, message: 'Xoá thành công' };
   }
 
-  async deleteMultipleTicketGroups(
+  async deleteTicketGroupByCode(code: string, adminId: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: adminId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const ticketGroup = await this.getTicketGroupByCode(code);
+    ticketGroup.updatedBy = adminExist.id;
+    ticketGroup.deletedAt = new Date();
+
+    const saveTicketGroup = await this.tickerGroupRepository.save(ticketGroup);
+    return { id: saveTicketGroup.id, message: 'Xoá thành công' };
+  }
+
+  async deleteMultipleTicketGroupsByIds(
     adminId: string,
     dto: DeleteMultiTicketGroupDto,
   ) {
     try {
-      const { ids } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: adminId } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
+      const { data: ids } = dto;
 
       const list = await Promise.all(
-        ids.map(async (id) => await this.deleteTicketGroupById(id, adminId)),
+        ids.map(async (id) => {
+          const ticketGroup = await this.findOneTicketGroupById(id);
+          if (!ticketGroup) {
+            return { id: ticketGroup.id, message: 'không tìm thấy nhóm vé' };
+          }
+          ticketGroup.updatedBy = adminExist.id;
+          ticketGroup.deletedAt = new Date();
+
+          const saveTicketGroup = await this.tickerGroupRepository.save(
+            ticketGroup,
+          );
+          return { id: saveTicketGroup.id, message: 'Xoá thành công' };
+        }),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultipleTicketGroupsByCodes(
+    adminId: string,
+    dto: DeleteMultiTicketGroupDto,
+  ) {
+    try {
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: adminId } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
+      const { data: codes } = dto;
+
+      const list = await Promise.all(
+        codes.map(async (code) => {
+          const ticketGroup = await this.findOneTicketGroupByCode(code);
+          if (!ticketGroup) {
+            return { id: ticketGroup.id, message: 'không tìm thấy nhóm vé' };
+          }
+          ticketGroup.updatedBy = adminExist.id;
+          ticketGroup.deletedAt = new Date();
+
+          const saveTicketGroup = await this.tickerGroupRepository.save(
+            ticketGroup,
+          );
+          return { id: saveTicketGroup.id, message: 'Xoá thành công' };
+        }),
       );
       return list;
     } catch (err) {
