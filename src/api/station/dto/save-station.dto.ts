@@ -18,7 +18,7 @@ export class SaveStationDto {
   name: string;
 
   @ApiProperty({
-    example: 'Demo, Phường 26, Bình Thạnh, Thành phố Hồ Chí Minh',
+    example: 'Demo',
   })
   @IsNotEmpty({ message: 'ADDRESS_IS_REQUIRED' })
   @IsString({ message: 'ADDRESS_IS_STRING' })
@@ -44,9 +44,7 @@ export class SaveStationDto {
   @ApiPropertyOptional({
     example: [
       {
-        id: '1',
         url: 'https://res.cloudinary.com/dangdan2807/image/upload/v1668737017/ee0ygsbjvymvyfrugrtp.jpg',
-        isDeleted: true,
       },
       {
         url: 'https://res.cloudinary.com/dangdan2807/image/upload/v1668737015/tb7fssdjfjuvn6qcrajy.png',

@@ -46,7 +46,11 @@ export class TripService {
   async findOneTrip(options?: any) {
     const trip = await this.tripRepository.findOne({
       where: { ...options?.where },
-      relations: ['fromStation', 'toStation'].concat(options?.relations || []),
+      relations: {
+        fromStation: true,
+        toStation: true,
+        ...options?.relations,
+      },
       select: {
         fromStation: {
           id: true,

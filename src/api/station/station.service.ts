@@ -46,6 +46,75 @@ export class StationService {
     'w.districtCode',
   ];
 
+  async findOneStation(options: any) {
+    return await this.stationRepository.findOne({
+      where: { ...options?.where },
+      select: {
+        deletedAt: false,
+        ward: {
+          id: true,
+          code: true,
+          name: true,
+          type: true,
+          codename: true,
+          districtCode: true,
+        },
+        images: {
+          id: true,
+          url: true,
+          createdAt: true,
+        },
+        ...options?.select,
+      },
+      relations: {
+        ward: true,
+        images: true,
+        ...options?.relations,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options?.other,
+    });
+  }
+
+  async findOneStationById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    const station = await this.findOneStation(options);
+    return station;
+  }
+
+  async findOneStationByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    const station = await this.findOneStation(options);
+    return station;
+  }
+
+  async getOneStationByCode(code: string, options?: any) {
+    const station = await this.findOneStationByCode(code, options);
+    if (!station) {
+      throw new NotFoundException('STATION_NOT_FOUND');
+    }
+    return station;
+  }
+
+  async getOneStationById(id: string, options?: any) {
+    const station = await this.findOneStationById(id, options);
+    if (!station) {
+      throw new NotFoundException('STATION_NOT_FOUND');
+    }
+    return station;
+  }
+
   async createStation(dto: SaveStationDto, userId: string) {
     const { name, address, wardCode, images, code } = dto;
 
@@ -70,8 +139,10 @@ export class StationService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    const oldStation = await this.stationRepository.findOne({
-      where: { code },
+    const oldStation = await this.findOneStationByCode(code, {
+      other: {
+        withDeleted: true,
+      },
     });
     if (oldStation) {
       throw new BadRequestException('STATION_CODE_EXISTED');
@@ -136,121 +207,6 @@ export class StationService {
     return newStation;
   }
 
-  async findOneStationById(id: string) {
-    const query = this.stationRepository.createQueryBuilder('q');
-    query.where('q.id = :id', { id });
-
-    const dataResult = await query
-      .leftJoinAndSelect('q.ward', 'w')
-      .select(this.selectFile)
-      .getOne();
-
-    if (dataResult) {
-      if (dataResult?.ward) {
-        const district = await this.districtService.findOneByCode(
-          dataResult.ward.districtCode,
-          {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              codename: true,
-              code: true,
-              provinceCode: true,
-            },
-          },
-        );
-        dataResult['district'] = district;
-        const province = await this.provinceService.findOneByCode(
-          district.provinceCode,
-          {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              codename: true,
-              code: true,
-            },
-          },
-        );
-        dataResult['province'] = province;
-        delete dataResult.ward.districtCode;
-      }
-      const images =
-        await this.imageResourceService.findImageResourcesByStationId(id, {
-          select: {
-            id: true,
-            url: true,
-            createdAt: true,
-            createdBy: true,
-          },
-        });
-      dataResult.images = images;
-    }
-    delete dataResult.deletedAt;
-
-    return { dataResult };
-  }
-
-  async findOneStationByCode(code: string) {
-    const query = this.stationRepository.createQueryBuilder('q');
-    query.where('q.code = :code', { code });
-
-    const station = await query
-      .leftJoinAndSelect('q.ward', 'w')
-      .select(this.selectFile)
-      .getOne();
-
-    if (station) {
-      if (station.ward) {
-        const district = await this.districtService.findOneByCode(
-          station.ward.districtCode,
-          {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              codename: true,
-              code: true,
-              provinceCode: true,
-            },
-          },
-        );
-        station['district'] = district;
-
-        const province = await this.provinceService.findOneByCode(
-          district.provinceCode,
-          {
-            select: {
-              id: true,
-              name: true,
-              type: true,
-              codename: true,
-              code: true,
-            },
-          },
-        );
-        station['province'] = province;
-        delete station.ward.districtCode;
-      }
-      const images =
-        await this.imageResourceService.findImageResourcesByStationId(
-          station.id,
-          {
-            select: {
-              id: true,
-              url: true,
-              createdAt: true,
-              createdBy: true,
-            },
-          },
-        );
-      station.images = images;
-    }
-
-    return { dataResult: station };
-  }
-
   async findAll(dto: FilterStationDto, pagination?: Pagination) {
     const query = this.stationRepository.createQueryBuilder('q');
     const { keywords, sort } = dto;
@@ -304,13 +260,7 @@ export class StationService {
   async updateStationById(userId: string, id: string, dto: UpdateStationDto) {
     const { name, address, wardCode, images } = dto;
 
-    const station = await this.stationRepository.findOne({
-      where: { id },
-      relations: ['ward'],
-    });
-    if (!station) {
-      throw new NotFoundException('STATION_NOT_FOUND');
-    }
+    const station = await this.getOneStationById(id);
     if (name) {
       station.name = name;
     }
@@ -400,13 +350,7 @@ export class StationService {
   ) {
     const { name, address, wardCode, images } = dto;
 
-    const station = await this.stationRepository.findOne({
-      where: { code: currentCode },
-      relations: ['ward'],
-    });
-    if (!station) {
-      throw new NotFoundException('STATION_NOT_FOUND');
-    }
+    const station = await this.getOneStationByCode(currentCode);
 
     if (wardCode) {
       const ward = await this.dataSource
@@ -492,7 +436,6 @@ export class StationService {
     return updateStation;
   }
 
-  // delete a record by id
   async deleteStationById(userId: string, id: string) {
     const station = await this.stationRepository.findOne({ where: { id } });
 
@@ -511,7 +454,6 @@ export class StationService {
     return await this.stationRepository.save(station);
   }
 
-  // delete a record by code
   async deleteStationByCode(userId: string, code: string) {
     const station = await this.stationRepository.findOne({ where: { code } });
 
