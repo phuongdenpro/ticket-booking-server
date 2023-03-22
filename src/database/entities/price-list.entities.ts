@@ -1,3 +1,4 @@
+import { ActiveStatusEnum } from './../../enums';
 import {
   Column,
   Entity,
@@ -31,11 +32,11 @@ export class PriceList {
 
   @Column({
     name: 'status',
-    type: 'bool',
-    default: true,
+    type: 'varchar',
+    default: ActiveStatusEnum.INACTIVE,
     nullable: false,
   })
-  status: boolean;
+  status: ActiveStatusEnum;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;

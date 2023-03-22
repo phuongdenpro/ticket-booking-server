@@ -65,7 +65,7 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getPriceListById(@Param('id') id: string) {
-    return await this.priceListService.findOnePriceListById(id);
+    return await this.priceListService.getPriceListById(id);
   }
 
   @Get('code/:code')
@@ -74,7 +74,7 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getPriceListByCode(@Param('code') code: string) {
-    return await this.priceListService.findOnePriceListByCode(code);
+    return await this.priceListService.getPriceListByCode(code);
   }
 
   @Patch('id/:id')

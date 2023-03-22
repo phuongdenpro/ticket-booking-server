@@ -1,4 +1,3 @@
-import { UpdateTicketGroupDto } from './dto/update-ticket-group.dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums/roles.enum';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
@@ -24,6 +23,7 @@ import {
 } from './../../decorator';
 import {
   CreateTicketGroupDto,
+  UpdateTicketGroupDto,
   DeleteMultiTicketGroupDto,
   FilterTicketGroupDto,
 } from './dto';
@@ -47,7 +47,11 @@ export class TicketGroupController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async findAll(
+    @CurrentUser() user,
     @Query() dto: FilterTicketGroupDto,
     @GetPagination() pagination?: Pagination,
   ) {
@@ -56,14 +60,20 @@ export class TicketGroupController {
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
-  async getTickerGroupById(@Param('id') id: string) {
-    return await this.ticketGroupService.getTicketGroupById(id);
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getTickerGroupById(@Param('id') id: string, @CurrentUser() user) {
+    return await this.ticketGroupService.getTicketGroupById(id, user.id);
   }
 
-  @Get('id/:id')
+  @Get('code/:code')
   @HttpCode(HttpStatus.OK)
-  async getTickerGroupByCode(@Param('code') code: string) {
-    return await this.ticketGroupService.getTicketGroupByCode(code);
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getTickerGroupByCode(@Param('code') code: string, @CurrentUser() user) {
+    return await this.ticketGroupService.getTicketGroupByCode(code, user.id);
   }
 
   @Patch('id/:id')

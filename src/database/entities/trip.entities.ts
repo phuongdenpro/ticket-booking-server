@@ -1,3 +1,4 @@
+import { TripStatusEnum } from './../../enums';
 import {
   Column,
   Entity,
@@ -37,8 +38,8 @@ export class Trip {
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
 
-  @Column({ name: 'is_active', type: 'tinyint', default: true })
-  isActive: boolean;
+  @Column({ name: 'status', type: 'varchar', length: 100, default: false })
+  status: TripStatusEnum;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;

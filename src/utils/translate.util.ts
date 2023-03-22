@@ -193,7 +193,8 @@ export const mappingTranslate = {
   TO_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
   TO_STATION_ID_IS_STRING: 'Mã bến xe đi phải là chuỗi ký tự',
   TO_STATION_ID_IS_36_CHARACTERS: 'Mã bến xe đi phải là 36 ký tự',
-  TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM: 'Trạng thái tuyến đi không hợp lệ',
+  TRIP_STATUS_IS_ENUM: 'Trạng thái tuyến đi không hợp lệ',
+  TRIP_STATUS_IS_STRING: 'Trạng thái tuyến đi phải là chuỗi ký tự',
   START_DATE_IS_DATE: 'Ngày bắt đầu phải là ngày',
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
 

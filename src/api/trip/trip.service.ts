@@ -27,6 +27,7 @@ export class TripService {
 
   private tripSelectFieldsWithQ = [
     'q.id',
+    'q.code',
     'q.name',
     'q.note',
     'q.startDate',
@@ -47,8 +48,18 @@ export class TripService {
       where: { ...options?.where },
       relations: ['fromStation', 'toStation'].concat(options?.relations || []),
       select: {
-        fromStation: { id: true, name: true, code: true },
-        toStation: { id: true, name: true, code: true },
+        fromStation: {
+          id: true,
+          name: true,
+          code: true,
+          ...options?.select?.fromStation,
+        },
+        toStation: {
+          id: true,
+          name: true,
+          code: true,
+          ...options?.select?.toStation,
+        },
         ...options?.select,
       },
       order: {
@@ -88,18 +99,23 @@ export class TripService {
       endDate,
       fromStationId,
       toStationId,
-      isActive,
+      status,
     } = dto;
     // check permission
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
     // check trip code exist
-    const tripExist = await this.tripRepository.findOne({
-      where: { code },
+    const tripExist = await this.findOneTripById(code, {
+      other: {
+        withDeleted: true,
+      },
     });
     if (tripExist) {
       throw new BadRequestException('TRIP_CODE_EXIST');
@@ -107,9 +123,6 @@ export class TripService {
 
     const trip = new Trip();
     trip.code = code;
-    if (!name) {
-      throw new BadRequestException('NAME_IS_REQUIRED');
-    }
     trip.name = name;
     trip.note = note;
     // check start date
@@ -119,13 +132,10 @@ export class TripService {
     }
     trip.startDate = startDate;
     // check end date
-    if (endDate) {
-      if (endDate < currentDate && endDate < startDate) {
-        throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
-      } else {
-        trip.endDate = endDate;
-      }
+    if (endDate < currentDate && endDate < startDate) {
+      throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
     }
+    trip.endDate = endDate;
     // check from station
     const fromStation = await this.dataSource
       .getRepository(Station)
@@ -145,15 +155,16 @@ export class TripService {
     if (fromStationId === toStationId) {
       throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
-
-    if (isActive === undefined || isActive === null) {
-      trip.isActive = true;
-    } else {
-      trip.isActive = TripStatusEnum.ACTIVE === isActive;
+    switch (status) {
+      case TripStatusEnum.ACTIVE:
+        trip.status = TripStatusEnum.ACTIVE;
+        break;
+      default:
+        trip.status = TripStatusEnum.INACTIVE;
+        break;
     }
 
     trip.createdBy = adminExist.id;
-    trip.updatedBy = adminExist.id;
     const saveTrip = await this.tripRepository.save(trip);
     delete saveTrip.fromStation;
     delete saveTrip.toStation;
@@ -237,19 +248,19 @@ export class TripService {
       endDate,
       fromStationId,
       toStationId,
-      isActive,
+      status,
     } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const trip = await this.tripRepository.findOne({ where: { id } });
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const trip = await this.findOneTripById(id);
     if (name) {
       trip.name = name;
     }
@@ -292,8 +303,13 @@ export class TripService {
     if (fromStationId === toStationId) {
       throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
-    if (isActive) {
-      trip.isActive = TripStatusEnum.ACTIVE === isActive;
+    switch (status) {
+      case TripStatusEnum.ACTIVE:
+        trip.status = TripStatusEnum.ACTIVE;
+        break;
+      default:
+        trip.status = TripStatusEnum.INACTIVE;
+        break;
     }
     trip.updatedBy = adminExist.id;
 
@@ -304,7 +320,7 @@ export class TripService {
       note: updateTrip.note,
       startDate: updateTrip.startDate,
       endDate: updateTrip.endDate,
-      isActive: updateTrip.isActive,
+      isActive: updateTrip.status,
       createdBy: updateTrip.createdBy,
       updatedBy: updateTrip.updatedBy,
       createdAt: updateTrip.createdAt,
@@ -328,19 +344,19 @@ export class TripService {
       endDate,
       fromStationId,
       toStationId,
-      isActive,
+      status,
     } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const trip = await this.tripRepository.findOne({ where: { code } });
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const trip = await this.getTripByCode(code);
     if (name) {
       trip.name = name;
     }
@@ -383,8 +399,13 @@ export class TripService {
     if (fromStationId === toStationId) {
       throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
-    if (isActive) {
-      trip.isActive = TripStatusEnum.ACTIVE === isActive;
+    switch (status) {
+      case TripStatusEnum.ACTIVE:
+        trip.status = TripStatusEnum.ACTIVE;
+        break;
+      default:
+        trip.status = TripStatusEnum.INACTIVE;
+        break;
     }
     trip.updatedBy = adminExist.id;
 
@@ -395,7 +416,7 @@ export class TripService {
       note: updateTrip.note,
       startDate: updateTrip.startDate,
       endDate: updateTrip.endDate,
-      isActive: updateTrip.isActive,
+      isActive: updateTrip.status,
       createdBy: updateTrip.createdBy,
       updatedBy: updateTrip.updatedBy,
       createdAt: updateTrip.createdAt,
@@ -414,41 +435,39 @@ export class TripService {
   async deleteTripById(id: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const trip = await this.tripRepository.findOne({ where: { id } });
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const trip = await this.getTripById(id);
     trip.deletedAt = new Date();
     trip.updatedBy = adminExist.id;
 
-    return await (
-      await this.tripRepository.save(trip)
-    ).id;
+    const saveTrip = await this.tripRepository.save(trip);
+    return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
   }
 
   async deleteTripByCode(code: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const trip = await this.tripRepository.findOne({ where: { code } });
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const trip = await this.getTripByCode(code);
     trip.deletedAt = new Date();
     trip.updatedBy = adminExist.id;
 
-    return await (
-      await this.tripRepository.save(trip)
-    ).id;
+    const saveTrip = await this.tripRepository.save(trip);
+    return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
   }
 
   async deleteMultipleTrip(userId: string, dto: TripDeleteMultiInput) {

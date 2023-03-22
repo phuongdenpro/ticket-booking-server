@@ -111,7 +111,7 @@ export class OrderService {
     // check trip
     const trip = tripDetail.trip;
     if (
-      !trip.isActive ||
+      !trip.status ||
       trip.startDate > currentDate ||
       trip.endDate < currentDate
     ) {
@@ -389,7 +389,7 @@ export class OrderService {
     console.log(ticketDetailId);
 
     const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-    const priceDetail = await this.priceListService.findOnePriceDetailBy({
+    const priceDetail = await this.priceListService.findOnePriceDetail({
       where: {
         applicablePriceDetails: {
           trip: {

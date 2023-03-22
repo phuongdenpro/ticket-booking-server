@@ -25,6 +25,7 @@ export class TicketGroupService {
 
   private selectFieldsWithQ = [
     'q.id',
+    'q.code',
     'q.name',
     'q.description',
     'q.note',
@@ -55,6 +56,7 @@ export class TicketGroupService {
     } else {
       options = { where: { id } };
     }
+    console.log(options);
     return await this.findOneTicketGroup(options);
   }
 
@@ -67,7 +69,17 @@ export class TicketGroupService {
     return await this.findOneTicketGroup(options);
   }
 
-  async getTicketGroupById(id: string, options?: any) {
+  async getTicketGroupById(id: string, adminId: string, options?: any) {
+    const admin = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: adminId },
+    });
+    if (!admin) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!admin.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    console.log(id);
     const ticketGroup = await this.findOneTicketGroupById(id, options);
     if (!ticketGroup) {
       throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
@@ -75,7 +87,17 @@ export class TicketGroupService {
     return ticketGroup;
   }
 
-  async getTicketGroupByCode(code: string, options?: any) {
+  async getTicketGroupByCode(code: string, adminId: string, options?: any) {
+    const admin = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: adminId },
+    });
+    if (!admin) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!admin.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
     const ticketGroup = await this.findOneTicketGroupByCode(code, options);
     if (!ticketGroup) {
       throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
@@ -160,7 +182,7 @@ export class TicketGroupService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const ticketGroup = await this.getTicketGroupById(id);
+    const ticketGroup = await this.getTicketGroupById(id, adminId);
     if (name) {
       ticketGroup.name = name;
     }
@@ -194,7 +216,7 @@ export class TicketGroupService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const ticketGroup = await this.getTicketGroupByCode(code);
+    const ticketGroup = await this.getTicketGroupByCode(code, adminId);
 
     if (name) {
       ticketGroup.name = name;
@@ -223,7 +245,7 @@ export class TicketGroupService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const ticketGroup = await this.getTicketGroupById(id);
+    const ticketGroup = await this.getTicketGroupById(id, adminId);
     ticketGroup.updatedBy = adminExist.id;
     ticketGroup.deletedAt = new Date();
 
@@ -242,7 +264,7 @@ export class TicketGroupService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const ticketGroup = await this.getTicketGroupByCode(code);
+    const ticketGroup = await this.getTicketGroupByCode(code, adminId);
     ticketGroup.updatedBy = adminExist.id;
     ticketGroup.deletedAt = new Date();
 

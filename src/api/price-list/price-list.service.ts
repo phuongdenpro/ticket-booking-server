@@ -50,20 +50,6 @@ export class PriceListService {
     't.createdAt',
   ];
 
-  private selectFieldsPriceList = [
-    'id',
-    'code',
-    'name',
-    'note',
-    'startDate',
-    'endDate',
-    'status',
-    'createdAt',
-    'updatedAt',
-    'createdBy',
-    'updatedBy',
-  ];
-
   private selectFieldsPriceListWithQ = [
     'q.id',
     'q.code',
@@ -79,6 +65,53 @@ export class PriceListService {
   ];
 
   // price list
+  async findOnePriceList(options?: any) {
+    const priceList = await this.priceListRepository.findOne({
+      where: { ...options?.where },
+      select: {
+        deletedAt: false,
+      },
+      relations: [].concat(options?.relations || []),
+      order: { createdAt: SortEnum.DESC, ...options?.order },
+      ...options?.other,
+    });
+    return priceList;
+  }
+
+  async findOnePriceListById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return this.findOnePriceList(options);
+  }
+
+  async findOnePriceListByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return this.findOnePriceList(options);
+  }
+
+  async getPriceListById(id: string, options?: any) {
+    const priceList = await this.findOnePriceListById(id, options);
+    if (!priceList) {
+      throw new BadRequestException('PRICE_LIST_NOT_FOUND');
+    }
+    return priceList;
+  }
+
+  async getPriceListByCode(code: string, options?: any) {
+    const priceList = await this.findOnePriceListByCode(code, options);
+    if (!priceList) {
+      throw new BadRequestException('PRICE_LIST_NOT_FOUND');
+    }
+    return priceList;
+  }
+
   async createPriceList(dto: CreatePriceListDto, adminId: string) {
     const { code, name, note, startDate, endDate, status } = dto;
     const adminExist = await this.dataSource
@@ -90,7 +123,11 @@ export class PriceListService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-    const priceListExist = await this.findOnePriceListByCode(code);
+    const priceListExist = await this.findOnePriceListByCode(code, {
+      other: {
+        withDeleted: true,
+      },
+    });
     if (priceListExist) {
       throw new BadRequestException('PRICE_LIST_CODE_IS_EXIST');
     }
@@ -102,7 +139,14 @@ export class PriceListService {
     priceList.code = code;
     priceList.name = name;
     priceList.note = note;
-    priceList.status = ActiveStatusEnum.ACTIVE === status ? true : false;
+    switch (status) {
+      case ActiveStatusEnum.ACTIVE:
+        priceList.status = ActiveStatusEnum.ACTIVE;
+        break;
+      default:
+        priceList.status = ActiveStatusEnum.INACTIVE;
+        break;
+    }
     priceList.createdBy = adminExist.id;
 
     if (!startDate) {
@@ -125,38 +169,6 @@ export class PriceListService {
     const savePriceList = await this.priceListRepository.save(priceList);
     delete savePriceList.deletedAt;
     return savePriceList;
-  }
-
-  async findOnePriceListById(id: string, options?: any) {
-    const priceList = await this.priceListRepository.findOne({
-      where: { id, ...options?.where },
-      select: this.selectFieldsPriceList,
-      relations: [].concat(options?.relations || []),
-      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
-      ...options?.other,
-    });
-    return priceList;
-  }
-
-  async findOnePriceListByCode(code: string, options?: any) {
-    const priceList = await this.priceListRepository.findOne({
-      where: { code, ...options?.where },
-      select: this.selectFieldsPriceList,
-      relations: [].concat(options?.relations || []),
-      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
-      ...options?.other,
-    });
-    return priceList;
-  }
-
-  async findOnePriceDetailBy(options: any) {
-    return await this.priceDetailRepository.findOne({
-      where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
-      select: { ...options?.select },
-      orderBy: { createdAt: SortEnum.DESC, ...options?.orderBy },
-      ...options?.other,
-    });
   }
 
   async findAllPriceList(dto: FilterPriceListDto, pagination?: Pagination) {
@@ -245,8 +257,13 @@ export class PriceListService {
       const newEndDate = new Date(endDate);
       priceList.endDate = newEndDate;
     }
-    if (status) {
-      priceList.status = status === ActiveStatusEnum.ACTIVE ? true : false;
+    switch (status) {
+      case ActiveStatusEnum.ACTIVE:
+        priceList.status = ActiveStatusEnum.ACTIVE;
+        break;
+      default:
+        priceList.status = ActiveStatusEnum.INACTIVE;
+        break;
     }
 
     priceList.updatedBy = adminExist.id;
@@ -307,8 +324,13 @@ export class PriceListService {
       const newEndDate = new Date(endDate);
       priceList.endDate = newEndDate;
     }
-    if (status) {
-      priceList.status = status === ActiveStatusEnum.ACTIVE ? true : false;
+    switch (status) {
+      case ActiveStatusEnum.ACTIVE:
+        priceList.status = ActiveStatusEnum.ACTIVE;
+        break;
+      default:
+        priceList.status = ActiveStatusEnum.INACTIVE;
+        break;
     }
 
     priceList.updatedBy = adminExist.id;
@@ -448,6 +470,16 @@ export class PriceListService {
   }
 
   // price detail
+  async findOnePriceDetail(options: any) {
+    return await this.priceDetailRepository.findOne({
+      where: { ...options?.where },
+      relations: [].concat(options?.relations || []),
+      select: { ...options?.select },
+      order: { createdAt: SortEnum.DESC, ...options?.order },
+      ...options?.other,
+    });
+  }
+
   async createPriceDetail(dto: CreatePriceDetailDto, adminId: string) {
     const { code, price, note, priceListId, ticketGroupId } = dto;
 

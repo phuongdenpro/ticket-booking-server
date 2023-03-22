@@ -1,4 +1,4 @@
-export class TripStatusEnum {
-  static readonly ACTIVE = 1;
-  static readonly INACTIVE = 0;
+export enum TripStatusEnum {
+  ACTIVE = 'Kích hoạt',
+  INACTIVE = 'Tạm ngưng',
 }
