@@ -25,6 +25,7 @@ export class TicketGroupService {
 
   private selectFieldsWithQ = [
     'q.id',
+    'q.code',
     'q.name',
     'q.description',
     'q.note',
