@@ -203,7 +203,6 @@ export class CustomerService {
 
   async getCustomerById(id: string, options?: any) {
     const userExist = await this.findOneById(id, options);
-
     if (!userExist) throw new BadRequestException('USER_NOT_FOUND');
     return userExist;
   }
@@ -271,21 +270,19 @@ export class CustomerService {
     if (address) {
       oldCustomer.address = address;
     }
-    if (gender) {
-      switch (gender) {
-        case GenderEnum.MALE:
-          oldCustomer.gender = GenderEnum.MALE;
-          break;
-        case GenderEnum.FEMALE:
-          oldCustomer.gender = GenderEnum.FEMALE;
-          break;
-        case GenderEnum.OTHER:
-          oldCustomer.gender = GenderEnum.OTHER;
-          break;
-        default:
-          oldCustomer.gender = GenderEnum.OTHER;
-          break;
-      }
+    switch (gender) {
+      case GenderEnum.MALE:
+        oldCustomer.gender = GenderEnum.MALE;
+        break;
+      case GenderEnum.FEMALE:
+        oldCustomer.gender = GenderEnum.FEMALE;
+        break;
+      case GenderEnum.OTHER:
+        oldCustomer.gender = GenderEnum.OTHER;
+        break;
+      default:
+        oldCustomer.gender = GenderEnum.OTHER;
+        break;
     }
     if (birthDate) {
       oldCustomer.birthday = birthDate;
@@ -295,7 +292,7 @@ export class CustomerService {
         where: {
           id: wardId,
         },
-        relations: ['district', 'district.province'],
+        relations: { district: { province: true } },
       });
       if (!ward) {
         throw new NotFoundException('WARD_NOT_FOUND');
@@ -306,7 +303,7 @@ export class CustomerService {
         where: {
           code: wardCode,
         },
-        relations: ['district', 'district.province'],
+        relations: { district: { province: true } },
       });
       if (!ward) {
         throw new NotFoundException('WARD_NOT_FOUND');

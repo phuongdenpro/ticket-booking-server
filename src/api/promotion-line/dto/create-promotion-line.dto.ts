@@ -1,8 +1,10 @@
+import { PromotionTypeEnum } from './../../../enums';
+
 export class CreatePromotionLineDto {
   code: string;
   promotionCode: string;
   startDate: Date;
   endDate: Date;
-  type: string;
+  type: PromotionTypeEnum;
   promotionId: string;
 }

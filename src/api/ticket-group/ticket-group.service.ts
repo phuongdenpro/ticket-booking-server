@@ -39,7 +39,6 @@ export class TicketGroupService {
     return await this.tickerGroupRepository.findOne({
       where: { ...options?.where },
       relations: {
-        deletedAt: false,
         ...options?.relations,
       },
       select: {

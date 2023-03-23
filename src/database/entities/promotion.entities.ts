@@ -1,3 +1,4 @@
+import { PromotionStatusEnum } from './../../enums';
 import { ApplicableCustomerGroup, PromotionLine } from '.';
 import {
   Column,
@@ -37,7 +38,7 @@ export class Promotion {
     name: 'status',
     type: 'varchar',
     nullable: false,
-    default: 'Tạm ngưng',
+    default: PromotionStatusEnum.INACTIVE,
   })
   status: string;
 

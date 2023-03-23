@@ -82,7 +82,7 @@ export class CustomerController {
   @ApiBearerAuth()
   async findCustomerOneById(@Param('id') id: string) {
     const options = {
-      relations: ['ward', 'ward.district', 'ward.district.province'],
+      relations: { ward: { district: { province: true } } },
     };
     const customer = await this.customerService.getCustomerById(id, options);
     customer['province'] = customer.ward.district.province;
