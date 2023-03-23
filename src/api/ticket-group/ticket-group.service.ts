@@ -81,7 +81,6 @@ export class TicketGroupService {
     if (!admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-    console.log(id);
     const ticketGroup = await this.findOneTicketGroupById(id, options);
     if (!ticketGroup) {
       throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
@@ -183,7 +182,6 @@ export class TicketGroupService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-
     const ticketGroup = await this.getTicketGroupById(id, adminId);
     if (name) {
       ticketGroup.name = name;
@@ -219,7 +217,6 @@ export class TicketGroupService {
     }
 
     const ticketGroup = await this.getTicketGroupByCode(code, adminId);
-
     if (name) {
       ticketGroup.name = name;
     }

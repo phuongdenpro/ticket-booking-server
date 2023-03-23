@@ -7,6 +7,7 @@ import {
   DeleteDateColumn,
   JoinColumn,
   OneToMany,
+  OneToOne,
 } from 'typeorm';
 import { ApplicableTicketGroup, PromotionLine } from '.';
 
@@ -48,12 +49,12 @@ export class PromotionDetail {
   public deletedAt?: Date;
 
   // relationships
-  @OneToMany(
+  @OneToOne(
     () => PromotionLine,
     (promotionLine) => promotionLine.promotionDetail,
   )
   @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
-  promotionLine: PromotionLine[];
+  promotionLine: PromotionLine;
 
   @OneToMany(
     () => ApplicableTicketGroup,

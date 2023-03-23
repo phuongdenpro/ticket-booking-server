@@ -1,8 +1,10 @@
+import { PromotionTypeEnum } from './../../enums';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToOne,
   ManyToOne,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
@@ -18,6 +20,15 @@ export class PromotionLine {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
+  @Column({ name: 'title', type: 'varchar', length: 200, nullable: false })
+  title: string;
+
+  @Column({ name: 'description', type: 'text' })
+  description: string;
+
+  @Column({ name: 'note', type: 'text' })
+  note: string;
+
   @Column({
     name: 'promotion_code',
     type: 'varchar',
@@ -32,8 +43,19 @@ export class PromotionLine {
   @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date;
 
-  @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
-  type: string;
+  @Column({ name: 'type', type: 'varchar', length: 200, nullable: true })
+  type: PromotionTypeEnum;
+
+  @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
+  max_quantity: number;
+
+  @Column({
+    name: 'max_quantity_per_customer',
+    type: 'int',
+    nullable: false,
+    default: 1,
+  })
+  max_quantity_per_customer: number;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
@@ -56,11 +78,11 @@ export class PromotionLine {
   public deletedAt?: Date;
 
   // relationships
-  @ManyToOne(
+  @OneToOne(
     () => PromotionDetail,
     (promotionDetail) => promotionDetail.promotionLine,
   )
-  @JoinColumn({ name: 'promotion_detail_id', referencedColumnName: 'id' })
+  // @JoinColumn({ name: 'promotion_detail_id', referencedColumnName: 'id' })
   promotionDetail: PromotionDetail;
 
   @ManyToOne(
