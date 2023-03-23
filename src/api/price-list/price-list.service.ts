@@ -9,7 +9,7 @@ import {
   UpdatePriceDetailDto,
   DeletePriceDetailDto,
 } from './dto';
-import { PriceDetail, PriceList, Staff, Trip } from './../../database/entities';
+import { PriceDetail, PriceList, Staff } from './../../database/entities';
 import {
   BadRequestException,
   Injectable,
@@ -511,8 +511,6 @@ export class PriceListService {
       priceListCode,
       ticketGroupId,
       ticketGroupCode,
-      tripId,
-      tripCode,
     } = dto;
 
     const adminExist = await this.dataSource
@@ -560,27 +558,6 @@ export class PriceListService {
     if (!ticketGroup) {
       throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
     }
-
-    if (!tripCode && !tripId) {
-      throw new BadRequestException('TRIP_ID_OR_CODE_REQUIRED');
-    }
-    let trip;
-    if (tripCode) {
-      trip = await this.dataSource.getRepository(Trip).findOne({
-        where: {
-          code: tripCode,
-        },
-      });
-    } else {
-      trip = await this.dataSource.getRepository(Trip).findOne({
-        where: {
-          id: tripId,
-        },
-      });
-    }
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
-    }
     const priceDetail = new PriceDetail();
     if (price < 0) {
       throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
@@ -590,7 +567,6 @@ export class PriceListService {
     priceDetail.note = note;
     priceDetail.priceList = priceList;
     priceDetail.ticketGroup = ticketGroup;
-    priceDetail.trip = trip;
     priceDetail.createdBy = adminExist.id;
 
     const savePriceDetail = await this.priceDetailRepository.save(priceDetail);
@@ -655,7 +631,6 @@ export class PriceListService {
     dto: UpdatePriceDetailDto,
   ) {
     const { price, note, ticketGroupId, ticketGroupCode } = dto;
-
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId } });

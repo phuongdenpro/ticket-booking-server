@@ -47,14 +47,4 @@ export class CreatePriceDetailDto {
   @IsString({ message: 'TICKET_GROUP_CODE_IS_STRING' })
   @IsOptional()
   ticketGroupCode: string;
-
-  @ApiPropertyOptional({ example: 'd0adc2a4-386a-45de-bbf3-46d672b0a493' })
-  @IsString({ message: 'TRIP_ID_IS_STRING' })
-  @IsOptional()
-  tripId: string;
-
-  @ApiPropertyOptional({ example: 'BGT32023' })
-  @IsString({ message: 'TRIP_CODE_IS_STRING' })
-  @IsOptional()
-  tripCode: string;
 }

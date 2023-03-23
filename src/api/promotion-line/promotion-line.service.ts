@@ -1,7 +1,11 @@
-import { CreatePromotionLineDto } from './dto';
+import { CreatePromotionLineDto, UpdatePromotionLineDto } from './dto';
 import { PromotionTypeEnum, SortEnum } from './../../enums';
-import { Promotion, PromotionLine } from './../../database/entities';
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Promotion, PromotionLine, Staff } from './../../database/entities';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import * as moment from 'moment';
@@ -94,9 +98,9 @@ export class PromotionLineService {
       title,
       description,
       note,
-      budget,
-      max_quantity,
-      max_quantity_per_customer,
+      maxBudget,
+      maxQuantity,
+      maxQuantityPerCustomer,
       startDate,
       endDate,
       type,
@@ -126,20 +130,20 @@ export class PromotionLineService {
     promotionLine.title = title;
     promotionLine.description = description;
     promotionLine.note = note;
-    if (budget < 0) {
+    if (maxBudget < 0) {
       throw new NotFoundException('BUDGET_MUST_BE_GREATER_THAN_0');
     }
-    promotionLine.budget = budget;
-    if (max_quantity < 0) {
+    promotionLine.maxBudget = maxBudget;
+    if (maxQuantity < 0) {
       throw new NotFoundException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
     }
-    promotionLine.max_quantity = max_quantity;
-    if (max_quantity_per_customer < 0) {
+    promotionLine.max_quantity = maxQuantity;
+    if (maxQuantityPerCustomer < 0) {
       throw new NotFoundException(
         'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
       );
     }
-    promotionLine.max_quantity_per_customer = max_quantity_per_customer;
+    promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
     switch (type) {
       case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
         promotionLine.type = PromotionTypeEnum.PRODUCT_GIVEAWAYS;
@@ -167,4 +171,45 @@ export class PromotionLineService {
     promotionLine.createdBy = adminId;
     return await this.promotionLineRepository.save(promotionLine);
   }
+
+  async updatePromotionLineById(
+    id: string,
+    dto: UpdatePromotionLineDto,
+    adminId: string,
+  ) {
+    const {
+      maxBudget,
+      couponCode,
+      description,
+      endDate,
+      maxQuantity,
+      maxQuantityPerCustomer,
+      note,
+      startDate,
+      title,
+      type,
+    } = dto;
+    const adminExist = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: adminId },
+    });
+    if (!adminExist) {
+      throw new NotFoundException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const promotionLine = await this.getPromotionLineById(id);
+    if (!promotionLine) {
+      throw new NotFoundException('PROMOTION_LINE_NOT_FOUND');
+    }
+    if (maxBudget) {
+      if (maxBudget < 0) {
+        throw new NotFoundException('BUDGET_MUST_BE_GREATER_THAN_0');
+      }
+      promotionLine.maxBudget = maxBudget;
+    }
+  }
+
+  // async updatePromotionLineByCode(id: string, dto, adminId: string) {}
 }

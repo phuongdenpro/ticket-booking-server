@@ -10,20 +10,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import {
-  PriceDetail,
-  Staff,
-  Station,
-  TicketGroup,
-  Trip,
-} from './../../database/entities';
-import {
-  DataSource,
-  LessThanOrEqual,
-  MoreThanOrEqual,
-  Repository,
-} from 'typeorm';
-import { ActiveStatusEnum, SortEnum, TripStatusEnum } from './../../enums';
+import { Staff, Station, TicketGroup, Trip } from './../../database/entities';
+import { DataSource, Repository } from 'typeorm';
+import { SortEnum, TripStatusEnum } from './../../enums';
 import { Pagination } from './../../decorator';
 import * as moment from 'moment';
 moment.locale('vi');
@@ -217,7 +206,7 @@ export class TripService {
   }
 
   async findAllTrip(dto: FilterTripDto, pagination?: Pagination) {
-    const { keywords, fromStationId, toStationId } = dto;
+    const { keywords, fromStationId, toStationId, status } = dto;
     let { startDate, endDate } = dto;
     const query = this.tripRepository.createQueryBuilder('q');
 
@@ -243,10 +232,12 @@ export class TripService {
     if (toStationId) {
       query.andWhere('q.toStation = :toStationId', { toStationId });
     }
+    if (status) {
+      query.andWhere('q.status = :status', { status });
+    }
 
     const total = await query.getCount();
     const dataResult = await query
-      .andWhere('q.isActive = :isActive', { isActive: true })
       .leftJoinAndSelect('q.fromStation', 'fs')
       .leftJoinAndSelect('q.toStation', 'to')
       .select(this.tripSelectFieldsWithQ)
@@ -351,7 +342,6 @@ export class TripService {
         trip.status = TripStatusEnum.INACTIVE;
         break;
     }
-    const oldTicketGroup = trip.ticketGroup;
     let ticketGroup;
     if (ticketGroupId) {
       ticketGroup = await this.dataSource
@@ -369,49 +359,6 @@ export class TripService {
         throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
       }
       trip.ticketGroup = ticketGroup;
-    }
-    if (ticketGroup) {
-      const oldPriceDetail = await this.dataSource
-        .getRepository(PriceDetail)
-        .findOne({
-          where: {
-            trip: { id: trip.id },
-            ticketGroup: { id: oldTicketGroup.id },
-          },
-          relations: {
-            ticketGroup: true,
-            trip: true,
-          },
-        });
-      if (oldPriceDetail) {
-        oldPriceDetail.trip = null;
-        await this.dataSource.getRepository(PriceDetail).save(oldPriceDetail);
-      }
-      const priceDetail = await this.dataSource
-        .getRepository(PriceDetail)
-        .findOne({
-          where: {
-            priceList: {
-              status: ActiveStatusEnum.ACTIVE,
-              startDate: LessThanOrEqual(currentDate),
-              endDate: MoreThanOrEqual(currentDate),
-            },
-            ticketGroup: { id: ticketGroup.id },
-          },
-          relations: {
-            ticketGroup: true,
-            priceList: true,
-          },
-          order: {
-            priceList: {
-              startDate: SortEnum.DESC,
-            },
-            createdAt: SortEnum.DESC,
-          },
-        });
-      if (priceDetail) {
-        priceDetail.trip = trip;
-      }
     }
     trip.updatedBy = adminExist.id;
 
@@ -511,7 +458,6 @@ export class TripService {
         trip.status = TripStatusEnum.INACTIVE;
         break;
     }
-    const oldTicketGroup = trip.ticketGroup;
     let ticketGroup;
     if (ticketGroupId) {
       ticketGroup = await this.dataSource
@@ -529,49 +475,6 @@ export class TripService {
         throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
       }
       trip.ticketGroup = ticketGroup;
-    }
-    if (ticketGroup) {
-      const oldPriceDetail = await this.dataSource
-        .getRepository(PriceDetail)
-        .findOne({
-          where: {
-            trip: { id: trip.id },
-            ticketGroup: { id: oldTicketGroup.id },
-          },
-          relations: {
-            ticketGroup: true,
-            trip: true,
-          },
-        });
-      if (oldPriceDetail) {
-        oldPriceDetail.trip = null;
-        await this.dataSource.getRepository(PriceDetail).save(oldPriceDetail);
-      }
-      const priceDetail = await this.dataSource
-        .getRepository(PriceDetail)
-        .findOne({
-          where: {
-            priceList: {
-              status: ActiveStatusEnum.ACTIVE,
-              startDate: LessThanOrEqual(currentDate),
-              endDate: MoreThanOrEqual(currentDate),
-            },
-            ticketGroup: { id: ticketGroup.id },
-          },
-          relations: {
-            ticketGroup: true,
-            priceList: true,
-          },
-          order: {
-            priceList: {
-              startDate: SortEnum.DESC,
-            },
-            createdAt: SortEnum.DESC,
-          },
-        });
-      if (priceDetail) {
-        priceDetail.trip = trip;
-      }
     }
     trip.updatedBy = adminExist.id;
 

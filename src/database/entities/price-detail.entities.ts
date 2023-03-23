@@ -8,9 +8,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToOne,
 } from 'typeorm';
-import { PriceList, OrderDetail, TicketGroup, Trip } from '.';
+import { PriceList, OrderDetail, TicketGroup } from '.';
 
 @Entity({ name: 'price_detail' })
 export class PriceDetail {
@@ -57,8 +56,4 @@ export class PriceDetail {
 
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.priceDetail)
   orderDetails: OrderDetail[];
-
-  @OneToOne(() => Trip, (trip) => trip.priceDetail)
-  @JoinColumn({ name: 'trip_id', referencedColumnName: 'id' })
-  trip: Trip;
 }

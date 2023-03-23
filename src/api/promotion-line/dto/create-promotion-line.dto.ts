@@ -58,7 +58,7 @@ export class CreatePromotionLineDto {
   })
   endDate: Date;
 
-  @ApiPropertyOptional({
+  @ApiProperty({
     example: PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT,
     enum: PromotionTypeEnum,
   })
@@ -74,7 +74,7 @@ export class CreatePromotionLineDto {
     { message: 'MAX_QUANTITY_IS_NUMBER' },
   )
   @Min(1, { message: 'MAX_QUANTITY_MIN_1' })
-  max_quantity: number;
+  maxQuantity: number;
 
   @ApiProperty({ example: 100 })
   @IsNotEmpty({ message: 'MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED' })
@@ -83,7 +83,7 @@ export class CreatePromotionLineDto {
     { message: 'MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
   )
   @Min(0, { message: 'MAX_QUANTITY_PER_CUSTOMER_MIN_1' })
-  max_quantity_per_customer: number;
+  maxQuantityPerCustomer: number;
 
   @ApiProperty({ example: 1_000_000 })
   @IsNotEmpty({ message: 'BUDGET_IS_REQUIRED' })
@@ -92,7 +92,7 @@ export class CreatePromotionLineDto {
     { message: 'BUDGET_IS_NUMBER' },
   )
   @Min(0, { message: 'BUDGET_MUST_BE_GREATER_THAN_0' })
-  budget: number;
+  maxBudget: number;
 
   @ApiProperty({ example: '' })
   @IsNotEmpty({ message: 'PROMOTION_CODE_IS_REQUIRED' })

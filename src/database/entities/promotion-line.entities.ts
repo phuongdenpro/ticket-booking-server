@@ -49,6 +49,9 @@ export class PromotionLine {
   @Column({ name: 'budget', type: 'double', nullable: false, default: 0 })
   budget: number;
 
+  @Column({ name: 'budget', type: 'double', nullable: false, default: 0 })
+  maxBudget: number;
+
   @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
   max_quantity: number;
 
@@ -58,7 +61,7 @@ export class PromotionLine {
     nullable: false,
     default: 1,
   })
-  max_quantity_per_customer: number;
+  maxQuantityPerCustomer: number;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;

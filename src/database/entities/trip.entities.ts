@@ -9,9 +9,8 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
   DeleteDateColumn,
-  OneToOne,
 } from 'typeorm';
-import { PriceDetail, Station, TicketGroup, TripDetail } from '.';
+import { Station, TicketGroup, TripDetail } from '.';
 
 @Entity({ name: 'trip' })
 export class Trip {
@@ -71,7 +70,4 @@ export class Trip {
 
   @OneToMany(() => TripDetail, (tripDetail) => tripDetail.trip)
   tripDetails: TripDetail[];
-
-  @OneToOne(() => PriceDetail, (priceDetail) => priceDetail.trip)
-  priceDetail: PriceDetail;
 }
