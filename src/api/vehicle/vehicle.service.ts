@@ -236,7 +236,7 @@ export class VehicleService {
 
     const total = await query.getCount();
     const dataResult = await query
-      .orderBy('q.createdAt', SortEnum.ASC)
+      .orderBy('q.createdAt', SortEnum.DESC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
