@@ -475,11 +475,31 @@ export class PriceListService {
   async findOnePriceDetail(options: any) {
     return await this.priceDetailRepository.findOne({
       where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
+      relations: {
+        ...options?.relations,
+      },
       select: { ...options?.select },
       order: { createdAt: SortEnum.DESC, ...options?.order },
       ...options?.other,
     });
+  }
+
+  async findOnePriceDetailById(id: string, options?: any) {
+    if (options) {
+      options.where = { id: id, ...options?.where };
+    } else {
+      options = { where: { id: id } };
+    }
+    return await this.findOnePriceDetail(options);
+  }
+
+  async findOnePriceDetailByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOnePriceDetail(options);
   }
 
   async createPriceDetail(dto: CreatePriceDetailDto, adminId: string) {
@@ -578,27 +598,20 @@ export class PriceListService {
     return savePriceDetail;
   }
 
-  async getPriceDetailById(id: string) {
-    const query = this.priceDetailRepository.createQueryBuilder('q');
-    query.where('q.id = :id', { id });
-
-    const priceDetail = await query
-      .leftJoinAndSelect('q.ticketGroup', 't')
-      .select(this.selectFieldsPriceDetailWithQ)
-      .getOne();
-
+  async getPriceDetailById(id: string, options?: any) {
+    const priceDetail = await this.findOnePriceDetailById(id, options);
+    if (!priceDetail) {
+      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
     return priceDetail;
   }
 
-  async getPriceDetailByCode(code: string) {
-    const query = this.priceDetailRepository.createQueryBuilder('q');
-    query.where('q.code = :code', { code });
-
-    const priceDetail = await query
-      .leftJoinAndSelect('q.ticketGroup', 't')
-      .select(this.selectFieldsPriceDetailWithQ)
-      .getOne();
-
+  async getPriceDetailByCode(code: string, options?: any) {
+    console.log('options', options);
+    const priceDetail = await this.findOnePriceDetailByCode(code, options);
+    if (!priceDetail) {
+      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
     return priceDetail;
   }
 

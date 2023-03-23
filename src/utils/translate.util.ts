@@ -12,6 +12,9 @@ export const mappingTranslate = {
   NAME_IS_REQUIRED: 'Tên không được để trống',
   NAME_IS_STRING: 'Tên phải là chuỗi ký tự',
   NAME_LENGTH: 'Tên phải từ 1 đến 100 ký tự',
+  TITLE_IS_REQUIRED: 'Tiên đề không được để trống',
+  TITLE_IS_STRING: 'Tiên đề phải là chuỗi ký tự',
+  TITLE_LENGTH: 'Tiên đề phải từ 1 đến 100 ký tự',
   INVALID_STRING: 'Phải là chuỗi ký tự.',
   INVALID_DATE: 'Ngày không đúng định dạng.',
   DESCRIPTION_IS_STRING: 'Mô tả thông tin phải là chuỗi ký tự',
@@ -296,16 +299,18 @@ export const mappingTranslate = {
     'Chương trình khuyến mãi đang kích hoạt nên không thể cập nhật ngày bắt đầu',
   PROMOTION_NOT_FOUND: 'Không tìm thấy chương trình khuyến mãi',
   PROMOTION_CODE_EXISTED: 'Mã khuyến mãi đã tồn tại',
-  PROMOTION_TYPE_IS_STRING: 'Loại chương trình khuyến mãi phải là chuỗi ký tự',
-  PROMOTION_TYPE_IS_REQUIRED: 'Chương trình khuyến mãi không được để trống',
-  PROMOTION_TYPE_IS_ENUM:
-    'Chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Tặng sản phẩm", "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
+  PROMOTION_STATUS_IS_STRING:
+    'Trạng thái chương trình khuyến mãi phải là chuỗi ký tự',
+  PROMOTION_STATUS_IS_REQUIRED:
+    'Trạng thái chương trình khuyến mãi không được để trống',
+  PROMOTION_STATUS_IS_ENUM:
+    'Trạng thái chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Đang hoạt động", "Ngừng hoạt động", "Hết hạn", "Hết số lượng", "Hết ngân sách"',
   MAX_QUANTITY_MIN_1: 'Số lượng tối đa phải lớn hơn hoặc bằng 1',
   MAX_QUANTITY_IS_REQUIRED: 'Số lượng tối đa không được để trống',
   MAX_QUANTITY_IS_NUMBER: 'Số lượng tối đa phải là số',
+  MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 1',
-  MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED:
     'Số lượng tối đa cho mỗi khách hàng không được để trống',
   MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
@@ -320,9 +325,23 @@ export const mappingTranslate = {
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
+  PROMOTION_ID_IS_REQUIRED:
+    'Id của chương trình khuyến mãi không được để trống',
+  PROMOTION_ID_IS_36_CHARACTERS:
+    'Id của chương trình khuyến mãi phải là 36 ký tự',
+  PROMOTION_ID_IS_STRING: 'Id của chương trình khuyến mãi phải là chuỗi ký tự',
 
   // promotion line
-  PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy chi tiết khuyến mãi',
+  PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy khuyến mãi',
+  PROMOTION_LINE_TYPE_IS_STRING: 'Loại khuyến mãi phải là chuỗi ký tự',
+  PROMOTION_LINE_TYPE_IS_REQUIRED: 'Loại khuyến mãi không được để trống',
+  PROMOTION_LINE_TYPE_IS_ENUM:
+    'Loại khuyến mãi phải thuộc 1 trong các loại sau: "Tặng sản phẩm", "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
+  PROMOTION_LINE_CODE_ALREADY_EXIST: 'Mã khuyến mãi đã tồn tại',
+  PROMOTION_CODE_IS_REQUIRED: 'Mã khuyến mãi không được để trống',
+  COUPON_CODE_IS_REQUIRED: 'Mã coupon không được để trống',
+  COUPON_CODE_IS_STRING: 'Mã coupon phải là chuỗi ký tự',
+  COUPON_CODE_BETWEEN_1_100_CHARACTERS: 'Mã coupon phải có từ 1-100 ký tự',
 
   // order
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',

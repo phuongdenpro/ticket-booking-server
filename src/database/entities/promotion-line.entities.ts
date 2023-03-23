@@ -20,6 +20,14 @@ export class PromotionLine {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
+  @Column({
+    name: 'coupon_code',
+    type: 'varchar',
+    length: 20,
+    nullable: false,
+  })
+  couponCode: string;
+
   @Column({ name: 'title', type: 'varchar', length: 200, nullable: false })
   title: string;
 
@@ -29,22 +37,17 @@ export class PromotionLine {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({
-    name: 'promotion_code',
-    type: 'varchar',
-    length: 20,
-    nullable: false,
-  })
-  promotionCode: string;
-
   @Column({ name: 'start_date', type: 'timestamp', nullable: false })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
+  @Column({ name: 'end_date', type: 'timestamp', nullable: false })
   endDate: Date;
 
-  @Column({ name: 'type', type: 'varchar', length: 200, nullable: true })
+  @Column({ name: 'type', type: 'varchar', length: 200, nullable: false })
   type: PromotionTypeEnum;
+
+  @Column({ name: 'budget', type: 'double', nullable: false, default: 0 })
+  budget: number;
 
   @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
   max_quantity: number;
@@ -82,7 +85,6 @@ export class PromotionLine {
     () => PromotionDetail,
     (promotionDetail) => promotionDetail.promotionLine,
   )
-  // @JoinColumn({ name: 'promotion_detail_id', referencedColumnName: 'id' })
   promotionDetail: PromotionDetail;
 
   @ManyToOne(

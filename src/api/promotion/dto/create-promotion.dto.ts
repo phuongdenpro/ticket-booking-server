@@ -8,8 +8,6 @@ import {
   IsEnum,
   IsDate,
   MinDate,
-  IsNumber,
-  Min,
 } from 'class-validator';
 
 export class CreatePromotionDto {
@@ -62,16 +60,7 @@ export class CreatePromotionDto {
     enum: PromotionStatusEnum,
   })
   @IsString({ message: 'PROMOTION_STATUS_IS_STRING' })
-  @IsEnum(PromotionStatusEnum, { message: 'PROMOTION_STATUS_INVALID' })
+  @IsEnum(PromotionStatusEnum, { message: 'PROMOTION_STATUS_IS_ENUM' })
   @IsOptional()
   status: PromotionStatusEnum;
-
-  @ApiProperty({ example: 1_000_000 })
-  @IsNotEmpty({ message: 'BUDGET_IS_REQUIRED' })
-  @IsNumber(
-    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 3 },
-    { message: 'BUDGET_IS_NUMBER' },
-  )
-  @Min(0, { message: 'BUDGET_MUST_BE_GREATER_THAN_0' })
-  budget: number;
 }
