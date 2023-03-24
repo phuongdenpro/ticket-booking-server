@@ -1,5 +1,6 @@
 import { PromotionTypeEnum } from './../../../enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsNotEmpty,
   IsString,
@@ -10,7 +11,17 @@ import {
   MinDate,
   IsNumber,
   Min,
+  IsInt,
+  ValidateNested,
+  ValidateIf,
 } from 'class-validator';
+import {
+  ProductDiscountDto,
+  ProductDiscountPercentDto,
+  ProductGiveawayDto,
+} from './promotion-type.dto';
+import * as moment from 'moment';
+moment.locale('vi');
 
 export class CreatePromotionLineDto {
   @ApiProperty({ example: 'KM1' })
@@ -42,30 +53,23 @@ export class CreatePromotionLineDto {
   @Length(1, 100, { message: 'COUPON_CODE_BETWEEN_1_100_CHARACTERS' })
   couponCode: string;
 
-  @ApiProperty({ example: '2023-03-01' })
+  @ApiProperty({ example: moment().format('YYYY-MM-DD') })
   @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
   @IsDate({ message: 'START_DATE_IS_DATE' })
-  @MinDate(new Date(`${new Date().toDateString()}`), {
+  @MinDate(new Date(moment().format('YYYY-MM-DD')), {
     message: 'START_DATE_GREATER_THAN_NOW',
   })
   startDate: Date;
 
-  @ApiProperty({ example: '2023-03-31' })
+  @ApiProperty({
+    example: moment().add(10, 'days').format('YYYY-MM-DD'),
+  })
   @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
   @IsDate({ message: 'END_DATE_IS_DATE' })
-  @MinDate(new Date(`${new Date().toDateString()}`), {
+  @MinDate(new Date(moment().format('YYYY-MM-DD')), {
     message: 'END_DATE_GREATER_THAN_NOW',
   })
   endDate: Date;
-
-  @ApiProperty({
-    example: PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT,
-    enum: PromotionTypeEnum,
-  })
-  @IsNotEmpty({ message: 'PROMOTION_LINE_TYPE_IS_REQUIRED' })
-  @IsString({ message: 'PROMOTION_LINE_TYPE_IS_STRING' })
-  @IsEnum(PromotionTypeEnum, { message: 'PROMOTION_LINE_TYPE_IS_ENUM' })
-  type: PromotionTypeEnum;
 
   @ApiProperty({ example: 100 })
   @IsNotEmpty({ message: 'MAX_QUANTITY_IS_REQUIRED' })
@@ -74,6 +78,7 @@ export class CreatePromotionLineDto {
     { message: 'MAX_QUANTITY_IS_NUMBER' },
   )
   @Min(1, { message: 'MAX_QUANTITY_MIN_1' })
+  @IsInt({ message: 'MAX_QUANTITY_MUST_BE_INTEGER' })
   maxQuantity: number;
 
   @ApiProperty({ example: 100 })
@@ -82,7 +87,8 @@ export class CreatePromotionLineDto {
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
     { message: 'MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
   )
-  @Min(0, { message: 'MAX_QUANTITY_PER_CUSTOMER_MIN_1' })
+  @Min(1, { message: 'MAX_QUANTITY_PER_CUSTOMER_MIN_1' })
+  @IsInt({ message: 'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_INTEGER' })
   maxQuantityPerCustomer: number;
 
   @ApiProperty({ example: 1_000_000 })
@@ -97,6 +103,48 @@ export class CreatePromotionLineDto {
   @ApiProperty({ example: '' })
   @IsNotEmpty({ message: 'PROMOTION_CODE_IS_REQUIRED' })
   @IsString({ message: 'PROMOTION_CODE_IS_STRING' })
-  @Length(36, 36, { message: 'PROMOTION_CODE_BETWEEN_1_100_CHARACTERS' })
+  @Length(1, 100, { message: 'PROMOTION_CODE_BETWEEN_1_100_CHARACTERS' })
   promotionCode: string;
+
+  @ApiProperty({
+    example: PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT,
+    enum: PromotionTypeEnum,
+  })
+  @IsNotEmpty({ message: 'PROMOTION_LINE_TYPE_IS_REQUIRED' })
+  @IsEnum(PromotionTypeEnum, { message: 'PROMOTION_LINE_TYPE_IS_ENUM' })
+  type: PromotionTypeEnum;
+
+  // promotion detail
+  @ApiProperty({ example: '' })
+  @IsNotEmpty({ message: 'TICKET_GROUP_CODE_IS_REQUIRED' })
+  @IsString({ message: 'TICKET_GROUP_CODE_MUST_BE_STRING' })
+  @Length(1, 100, { message: 'TICKET_GROUP_CODE_MUST_BE_BETWEEN_1_AND_100' })
+  ticketGroupCode: string;
+
+  @ApiProperty({ type: ProductDiscountDto })
+  @ValidateIf(
+    (dto: CreatePromotionLineDto) =>
+      dto.type === PromotionTypeEnum.PRODUCT_DISCOUNT,
+  )
+  @ValidateNested()
+  @Type(() => ProductDiscountDto)
+  productDiscount?: ProductDiscountDto;
+
+  @ApiProperty({ type: ProductDiscountPercentDto })
+  @ValidateIf(
+    (dto: CreatePromotionLineDto) =>
+      dto.type === PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT,
+  )
+  @ValidateNested()
+  @Type(() => ProductDiscountPercentDto)
+  productDiscountPercent?: ProductDiscountPercentDto;
+
+  @ApiProperty({ type: ProductGiveawayDto })
+  @ValidateIf(
+    (dto: CreatePromotionLineDto) =>
+      dto.type === PromotionTypeEnum.PRODUCT_GIVEAWAYS,
+  )
+  @ValidateNested()
+  @Type(() => ProductGiveawayDto)
+  productGiveaway?: ProductGiveawayDto;
 }

@@ -5,6 +5,7 @@ export const mappingTranslate = {
   INACTIVATE: 'Chưa kích hoạt',
   ACTIVE: 'Đã kích hoạt',
   SUSPENSION: 'Tạm ngưng/ Khóa tài khoản',
+  TEST: 'Test',
 
   // base
   IDS_REQUIRE: 'Danh sách id không được để trống',
@@ -248,7 +249,10 @@ export const mappingTranslate = {
   TICKET_GROUP_ID_IS_STRING: 'Id của nhóm vé phải là chuỗi ký tự',
   TICKET_GROUP_ID_IS_36_CHARACTERS: 'Id của nhóm vé phải là 36 ký tự',
   TICKET_GROUP_CODE_ALREADY_EXIST: 'Mã nhóm vé đã tồn tại',
-  TICKET_GROUP_CODE_IS_STRING: 'Mã nhóm vé phải là chuỗi ký tự',
+  TICKET_GROUP_CODE_MUST_BE_STRING: 'Mã nhóm vé phải là chuỗi ký tự',
+  TICKET_GROUP_CODE_IS_REQUIRED: 'Mã của nhóm vé là không được để trống',
+  TICKET_GROUP_CODE_MUST_BE_BETWEEN_1_AND_100:
+    'Mã nhóm vé phải có 1 đến 100 ký tự',
 
   // ticket
   TICKET_CODE_EXISTED: 'Mã vé đã tồn tại',
@@ -283,7 +287,8 @@ export const mappingTranslate = {
   PRICE_LIST_ID_IS_36_CHARACTERS: 'Id của bảng giá phải là 36 ký tự',
   PRICE_LIST_ID_OR_CODE_REQUIRED: 'Id hoặc mã của bảng giá không được để trống',
   PRICE_LIST_CODE_IS_EXIST: 'mã của bảng giá đã tồn tại',
-
+  TICKET_GROUP_EXISTED_IN_PRICE_LIST:
+    'Nhóm vé đã tồn tại trong khác bảng giá đang hoạt động',
   // price details
   PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết bảng giá',
   PRICE_IS_NUMBER: 'Giá phải là số',
@@ -294,6 +299,7 @@ export const mappingTranslate = {
   // promotion
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
+  BUDGET_MUST_BE_INT: 'Ngân sách phải là số nguyên',
   BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
   PROMOTION_STATUS_IS_ON_ACTIVE:
     'Chương trình khuyến mãi đang kích hoạt nên không thể cập nhật ngày bắt đầu',
@@ -308,9 +314,12 @@ export const mappingTranslate = {
   MAX_QUANTITY_MIN_1: 'Số lượng tối đa phải lớn hơn hoặc bằng 1',
   MAX_QUANTITY_IS_REQUIRED: 'Số lượng tối đa không được để trống',
   MAX_QUANTITY_IS_NUMBER: 'Số lượng tối đa phải là số',
+  MAX_QUANTITY_MUST_BE_INTEGER: 'Số lượng tối đa phải là số nguyên',
   MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 1',
+  MAX_QUANTITY_PER_CUSTOMER_MUST_BE_INTEGER:
+    'Số lượng tối đa cho mỗi khách hàng phải 1 số nguyên',
   MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED:
     'Số lượng tối đa cho mỗi khách hàng không được để trống',
   MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
@@ -341,7 +350,47 @@ export const mappingTranslate = {
   PROMOTION_CODE_IS_REQUIRED: 'Mã khuyến mãi không được để trống',
   COUPON_CODE_IS_REQUIRED: 'Mã coupon không được để trống',
   COUPON_CODE_IS_STRING: 'Mã coupon phải là chuỗi ký tự',
-  COUPON_CODE_BETWEEN_1_100_CHARACTERS: 'Mã coupon phải có từ 1-100 ký tự',
+  COUPON_CODE_BETWEEN_1_100_CHARACTERS: 'Mã voucher phải có từ 1-100 ký tự',
+  PROMOTION_LINE_COUPON_CODE_ALREADY_EXIST: 'Mã voucher khuyến mãi đã tồn tại',
+
+  // promotion detail
+  PROMOTION_DETAIL_NOT_CREATED: 'Không thể tạo chi tiết khuyến mãi',
+  PROMOTION_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết khuyến mãi',
+  PROMOTION_DETAIL_ID_MUST_BE_STRING:
+    'Id chi tiết khuyến mãi phải là chuỗi ký tự',
+  PROMOTION_DETAIL_ID_IS_REQUIRED: 'Id chi tiết khuyến mãi không được để trống',
+  PROMOTION_DETAIL_ID_MUST_BE_BETWEEN_1_AND_100_CHARACTERS:
+    'Id chi tiết khuyến mãi phải có từ 1-100 ký tự',
+  QUANTITY_BUY_MUST_BE_INTEGER: 'Số lượng mua phải là số nguyên',
+  QUANTITY_BUY_MUST_BE_GREATER_THAN_0: 'Số lượng mua phải lớn hơn 0',
+  QUANTITY_BUY_IS_REQUIRED: 'Số lượng mua không được để trống',
+  PURCHASE_AMOUNT_MUST_BE_INT: 'Số tiền mua phải là số nguyên',
+  PURCHASE_AMOUNT_IS_REQUIRED: 'Số tiền mua không được để trống',
+  PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền mua phải lớn hơn hoặc bằng 0',
+  REDUCTION_AMOUNT_IS_INT: 'Số tiền được giảm phải là số nguyên',
+  REDUCTION_AMOUNT_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền được giảm phải lớn hơn hoặc bằng 0',
+  REDUCTION_PERCENT_IS_INT: 'Phần trăm được giảm phải là số nguyên',
+  REDUCTION_AMOUNT_IS_REQUIRED: 'Số tiền được giảm không được để trống',
+  REDUCTION_PERCENT_GREATER_THAN_OR_EQUAL_TO_0:
+    'Phần trăm được giảm phải lớn hơn hoặc bằng 0',
+  MAX_REDUCTION_AMOUNT_MUST_BE_INT:
+    'Số tiền được giảm tối đa phải là số nguyên',
+  MAX_REDUCTION_AMOUNT_IS_REQUIRED:
+    'Số tiền được giảm tối đa không được để trống',
+  MAX_REDUCTION_AMOUNT_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền được giảm tối đa phải lớn hơn hoặc bằng 0',
+  PERCENT_DISCOUNT_IS_INT: 'Phần trăm được giảm phải là số nguyên',
+  PERCENT_DISCOUNT_IS_REQUIRED: 'Phần trăm được giảm không được để trống',
+  PERCENT_DISCOUNT_GREATER_THAN_OR_EQUAL_TO_0:
+    'Phần trăm được giảm phải lớn hơn hoặc bằng 0',
+  PERCENT_DISCOUNT_LESS_THAN_OR_EQUAL_TO_100:
+    'Phần trăm được giảm phải nhỏ hơn hoặc bằng 100',
+  QUANTITY_RECEIVE_IS_INT: 'Số lượng được tặng phải là số nguyên',
+  QUANTITY_RECEIVE_IS_REQUIRED: 'Số lượng được tặng không được để trống',
+  QUANTITY_RECEIVE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_1:
+    'Số lượng được tặng phải lớn hơn hoặc bằng 1',
 
   // order
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',

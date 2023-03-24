@@ -44,7 +44,7 @@ export class CreatePriceDetailDto {
   ticketGroupId: string;
 
   @ApiPropertyOptional({ example: 'BGT32023' })
-  @IsString({ message: 'TICKET_GROUP_CODE_IS_STRING' })
+  @IsString({ message: 'TICKET_GROUP_CODE_MUST_BE_STRING' })
   @IsOptional()
   ticketGroupCode: string;
 }

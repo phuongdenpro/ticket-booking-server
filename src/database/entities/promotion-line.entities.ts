@@ -53,7 +53,7 @@ export class PromotionLine {
   maxBudget: number;
 
   @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
-  max_quantity: number;
+  maxQuantity: number;
 
   @Column({
     name: 'max_quantity_per_customer',

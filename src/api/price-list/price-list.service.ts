@@ -43,6 +43,7 @@ export class PriceListService {
     'q.createdAt',
     'q.updatedAt',
     't.id',
+    't.code',
     't.name',
     't.description',
     't.note',
@@ -177,17 +178,25 @@ export class PriceListService {
     const { keywords, startDate, endDate, status, sort } = dto;
 
     const query = this.priceListRepository.createQueryBuilder('q');
-
     if (keywords) {
       query
         .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` });
     }
-    if (status) {
-      let statusBool = true;
-      if (status === ActiveStatusEnum.INACTIVE) statusBool = false;
-      query.andWhere('q.status = :status', { status: statusBool });
+    switch (status) {
+      case ActiveStatusEnum.ACTIVE:
+        query.andWhere('q.status = :status', {
+          status: ActiveStatusEnum.ACTIVE,
+        });
+        break;
+      case ActiveStatusEnum.INACTIVE:
+        query.andWhere('q.status = :status', {
+          status: ActiveStatusEnum.INACTIVE,
+        });
+        break;
+      default:
+        break;
     }
     if (startDate) {
       const newStartDate = new Date(startDate);
@@ -522,10 +531,10 @@ export class PriceListService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-    const priceDetailExist = await this.priceDetailRepository.findOne({
+    const priceDetailCodeExist = await this.priceDetailRepository.findOne({
       where: { code: code },
     });
-    if (priceDetailExist) {
+    if (priceDetailCodeExist) {
       throw new BadRequestException('PRICE_DETAIL_CODE_EXISTED');
     }
 
@@ -550,13 +559,32 @@ export class PriceListService {
       ticketGroup = await this.ticketGroupService.findOneTicketGroupById(
         ticketGroupId,
       );
-    } else {
+    } else if (ticketGroupCode) {
       ticketGroup = await this.ticketGroupService.findOneTicketGroupByCode(
         ticketGroupCode,
       );
     }
     if (!ticketGroup) {
       throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+    }
+    const priceDetailExist = await this.findOnePriceDetail({
+      where: {
+        priceList: {
+          status: ActiveStatusEnum.ACTIVE,
+        },
+        ticketGroup: {
+          id: ticketGroup.id,
+        },
+      },
+      relations: {
+        priceList: true,
+        ticketGroup: true,
+      },
+    });
+    if (priceDetailExist) {
+      throw new BadRequestException('TICKET_GROUP_EXISTED_IN_PRICE_LIST', {
+        description: `Nhóm vé ${ticketGroup?.name} đã tồn tại trong bảng giá có mã ${priceList?.code}`,
+      });
     }
     const priceDetail = new PriceDetail();
     if (price < 0) {
@@ -666,6 +694,25 @@ export class PriceListService {
         throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
       }
       priceDetail.ticketGroup = ticketGroup;
+      const priceDetailExist = await this.findOnePriceDetail({
+        where: {
+          priceList: {
+            status: ActiveStatusEnum.ACTIVE,
+          },
+          ticketGroup: {
+            id: ticketGroup.id,
+          },
+        },
+        relations: {
+          priceList: true,
+          ticketGroup: true,
+        },
+      });
+      if (priceDetailExist) {
+        throw new BadRequestException('TICKET_GROUP_EXISTED_IN_PRICE_LIST', {
+          description: `Nhóm vé ${ticketGroup?.name} đã tồn tại trong bảng giá có mã ${priceDetailExist.priceList?.code}`,
+        });
+      }
     } else if (ticketGroupCode) {
       const ticketGroup =
         await this.ticketGroupService.findOneTicketGroupByCode(ticketGroupCode);
@@ -673,6 +720,25 @@ export class PriceListService {
         throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
       }
       priceDetail.ticketGroup = ticketGroup;
+      const priceDetailExist = await this.findOnePriceDetail({
+        where: {
+          priceList: {
+            status: ActiveStatusEnum.ACTIVE,
+          },
+          ticketGroup: {
+            id: ticketGroup.id,
+          },
+        },
+        relations: {
+          priceList: true,
+          ticketGroup: true,
+        },
+      });
+      if (priceDetailExist) {
+        throw new BadRequestException('TICKET_GROUP_EXISTED_IN_PRICE_LIST', {
+          description: `Nhóm vé ${ticketGroup?.name} đã tồn tại trong bảng giá có mã ${priceDetailExist?.priceList?.code}`,
+        });
+      }
     }
     priceDetail.updatedBy = adminExist.id;
 
@@ -725,6 +791,25 @@ export class PriceListService {
         throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
       }
       priceDetail.ticketGroup = ticketGroup;
+      const priceDetailExist = await this.findOnePriceDetail({
+        where: {
+          priceList: {
+            status: ActiveStatusEnum.ACTIVE,
+          },
+          ticketGroup: {
+            id: ticketGroup.id,
+          },
+        },
+        relations: {
+          priceList: true,
+          ticketGroup: true,
+        },
+      });
+      if (priceDetailExist) {
+        throw new BadRequestException('TICKET_GROUP_EXISTED_IN_PRICE_LIST', {
+          description: `Nhóm vé ${ticketGroup?.name} đã tồn tại trong bảng giá có mã ${priceDetailExist.priceList?.code}`,
+        });
+      }
     } else if (ticketGroupCode) {
       const ticketGroup =
         await this.ticketGroupService.findOneTicketGroupByCode(ticketGroupCode);
@@ -732,6 +817,25 @@ export class PriceListService {
         throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
       }
       priceDetail.ticketGroup = ticketGroup;
+      const priceDetailExist = await this.findOnePriceDetail({
+        where: {
+          priceList: {
+            status: ActiveStatusEnum.ACTIVE,
+          },
+          ticketGroup: {
+            id: ticketGroup.id,
+          },
+        },
+        relations: {
+          priceList: true,
+          ticketGroup: true,
+        },
+      });
+      if (priceDetailExist) {
+        throw new BadRequestException('TICKET_GROUP_EXISTED_IN_PRICE_LIST', {
+          description: `Nhóm vé ${ticketGroup?.name} đã tồn tại trong bảng giá có mã ${priceDetailExist.priceList?.code}`,
+        });
+      }
     }
     priceDetail.updatedBy = adminExist.id;
 

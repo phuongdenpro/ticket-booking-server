@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { Promotion, PromotionDetail, TicketGroup } from '.';
+import { PromotionDetail, TicketGroup } from '.';
 
 @Entity({ name: 'applicable_ticket_group' })
 export class ApplicableTicketGroup {
@@ -19,7 +19,7 @@ export class ApplicableTicketGroup {
     (promotionDetail) => promotionDetail.applicableTicketGroup,
   )
   @JoinColumn([{ name: 'promotion_detail_id', referencedColumnName: 'id' }])
-  promotionDetail: Promotion;
+  promotionDetail: PromotionDetail;
 
   @ManyToOne(
     () => TicketGroup,
