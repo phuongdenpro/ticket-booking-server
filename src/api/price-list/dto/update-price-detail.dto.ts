@@ -1,5 +1,5 @@
-import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, Length, IsNumber, Min } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsOptional, IsNumber, Min } from 'class-validator';
 
 export class UpdatePriceDetailDto {
   @ApiPropertyOptional({ example: 100000 })
@@ -20,15 +20,13 @@ export class UpdatePriceDetailDto {
   @IsOptional()
   note: string;
 
-  @ApiProperty({ example: '1fbaba64-77c4-4403-9d14-73c03e3d0954' })
-  @IsString({ message: 'PRICE_LIST_ID_IS_STRING' })
-  @Length(36, 36, { message: 'PRICE_LIST_ID_IS_36_CHARACTERS' })
-  @IsOptional()
-  priceListId: string;
-
-  @ApiProperty({ example: 'd0adc2a4-386a-45de-bbf3-46d672b0a493' })
+  @ApiPropertyOptional({ example: 'd0adc2a4-386a-45de-bbf3-46d672b0a493' })
   @IsString({ message: 'TICKET_GROUP_ID_IS_STRING' })
-  @Length(36, 36, { message: 'TICKET_GROUP_ID_IS_36_CHARACTERS' })
   @IsOptional()
   ticketGroupId: string;
+
+  @ApiPropertyOptional({ example: 'BGT32023' })
+  @IsString({ message: 'TICKET_CODE_IS_STRING' })
+  @IsOptional()
+  ticketGroupCode: string;
 }

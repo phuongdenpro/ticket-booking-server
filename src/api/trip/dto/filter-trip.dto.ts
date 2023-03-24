@@ -1,5 +1,6 @@
+import { TripStatusEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDate } from 'class-validator';
+import { IsString, IsOptional, IsDate, IsEnum } from 'class-validator';
 
 export class FilterTripDto {
   @ApiPropertyOptional({
@@ -18,6 +19,15 @@ export class FilterTripDto {
   @IsDate({ message: 'TRIP_END_DATE_INVALID' })
   @IsOptional()
   endDate: Date;
+
+  @ApiPropertyOptional({
+    example: TripStatusEnum.ACTIVE,
+    enum: ['', TripStatusEnum.ACTIVE, TripStatusEnum.INACTIVE],
+  })
+  @IsString({ message: 'TRIP_STATUS_IS_STRING' })
+  @IsEnum(TripStatusEnum, { message: 'TRIP_STATUS_IS_ENUM' })
+  @IsOptional()
+  status: TripStatusEnum;
 
   @ApiPropertyOptional({ example: 'd7d44845-b906-4a3c-be7b-232cc555f019' })
   @IsString({ message: 'FROM_STATION_ID_IS_STRING' })

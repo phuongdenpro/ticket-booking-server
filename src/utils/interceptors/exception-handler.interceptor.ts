@@ -16,10 +16,13 @@ const transform = (err): HttpException => {
   Logger.error(err);
 
   if (err instanceof HttpException) {
+    console.log(err['options']['description']);
     err['response']['error'] =
       mappingTranslate[err.getResponse()['message'][0]];
     err['response']['code'] = MESS_CODE[err.message];
-    err['response']['message'] = mappingTranslate[err.message];
+    err['response']['message'] = err['options']['description']
+      ? err['options']['description']
+      : mappingTranslate[err.message];
     return err;
   }
 

@@ -7,12 +7,15 @@ import {
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { ApplicableTicketGroup, PriceDetail, TicketGroupDetail } from '.';
+import { ApplicableTicketGroup, PriceDetail, Ticket, Trip } from '.';
 
 @Entity({ name: 'ticket_group' })
 export class TicketGroup {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'name', type: 'varchar', length: 255, nullable: false })
   name: string;
@@ -50,11 +53,11 @@ export class TicketGroup {
   )
   applicableTicketGroups: ApplicableTicketGroup[];
 
-  @OneToMany(
-    () => TicketGroupDetail,
-    (ticketGroupDetail) => ticketGroupDetail.ticketGroup,
-  )
-  ticketGroupDetail: TicketGroupDetail[];
+  @OneToMany(() => Ticket, (ticket) => ticket.ticketGroup)
+  tickets: Ticket[];
+
+  @OneToMany(() => Trip, (trip) => trip.ticketGroup)
+  trips: Trip[];
 
   @OneToMany(() => PriceDetail, (priceDetail) => priceDetail.ticketGroup)
   priceDetail: PriceDetail[];

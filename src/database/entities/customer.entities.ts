@@ -1,4 +1,4 @@
-import { GenderEnum } from './../../enums';
+import { GenderEnum, UserStatusEnum } from './../../enums';
 import { Entity, OneToMany, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Order, Ward, CustomerGroup } from '.';
 import {
@@ -21,11 +21,12 @@ export class Customer {
 
   @Column({
     name: 'status',
-    type: 'int',
-    default: 0,
+    type: 'varchar',
+    length: 100,
+    default: UserStatusEnum.INACTIVATE,
     nullable: false,
   })
-  status?: number;
+  status?: UserStatusEnum;
 
   @Column({ name: 'phone', type: 'varchar', nullable: true })
   phone?: string;
@@ -33,7 +34,7 @@ export class Customer {
   @Column({ name: 'email', type: 'varchar', nullable: false })
   email?: string;
 
-  @Column({ name: 'fullname', type: 'varchar', nullable: false })
+  @Column({ name: 'full_name', type: 'varchar', nullable: false })
   fullName?: string;
 
   @Column({ name: 'gender', type: 'varchar', default: 'N', nullable: false })
@@ -48,8 +49,11 @@ export class Customer {
   @Column({ name: 'note', type: 'text', nullable: true })
   note?: string;
 
-  @Column({ name: 'birthday', type: 'timestamp', nullable: true })
+  @Column({ name: 'birthday', type: 'date', nullable: true })
   birthday?: Date;
+
+  @Column({ name: 'created_by', type: 'varchar', nullable: true })
+  createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;

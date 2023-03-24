@@ -8,12 +8,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Pagination } from './../../../decorator';
-import { DataSource, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   FilterProvinceDto,
   ProvinceDeleteMultiCode,
   ProvinceDeleteMultiId,
   SaveProvinceDto,
+  UpdateProvinceDto,
 } from './dto';
 
 @Injectable()
@@ -22,12 +23,14 @@ export class ProvinceService {
     @InjectRepository(Province)
     private readonly provinceRepository: Repository<Province>,
     private readonly adminService: AdminService,
-    private dataSource: DataSource,
   ) {}
 
   async findOneProvince(options: any) {
     return await this.provinceRepository.findOne({
       where: { ...options?.where },
+      relations: {
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,
@@ -88,11 +91,19 @@ export class ProvinceService {
 
   // insert a new record
   async createProvince(dto: SaveProvinceDto, userId: string) {
+    const { code, codename, name, type } = dto;
+    const provinceExists = await this.findOneByCode(code, {
+      withDeleted: true,
+    });
+    if (provinceExists) {
+      throw new BadRequestException('PROVINCE_CODE_ALREADY_EXIST');
+    }
+
     const province = new Province();
-    province.name = dto.name;
-    province.type = dto.type;
-    province.code = dto.code;
-    province.codename = dto.codename;
+    province.name = name;
+    province.type = type;
+    province.code = code;
+    province.codename = codename;
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -105,21 +116,20 @@ export class ProvinceService {
   }
 
   // update a record by id
-  async updateById(id: string, dto: SaveProvinceDto, userId: string) {
-    const query = this.provinceRepository.createQueryBuilder('p');
-    const province = await query.where('p.id = :id', { id }).getOne();
-    if (!province) return null;
-    if (dto.name) {
-      province.name = dto.name;
+  async updateById(id: string, dto: UpdateProvinceDto, userId: string) {
+    const { name, type, codename } = dto;
+    const province = await this.findOneById(id);
+    if (!province) {
+      throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    if (dto.type) {
-      province.type = dto.type;
+    if (name) {
+      province.name = name;
     }
-    if (dto.code) {
-      province.code = dto.code;
+    if (type) {
+      province.type = type;
     }
-    if (dto.codename) {
-      province.codename = dto.codename;
+    if (codename) {
+      province.codename = codename;
     }
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
@@ -134,23 +144,20 @@ export class ProvinceService {
   }
 
   // update a record by code
-  async updateByCode(code: number, dto: SaveProvinceDto, userId: string) {
-    const query = this.provinceRepository.createQueryBuilder('p');
-    const province = await query.where('p.code = :code', { code }).getOne();
+  async updateByCode(code: number, dto: UpdateProvinceDto, userId: string) {
+    const { name, type, codename } = dto;
+    const province = await this.findOneByCode(code);
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    if (dto.name) {
-      province.name = dto.name;
+    if (name) {
+      province.name = name;
     }
-    if (dto.type) {
-      province.type = dto.type;
+    if (type) {
+      province.type = type;
     }
-    if (dto.code) {
-      province.code = code;
-    }
-    if (dto.codename) {
-      province.codename = dto.codename;
+    if (codename) {
+      province.codename = codename;
     }
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
@@ -166,8 +173,7 @@ export class ProvinceService {
 
   // delete a record by id
   async deleteById(id: string, userId: string) {
-    const query = this.provinceRepository.createQueryBuilder('p');
-    const province = await query.where('p.id = :id', { id }).getOne();
+    const province = await this.findOneById(id);
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
@@ -185,8 +191,7 @@ export class ProvinceService {
 
   // delete a record by code
   async deleteByCode(code: number, userId: string) {
-    const query = this.provinceRepository.createQueryBuilder('p');
-    const province = await query.where('p.code = :code', { code }).getOne();
+    const province = await this.findOneByCode(code);
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }

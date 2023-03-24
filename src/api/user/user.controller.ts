@@ -12,7 +12,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UserUpdatePasswordDto } from './dto';
+import { UpdateCustomerDto, UserUpdatePasswordDto } from './dto';
 
 @Controller('user')
 @ApiTags('User')
@@ -25,7 +25,16 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async profile(@CurrentUser() user) {
-    return this.userService.profile(user?.['id']);
+    return this.userService.profile(user?.id);
+  }
+
+  @Patch('update-info')
+  @Roles(RoleEnum.CUSTOMER)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateUser(@CurrentUser() user, @Body() dto: UpdateCustomerDto) {
+    return this.userService.updateCustomer(user.id, dto, user.id);
   }
 
   @Patch('password')

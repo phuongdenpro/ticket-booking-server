@@ -15,14 +15,10 @@ import {
 import { CustomerGroupService } from './customer-group.service';
 import {
   SaveCustomerGroupDto,
-  AddCustomerDto,
-  AddMultiCustomerDto,
   FilterCustomerGroupDto,
   DeleteMultiCustomerGroupDto,
   UpdateCustomerGroupDto,
-  RemoveMultiCustomerDto,
   FilterCustomerDto,
-  RemoveCustomerDto,
 } from './dto';
 import {
   CurrentUser,
@@ -194,42 +190,42 @@ export class CustomerGroupController {
     );
   }
 
-  @Post('/add-customer')
-  @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.STAFF)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async addCustomer(@Body() dto: AddCustomerDto, @CurrentUser() user) {
-    return await this.customGroupService.addCustomer(dto, user.id);
-  }
+  // @Post('/add-customer')
+  // @HttpCode(HttpStatus.CREATED)
+  // @Roles(RoleEnum.STAFF)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // async addCustomer(@Body() dto: AddCustomerDto, @CurrentUser() user) {
+  //   return await this.customGroupService.addCustomer(dto, user.id);
+  // }
 
-  @Post('/add-customers')
-  @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.STAFF)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async addCustomers(@Body() dto: AddMultiCustomerDto, @CurrentUser() user) {
-    return await this.customGroupService.addCustomers(dto, user.id);
-  }
+  // @Post('/add-customers')
+  // @HttpCode(HttpStatus.CREATED)
+  // @Roles(RoleEnum.STAFF)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // async addCustomers(@Body() dto: AddMultiCustomerDto, @CurrentUser() user) {
+  //   return await this.customGroupService.addCustomers(dto, user.id);
+  // }
 
-  @Delete('/remove-customer')
-  @HttpCode(HttpStatus.NOT_FOUND)
-  @Roles(RoleEnum.STAFF)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async removeCustomer(@Body() dto: RemoveCustomerDto, @CurrentUser() user) {
-    return await this.customGroupService.removeCustomer(dto, user.id);
-  }
+  // @Delete('/remove-customer')
+  // @HttpCode(HttpStatus.NOT_FOUND)
+  // @Roles(RoleEnum.STAFF)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // async removeCustomer(@Body() dto: RemoveCustomerDto, @CurrentUser() user) {
+  //   return await this.customGroupService.removeCustomer(dto, user.id);
+  // }
 
-  @Delete('/remove-customers')
-  @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async removeCustomers(
-    @Body() dto: RemoveMultiCustomerDto,
-    @CurrentUser() user,
-  ) {
-    return await this.customGroupService.removeCustomers(user.id, dto);
-  }
+  // @Delete('/remove-customers')
+  // @HttpCode(HttpStatus.OK)
+  // @Roles(RoleEnum.STAFF)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // async removeCustomers(
+  //   @Body() dto: RemoveMultiCustomerDto,
+  //   @CurrentUser() user,
+  // ) {
+  //   return await this.customGroupService.removeCustomers(user.id, dto);
+  // }
 }

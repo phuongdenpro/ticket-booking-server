@@ -55,7 +55,7 @@ export class Province {
   })
   public deletedAt?: Date;
 
-  @OneToMany(() => District, (district) => district.parentCode)
+  @OneToMany(() => District, (district) => district.province)
   districts: District[];
 
   @OneToMany(() => TripDetail, (tripDetail) => tripDetail.fromProvince)

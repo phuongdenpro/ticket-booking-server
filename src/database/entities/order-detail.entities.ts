@@ -53,11 +53,11 @@ export class OrderDetail {
   order: Order;
 
   @ManyToOne(() => PriceDetail, (priceDetail) => priceDetail.orderDetails)
-  @JoinColumn({ name: 'price_id', referencedColumnName: 'id' })
+  @JoinColumn({ name: 'price_detail_id', referencedColumnName: 'id' })
   priceDetail: PriceDetail;
 
   @OneToOne(() => TicketDetail, (ticketDetail) => ticketDetail.orderDetail)
-  @JoinColumn({ name: 'ticket_id', referencedColumnName: 'id' })
+  @JoinColumn({ name: 'ticket_detail_id', referencedColumnName: 'id' })
   ticketDetail: TicketDetail;
 
   @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.orderRefundDetail)

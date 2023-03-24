@@ -1,8 +1,10 @@
+import { PromotionTypeEnum } from './../../enums';
 import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
+  OneToOne,
   ManyToOne,
   UpdateDateColumn,
   PrimaryGeneratedColumn,
@@ -19,21 +21,47 @@ export class PromotionLine {
   code: string;
 
   @Column({
-    name: 'promotion_code',
+    name: 'coupon_code',
     type: 'varchar',
     length: 20,
     nullable: false,
   })
-  promotionCode: string;
+  couponCode: string;
+
+  @Column({ name: 'title', type: 'varchar', length: 200, nullable: false })
+  title: string;
+
+  @Column({ name: 'description', type: 'text' })
+  description: string;
+
+  @Column({ name: 'note', type: 'text' })
+  note: string;
 
   @Column({ name: 'start_date', type: 'timestamp', nullable: false })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
+  @Column({ name: 'end_date', type: 'timestamp', nullable: false })
   endDate: Date;
 
-  @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
-  type: string;
+  @Column({ name: 'type', type: 'varchar', length: 200, nullable: false })
+  type: PromotionTypeEnum;
+
+  @Column({ name: 'budget', type: 'double', nullable: false, default: 0 })
+  budget: number;
+
+  @Column({ name: 'budget', type: 'double', nullable: false, default: 0 })
+  maxBudget: number;
+
+  @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
+  maxQuantity: number;
+
+  @Column({
+    name: 'max_quantity_per_customer',
+    type: 'int',
+    nullable: false,
+    default: 1,
+  })
+  maxQuantityPerCustomer: number;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
@@ -56,11 +84,10 @@ export class PromotionLine {
   public deletedAt?: Date;
 
   // relationships
-  @ManyToOne(
+  @OneToOne(
     () => PromotionDetail,
     (promotionDetail) => promotionDetail.promotionLine,
   )
-  @JoinColumn({ name: 'promotion_detail_id', referencedColumnName: 'id' })
   promotionDetail: PromotionDetail;
 
   @ManyToOne(

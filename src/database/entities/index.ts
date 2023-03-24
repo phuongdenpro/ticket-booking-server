@@ -1,6 +1,5 @@
 export * from './applicable-customer-group.entities';
 export * from './applicable-ticket-group.entities';
-export * from './applicable-price-detail.entities';
 export * from './customer-group.entities';
 export * from './customer.entities';
 export * from './vi-address-district.entities';
@@ -19,7 +18,6 @@ export * from './seat.entities';
 export * from './staff.entities';
 export * from './station.entities';
 export * from './ticket-detail.entities';
-export * from './ticket-group-detail.entities';
 export * from './ticket-group.entities';
 export * from './ticket.entities';
 export * from './trip-detail.entities';

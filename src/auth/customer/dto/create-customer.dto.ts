@@ -10,6 +10,8 @@ import {
   MaxLength,
   IsEmail,
   IsPhoneNumber,
+  IsNumber,
+  Length,
 } from 'class-validator';
 
 export class CustomerRegisterDto {
@@ -47,8 +49,25 @@ export class CustomerRegisterDto {
   birthday?: Date;
 
   @ApiPropertyOptional({ example: GenderEnum.OTHER, enum: GenderEnum })
-  @IsEnum(GenderEnum, { message: 'GENDER_IS_ENUM' })
+  @IsEnum(['', GenderEnum.MALE, GenderEnum.FEMALE, GenderEnum.OTHER], {
+    message: 'GENDER_IS_ENUM',
+  })
   @IsString({ message: 'GENDER_IS_STRING' })
   @IsOptional()
   gender?: GenderEnum;
+
+  @ApiPropertyOptional({
+    example: 'Demo',
+  })
+  @IsString({ message: 'ADDRESS_IS_STRING' })
+  @IsOptional()
+  address: string;
+
+  @ApiPropertyOptional({ example: 26914 })
+  @IsNumber(
+    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
+    { message: 'WARD_CODE_IS_NUMBER' },
+  )
+  @IsOptional()
+  wardCode?: number;
 }

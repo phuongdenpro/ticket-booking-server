@@ -5,6 +5,7 @@ export const mappingTranslate = {
   INACTIVATE: 'Chưa kích hoạt',
   ACTIVE: 'Đã kích hoạt',
   SUSPENSION: 'Tạm ngưng/ Khóa tài khoản',
+  TEST: 'Test',
 
   // base
   IDS_REQUIRE: 'Danh sách id không được để trống',
@@ -12,6 +13,9 @@ export const mappingTranslate = {
   NAME_IS_REQUIRED: 'Tên không được để trống',
   NAME_IS_STRING: 'Tên phải là chuỗi ký tự',
   NAME_LENGTH: 'Tên phải từ 1 đến 100 ký tự',
+  TITLE_IS_REQUIRED: 'Tiên đề không được để trống',
+  TITLE_IS_STRING: 'Tiên đề phải là chuỗi ký tự',
+  TITLE_LENGTH: 'Tiên đề phải từ 1 đến 100 ký tự',
   INVALID_STRING: 'Phải là chuỗi ký tự.',
   INVALID_DATE: 'Ngày không đúng định dạng.',
   DESCRIPTION_IS_STRING: 'Mô tả thông tin phải là chuỗi ký tự',
@@ -82,18 +86,23 @@ export const mappingTranslate = {
   CUSTOMER_ID_MUST_BE_36_CHARACTERS: 'Mã khách hàng phải có 36 ký tự',
   CUSTOMER_ID_IS_ARRAY: 'Mã khách hàng phải là mảng',
   CUSTOMER_STATUS_IS_ENUM: 'Trạng thái khách hàng không hợp lệ',
+  CUSTOMER_STATUS_IS_STRING: 'Trạng thái khách hàng phải là chuỗi',
 
   // customer group
   CUSTOMER_GROUP_NOT_FOUND: 'Không tìm thấy nhóm khách hàng',
-  CUSTOMER_GROUP_ID_IS_REQUIRED: 'Mã nhóm khách hàng không được để trống',
-  CUSTOMER_GROUP_ID_IS_STRING: 'Mã nhóm khách hàng phải là chuỗi ký tự',
+  CUSTOMER_GROUP_ID_IS_REQUIRED: 'Id nhóm khách hàng không được để trống',
+  CUSTOMER_GROUP_ID_IS_STRING: 'Id nhóm khách hàng phải là chuỗi ký tự',
+  CUSTOMER_GROUP_CODE_IS_STRING: 'Mã nhóm khách hàng phải là chuỗi ký tự',
   CUSTOMER_GROUP_NAME_IS_STRING: 'Tên nhóm khách hàng phải là chuỗi ký tự',
   CUSTOMER_GROUP_ID_MUST_BE_36_CHARACTERS:
     'Mã nhóm khách hàng phải có 36 ký tự',
   CUSTOMER_GROUP_HAS_CUSTOMER: 'Nhóm khách hàng vẫn còn khách hàng',
-  CUSTOMER_GROUP_CODE_EXIST: 'Mã nhóm khách hàng đã tồn tại',
+  CUSTOMER_GROUP_CODE_EXIST: 'Id nhóm khách hàng đã tồn tại',
   CUSTOMER_ALREADY_IN_GROUP: 'Khách hàng đã tồn tại trong nhóm',
   CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
+  CUSTOMER_GROUP_HAS_CUSTOMERS: 'Nhóm khách hàng vẫn còn khách hàng',
+  CUSTOMER_GROUP_ID_OR_CUSTOMER_GROUP_CODE_REQUIRED:
+    'Id nhóm khách hàng hoặc mã nhóm khách hàng không được để trống',
 
   // image resource
   INVALID_IMAGE_URL: 'url ảnh không đúng định dạng',
@@ -112,6 +121,7 @@ export const mappingTranslate = {
   PROVINCE_TYPE_IS_REQUIRED: 'loại tỉnh thành không được để trống',
   PROVINCE_TYPE_BETWEEN_1_50_CHARACTERS:
     'loại tỉnh thành phải từ 1 đến 50 ký tự',
+  PROVINCE_CODE_ALREADY_EXIST: 'mã tỉnh/thành phố đã tồn tại',
 
   // district
   DISTRICT_NOT_FOUND: 'Không tìm thấy quận/huyện',
@@ -124,11 +134,13 @@ export const mappingTranslate = {
 
   // ward
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
-  WARD_ID_IS_REQUIRED: 'Mã phường/xã không được để trống',
-  WARD_ID_IS_NUMBER: 'Mã phường/xã phải là số',
+  WARD_ID_IS_REQUIRED: 'Id phường/xã không được để trống',
+  WARD_ID_IS_NUMBER: 'Id phường/xã phải là số',
+  WARD_CODE_IS_NUMBER: 'Mã phường/xã phải là số',
   WARD_TYPE_IS_STRING: 'Loại phường/xã phải là chuỗi ký tự',
   WARD_TYPE_BETWEEN_1_50_CHARACTERS: 'loại phường/xã phải từ 1 đến 50 ký tự',
   WARD_TYPE_IS_REQUIRED: 'loại phường/xã không được để trống',
+  WARD_CODE_ALREADY_EXIST: 'mã phường/xã đã tồn tại',
 
   // station
   STATION_CODE_EXISTED: 'Mã bến xe đã tồn tại ở một bến xe khác',
@@ -167,8 +179,10 @@ export const mappingTranslate = {
   TRIP_ID_REQUIRED: 'Id của tuyến đi là không được để trống',
   TRIP_ID_IS_STRING: 'Id của tuyến đi phải là chuỗi ký tự',
   TRIP_ID_INVALID: 'Id của tuyến đi không hợp lệ',
-  TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
+  TRIP_CODE_IS_STRING: 'Mã của tuyến đi phải là chuỗi ký tự',
   TRIP_CODE_EXIST: 'Mã tuyến đi đã tồn tại',
+  TRIP_ID_OR_CODE_REQUIRED: 'Id hoặc mã của tuyến đi không được để trống',
+  TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
@@ -185,7 +199,8 @@ export const mappingTranslate = {
   TO_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
   TO_STATION_ID_IS_STRING: 'Mã bến xe đi phải là chuỗi ký tự',
   TO_STATION_ID_IS_36_CHARACTERS: 'Mã bến xe đi phải là 36 ký tự',
-  TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM: 'Trạng thái tuyến đi không hợp lệ',
+  TRIP_STATUS_IS_ENUM: 'Trạng thái tuyến đi không hợp lệ',
+  TRIP_STATUS_IS_STRING: 'Trạng thái tuyến đi phải là chuỗi ký tự',
   START_DATE_IS_DATE: 'Ngày bắt đầu phải là ngày',
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
 
@@ -212,6 +227,7 @@ export const mappingTranslate = {
   VEHICLE_ID_REQUIRED: 'Id của xe là không được để trống',
   VEHICLE_ID_IS_STRING: 'Id của xe phải là chuỗi ký tự',
   VEHICLE_ID_INVALID: 'Id của xe không hợp lệ',
+  VEHICLE_CODE_ALREADY_EXIST: 'Mã xe đã tồn tại',
   LICENSE_PLATE_INVALID: 'Biển số xe không hợp lệ',
   LICENSE_PLATE_REQUIRED: 'Biển số xe không hợp lệ',
   LICENSE_PLATE_STRING: 'Biển số xe không hợp lệ',
@@ -232,6 +248,11 @@ export const mappingTranslate = {
   TICKET_GROUP_ID_IS_REQUIRED: 'Id của nhóm vé là không được để trống',
   TICKET_GROUP_ID_IS_STRING: 'Id của nhóm vé phải là chuỗi ký tự',
   TICKET_GROUP_ID_IS_36_CHARACTERS: 'Id của nhóm vé phải là 36 ký tự',
+  TICKET_GROUP_CODE_ALREADY_EXIST: 'Mã nhóm vé đã tồn tại',
+  TICKET_GROUP_CODE_MUST_BE_STRING: 'Mã nhóm vé phải là chuỗi ký tự',
+  TICKET_GROUP_CODE_IS_REQUIRED: 'Mã của nhóm vé là không được để trống',
+  TICKET_GROUP_CODE_MUST_BE_BETWEEN_1_AND_100:
+    'Mã nhóm vé phải có 1 đến 100 ký tự',
 
   // ticket
   TICKET_CODE_EXISTED: 'Mã vé đã tồn tại',
@@ -244,10 +265,15 @@ export const mappingTranslate = {
   TICKET_NOT_FOUND: 'Không tìm thấy thông tin vé',
   TICKET_ID_IS_STRING: 'Id của vé phải là chuỗi ký tự',
   TICKET_ID_IS_REQUIRED: 'Id của vé là không được để trống',
-  TICKET_CODE_IS_STRING: 'Id của vé phải là chuỗi ký tự',
+  TICKET_CODE_IS_REQUIRED: 'Mã vé là không được để trống',
+  TICKET_CODE_IS_STRING: 'Mã của vé phải là chuỗi ký tự',
+  TICKET_CODE_BETWEEN_1_100_CHARACTERS: 'Mã vé phải có 1 đến 100 ký tự',
   TICKET_STATUS_IS_STRING: 'trạng thái của vé phải là chuỗi',
   TICKET_STATUS_IS_ENUM: 'Trạng thái của vé không hợp lệ',
   TICKET_ID_IS_36_CHARACTERS: 'Id của vé phải là 36 ký tự',
+  TICKET_DETAIL_IS_SOLD: 'Vé này đã được bán',
+  TICKET_GROUP_ID_OR_CODE_REQUIRED:
+    'Id hoặc mã của nhóm vé không được để trống',
 
   // price list
   PRICE_LIST_STATUS_INVALID:
@@ -259,10 +285,12 @@ export const mappingTranslate = {
   PRICE_LIST_ID_IS_STRING: 'Id của bảng giá phải là chuỗi ký tự',
   PRICE_LIST_ID_IS_REQUIRED: 'Id của bảng giá không được để trống',
   PRICE_LIST_ID_IS_36_CHARACTERS: 'Id của bảng giá phải là 36 ký tự',
+  PRICE_LIST_ID_OR_CODE_REQUIRED: 'Id hoặc mã của bảng giá không được để trống',
   PRICE_LIST_CODE_IS_EXIST: 'mã của bảng giá đã tồn tại',
-
+  TICKET_GROUP_EXISTED_IN_PRICE_LIST:
+    'Nhóm vé đã tồn tại trong khác bảng giá đang hoạt động',
   // price details
-  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết giá',
+  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết bảng giá',
   PRICE_IS_NUMBER: 'Giá phải là số',
   PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Giá phải lớn hơn hoặc bằng 0',
   PRICE_IS_TOO_BIG: 'Giá lớn hơn miền giá trị của double',
@@ -271,18 +299,27 @@ export const mappingTranslate = {
   // promotion
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
-  BUDGET_MIN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
+  BUDGET_MUST_BE_INT: 'Ngân sách phải là số nguyên',
+  BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
+  PROMOTION_STATUS_IS_ON_ACTIVE:
+    'Chương trình khuyến mãi đang kích hoạt nên không thể cập nhật ngày bắt đầu',
+  PROMOTION_NOT_FOUND: 'Không tìm thấy chương trình khuyến mãi',
   PROMOTION_CODE_EXISTED: 'Mã khuyến mãi đã tồn tại',
-  PROMOTION_TYPE_IS_STRING: 'Loại chương trình khuyến mãi phải là chuỗi ký tự',
-  PROMOTION_TYPE_IS_REQUIRED: 'Chương trình khuyến mãi không được để trống',
-  PROMOTION_TYPE_IS_ENUM:
-    'Chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Tặng sản phẩm", "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
+  PROMOTION_STATUS_IS_STRING:
+    'Trạng thái chương trình khuyến mãi phải là chuỗi ký tự',
+  PROMOTION_STATUS_IS_REQUIRED:
+    'Trạng thái chương trình khuyến mãi không được để trống',
+  PROMOTION_STATUS_IS_ENUM:
+    'Trạng thái chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Đang hoạt động", "Ngừng hoạt động", "Hết hạn", "Hết số lượng", "Hết ngân sách"',
   MAX_QUANTITY_MIN_1: 'Số lượng tối đa phải lớn hơn hoặc bằng 1',
   MAX_QUANTITY_IS_REQUIRED: 'Số lượng tối đa không được để trống',
   MAX_QUANTITY_IS_NUMBER: 'Số lượng tối đa phải là số',
+  MAX_QUANTITY_MUST_BE_INTEGER: 'Số lượng tối đa phải là số nguyên',
+  MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 1',
-  MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
+  MAX_QUANTITY_PER_CUSTOMER_MUST_BE_INTEGER:
+    'Số lượng tối đa cho mỗi khách hàng phải 1 số nguyên',
   MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED:
     'Số lượng tối đa cho mỗi khách hàng không được để trống',
   MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
@@ -297,9 +334,66 @@ export const mappingTranslate = {
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
+  PROMOTION_ID_IS_REQUIRED:
+    'Id của chương trình khuyến mãi không được để trống',
+  PROMOTION_ID_IS_36_CHARACTERS:
+    'Id của chương trình khuyến mãi phải là 36 ký tự',
+  PROMOTION_ID_IS_STRING: 'Id của chương trình khuyến mãi phải là chuỗi ký tự',
+
+  // promotion line
+  PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy khuyến mãi',
+  PROMOTION_LINE_TYPE_IS_STRING: 'Loại khuyến mãi phải là chuỗi ký tự',
+  PROMOTION_LINE_TYPE_IS_REQUIRED: 'Loại khuyến mãi không được để trống',
+  PROMOTION_LINE_TYPE_IS_ENUM:
+    'Loại khuyến mãi phải thuộc 1 trong các loại sau: "Tặng sản phẩm", "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
+  PROMOTION_LINE_CODE_ALREADY_EXIST: 'Mã khuyến mãi đã tồn tại',
+  PROMOTION_CODE_IS_REQUIRED: 'Mã khuyến mãi không được để trống',
+  COUPON_CODE_IS_REQUIRED: 'Mã coupon không được để trống',
+  COUPON_CODE_IS_STRING: 'Mã coupon phải là chuỗi ký tự',
+  COUPON_CODE_BETWEEN_1_100_CHARACTERS: 'Mã voucher phải có từ 1-100 ký tự',
+  PROMOTION_LINE_COUPON_CODE_ALREADY_EXIST: 'Mã voucher khuyến mãi đã tồn tại',
+
+  // promotion detail
+  PROMOTION_DETAIL_NOT_CREATED: 'Không thể tạo chi tiết khuyến mãi',
+  PROMOTION_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết khuyến mãi',
+  PROMOTION_DETAIL_ID_MUST_BE_STRING:
+    'Id chi tiết khuyến mãi phải là chuỗi ký tự',
+  PROMOTION_DETAIL_ID_IS_REQUIRED: 'Id chi tiết khuyến mãi không được để trống',
+  PROMOTION_DETAIL_ID_MUST_BE_BETWEEN_1_AND_100_CHARACTERS:
+    'Id chi tiết khuyến mãi phải có từ 1-100 ký tự',
+  QUANTITY_BUY_MUST_BE_INTEGER: 'Số lượng mua phải là số nguyên',
+  QUANTITY_BUY_MUST_BE_GREATER_THAN_0: 'Số lượng mua phải lớn hơn 0',
+  QUANTITY_BUY_IS_REQUIRED: 'Số lượng mua không được để trống',
+  PURCHASE_AMOUNT_MUST_BE_INT: 'Số tiền mua phải là số nguyên',
+  PURCHASE_AMOUNT_IS_REQUIRED: 'Số tiền mua không được để trống',
+  PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền mua phải lớn hơn hoặc bằng 0',
+  REDUCTION_AMOUNT_IS_INT: 'Số tiền được giảm phải là số nguyên',
+  REDUCTION_AMOUNT_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền được giảm phải lớn hơn hoặc bằng 0',
+  REDUCTION_PERCENT_IS_INT: 'Phần trăm được giảm phải là số nguyên',
+  REDUCTION_AMOUNT_IS_REQUIRED: 'Số tiền được giảm không được để trống',
+  REDUCTION_PERCENT_GREATER_THAN_OR_EQUAL_TO_0:
+    'Phần trăm được giảm phải lớn hơn hoặc bằng 0',
+  MAX_REDUCTION_AMOUNT_MUST_BE_INT:
+    'Số tiền được giảm tối đa phải là số nguyên',
+  MAX_REDUCTION_AMOUNT_IS_REQUIRED:
+    'Số tiền được giảm tối đa không được để trống',
+  MAX_REDUCTION_AMOUNT_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền được giảm tối đa phải lớn hơn hoặc bằng 0',
+  PERCENT_DISCOUNT_IS_INT: 'Phần trăm được giảm phải là số nguyên',
+  PERCENT_DISCOUNT_IS_REQUIRED: 'Phần trăm được giảm không được để trống',
+  PERCENT_DISCOUNT_GREATER_THAN_OR_EQUAL_TO_0:
+    'Phần trăm được giảm phải lớn hơn hoặc bằng 0',
+  PERCENT_DISCOUNT_LESS_THAN_OR_EQUAL_TO_100:
+    'Phần trăm được giảm phải nhỏ hơn hoặc bằng 100',
+  QUANTITY_RECEIVE_IS_INT: 'Số lượng được tặng phải là số nguyên',
+  QUANTITY_RECEIVE_IS_REQUIRED: 'Số lượng được tặng không được để trống',
+  QUANTITY_RECEIVE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_1:
+    'Số lượng được tặng phải lớn hơn hoặc bằng 1',
 
   // order
-  ORDER_NOT_FOUND: 'Không tìm thấy đơn hàng',
+  ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',
   ORDER_STATUS_IS_STRING: 'Trạng thái của đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_ENUM: 'Trạng thái của đơn hàng không hợp lệ',
   ORDER_ID_IS_36_CHARACTERS: 'Id của đơn hàng phải là 36 ký tự',

@@ -7,9 +7,9 @@ import {
   DeleteDateColumn,
   JoinColumn,
   OneToMany,
-  ManyToOne,
+  OneToOne,
 } from 'typeorm';
-import { ApplicableTicketGroup, Promotion, PromotionLine } from '.';
+import { ApplicableTicketGroup, PromotionLine } from '.';
 
 @Entity({ name: 'promotion_detail' })
 export class PromotionDetail {
@@ -22,17 +22,17 @@ export class PromotionDetail {
   @Column({ name: 'quantity_receive', type: 'int', default: 1 })
   quantityReceive: number;
 
-  @Column({ name: 'total_purchase_amount', type: 'double', default: 0 })
-  totalPurchaseAmount: number;
+  @Column({ name: 'purchase_amount', type: 'double', default: 0 })
+  purchaseAmount: number;
 
   @Column({ name: 'reduction_amount', type: 'double', default: 0 })
   reductionAmount: number;
 
-  @Column({ name: 'percent_reduction', type: 'double', default: 0 })
-  percentReduction: number;
+  @Column({ name: 'percent_discount', type: 'double', default: 0 })
+  percentDiscount: number;
 
   @Column({ name: 'maximum_reduction_amount', type: 'double', default: 0 })
-  maximumReductionAmount: number;
+  maxReductionAmount: number;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
@@ -49,16 +49,12 @@ export class PromotionDetail {
   public deletedAt?: Date;
 
   // relationships
-  @OneToMany(
+  @OneToOne(
     () => PromotionLine,
     (promotionLine) => promotionLine.promotionDetail,
   )
   @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
-  promotionLine: PromotionLine[];
-
-  @ManyToOne(() => Promotion, (promotionLine) => promotionLine.promotionDetail)
-  @JoinColumn({ name: 'promotion_id', referencedColumnName: 'id' })
-  promotion: Promotion;
+  promotionLine: PromotionLine;
 
   @OneToMany(
     () => ApplicableTicketGroup,

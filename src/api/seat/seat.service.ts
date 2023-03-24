@@ -1,4 +1,4 @@
-import { SeatTypeEnum, SortEnum } from './../../enums';
+import { SeatTypeEnum, SortEnum, UserStatusEnum } from './../../enums';
 import {
   BadRequestException,
   Injectable,
@@ -24,15 +24,17 @@ export class SeatService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneSeatById(id: string, options?: any) {
+  async findOneSeat(options: any) {
     return await this.seatRepository.findOne({
-      where: { id, ...options?.where },
-      relations: [].concat(options?.relations || []),
+      where: { ...options?.where },
+      relations: {
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,
       },
-      orderBy: {
+      order: {
         createdAt: SortEnum.DESC,
         ...options?.orderBy,
       },
@@ -40,20 +42,38 @@ export class SeatService {
     });
   }
 
+  async findOneSeatById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneSeat(options);
+  }
+
   async findOneSeatByCode(code: string, options?: any) {
-    return await this.seatRepository.findOne({
-      where: { code, ...options?.where },
-      relations: [].concat(options?.relations || []),
-      select: {
-        deletedAt: false,
-        ...options?.select,
-      },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options,
-    });
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneSeat(options);
+  }
+
+  async getSeatById(id: string, options?: any) {
+    const seat = await this.findOneSeatById(id, options);
+    if (!seat) {
+      throw new NotFoundException('SEAT_NOT_FOUND');
+    }
+    return seat;
+  }
+
+  async getSeatByCode(code: string, options?: any) {
+    const seat = await this.findOneSeatByCode(code, options);
+    if (!seat) {
+      throw new NotFoundException('SEAT_NOT_FOUND');
+    }
+    return seat;
   }
 
   async createSeat(dto: CreateSeatDto, userId: string) {
@@ -74,10 +94,8 @@ export class SeatService {
       throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
 
-    const seatExist = this.getSeatByCode(code, {
-      withDeleted: true,
-    });
-    if (!seatExist) {
+    const seatExist = await this.findOneSeatByCode(code);
+    if (seatExist) {
       throw new BadRequestException('SEAT_CODE_ALREADY_EXIST');
     }
     const seat = new Seat();
@@ -179,22 +197,6 @@ export class SeatService {
     return { dataResult, pagination, total };
   }
 
-  async getSeatById(id: string, options?: any) {
-    const seat = await this.findOneSeatById(id, options);
-    if (!seat) {
-      throw new NotFoundException('SEAT_NOT_FOUND');
-    }
-    return seat;
-  }
-
-  async getSeatByCode(code: string, options?: any) {
-    const seat = await this.findOneSeatByCode(code, options);
-    if (!seat) {
-      throw new NotFoundException('SEAT_NOT_FOUND');
-    }
-    return seat;
-  }
-
   async findAllSeatByVehicleId(vehicleId: string, pagination?: Pagination) {
     const query = this.seatRepository.createQueryBuilder('q');
     query.where('q.vehicle = :vehicleId', { vehicleId });
@@ -234,7 +236,10 @@ export class SeatService {
     if (!adminExist || !customerExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (!adminExist.isActive || customerExist.status == 0) {
+    if (
+      !adminExist.isActive ||
+      customerExist.status === UserStatusEnum.INACTIVATE
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
@@ -255,6 +260,9 @@ export class SeatService {
       const vehicle = await this.dataSource
         .getRepository(Vehicle)
         .findOne({ where: { id: vehicleId } });
+      if (!vehicle) {
+        throw new BadRequestException('VEHICLE_NOT_FOUND');
+      }
       seat.vehicle = vehicle;
     }
     seat.updatedBy = adminExist.id;
@@ -296,6 +304,9 @@ export class SeatService {
       const vehicle = await this.dataSource
         .getRepository(Vehicle)
         .findOne({ where: { id: vehicleId } });
+      if (!vehicle) {
+        throw new BadRequestException('VEHICLE_NOT_FOUND');
+      }
       seat.vehicle = vehicle;
     }
     seat.updatedBy = adminExist.id;
@@ -305,15 +316,15 @@ export class SeatService {
   }
 
   async deleteSeatById(id: string, userId: string) {
-    const seat = await this.seatRepository.findOne({ where: { id } });
-    if (!seat) {
-      throw new BadRequestException('SEAT_NOT_FOUND');
-    }
+    const seat = await this.getSeatById(id);
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     seat.updatedBy = adminExist.id;
     seat.deletedAt = new Date();
@@ -321,12 +332,90 @@ export class SeatService {
     return await this.seatRepository.save(seat);
   }
 
-  async deleteMultipleTrip(userId: string, dto: SeatDeleteMultiInput) {
+  async deleteSeatByCode(code: string, userId: string) {
+    const seat = await this.getSeatByCode(code);
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    seat.updatedBy = adminExist.id;
+    seat.deletedAt = new Date();
+
+    return await this.seatRepository.save(seat);
+  }
+
+  async deleteMultipleTripById(userId: string, dto: SeatDeleteMultiInput) {
     try {
-      const { ids } = dto;
+      const { data: ids } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: userId } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
 
       const list = await Promise.all(
-        ids.map(async (id) => await this.deleteSeatById(id, userId)),
+        ids.map(async (id) => {
+          const seat = await this.findOneSeatById(id);
+          if (!seat) {
+            return {
+              id: id,
+              message: 'Không tìm thấy ghế',
+            };
+          }
+          seat.updatedBy = adminExist.id;
+          seat.deletedAt = new Date();
+          const saveSeat = await this.seatRepository.save(seat);
+          return {
+            id: saveSeat.id,
+            message: 'Xoá ghế thành công',
+          };
+        }),
+      );
+      return list;
+    } catch (err) {
+      throw new BadRequestException(err.message);
+    }
+  }
+
+  async deleteMultipleTripByCode(userId: string, dto: SeatDeleteMultiInput) {
+    try {
+      const { data: codes } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: userId } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
+
+      const list = await Promise.all(
+        codes.map(async (code) => {
+          const seat = await this.findOneSeatByCode(code);
+          if (!seat) {
+            return {
+              code: code,
+              message: 'Không tìm thấy ghế',
+            };
+          }
+          seat.updatedBy = adminExist.id;
+          seat.deletedAt = new Date();
+          const saveSeat = await this.seatRepository.save(seat);
+          return {
+            id: saveSeat.id,
+            message: 'Xoá ghế thành công',
+          };
+        }),
       );
       return list;
     } catch (err) {

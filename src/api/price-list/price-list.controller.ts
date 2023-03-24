@@ -65,7 +65,7 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getPriceListById(@Param('id') id: string) {
-    return await this.priceListService.findOnePriceListById(id);
+    return await this.priceListService.getPriceListById(id);
   }
 
   @Get('code/:code')
@@ -74,7 +74,7 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getPriceListByCode(@Param('code') code: string) {
-    return await this.priceListService.findOnePriceListByCode(code);
+    return await this.priceListService.getPriceListByCode(code);
   }
 
   @Patch('id/:id')
@@ -159,7 +159,17 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getPriceDetailById(@Param('id') id: string) {
-    return await this.priceListService.getPriceDetailById(id);
+    return await this.priceListService.getPriceDetailById(id, {
+      select: {
+        priceList: {
+          id: true,
+          code: true,
+        },
+      },
+      relations: {
+        priceList: true,
+      },
+    });
   }
 
   @Get('price-detail/code/:code')
@@ -168,7 +178,17 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getPriceDetailByCode(@Param('code') code: string) {
-    return await this.priceListService.getPriceDetailByCode(code);
+    return await this.priceListService.getPriceDetailByCode(code, {
+      select: {
+        priceList: {
+          id: true,
+          code: true,
+        },
+      },
+      relations: {
+        priceList: true,
+      },
+    });
   }
 
   @Patch('price-detail/id/:id')

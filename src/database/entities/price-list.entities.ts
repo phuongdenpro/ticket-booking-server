@@ -1,3 +1,4 @@
+import { ActiveStatusEnum } from './../../enums';
 import {
   Column,
   Entity,
@@ -20,10 +21,10 @@ export class PriceList {
   @Column({ name: 'name', type: 'varchar', length: 255, nullable: false })
   name: string;
 
-  @Column({ name: 'start_date', type: 'timestamp', nullable: false })
+  @Column({ name: 'start_date', type: 'date', nullable: false })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
+  @Column({ name: 'end_date', type: 'date', nullable: true })
   endDate: Date;
 
   @Column({ name: 'note', type: 'text' })
@@ -31,11 +32,11 @@ export class PriceList {
 
   @Column({
     name: 'status',
-    type: 'bool',
-    default: true,
+    type: 'varchar',
+    default: ActiveStatusEnum.INACTIVE,
     nullable: false,
   })
-  status: boolean;
+  status: ActiveStatusEnum;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;

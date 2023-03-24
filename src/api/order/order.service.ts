@@ -19,14 +19,17 @@ import {
   SortEnum,
   SeatTypeEnum,
   TicketStatusEnum,
+  UserStatusEnum,
 } from './../../enums';
-import { generateOrderId } from './../../utils';
+import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
 import { AdminService } from '../admin/admin.service';
 import { SeatService } from '../seat/seat.service';
 import { TicketService } from '../ticket/ticket.service';
 import { PriceListService } from '../price-list/price-list.service';
 import { UpdateTicketDetailDto } from '../ticket/dto';
+import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class OrderService {
@@ -44,12 +47,15 @@ export class OrderService {
   ) {}
 
   // order
-  async findOrderById(id: string, options?: any) {
+  async findOneOrder(options: any) {
     return await this.orderRepository.findOne({
-      where: { id, ...options?.where },
-      relations: ['orderDetails'].concat(options?.relations || []),
+      where: { ...options?.where },
+      relations: {
+        orderDetails: true,
+        ...options?.relations,
+      },
       select: { deletedAt: false, ...options?.select },
-      orderBy: {
+      order: {
         createdAt: SortEnum.DESC,
         ...options?.orderBy,
       },
@@ -57,17 +63,22 @@ export class OrderService {
     });
   }
 
-  async findOrderByCode(code: string, options?: any) {
-    return await this.orderRepository.findOne({
-      where: { code, ...options?.where },
-      relations: ['orderDetails'].concat(options?.relations || []),
-      select: { deletedAt: false, ...options?.select },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
+  async findOneOrderById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneOrder(options);
+  }
+
+  async findOneOrderByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneOrder(options);
   }
 
   async createOrder(dto: CreateOrderDto, userId: string) {
@@ -78,7 +89,10 @@ export class OrderService {
     if (!customer && !admin) {
       throw new NotFoundException('USER_NOT_FOUND');
     }
-    if ((customer && customer.status === 0) || (admin && !admin.isActive)) {
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
@@ -89,21 +103,21 @@ export class OrderService {
         relations: ['trip'],
       },
     );
-    const currentDate = new Date();
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
     if (currentDate > tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
     }
     if (!tripDetail.isActive) {
       throw new UnauthorizedException('TRIP_DETAIL_NOT_ACTIVE');
     }
-    console.log(tripDetail.trip);
 
     // check trip
     const trip = tripDetail.trip;
-    if (!trip.isActive || trip.startDate > currentDate) {
-      throw new BadRequestException('TRIP_NOT_ACTIVE');
-    }
-    if (trip.endDate < currentDate) {
+    if (
+      !trip.status ||
+      trip.startDate > currentDate ||
+      trip.endDate < currentDate
+    ) {
       throw new BadRequestException('TRIP_NOT_ACTIVE');
     }
 
@@ -131,24 +145,25 @@ export class OrderService {
     } else {
       order.status = OrderStatusEnum.UNPAID;
     }
-    let code = generateOrderId();
+    // generate order code
+    let code = generateOrderCode();
     let flag = true;
     while (flag) {
-      const orderExist = await this.findOrderByCode(code);
+      const orderExist = await this.findOneOrderByCode(code);
       if (!orderExist) {
         flag = false;
       } else {
-        code = generateOrderId();
+        code = generateOrderCode();
       }
     }
     order.code = code;
     order.total = 0;
     order.finalTotal = 0;
+    const createOrder = await this.orderRepository.save(order);
 
     if (!seatIds && !seatCodes) {
       throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
     }
-    const createOrder = await this.orderRepository.save(order);
     if (seatIds && seatIds.length > 0) {
       const orderDetails = await seatIds.map(async (seatId) => {
         const dto = new CreateOrderDetailDto();
@@ -186,7 +201,7 @@ export class OrderService {
   }
 
   async getOrderById(id: string, options?: any) {
-    const order = await this.findOrderById(id, options);
+    const order = await this.findOneOrderById(id, options);
     if (!order) {
       throw new UnauthorizedException('ORDER_NOT_FOUND');
     }
@@ -194,7 +209,7 @@ export class OrderService {
   }
 
   async getOrderByCode(code: string, options?: any) {
-    const order = await this.findOrderByCode(code, options);
+    const order = await this.findOneOrderByCode(code, options);
     if (!order) {
       throw new UnauthorizedException('ORDER_NOT_FOUND');
     }
@@ -249,9 +264,9 @@ export class OrderService {
   // async updateOrderByCode(id: string, dto: CreateOrderDto, userId: string) {}
 
   // order detail
-  async findOrderDetailById(id: string, options?: any) {
+  async findOrderDetail(options?: any) {
     return await this.orderDetailRepository.findOne({
-      where: { id, ...options?.where },
+      where: { ...options?.where },
       relations: ['orderDetails'].concat(options?.relations),
       select: { deletedAt: false, ...options?.select },
       orderBy: {
@@ -262,17 +277,22 @@ export class OrderService {
     });
   }
 
+  async findOrderDetailById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneOrder(options);
+  }
+
   async findOrderDetailByCode(code: string, options?: any) {
-    return await this.orderDetailRepository.findOne({
-      where: { code, ...options?.where },
-      relations: options?.relations,
-      select: { deletedAt: false, ...options?.select },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneOrder(options);
   }
 
   async createOrderDetail(dto: CreateOrderDetailDto, userId: string) {
@@ -282,12 +302,15 @@ export class OrderService {
     if (!customer && !admin) {
       throw new UnauthorizedException('USER_NOT_FOUND');
     }
-    if ((customer && customer.status === 0) || (admin && !admin.isActive)) {
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
     const { note, orderId, seatId, seatCode, tripDetailId } = dto;
-    const orderExist = await this.findOrderById(orderId);
+    const orderExist = await this.findOneOrderById(orderId);
     if (!orderExist) {
       throw new NotFoundException('ORDER_NOT_FOUND');
     }
@@ -313,26 +336,28 @@ export class OrderService {
     let ticketDetail;
     if (seatId) {
       const seat = await this.seatService.getSeatById(seatId);
-      if (seat.type === SeatTypeEnum.SOLD) {
-        throw new BadRequestException('SEAT_IS_SOLD');
-      } else if (seat.type === SeatTypeEnum.PENDING) {
+      if (
+        seat.type === SeatTypeEnum.SOLD ||
+        seat.type === SeatTypeEnum.PENDING
+      ) {
         throw new BadRequestException('SEAT_IS_SOLD');
       }
       ticketDetail = await this.ticketService.findOneTicketDetailBy({
         where: {
           seat: {
             id: seat.id,
-            vehicle: {
-              tripDetails: {
-                id: tripDetailId,
-              },
+          },
+          ticket: {
+            tripDetail: {
+              id: tripDetailId,
             },
           },
         },
         relations: ['seat.vehicle.tripDetails'],
       });
+
       if (!ticketDetail) {
-        throw new NotFoundException('TICKET_DETAIL_NOT_FOUND');
+        throw new NotFoundException('TICKET_NOT_FOUND');
       }
       delete ticketDetail.seat;
       orderDetail.ticketDetail = ticketDetail;
@@ -364,8 +389,10 @@ export class OrderService {
     }
     // get price detail
     const ticketDetailId = ticketDetail.id;
-    const currentDate = new Date(`${new Date().toDateString()}`);
-    const priceDetail = await this.priceListService.findOnePriceDetailBy({
+    console.log(ticketDetailId);
+
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
+    const priceDetail = await this.priceListService.findOnePriceDetail({
       where: {
         applicablePriceDetails: {
           trip: {
@@ -395,56 +422,55 @@ export class OrderService {
         'priceList',
       ],
       orderBy: {
-        createdAt: SortEnum.DESC,
+        startDate: SortEnum.ASC,
+        createdAt: SortEnum.ASC,
       },
     });
+    console.log(priceDetail);
     if (!priceDetail) {
       throw new NotFoundException('PRICE_DETAIL_NOT_FOUND');
     }
-    console.log(priceDetail);
     orderDetail.priceDetail = priceDetail;
     orderDetail.total = priceDetail.price;
-    console.log(priceDetail);
 
-    // const createOrderDetail = await this.orderDetailRepository.save(
-    //   orderDetail,
-    // );
-    // // update ticket detail status
-    // const ticketDetailDto = new UpdateTicketDetailDto();
-    // ticketDetailDto.status = TicketStatusEnum.PENDING;
-    // await this.ticketService.updateTicketDetailById(
-    //   ticketDetailId,
-    //   ticketDetailDto,
-    //   userId,
-    // );
+    const createOrderDetail = await this.orderDetailRepository.save(
+      orderDetail,
+    );
+    // update ticket detail status
+    const ticketDetailDto = new UpdateTicketDetailDto();
+    ticketDetailDto.status = TicketStatusEnum.PENDING;
+    await this.ticketService.updateTicketDetailById(
+      ticketDetailId,
+      ticketDetailDto,
+      userId,
+    );
 
     // // update seat status
-    // if (seatId) {
-    //   await this.seatService.updateSeatById(
-    //     seatId,
-    //     {
-    //       name: undefined,
-    //       type: SeatTypeEnum.PENDING,
-    //       floor: undefined,
-    //       vehicleId: undefined,
-    //     },
-    //     userId,
-    //   );
-    // } else if (seatCode) {
-    //   await this.seatService.updateSeatByCode(
-    //     seatCode,
-    //     {
-    //       name: undefined,
-    //       type: SeatTypeEnum.PENDING,
-    //       floor: undefined,
-    //       vehicleId: undefined,
-    //     },
-    //     userId,
-    //   );
-    // }
-    // delete createOrderDetail.deletedAt;
-    // return createOrderDetail;
-    return new OrderDetail();
+    if (seatId) {
+      await this.seatService.updateSeatById(
+        seatId,
+        {
+          name: undefined,
+          type: SeatTypeEnum.PENDING,
+          floor: undefined,
+          vehicleId: undefined,
+        },
+        userId,
+      );
+    } else if (seatCode) {
+      await this.seatService.updateSeatByCode(
+        seatCode,
+        {
+          name: undefined,
+          type: SeatTypeEnum.PENDING,
+          floor: undefined,
+          vehicleId: undefined,
+        },
+        userId,
+      );
+    }
+    delete createOrderDetail.deletedAt;
+    return createOrderDetail;
   }
 
   // async updateOrderDetailById(dto: UpdateOrderDetailDto, userId: string) {}

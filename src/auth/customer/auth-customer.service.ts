@@ -1,12 +1,12 @@
 import { CustomerService } from '../../api/customer/customer.service';
-import { Customer } from '../../database/entities';
+import { Customer, Ward } from '../../database/entities';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { GenderEnum, RoleEnum } from '../../enums';
+import { GenderEnum, RoleEnum, UserStatusEnum } from '../../enums';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { CustomerLoginDto, CustomerRegisterDto } from './dto';
@@ -25,7 +25,7 @@ export class AuthCustomerService {
   }
 
   async register(dto: CustomerRegisterDto) {
-    const { email, fullName, gender, birthday, phone } = dto;
+    const { email, fullName, gender, birthday, phone, wardCode, address } = dto;
     if (email) {
       const userEmailExist = await this.customerService.findOneByEmail(email);
       if (userEmailExist) {
@@ -43,12 +43,30 @@ export class AuthCustomerService {
       await queryRunner.connect();
       await queryRunner.startTransaction();
       const passwordHashed = await this.authService.hashData(dto.password);
+      const ward = await this.dataSource.getRepository(Ward).findOne({
+        where: { code: wardCode ? wardCode : 0 },
+        relations: ['district', 'district.province'],
+      });
+      if (!ward) {
+        throw new BadRequestException('WARD_NOT_FOUND');
+      }
 
       const user = new Customer();
       user.password = passwordHashed;
       user.fullName = fullName;
       user.phone = phone;
       user.email = email;
+      user.ward = ward;
+      if (address) {
+        user.address = address;
+      } else {
+        user.address = 'Không xác định';
+      }
+      if (wardCode) {
+        user.fullAddress = `${address}, ${ward.name}, ${ward.district.name}, ${ward.district.province.name}`;
+      } else {
+        user.fullAddress = 'Không xác định';
+      }
       if (!gender) {
         user.gender = GenderEnum.OTHER;
       } else {
@@ -59,7 +77,7 @@ export class AuthCustomerService {
       } else {
         user.birthday = new Date('01-01-1970');
       }
-      user.status = 0;
+      user.status = UserStatusEnum.INACTIVATE;
       await queryRunner.commitTransaction();
       // save and select return fields
       const saveUser = await this.userRepository.save(user);

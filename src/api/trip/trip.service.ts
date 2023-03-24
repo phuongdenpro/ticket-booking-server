@@ -10,10 +10,12 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Staff, Station, Trip } from './../../database/entities';
+import { Staff, Station, TicketGroup, Trip } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import { SortEnum, TripStatusEnum } from './../../enums';
 import { Pagination } from './../../decorator';
+import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class TripService {
@@ -25,13 +27,14 @@ export class TripService {
 
   private tripSelectFieldsWithQ = [
     'q.id',
+    'q.code',
     'q.name',
     'q.note',
     'q.startDate',
     'q.endDate',
     'q.createdBy',
     'q.updatedBy',
-    'q.isActive',
+    'q.status',
     'q.createdAt',
     'q.updatedAt',
     'fs.id',
@@ -40,30 +43,55 @@ export class TripService {
     'to.name',
   ];
 
-  async findOneTripById(id: string, options?: any) {
+  async findOneTrip(options?: any) {
     const trip = await this.tripRepository.findOne({
-      where: { id },
-      relations: ['fromStation', 'toStation'],
-      select: {
-        fromStation: { id: true, name: true, code: true },
-        toStation: { id: true, name: true, code: true },
+      where: { ...options?.where },
+      relations: {
+        fromStation: true,
+        toStation: true,
+        ...options?.relations,
       },
-      ...options,
+      select: {
+        fromStation: {
+          id: true,
+          name: true,
+          code: true,
+          ...options?.select?.fromStation,
+        },
+        toStation: {
+          id: true,
+          name: true,
+          code: true,
+          ...options?.select?.toStation,
+        },
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options.other,
     });
 
     return trip;
   }
 
+  async findOneTripById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneTrip(options);
+  }
+
   async findOneTripByCode(code: string, options?: any) {
-    return await this.tripRepository.findOne({
-      where: { code },
-      relations: ['fromStation', 'toStation'],
-      select: {
-        fromStation: { id: true, name: true, code: true },
-        toStation: { id: true, name: true, code: true },
-      },
-      ...options,
-    });
+    if (options) {
+      options.where = { code, ...options.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneTrip(options);
   }
 
   async createTrip(dto: CreateTripDto, userId: string) {
@@ -75,18 +103,25 @@ export class TripService {
       endDate,
       fromStationId,
       toStationId,
-      isActive,
+      status,
+      ticketGroupCode,
+      ticketGroupId,
     } = dto;
     // check permission
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
     // check trip code exist
-    const tripExist = await this.tripRepository.findOne({
-      where: { code },
+    const tripExist = await this.findOneTripById(code, {
+      other: {
+        withDeleted: true,
+      },
     });
     if (tripExist) {
       throw new BadRequestException('TRIP_CODE_EXIST');
@@ -94,25 +129,19 @@ export class TripService {
 
     const trip = new Trip();
     trip.code = code;
-    if (!name) {
-      throw new BadRequestException('NAME_IS_REQUIRED');
-    }
     trip.name = name;
     trip.note = note;
     // check start date
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate < currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     trip.startDate = startDate;
     // check end date
-    if (endDate) {
-      if (endDate < currentDate && endDate < startDate) {
-        throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
-      } else {
-        trip.endDate = endDate;
-      }
+    if (endDate < currentDate && endDate < startDate) {
+      throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
     }
+    trip.endDate = endDate;
     // check from station
     const fromStation = await this.dataSource
       .getRepository(Station)
@@ -132,15 +161,33 @@ export class TripService {
     if (fromStationId === toStationId) {
       throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
-
-    if (isActive === undefined || isActive === null) {
-      trip.isActive = true;
-    } else {
-      trip.isActive = TripStatusEnum.ACTIVE === isActive;
+    switch (status) {
+      case TripStatusEnum.ACTIVE:
+        trip.status = TripStatusEnum.ACTIVE;
+        break;
+      default:
+        trip.status = TripStatusEnum.INACTIVE;
+        break;
     }
+    if (!ticketGroupId && !ticketGroupCode) {
+      throw new BadRequestException('TICKET_GROUP_ID_OR_CODE_REQUIRED');
+    }
+    let ticketGroup;
+    if (ticketGroupId) {
+      ticketGroup = await this.dataSource
+        .getRepository(TicketGroup)
+        .findOne({ where: { id: ticketGroupId } });
+    } else {
+      ticketGroup = await this.dataSource
+        .getRepository(TicketGroup)
+        .findOne({ where: { code: ticketGroupCode } });
+    }
+    if (!ticketGroup) {
+      throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+    }
+    trip.ticketGroup = ticketGroup;
 
     trip.createdBy = adminExist.id;
-    trip.updatedBy = adminExist.id;
     const saveTrip = await this.tripRepository.save(trip);
     delete saveTrip.fromStation;
     delete saveTrip.toStation;
@@ -159,7 +206,7 @@ export class TripService {
   }
 
   async findAllTrip(dto: FilterTripDto, pagination?: Pagination) {
-    const { keywords, fromStationId, toStationId } = dto;
+    const { keywords, fromStationId, toStationId, status } = dto;
     let { startDate, endDate } = dto;
     const query = this.tripRepository.createQueryBuilder('q');
 
@@ -170,7 +217,7 @@ export class TripService {
         .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
     }
 
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate && startDate >= currentDate) {
       startDate = new Date(startDate);
       query.andWhere('q.startDate >= :startDate', { startDate });
@@ -185,10 +232,12 @@ export class TripService {
     if (toStationId) {
       query.andWhere('q.toStation = :toStationId', { toStationId });
     }
+    if (status) {
+      query.andWhere('q.status = :status', { status });
+    }
 
     const total = await query.getCount();
     const dataResult = await query
-      .andWhere('q.isActive = :isActive', { isActive: true })
       .leftJoinAndSelect('q.fromStation', 'fs')
       .leftJoinAndSelect('q.toStation', 'to')
       .select(this.tripSelectFieldsWithQ)
@@ -200,16 +249,16 @@ export class TripService {
     return { dataResult, pagination, total };
   }
 
-  async getTripById(id: string) {
-    const trip = await this.findOneTripById(id);
+  async getTripById(id: string, options?: any) {
+    const trip = await this.findOneTripById(id, options);
     if (!trip) {
       throw new BadRequestException('TRIP_NOT_FOUND');
     }
     return trip;
   }
 
-  async getTripByCode(code: string) {
-    const trip = await this.findOneTripByCode(code);
+  async getTripByCode(code: string, options?: any) {
+    const trip = await this.findOneTripByCode(code, options);
     if (!trip) {
       throw new BadRequestException('TRIP_NOT_FOUND');
     }
@@ -224,19 +273,25 @@ export class TripService {
       endDate,
       fromStationId,
       toStationId,
-      isActive,
+      status,
+      ticketGroupCode,
+      ticketGroupId,
     } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const trip = await this.tripRepository.findOne({ where: { id } });
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const trip = await this.getTripById(id, {
+      relations: {
+        ticketGroup: true,
+      },
+    });
     if (name) {
       trip.name = name;
     }
@@ -244,7 +299,7 @@ export class TripService {
       trip.note = note;
     }
 
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate !== undefined || startDate !== null) {
       if (startDate < currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -279,8 +334,31 @@ export class TripService {
     if (fromStationId === toStationId) {
       throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
-    if (isActive) {
-      trip.isActive = TripStatusEnum.ACTIVE === isActive;
+    switch (status) {
+      case TripStatusEnum.ACTIVE:
+        trip.status = TripStatusEnum.ACTIVE;
+        break;
+      default:
+        trip.status = TripStatusEnum.INACTIVE;
+        break;
+    }
+    let ticketGroup;
+    if (ticketGroupId) {
+      ticketGroup = await this.dataSource
+        .getRepository(TicketGroup)
+        .findOne({ where: { id: ticketGroupId } });
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+      trip.ticketGroup = ticketGroup;
+    } else {
+      ticketGroup = await this.dataSource
+        .getRepository(TicketGroup)
+        .findOne({ where: { code: ticketGroupCode } });
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+      trip.ticketGroup = ticketGroup;
     }
     trip.updatedBy = adminExist.id;
 
@@ -291,7 +369,7 @@ export class TripService {
       note: updateTrip.note,
       startDate: updateTrip.startDate,
       endDate: updateTrip.endDate,
-      isActive: updateTrip.isActive,
+      isActive: updateTrip.status,
       createdBy: updateTrip.createdBy,
       updatedBy: updateTrip.updatedBy,
       createdAt: updateTrip.createdAt,
@@ -315,19 +393,21 @@ export class TripService {
       endDate,
       fromStationId,
       toStationId,
-      isActive,
+      status,
+      ticketGroupCode,
+      ticketGroupId,
     } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const trip = await this.tripRepository.findOne({ where: { code } });
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const trip = await this.getTripByCode(code, {});
     if (name) {
       trip.name = name;
     }
@@ -335,7 +415,7 @@ export class TripService {
       trip.note = note;
     }
 
-    const currentDate: Date = new Date(`${new Date().toDateString()}`);
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate !== undefined || startDate !== null) {
       if (startDate < currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -370,8 +450,31 @@ export class TripService {
     if (fromStationId === toStationId) {
       throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
-    if (isActive) {
-      trip.isActive = TripStatusEnum.ACTIVE === isActive;
+    switch (status) {
+      case TripStatusEnum.ACTIVE:
+        trip.status = TripStatusEnum.ACTIVE;
+        break;
+      default:
+        trip.status = TripStatusEnum.INACTIVE;
+        break;
+    }
+    let ticketGroup;
+    if (ticketGroupId) {
+      ticketGroup = await this.dataSource
+        .getRepository(TicketGroup)
+        .findOne({ where: { id: ticketGroupId } });
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+      trip.ticketGroup = ticketGroup;
+    } else {
+      ticketGroup = await this.dataSource
+        .getRepository(TicketGroup)
+        .findOne({ where: { code: ticketGroupCode } });
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+      trip.ticketGroup = ticketGroup;
     }
     trip.updatedBy = adminExist.id;
 
@@ -382,7 +485,7 @@ export class TripService {
       note: updateTrip.note,
       startDate: updateTrip.startDate,
       endDate: updateTrip.endDate,
-      isActive: updateTrip.isActive,
+      isActive: updateTrip.status,
       createdBy: updateTrip.createdBy,
       updatedBy: updateTrip.updatedBy,
       createdAt: updateTrip.createdAt,
@@ -401,49 +504,66 @@ export class TripService {
   async deleteTripById(id: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const trip = await this.tripRepository.findOne({ where: { id } });
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const trip = await this.getTripById(id);
     trip.deletedAt = new Date();
     trip.updatedBy = adminExist.id;
 
-    return await (
-      await this.tripRepository.save(trip)
-    ).id;
+    const saveTrip = await this.tripRepository.save(trip);
+    return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
   }
 
   async deleteTripByCode(code: string, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-
-    const trip = await this.tripRepository.findOne({ where: { code } });
-    if (!trip) {
-      throw new BadRequestException('TRIP_NOT_FOUND');
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
+    const trip = await this.getTripByCode(code);
     trip.deletedAt = new Date();
     trip.updatedBy = adminExist.id;
 
-    return await (
-      await this.tripRepository.save(trip)
-    ).id;
+    const saveTrip = await this.tripRepository.save(trip);
+    return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
   }
 
   async deleteMultipleTrip(userId: string, dto: TripDeleteMultiInput) {
     try {
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: userId } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
       const { ids } = dto;
 
       const list = await Promise.all(
-        ids.map(async (id) => await this.deleteTripById(id, userId)),
+        ids.map(async (id) => {
+          const trip = await this.findOneTripById(id);
+          if (!trip) {
+            return { id: id, message: 'Không tìm thấy tuyến xe' };
+          }
+          trip.deletedAt = new Date();
+          trip.updatedBy = adminExist.id;
+
+          const saveTrip = await this.tripRepository.save(trip);
+          return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
+        }),
       );
       return list;
     } catch (err) {
@@ -453,10 +573,29 @@ export class TripService {
 
   async deleteMultipleTripByCodes(userId: string, dto: TripDeleteMultiInput) {
     try {
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: userId } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
       const { ids } = dto;
 
       const list = await Promise.all(
-        ids.map(async (code) => await this.deleteTripByCode(code, userId)),
+        ids.map(async (code) => {
+          const trip = await this.findOneTripByCode(code);
+          if (!trip) {
+            return { code, message: 'Không tìm thấy tuyến xe' };
+          }
+          trip.deletedAt = new Date();
+          trip.updatedBy = adminExist.id;
+
+          const saveTrip = await this.tripRepository.save(trip);
+          return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
+        }),
       );
       return list;
     } catch (err) {

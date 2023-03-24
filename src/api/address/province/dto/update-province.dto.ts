@@ -1,6 +1,6 @@
 import { ProvinceTypeEnum } from './../../../../enums/province-type.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class UpdateProvinceDto {
   @ApiPropertyOptional({ example: 'Thành phố Hà Nội' })
@@ -15,14 +15,6 @@ export class UpdateProvinceDto {
   @IsOptional()
   @IsString({ message: 'PROVINCE_TYPE_IS_STRING' })
   type: ProvinceTypeEnum;
-
-  @ApiPropertyOptional({ example: 1 })
-  @IsOptional()
-  @IsNumber(
-    { allowNaN: false, allowInfinity: false },
-    { message: 'CODE_IS_NUMBER' },
-  )
-  code: number;
 
   @ApiPropertyOptional({ example: 'thanh_pho_ha_noi' })
   @IsOptional()

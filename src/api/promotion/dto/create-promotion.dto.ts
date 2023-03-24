@@ -60,7 +60,7 @@ export class CreatePromotionDto {
     enum: PromotionStatusEnum,
   })
   @IsString({ message: 'PROMOTION_STATUS_IS_STRING' })
-  @IsEnum(PromotionStatusEnum, { message: 'PROMOTION_STATUS_INVALID' })
+  @IsEnum(PromotionStatusEnum, { message: 'PROMOTION_STATUS_IS_ENUM' })
   @IsOptional()
   status: PromotionStatusEnum;
 }

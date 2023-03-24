@@ -10,14 +10,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   SaveCustomerGroupDto,
-  AddCustomerDto,
-  AddMultiCustomerDto,
   FilterCustomerGroupDto,
   UpdateCustomerGroupDto,
   DeleteMultiCustomerGroupDto,
-  RemoveCustomerDto,
   FilterCustomerDto,
-  RemoveMultiCustomerDto,
 } from './dto';
 import { Pagination } from './../../decorator';
 import { CustomerService } from '../customer/customer.service';
@@ -34,7 +30,9 @@ export class CustomerGroupService {
   async findOneCustomerGroup(options: any) {
     return await this.customerGroupRepository.findOne({
       where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
+      relations: {
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,
@@ -250,9 +248,14 @@ export class CustomerGroupService {
   }
 
   async deleteCustomerGroupById(adminId: string, id: string) {
-    const customerGroup = await this.getCustomerGroupById(id, adminId);
+    const customerGroup = await this.getCustomerGroupById(id, adminId, {
+      relations: ['customers'],
+    });
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+    if (customerGroup.customers.length > 0) {
+      throw new BadRequestException('CUSTOMER_GROUP_HAS_CUSTOMERS');
     }
 
     const adminExist = await this.adminService.findOneBydId(adminId);
@@ -277,6 +280,9 @@ export class CustomerGroupService {
     const customerGroup = await this.getCustomerGroupByCode(code, adminId);
     if (!customerGroup) {
       throw new BadRequestException('CUSTOMER_GROUP_NOT_FOUND');
+    }
+    if (customerGroup.customers.length > 0) {
+      throw new BadRequestException('CUSTOMER_GROUP_HAS_CUSTOMERS');
     }
 
     const adminExist = await this.adminService.findOneBydId(adminId);
@@ -354,22 +360,21 @@ export class CustomerGroupService {
     }
 
     const { keywords, gender, sort } = dto;
+
     const query = this.customerGroupRepository.createQueryBuilder('q');
+    query.where('q.id = :groupId', { groupId });
     query.leftJoinAndSelect('q.customers', 'c');
 
     if (keywords) {
       query
-        .orWhere('c.fullName LIKE :customerName', {
-          customerName: `%${keywords}%`,
-        })
+        .orWhere('c.fullName LIKE :fullName', { fullName: `%${keywords}%` })
         .orWhere('c.phone LIKE :phone', { phone: `%${keywords}%` })
         .orWhere('c.email LIKE :email', { email: `%${keywords}%` })
-        .orWhere('c.address LIKE :email', { email: `%${keywords}%` })
-        .orWhere('c.fullAddress LIKE :email', { email: `%${keywords}%` });
+        .orWhere('c.address LIKE :address', { address: `%${keywords}%` })
+        .orWhere('c.fullAddress LIKE :fullAddress', {
+          fullAddress: `%${keywords}%`,
+        });
     }
-    query.andWhere('q.id = :groupId', {
-      groupId,
-    });
 
     if (gender) {
       query.andWhere('c.gender = :gender', { gender });
@@ -409,244 +414,243 @@ export class CustomerGroupService {
       ])
       .take(pagination.take)
       .skip(pagination.skip)
-      .getMany();
-    console.log(query.getSql());
+      .getOne();
 
     const total = await query.clone().getCount();
     return { dataResult, pagination, total };
   }
 
-  async addCustomer(dto: AddCustomerDto, adminId: string) {
-    const { customerId, customerGroupId } = dto;
-    // check exist
-    const customerGroupExist = await this.getCustomerGroupById(
-      customerGroupId,
-      adminId,
-    );
-    const customer = await this.customerService.getCustomerById(customerId);
-    const customerGroup = await this.findCustomerGroupById(customerGroupId, {
-      where: {
-        id: customerGroupId,
-        customers: {
-          id: customerId,
-        },
-      },
-      relations: ['customers'],
-      select: {
-        customers: {
-          id: true,
-          lastLogin: true,
-          status: true,
-          phone: true,
-          email: true,
-          fullName: true,
-          gender: true,
-          address: true,
-          note: true,
-          birthday: true,
-          createdAt: true,
-        },
-      },
-    });
-    if (customerGroup) {
-      throw new BadRequestException('CUSTOMER_ALREADY_IN_GROUP');
-    }
+  // async addCustomer(dto: AddCustomerDto, adminId: string) {
+  //   const { customerId, customerGroupId } = dto;
+  //   // check exist
+  //   const customerGroupExist = await this.getCustomerGroupById(
+  //     customerGroupId,
+  //     adminId,
+  //   );
+  //   const customer = await this.customerService.getCustomerById(customerId);
+  //   const customerGroup = await this.findCustomerGroupById(customerGroupId, {
+  //     where: {
+  //       id: customerGroupId,
+  //       customers: {
+  //         id: customerId,
+  //       },
+  //     },
+  //     relations: ['customers'],
+  //     select: {
+  //       customers: {
+  //         id: true,
+  //         lastLogin: true,
+  //         status: true,
+  //         phone: true,
+  //         email: true,
+  //         fullName: true,
+  //         gender: true,
+  //         address: true,
+  //         note: true,
+  //         birthday: true,
+  //         createdAt: true,
+  //       },
+  //     },
+  //   });
+  //   if (customerGroup) {
+  //     throw new BadRequestException('CUSTOMER_ALREADY_IN_GROUP');
+  //   }
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
+  //   const adminExist = await this.adminService.findOneBydId(adminId);
+  //   if (!adminExist) {
+  //     throw new UnauthorizedException('UNAUTHORIZED');
+  //   }
+  //   if (!adminExist.isActive) {
+  //     throw new BadRequestException('USER_NOT_ACTIVE');
+  //   }
 
-    customer.customerGroup = customerGroupExist;
-    await this.customerService.addCustomerToCustomerGroup(
-      customer.id,
-      customerGroupExist.id,
-      adminId,
-    );
+  //   customer.customerGroup = customerGroupExist;
+  //   await this.customerService.addCustomerToCustomerGroup(
+  //     customer.id,
+  //     customerGroupExist.id,
+  //     adminId,
+  //   );
 
-    return {
-      customer: { id: customer.id },
-      customerGroup: { id: customerGroupExist.id },
-    };
-  }
+  //   return {
+  //     customer: { id: customer.id },
+  //     customerGroup: { id: customerGroupExist.id },
+  //   };
+  // }
 
-  async addCustomers(dto: AddMultiCustomerDto, adminId: string) {
-    const { customerIds, customerGroupId } = dto;
-    const customerGroupExist = await this.getCustomerGroupById(
-      customerGroupId,
-      adminId,
-    );
+  // async addCustomers(dto: AddMultiCustomerDto, adminId: string) {
+  //   const { customerIds, customerGroupId } = dto;
+  //   const customerGroupExist = await this.getCustomerGroupById(
+  //     customerGroupId,
+  //     adminId,
+  //   );
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-    const newCustomerIds = customerIds.map(async (customerId) => {
-      const customer = await this.customerService.getCustomerById(customerId);
-      const customerGroup = await this.findCustomerGroupById(customerGroupId, {
-        where: {
-          id: customerGroupId,
-          customers: {
-            id: customerId,
-          },
-        },
-        relations: ['customers'],
-        select: {
-          customers: {
-            id: true,
-            lastLogin: true,
-            status: true,
-            phone: true,
-            email: true,
-            fullName: true,
-            gender: true,
-            address: true,
-            note: true,
-            birthday: true,
-            createdAt: true,
-          },
-        },
-      });
-      if (customerGroup) {
-        return {
-          id: customerId,
-          message: 'Khách hàng đã tồn tại trong nhóm',
-        };
-      }
+  //   const adminExist = await this.adminService.findOneBydId(adminId);
+  //   if (!adminExist) {
+  //     throw new UnauthorizedException('UNAUTHORIZED');
+  //   }
+  //   if (!adminExist.isActive) {
+  //     throw new BadRequestException('USER_NOT_ACTIVE');
+  //   }
+  //   const newCustomerIds = customerIds.map(async (customerId) => {
+  //     const customer = await this.customerService.getCustomerById(customerId);
+  //     const customerGroup = await this.findCustomerGroupById(customerGroupId, {
+  //       where: {
+  //         id: customerGroupId,
+  //         customers: {
+  //           id: customerId,
+  //         },
+  //       },
+  //       relations: ['customers'],
+  //       select: {
+  //         customers: {
+  //           id: true,
+  //           lastLogin: true,
+  //           status: true,
+  //           phone: true,
+  //           email: true,
+  //           fullName: true,
+  //           gender: true,
+  //           address: true,
+  //           note: true,
+  //           birthday: true,
+  //           createdAt: true,
+  //         },
+  //       },
+  //     });
+  //     if (customerGroup) {
+  //       return {
+  //         id: customerId,
+  //         message: 'Khách hàng đã tồn tại trong nhóm',
+  //       };
+  //     }
 
-      const saveCustomer =
-        await this.customerService.addCustomerToCustomerGroup(
-          customer.id,
-          customerGroupExist.id,
-          adminId,
-        );
-      return { id: saveCustomer.id, message: 'Thêm thành công' };
-    });
-    return {
-      customerIds: await Promise.all(newCustomerIds),
-      customerGroup: customerGroupExist,
-    };
-  }
+  //     const saveCustomer =
+  //       await this.customerService.addCustomerToCustomerGroup(
+  //         customer.id,
+  //         customerGroupExist.id,
+  //         adminId,
+  //       );
+  //     return { id: saveCustomer.id, message: 'Thêm thành công' };
+  //   });
+  //   return {
+  //     customerIds: await Promise.all(newCustomerIds),
+  //     customerGroup: customerGroupExist,
+  //   };
+  // }
 
-  async removeCustomer(dto: RemoveCustomerDto, adminId: string) {
-    const { customerId, customerGroupId } = dto;
-    const customer = await this.customerService.getCustomerById(customerId);
-    const customerGroupExist = await this.getCustomerGroupById(
-      customerGroupId,
-      adminId,
-    );
-    const customerGroup = await this.findCustomerGroupById(customerGroupId, {
-      where: {
-        id: customerGroupId,
-        customers: {
-          id: customerId,
-        },
-      },
-      relations: ['customers'],
-      select: {
-        customers: {
-          id: true,
-          lastLogin: true,
-          status: true,
-          phone: true,
-          email: true,
-          fullName: true,
-          gender: true,
-          address: true,
-          note: true,
-          birthday: true,
-          createdAt: true,
-        },
-      },
-    });
-    if (!customerGroup) {
-      throw new BadRequestException('CUSTOMER_NOT_IN_GROUP');
-    }
+  // async removeCustomer(dto: RemoveCustomerDto, adminId: string) {
+  //   const { customerId, customerGroupId } = dto;
+  //   const customer = await this.customerService.getCustomerById(customerId);
+  //   const customerGroupExist = await this.getCustomerGroupById(
+  //     customerGroupId,
+  //     adminId,
+  //   );
+  //   const customerGroup = await this.findCustomerGroupById(customerGroupId, {
+  //     where: {
+  //       id: customerGroupId,
+  //       customers: {
+  //         id: customerId,
+  //       },
+  //     },
+  //     relations: ['customers'],
+  //     select: {
+  //       customers: {
+  //         id: true,
+  //         lastLogin: true,
+  //         status: true,
+  //         phone: true,
+  //         email: true,
+  //         fullName: true,
+  //         gender: true,
+  //         address: true,
+  //         note: true,
+  //         birthday: true,
+  //         createdAt: true,
+  //       },
+  //     },
+  //   });
+  //   if (!customerGroup) {
+  //     throw new BadRequestException('CUSTOMER_NOT_IN_GROUP');
+  //   }
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
+  //   const adminExist = await this.adminService.findOneBydId(adminId);
+  //   if (!adminExist) {
+  //     throw new UnauthorizedException('UNAUTHORIZED');
+  //   }
+  //   if (!adminExist.isActive) {
+  //     throw new BadRequestException('USER_NOT_ACTIVE');
+  //   }
 
-    await this.customerService.removeCustomerFromCustomerGroup(
-      customer.id,
-      customerGroupExist.id,
-      adminId,
-    );
-    return {
-      customer: { id: customer.id },
-      message: 'Xóa thành công',
-    };
-  }
+  //   await this.customerService.removeCustomerFromCustomerGroup(
+  //     customer.id,
+  //     customerGroupExist.id,
+  //     adminId,
+  //   );
+  //   return {
+  //     customer: { id: customer.id },
+  //     message: 'Xóa thành công',
+  //   };
+  // }
 
-  async removeCustomers(adminId: string, dto: RemoveMultiCustomerDto) {
-    const { customerIds, customerGroupId } = dto;
-    const customerGroupExist = await this.getCustomerGroupById(
-      customerGroupId,
-      adminId,
-    );
+  // async removeCustomers(adminId: string, dto: RemoveMultiCustomerDto) {
+  //   const { customerIds, customerGroupId } = dto;
+  //   const customerGroupExist = await this.getCustomerGroupById(
+  //     customerGroupId,
+  //     adminId,
+  //   );
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
+  //   const adminExist = await this.adminService.findOneBydId(adminId);
+  //   if (!adminExist) {
+  //     throw new UnauthorizedException('UNAUTHORIZED');
+  //   }
+  //   if (!adminExist.isActive) {
+  //     throw new BadRequestException('USER_NOT_ACTIVE');
+  //   }
 
-    const newCustomerIds = customerIds.map(async (customerId) => {
-      const customer = await this.customerService.getCustomerById(customerId);
-      const customerGroup = await this.findCustomerGroupById(customerGroupId, {
-        where: {
-          id: customerGroupId,
-          customers: {
-            id: customerId,
-          },
-        },
-        relations: ['customers'],
-        select: {
-          customers: {
-            id: true,
-            lastLogin: true,
-            status: true,
-            phone: true,
-            email: true,
-            fullName: true,
-            gender: true,
-            address: true,
-            note: true,
-            birthday: true,
-            createdAt: true,
-          },
-        },
-      });
-      if (!customerGroup) {
-        return {
-          id: customerId,
-          message: 'Khách hàng không thuộc trong nhóm này',
-        };
-      }
+  //   const newCustomerIds = customerIds.map(async (customerId) => {
+  //     const customer = await this.customerService.getCustomerById(customerId);
+  //     const customerGroup = await this.findCustomerGroupById(customerGroupId, {
+  //       where: {
+  //         id: customerGroupId,
+  //         customers: {
+  //           id: customerId,
+  //         },
+  //       },
+  //       relations: ['customers'],
+  //       select: {
+  //         customers: {
+  //           id: true,
+  //           lastLogin: true,
+  //           status: true,
+  //           phone: true,
+  //           email: true,
+  //           fullName: true,
+  //           gender: true,
+  //           address: true,
+  //           note: true,
+  //           birthday: true,
+  //           createdAt: true,
+  //         },
+  //       },
+  //     });
+  //     if (!customerGroup) {
+  //       return {
+  //         id: customerId,
+  //         message: 'Khách hàng không thuộc trong nhóm này',
+  //       };
+  //     }
 
-      const saveCustomer =
-        await this.customerService.removeCustomerFromCustomerGroup(
-          customer.id,
-          customerGroupExist.id,
-          adminId,
-        );
-      return { id: saveCustomer.id, message: 'Xoá thành công' };
-    });
-    return {
-      customerIds: await Promise.all(newCustomerIds),
-      customerGroup: customerGroupExist,
-    };
-  }
+  //     const saveCustomer =
+  //       await this.customerService.removeCustomerFromCustomerGroup(
+  //         customer.id,
+  //         customerGroupExist.id,
+  //         adminId,
+  //       );
+  //     return { id: saveCustomer.id, message: 'Xoá thành công' };
+  //   });
+  //   return {
+  //     customerIds: await Promise.all(newCustomerIds),
+  //     customerGroup: customerGroupExist,
+  //   };
+  // }
 }

@@ -56,10 +56,11 @@ export class District {
   })
   public deletedAt?: Date;
 
+  // relationship
   @ManyToOne(() => Province, (province) => province.districts)
   @JoinColumn({ name: 'parent_code_id', referencedColumnName: 'id' })
-  parentCode: string;
+  province: Province;
 
-  @OneToMany(() => Ward, (ward) => ward.parentCode)
+  @OneToMany(() => Ward, (ward) => ward.district)
   wards: Ward[];
 }

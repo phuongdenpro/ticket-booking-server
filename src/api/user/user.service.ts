@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { CustomerService } from '../customer/customer.service';
-import { DataSource, Repository } from 'typeorm';
-import { UserUpdatePasswordDto } from './dto';
+import { Repository } from 'typeorm';
+import { UpdateCustomerDto, UserUpdatePasswordDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -19,7 +19,6 @@ export class UserService {
     private readonly customerRepository: Repository<Customer>,
     private customerService: CustomerService,
     private authService: AuthService,
-    private dataSource: DataSource,
   ) {}
 
   async profile(id: string) {
@@ -51,5 +50,9 @@ export class UserService {
       { id: userExist.id },
       { password: passwordHash, updatedBy: userExist.id },
     );
+  }
+
+  async updateCustomer(id: string, dto: UpdateCustomerDto, userId: string) {
+    return await this.customerService.updateCustomer(id, dto, userId);
   }
 }

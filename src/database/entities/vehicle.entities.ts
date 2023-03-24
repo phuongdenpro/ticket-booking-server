@@ -26,6 +26,9 @@ export class Vehicle {
   @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
   type: string;
 
+  @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })
+  status: string;
+
   @Column({
     name: 'license_plate',
     type: 'varchar',

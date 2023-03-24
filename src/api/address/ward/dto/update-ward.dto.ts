@@ -12,14 +12,6 @@ export class UpdateWardDto {
   @IsOptional()
   type: string;
 
-  @ApiPropertyOptional({ example: 454 })
-  @IsOptional()
-  @IsNumber(
-    { allowNaN: false, allowInfinity: false },
-    { message: 'CODE_IS_NUMBER' },
-  )
-  code: number;
-
   @ApiPropertyOptional({ example: 'thi_tran_dong_anh' })
   @IsOptional()
   @IsString({ message: 'CODENAME_IS_STRING' })

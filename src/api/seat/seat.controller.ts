@@ -48,6 +48,12 @@ export class SeatController {
     return await this.seatService.getSeatById(id);
   }
 
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
+  async getSeatByCode(@Param('code') code: string) {
+    return await this.seatService.getSeatByCode(code);
+  }
+
   @Get('vehicle/:id')
   @HttpCode(HttpStatus.OK)
   async getSeatByVehicleId(
@@ -85,12 +91,25 @@ export class SeatController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async updateStationById(
+  async updateSeatById(
     @CurrentUser() user,
     @Param('id') id: string,
     @Body() dto: UpdateSeatDto,
   ) {
     return await this.seatService.updateSeatById(id, dto, user.id);
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateSeatByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+    @Body() dto: UpdateSeatDto,
+  ) {
+    return await this.seatService.updateSeatByCode(code, dto, user.id);
   }
 
   @Delete('id/:id')
@@ -102,12 +121,36 @@ export class SeatController {
     return await this.seatService.deleteSeatById(id, user.id);
   }
 
-  @Delete('multiple')
+  @Delete('code/:code')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async deleteMultiple(@CurrentUser() user, @Body() dto: SeatDeleteMultiInput) {
-    return await this.seatService.deleteMultipleTrip(user.id, dto);
+  async deleteStationByCode(@CurrentUser() user, @Param('code') code: string) {
+    return await this.seatService.deleteSeatByCode(code, user.id);
+  }
+
+  @Delete('multiple/ids')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleByIds(
+    @CurrentUser() user,
+    @Body() dto: SeatDeleteMultiInput,
+  ) {
+    return await this.seatService.deleteMultipleTripById(user.id, dto);
+  }
+
+  @Delete('multiple/codes')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultipleByCodes(
+    @CurrentUser() user,
+    @Body() dto: SeatDeleteMultiInput,
+  ) {
+    return await this.seatService.deleteMultipleTripByCode(user.id, dto);
   }
 }

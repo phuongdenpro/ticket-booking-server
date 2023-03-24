@@ -34,10 +34,14 @@ export class VehicleService {
     private dataSource: DataSource,
   ) {}
 
-  async findOneVehicleById(id: string, options?: any) {
+  async findOneVehicle(options?: any) {
     return await this.vehicleService.findOne({
-      where: { id },
-      relations: ['images', 'seats'].concat(options?.relations || []),
+      where: { ...options.where },
+      relations: {
+        images: true,
+        seats: true,
+        ...options?.relations,
+      },
       select: {
         seats: {
           id: true,
@@ -49,35 +53,33 @@ export class VehicleService {
           id: true,
           url: true,
           createdAt: true,
-          updatedAt: true,
         },
         ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
       },
       ...options,
     });
   }
 
+  async findOneVehicleById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneVehicle(options);
+  }
+
   async findOneVehicleByCode(code: string, options?: any) {
-    return await this.vehicleService.findOne({
-      where: { code },
-      relations: ['images', 'seats'].concat(options?.relations || []),
-      select: {
-        seats: {
-          id: true,
-          name: true,
-          type: true,
-          floor: true,
-        },
-        images: {
-          id: true,
-          url: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-        ...options?.select,
-      },
-      ...options,
-    });
+    if (options) {
+      options.where = { code, ...options.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneVehicle(options);
   }
 
   async getVehicleTypes() {
@@ -105,7 +107,7 @@ export class VehicleService {
       withDeleted: true,
     });
     if (vehicleExist) {
-      throw new BadRequestException('VEHICLE_CODE_EXIST');
+      throw new BadRequestException('VEHICLE_CODE_ALREADY_EXIST');
     }
 
     const vehicle = new Vehicle();
@@ -176,7 +178,7 @@ export class VehicleService {
         }
       } else {
         if (numOfSeat > i) {
-          dto.code = `${code}A${i - numOfSeat}`;
+          dto.code = `${code}A${numOfSeat - i}`;
           dto.name = `A${i}`;
           dto.floor = 1;
         } else {
@@ -234,7 +236,7 @@ export class VehicleService {
 
     const total = await query.getCount();
     const dataResult = await query
-      .orderBy('q.createdAt', SortEnum.ASC)
+      .orderBy('q.createdAt', SortEnum.DESC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();

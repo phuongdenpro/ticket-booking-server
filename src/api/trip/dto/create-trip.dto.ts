@@ -7,9 +7,6 @@ import {
   IsEnum,
   Length,
   IsDate,
-  IsNumber,
-  Min,
-  Max,
 } from 'class-validator';
 
 export class CreateTripDto {
@@ -56,10 +53,18 @@ export class CreateTripDto {
   toStationId: string;
 
   @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE, enum: TripStatusEnum })
-  @IsEnum(TripStatusEnum, { message: 'TRIP_IS_ACTIVE_IS_ACTIVE_IS_ENUM' })
-  @IsNumber({ allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 })
-  @Min(0)
-  @Max(1)
+  @IsEnum(TripStatusEnum, { message: 'TRIP_STATUS_IS_ENUM' })
+  @IsString({ message: 'TRIP_STATUS_IS_STRING' })
   @IsOptional()
-  isActive: TripStatusEnum;
+  status: TripStatusEnum;
+
+  @ApiPropertyOptional({ example: 'd0adc2a4-386a-45de-bbf3-46d672b0a493' })
+  @IsString({ message: 'TICKET_GROUP_ID_IS_STRING' })
+  @IsOptional()
+  ticketGroupId: string;
+
+  @ApiPropertyOptional({ example: 'BGT32023' })
+  @IsString({ message: 'TICKET_CODE_IS_STRING' })
+  @IsOptional()
+  ticketGroupCode: string;
 }
