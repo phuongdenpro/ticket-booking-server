@@ -1,5 +1,10 @@
 import { Pagination } from './../../decorator';
-import { ActiveStatusEnum, SortEnum, TicketStatusEnum, UserStatusEnum } from './../../enums';
+import {
+  ActiveStatusEnum,
+  SortEnum,
+  TicketStatusEnum,
+  UserStatusEnum,
+} from './../../enums';
 import {
   CreateTicketDto,
   FilterTicketDto,

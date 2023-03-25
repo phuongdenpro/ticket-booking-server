@@ -147,18 +147,12 @@ export class CustomerGroupService {
     const query = this.customerGroupRepository.createQueryBuilder('q');
 
     if (keywords) {
-      query.orWhere('q.code LIKE :customerGroupCode', {
-        customerGroupCode: `%${keywords}%`,
+      query.orWhere('q.code LIKE :code', { code: `%${keywords}%` });
+      query.orWhere('q.name LIKE :name', { name: `%${keywords}%` });
+      query.orWhere('q.description LIKE :description', {
+        description: `%${keywords}%`,
       });
-      query.orWhere('q.name LIKE :customerGroupName', {
-        customerGroupName: `%${keywords}%`,
-      });
-      query.orWhere('q.description LIKE :customerGroupDescription', {
-        customerGroupDescription: `%${keywords}%`,
-      });
-      query.orWhere('q.note LIKE :customerGroupNote', {
-        customerGroupNote: `%${keywords}%`,
-      });
+      query.orWhere('q.note LIKE :note', { note: `%${keywords}%` });
     }
     if (sort) {
       query.orderBy('q.createdAt', sort);

@@ -38,6 +38,8 @@ export const mappingTranslate = {
   CODE_BETWEEN_1_100_CHARACTERS: 'Mã phải từ 1 đến 100 ký tự',
   KEYWORDS_IS_STRING: 'Từ khóa phải là chuỗi ký tự',
   IMAGE_IS_STRING: 'url ảnh phải là chuỗi ký tự',
+  LIST_ITEM_IS_STRING: 'Id/code trong danh sách phải là chuỗi ký tự',
+  LIST_IS_ARRAY: 'Danh sách phải là mảng',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',
@@ -301,6 +303,8 @@ export const mappingTranslate = {
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
   BUDGET_MUST_BE_INT: 'Ngân sách phải là số nguyên',
   BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
+  BUDGET_MUST_BE_GREATER_THAN_USED_BUDGET:
+    'Ngân sách phải lớn hơn ngân sách đã dùng',
   PROMOTION_STATUS_IS_ON_ACTIVE:
     'Chương trình khuyến mãi đang kích hoạt nên không thể cập nhật ngày bắt đầu',
   PROMOTION_NOT_FOUND: 'Không tìm thấy chương trình khuyến mãi',
@@ -315,6 +319,8 @@ export const mappingTranslate = {
   MAX_QUANTITY_IS_REQUIRED: 'Số lượng tối đa không được để trống',
   MAX_QUANTITY_IS_NUMBER: 'Số lượng tối đa phải là số',
   MAX_QUANTITY_MUST_BE_INTEGER: 'Số lượng tối đa phải là số nguyên',
+  MAX_QUANTITY_MUST_BE_GREATER_THAN_USED_QUANTITY:
+    'Số lượng tối đa phải lớn hơn số lượng đã dùng',
   MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 1',

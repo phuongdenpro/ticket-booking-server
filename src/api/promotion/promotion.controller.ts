@@ -1,6 +1,16 @@
-import { CreatePromotionDto, UpdatePromotionDto } from './dto';
+import { DeleteMultiPromotionDto } from './dto/delete-multiple-promotion.dto';
+import {
+  CreatePromotionDto,
+  FilterPromotionDto,
+  UpdatePromotionDto,
+} from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
-import { CurrentUser, Roles } from './../../decorator';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
 import { RoleEnum } from './../../enums';
 import { PromotionService } from './promotion.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -14,6 +24,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -21,6 +32,21 @@ import {
 @ApiTags('Promotion')
 export class PromotionController {
   constructor(private promotionService: PromotionService) {}
+
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getPromotionStatusEnum() {
+    return await this.promotionService.getPromotionStatusEnum();
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  async findAllPromotion(
+    @Query() dto: FilterPromotionDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.promotionService.findAllPromotion(dto, pagination);
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -92,5 +118,35 @@ export class PromotionController {
     @CurrentUser() user,
   ) {
     return await this.promotionService.deletePromotionByCode(code, user.id);
+  }
+
+  @Delete('multiple/ids')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiplePromotionByIds(
+    dto: DeleteMultiPromotionDto,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionService.deleteMultiplePromotionByIds(
+      dto,
+      user.id,
+    );
+  }
+
+  @Delete('multiple/codes')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiplePromotionByCodes(
+    dto: DeleteMultiPromotionDto,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionService.deleteMultiplePromotionByCodes(
+      dto,
+      user.id,
+    );
   }
 }

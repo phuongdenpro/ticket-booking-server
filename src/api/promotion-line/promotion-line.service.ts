@@ -38,7 +38,7 @@ export class PromotionLineService {
   ) {}
 
   // valid
-  async validProductGiveaway(
+  private async validProductGiveaway(
     dto: ProductGiveawayDto,
     savePromotionLine: PromotionLine,
   ) {
@@ -88,7 +88,7 @@ export class PromotionLineService {
     return promotionDetail;
   }
 
-  async validProductDiscount(
+  private async validProductDiscount(
     dto: ProductDiscountDto,
     savePromotionLine: PromotionLine,
   ) {
@@ -151,7 +151,7 @@ export class PromotionLineService {
     return promotionDetail;
   }
 
-  async validProductDiscountPercent(
+  private async validProductDiscountPercent(
     dto: ProductDiscountPercentDto,
     savePromotionLine: PromotionLine,
   ) {
@@ -465,7 +465,11 @@ export class PromotionLineService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const promotionLine = await this.findOnePromotionLineById(id);
+    const promotionLine = await this.findOnePromotionLineById(id, {
+      relations: {
+        promotionDetail: true,
+      },
+    });
     if (!promotionLine) {
       throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
     }
@@ -482,18 +486,32 @@ export class PromotionLineService {
       if (maxBudget < 0) {
         throw new BadRequestException('BUDGET_MUST_BE_GREATER_THAN_0');
       }
+      if (maxBudget < promotionLine.useBudget) {
+        throw new BadRequestException(
+          'BUDGET_MUST_BE_GREATER_THAN_USED_BUDGET',
+        );
+      }
       promotionLine.maxBudget = maxBudget;
     }
-    if (maxQuantity < 0) {
-      throw new BadRequestException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
+    if (maxQuantity) {
+      if (maxQuantity < 0) {
+        throw new BadRequestException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
+      }
+      if (maxQuantity < promotionLine.useQuantity) {
+        throw new BadRequestException(
+          'MAX_QUANTITY_MUST_BE_GREATER_THAN_USED_QUANTITY',
+        );
+      }
+      promotionLine.maxQuantity = maxQuantity;
     }
-    promotionLine.maxQuantity = maxQuantity;
-    if (maxQuantityPerCustomer < 0) {
-      throw new BadRequestException(
-        'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
-      );
+    if (maxQuantityPerCustomer) {
+      if (maxQuantityPerCustomer < 0) {
+        throw new BadRequestException(
+          'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
+        );
+      }
+      promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
     }
-    promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
     switch (type) {
       case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
         promotionLine.type = PromotionTypeEnum.PRODUCT_GIVEAWAYS;
@@ -501,8 +519,10 @@ export class PromotionLineService {
       case PromotionTypeEnum.PRODUCT_DISCOUNT:
         promotionLine.type = PromotionTypeEnum.PRODUCT_DISCOUNT;
         break;
-      default:
+      case PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT:
         promotionLine.type = PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT;
+        break;
+      default:
         break;
     }
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
@@ -517,51 +537,65 @@ export class PromotionLineService {
     }
     promotionLine.startDate = startDate;
     promotionLine.endDate = endDate;
-    const promotionLineCouponCodeExist = await this.findOnePromotionLine({
-      where: { couponCode },
-      other: { withDeleted: true },
-    });
-    if (promotionLineCouponCodeExist) {
-      throw new BadRequestException('PROMOTION_LINE_COUPON_CODE_ALREADY_EXIST');
+    if (couponCode) {
+      const promotionLineCouponCodeExist = await this.findOnePromotionLine({
+        where: { couponCode },
+        other: { withDeleted: true },
+      });
+      if (promotionLineCouponCodeExist) {
+        throw new BadRequestException(
+          'PROMOTION_LINE_COUPON_CODE_ALREADY_EXIST',
+        );
+      }
+      promotionLine.couponCode = couponCode;
     }
-    promotionLine.couponCode = couponCode;
-    promotionLine.createdBy = adminId;
+    promotionLine.updatedBy = adminId;
     const savePromotionLine = await this.promotionLineRepository.save(
       promotionLine,
     );
 
-    const ticketGroup = await this.dataSource
-      .getRepository(TicketGroup)
-      .findOne({
-        where: { code: ticketGroupCode },
-      });
-    if (!ticketGroup) {
-      throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+    if (ticketGroupCode) {
+      // await this.applicableTGService.createApplicableTicketGroup(
+      //   {
+      //     promotionDetailId: savePromotionDetail.id,
+      //     ticketGroupCode,
+      //   },
+      //   adminExist.id,
+      // );
+      const ticketGroup = await this.dataSource
+        .getRepository(TicketGroup)
+        .findOne({
+          where: { code: ticketGroupCode },
+        });
+      if (!ticketGroup) {
+        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
+      }
+
+      let promotionDetail;
+      if (type === PromotionTypeEnum.PRODUCT_GIVEAWAYS) {
+        promotionDetail = await this.validProductGiveaway(
+          productGiveaway,
+          savePromotionLine,
+        );
+      } else if (type === PromotionTypeEnum.PRODUCT_DISCOUNT) {
+        promotionDetail = await this.validProductDiscount(
+          productDiscount,
+          savePromotionLine,
+        );
+      } else if (type == PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT) {
+        promotionDetail = await this.validProductDiscountPercent(
+          productDiscountPercent,
+          savePromotionLine,
+        );
+      } else {
+        throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
+      }
+      const savePromotionDetail = await this.promotionDetailRepository.save(
+        promotionDetail,
+      );
+      savePromotionLine.promotionDetail = savePromotionDetail;
     }
 
-    let promotionDetail;
-    if (type === PromotionTypeEnum.PRODUCT_GIVEAWAYS) {
-      promotionDetail = await this.validProductGiveaway(
-        productGiveaway,
-        savePromotionLine,
-      );
-    } else if (type === PromotionTypeEnum.PRODUCT_DISCOUNT) {
-      promotionDetail = await this.validProductDiscount(
-        productDiscount,
-        savePromotionLine,
-      );
-    } else if (type == PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT) {
-      promotionDetail = await this.validProductDiscountPercent(
-        productDiscountPercent,
-        savePromotionLine,
-      );
-    } else {
-      throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
-    }
-    const savePromotionDetail = await this.promotionDetailRepository.save(
-      promotionDetail,
-    );
-    savePromotionLine.promotionDetail = savePromotionDetail;
     return savePromotionLine;
   }
 

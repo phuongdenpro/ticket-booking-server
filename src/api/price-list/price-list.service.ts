@@ -179,24 +179,17 @@ export class PriceListService {
 
     const query = this.priceListRepository.createQueryBuilder('q');
     if (keywords) {
-      query
-        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.note LIKE :keywords', { keywords: `%${keywords}%` });
+      const subQuery = this.priceListRepository
+        .createQueryBuilder('q2')
+        .where('q2.code LIKE :code', { code: `%${keywords}%` })
+        .orWhere('q2.name LIKE :name', { name: `%${keywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${keywords}%` })
+        .getQuery();
+
+      query.andWhere(`EXISTS ${subQuery}`, {});
     }
-    switch (status) {
-      case ActiveStatusEnum.ACTIVE:
-        query.andWhere('q.status = :status', {
-          status: ActiveStatusEnum.ACTIVE,
-        });
-        break;
-      case ActiveStatusEnum.INACTIVE:
-        query.andWhere('q.status = :status', {
-          status: ActiveStatusEnum.INACTIVE,
-        });
-        break;
-      default:
-        break;
+    if (status) {
+      query.where('q.status = :status', { status });
     }
     if (startDate) {
       const newStartDate = new Date(startDate);
@@ -206,18 +199,13 @@ export class PriceListService {
       const newEndDate = new Date(endDate);
       query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
-    if (sort) {
-      query.orderBy('q.createdAt', sort);
-    } else {
-      query.orderBy('q.createdAt', SortEnum.DESC);
-    }
+    query.orderBy('q.createdAt', sort || SortEnum.DESC);
 
     const dataResult = await query
       .select(this.selectFieldsPriceListWithQ)
-      .offset(pagination.skip)
-      .limit(pagination.take)
+      .offset(pagination.skip ?? 0)
+      .limit(pagination.take ?? 10)
       .getMany();
-
     const total = await query.clone().getCount();
 
     return { dataResult, total, pagination };
@@ -623,25 +611,29 @@ export class PriceListService {
     const { price, keywords, priceListId, sort } = dto;
     const query = this.priceDetailRepository.createQueryBuilder('q');
 
+    if (keywords) {
+      const subQuery = this.priceDetailRepository
+        .createQueryBuilder('q2')
+        .where('q2.code LIKE :code', { code: `%${keywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${keywords}%` })
+        .getQuery();
+
+      query.andWhere(`EXISTS ${subQuery}`, {});
+    }
     if (price) {
       query.andWhere('q.price <= :price', { price });
-    }
-    if (keywords) {
-      query.andWhere('q.note like :note', { note: `%${keywords}%` });
     }
     if (priceListId) {
       query
         .leftJoinAndSelect('q.priceList', 'p')
         .andWhere('p.id = :priceListId', { priceListId });
     }
-    if (sort) {
-      query.orderBy('q.price', sort);
-    } else {
-      query.orderBy('q.price', SortEnum.ASC);
-    }
+    query
+      .orderBy('q.price', sort || SortEnum.ASC)
+      .addOrderBy('q.code', sort || SortEnum.DESC)
+      .addOrderBy('q.note', sort || SortEnum.DESC);
 
     const dataResult = await query
-      .addOrderBy('q.note', SortEnum.ASC)
       .leftJoinAndSelect('q.ticketGroup', 't')
       .select(this.selectFieldsPriceDetailWithQ)
       .skip(pagination.skip)
