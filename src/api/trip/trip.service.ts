@@ -38,8 +38,10 @@ export class TripService {
     'q.createdAt',
     'q.updatedAt',
     'fs.id',
+    'fs.code',
     'fs.name',
     'to.id',
+    'to.code',
     'to.name',
   ];
 
