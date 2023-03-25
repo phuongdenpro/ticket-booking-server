@@ -92,10 +92,10 @@ export class CreatePromotionLineDto {
   maxQuantityPerCustomer: number;
 
   @ApiProperty({ example: 1_000_000 })
-  @IsNotEmpty({ message: 'BUDGET_IS_REQUIRED' })
+  @IsNotEmpty({ message: 'MAX_BUDGET_IS_REQUIRED' })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 3 },
-    { message: 'BUDGET_IS_NUMBER' },
+    { message: 'MAX_BUDGET_IS_NUMBER' },
   )
   @Min(0, { message: 'BUDGET_MUST_BE_GREATER_THAN_0' })
   maxBudget: number;

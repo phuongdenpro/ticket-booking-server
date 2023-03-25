@@ -34,7 +34,7 @@ export class ProductDiscountPercentDto {
   // @IsOptional()
   quantityBuy: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: 0 })
   @IsInt({ message: 'PURCHASE_AMOUNT_MUST_BE_INT' })
   @Min(0, { message: 'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0' })
   // @IsOptional()
@@ -46,7 +46,7 @@ export class ProductDiscountPercentDto {
   // @IsOptional()
   percentDiscount: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: 10000 })
   @IsInt({ message: 'MAX_REDUCTION_AMOUNT_MUST_BE_INT' })
   @Min(0, { message: 'MAX_REDUCTION_AMOUNT_GREATER_THAN_OR_EQUAL_TO_0' })
   // @IsOptional()

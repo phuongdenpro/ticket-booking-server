@@ -299,6 +299,25 @@ export const mappingTranslate = {
   PRICE_DETAIL_CODE_EXISTED: 'Mã chi tiết giá đã tồn tại',
 
   // promotion
+  USE_BUDGET_IS_NUMBER: 'Ngân sách đã dùng phải là số',
+  USE_BUDGET_MUST_BE_GREATER_THAN_0:
+    'Ngân sách đã dùng phải lớn hơn hoặc bằng 0',
+  MIN_OF_MAX_BUDGET_IS_NUMBER: 'Số tối thiểu của ngân sách tối đa phải là số',
+  MIN_OF_MAX_BUDGET_MUST_BE_GREATER_THAN_0:
+    'Số tối thiểu của ngân sách tối đa phải lớn hơn hoặc bằng 0',
+  MAX_OF_MAX_BUDGET_IS_NUMBER: 'Số tối đa của ngân sách tối đa phải là số',
+  MAX_OF_MAX_BUDGET_MUST_BE_GREATER_THAN_0:
+    'Số tối đa của ngân sách tối đa phải lớn hơn hoặc bằng 0',
+  MAX_BUDGET_IS_REQUIRED: 'Ngân sách tối đa không được để trống',
+  MAX_BUDGET_IS_NUMBER: 'Ngân sách tối đa phải là số',
+  MAX_BUDGET_MUST_BE_GREATER_THAN_0:
+    'Ngân sách tối đa phải lớn hơn hoặc bằng 0',
+  MIN_USE_BUDGET_IS_NUMBER: 'Ngân sách đã sử dụng tối thiểu phải là số',
+  MIN_USE_BUDGET_MUST_BE_GREATER_THAN_0:
+    'Ngân sách đã sử dụng tối thiểu phải lớn hơn hoặc bằng 0',
+  MAX_USE_BUDGET_MUST_BE_GREATER_THAN_0:
+    'Ngân sách đã sử dụng tối đa phải lớn hơn hoặc bằng 0',
+  MAX_USE_BUDGET_IS_NUMBER: 'Ngân sách đã sử dụng tối đa phải là số',
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
   BUDGET_MUST_BE_INT: 'Ngân sách phải là số nguyên',
@@ -315,7 +334,22 @@ export const mappingTranslate = {
     'Trạng thái chương trình khuyến mãi không được để trống',
   PROMOTION_STATUS_IS_ENUM:
     'Trạng thái chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Đang hoạt động", "Ngừng hoạt động", "Hết hạn", "Hết số lượng", "Hết ngân sách"',
+  USE_QUANTITY_IS_NUMBER: 'Số lượng đã dùng phải là số',
+  MIN_USE_QUANTITY_IS_NUMBER: 'Số lượng đã dùng tối thiểu phải là số',
+  MAX_USE_QUANTITY_IS_NUMBER: 'Số lượng đã dùng tối đa phải là số',
+  USE_QUANTITY_MIN_0: 'Số lượng đã dùng phải lớn hơn hoặc bằng 0',
+  MIN_USE_QUANTITY_MIN_0: 'Số lượng đã dùng tối thiểu phải lớn hơn hoặc bằng 0',
+  MAX_USE_QUANTITY_MIN_0: 'Số lượng đã dùng tối đa phải lớn hơn hoặc bằng 0',
+  MAX_OF_MAX_QUANTITY_IS_NUMBER:
+    'Số tối đa của số lượng áp dụng tối đa phải là số',
+  MIN_OF_MAX_QUANTITY_IS_NUMBER:
+    'Số tối thiểu của số lượng áp dụng tối đa phải là số',
+  MAX_OF_MAX_QUANTITY_MIN_0:
+    'Số tối đa của số lượng áp dụng tối đa phải lớn hơn hoặc bằng 0',
+  MIN_OF_MAX_QUANTITY_MIN_0:
+    'Số tối thiểu của số lượng áp dụng tối đa phải lớn hơn hoặc bằng 0',
   MAX_QUANTITY_MIN_1: 'Số lượng tối đa phải lớn hơn hoặc bằng 1',
+  MAX_QUANTITY_MIN_0: 'Số lượng tối đa phải lớn hơn hoặc bằng 0',
   MAX_QUANTITY_IS_REQUIRED: 'Số lượng tối đa không được để trống',
   MAX_QUANTITY_IS_NUMBER: 'Số lượng tối đa phải là số',
   MAX_QUANTITY_MUST_BE_INTEGER: 'Số lượng tối đa phải là số nguyên',
@@ -324,6 +358,8 @@ export const mappingTranslate = {
   MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_MIN_1:
     'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 1',
+  MAX_QUANTITY_PER_CUSTOMER_MIN_0:
+    'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 0',
   MAX_QUANTITY_PER_CUSTOMER_MUST_BE_INTEGER:
     'Số lượng tối đa cho mỗi khách hàng phải 1 số nguyên',
   MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED:
@@ -345,6 +381,14 @@ export const mappingTranslate = {
   PROMOTION_ID_IS_36_CHARACTERS:
     'Id của chương trình khuyến mãi phải là 36 ký tự',
   PROMOTION_ID_IS_STRING: 'Id của chương trình khuyến mãi phải là chuỗi ký tự',
+  MIN_OF_MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
+    'Số tổi thiểu của Số lượng tối đa áp dụng cho mỗi khách hàng phải là số',
+  MIN_OF_MAX_QUANTITY_PER_CUSTOMER_MIN_0:
+    'Số tổi thiểu của Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn hoặc bằng 0',
+  MAX_OF_MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
+    'Số tổi đa của Số lượng tối đa áp dụng cho mỗi khách hàng phải là số',
+  MAX_OF_MAX_QUANTITY_PER_CUSTOMER_MIN_0:
+    'Số tổi đa của Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn hoặc bằng 0',
 
   // promotion line
   PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy khuyến mãi',

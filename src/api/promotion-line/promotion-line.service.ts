@@ -1,3 +1,4 @@
+import { Pagination } from './../../decorator';
 import { ApplicableTicketGroupService } from './../applicable-ticket-group/applicable-ticket-group.service';
 import {
   CreatePromotionLineDto,
@@ -5,6 +6,7 @@ import {
   ProductDiscountDto,
   ProductDiscountPercentDto,
   UpdatePromotionLineDto,
+  FilterPromotionLineDto,
 } from './dto';
 import { PromotionTypeEnum, SortEnum } from './../../enums';
 import {
@@ -69,8 +71,7 @@ export class PromotionLineService {
       throw new BadRequestException('QUANTITY_RECEIVE_IS_INT');
     }
     promotionDetail.quantityReceive = quantityReceive;
-
-    if (!purchaseAmount) {
+    if (!purchaseAmount && purchaseAmount !== 0) {
       throw new BadRequestException('PURCHASE_AMOUNT_IS_REQUIRED');
     }
     if (purchaseAmount < 0) {
@@ -107,7 +108,7 @@ export class PromotionLineService {
     }
     promotionDetail.quantityBuy = quantityBuy;
 
-    if (!purchaseAmount) {
+    if (!purchaseAmount && purchaseAmount !== 0) {
       throw new BadRequestException('PURCHASE_AMOUNT_IS_REQUIRED');
     }
     if (purchaseAmount < 0) {
@@ -122,7 +123,7 @@ export class PromotionLineService {
     }
     promotionDetail.purchaseAmount = purchaseAmount;
 
-    if (!maxReductionAmount) {
+    if (!maxReductionAmount && maxReductionAmount !== 0) {
       throw new BadRequestException('MAX_REDUCTION_AMOUNT_IS_REQUIRED');
     }
     if (maxReductionAmount < 0) {
@@ -135,7 +136,7 @@ export class PromotionLineService {
     }
     promotionDetail.maxReductionAmount = maxReductionAmount;
 
-    if (!reductionAmount) {
+    if (!reductionAmount && reductionAmount !== 0) {
       throw new BadRequestException('REDUCTION_AMOUNT_IS_REQUIRED');
     }
     if (reductionAmount < 0) {
@@ -170,7 +171,7 @@ export class PromotionLineService {
     }
     promotionDetail.quantityBuy = quantityBuy;
 
-    if (!purchaseAmount) {
+    if (!purchaseAmount && purchaseAmount !== 0) {
       throw new BadRequestException('PURCHASE_AMOUNT_IS_REQUIRED');
     }
     if (purchaseAmount < 0) {
@@ -185,7 +186,7 @@ export class PromotionLineService {
     }
     promotionDetail.purchaseAmount = purchaseAmount;
 
-    if (!maxReductionAmount) {
+    if (!maxReductionAmount && maxReductionAmount !== 0) {
       throw new BadRequestException('MAX_REDUCTION_AMOUNT_IS_REQUIRED');
     }
     if (maxReductionAmount < 0) {
@@ -242,6 +243,7 @@ export class PromotionLineService {
     return await this.promotionLineRepository.findOne({
       where: { ...options?.where },
       relations: {
+        promotionDetail: true,
         ...options?.relations,
       },
       select: {
@@ -290,6 +292,128 @@ export class PromotionLineService {
     return line;
   }
 
+  async findAllPromotionLine(
+    dto: FilterPromotionLineDto,
+    pagination?: Pagination,
+  ) {
+    const {
+      keywords,
+      minUseBudget,
+      maxUseBudget,
+      minOfMaxBudget,
+      maxOfMaxBudget,
+      minUseQuantity,
+      maxUseQuantity,
+      maxOfMaxQuantity,
+      minOfMaxQuantity,
+      minOfMaxQuantityPerCustomer,
+      maxOfMaxQuantityPerCustomer,
+      startDate,
+      endDate,
+      type,
+      promotionCode,
+      sort,
+    } = dto;
+    const query = this.promotionLineRepository.createQueryBuilder('q');
+    if (keywords) {
+      const subQuery = this.promotionLineRepository
+        .createQueryBuilder('q2')
+        .where('q2.code LIKE :code', { code: `%${keywords}%` })
+        .orWhere('q2.couponCode LIKE :couponCode', {
+          couponCode: `%${keywords}%`,
+        })
+        .where('q2.title LIKE :title', { title: `%${keywords}%` })
+        .where('q2.description LIKE :description', {
+          description: `%${keywords}%`,
+        })
+        .where('q2.note LIKE :note', { note: `%${keywords}%` })
+        .getQuery();
+
+      query.andWhere(`EXISTS ${subQuery}`, {});
+    }
+    if (promotionCode) {
+      query.leftJoinAndSelect('q.promotion', 'p');
+      query.andWhere('p.code = :promotionCode', { promotionCode });
+    }
+    if (startDate) {
+      query.andWhere('q.startDate >= :startDate', { startDate });
+    }
+    if (endDate) {
+      query.andWhere('q.endDate <= :endDate', { endDate });
+    }
+    switch (type) {
+      case PromotionTypeEnum.PRODUCT_DISCOUNT:
+      case PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT:
+      case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
+        query.andWhere('q.type = :type', { type });
+        break;
+      default:
+        break;
+    }
+    if (minUseQuantity) {
+      query.andWhere('q.useQuantity >= :minUseQuantity', { minUseQuantity });
+    }
+    if (maxUseQuantity) {
+      query.andWhere('q.useQuantity <= :maxUseQuantity', { maxUseQuantity });
+    }
+    if (minUseBudget) {
+      query.andWhere('q.useBudget >= :minUseBudget', { minUseBudget });
+    }
+    if (maxUseBudget) {
+      query.andWhere('q.useBudget <= :maxUseBudget', { maxUseBudget });
+    }
+    if (minOfMaxQuantity) {
+      query.andWhere('q.maxQuantity >= :minOfMaxQuantity', {
+        minOfMaxQuantity,
+      });
+    }
+    if (maxOfMaxQuantity) {
+      query.andWhere('q.maxQuantity <= :maxOfMaxQuantity', {
+        maxOfMaxQuantity,
+      });
+    }
+    if (minOfMaxBudget) {
+      query.andWhere('q.maxBudget >= :minOfMaxBudget', {
+        minOfMaxBudget,
+      });
+    }
+    if (maxOfMaxBudget) {
+      query.andWhere('q.maxBudget <= :maxOfMaxBudget', {
+        maxOfMaxBudget,
+      });
+    }
+    if (minOfMaxQuantityPerCustomer) {
+      query.andWhere(
+        'q.maxQuantityPerCustomer >= :minOfMaxQuantityPerCustomer',
+        {
+          minOfMaxQuantityPerCustomer,
+        },
+      );
+    }
+    if (maxOfMaxQuantityPerCustomer) {
+      query.andWhere(
+        'q.maxQuantityPerCustomer <= :maxOfMaxQuantityPerCustomer',
+        {
+          maxOfMaxQuantityPerCustomer,
+        },
+      );
+    }
+
+    query
+      .orderBy('q.title', sort || SortEnum.DESC)
+      .orderBy('q.code', sort || SortEnum.DESC)
+      .orderBy('q.couponCode', sort || SortEnum.DESC)
+      .addOrderBy('q.createdAt', sort || SortEnum.DESC);
+
+    const dataResult = await query
+      .offset(pagination.skip ?? 0)
+      .limit(pagination.take ?? 10)
+      .getMany();
+    const total = await query.clone().getCount();
+
+    return { dataResult, total, pagination };
+  }
+
   async createPromotionLine(dto: CreatePromotionLineDto, adminId: string) {
     const {
       code,
@@ -319,13 +443,6 @@ export class PromotionLineService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const promotionLineCodeExist = await this.findOnePromotionLineByCode(code, {
-      other: { withDeleted: true },
-    });
-    if (promotionLineCodeExist) {
-      throw new BadRequestException('PROMOTION_LINE_CODE_ALREADY_EXIST');
-    }
-
     const promotionLine = new PromotionLine();
     if (!promotionCode) {
       throw new BadRequestException('PROMOTION_CODE_IS_REQUIRED');
@@ -336,8 +453,16 @@ export class PromotionLineService {
     if (!promotion) {
       throw new BadRequestException('PROMOTION_NOT_FOUND');
     }
-    promotionLine.code = code;
     promotionLine.promotion = promotion;
+
+    const promotionLineCodeExist = await this.findOnePromotionLineByCode(code, {
+      other: { withDeleted: true },
+    });
+    if (promotionLineCodeExist) {
+      throw new BadRequestException('PROMOTION_LINE_CODE_ALREADY_EXIST');
+    }
+    promotionLine.code = code;
+
     promotionLine.title = title;
     promotionLine.description = description;
     promotionLine.note = note;
@@ -345,6 +470,7 @@ export class PromotionLineService {
       throw new BadRequestException('BUDGET_MUST_BE_GREATER_THAN_0');
     }
     promotionLine.maxBudget = maxBudget;
+
     if (!Number.isInteger(maxQuantity)) {
       throw new BadRequestException('MAX_QUANTITY_MUST_BE_INT');
     }
@@ -352,6 +478,7 @@ export class PromotionLineService {
       throw new BadRequestException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
     }
     promotionLine.maxQuantity = maxQuantity;
+
     if (!Number.isInteger(maxQuantityPerCustomer)) {
       throw new BadRequestException('MAX_QUANTITY_MUST_BE_INT');
     }
@@ -361,17 +488,17 @@ export class PromotionLineService {
       );
     }
     promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
+
     switch (type) {
       case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
-        promotionLine.type = PromotionTypeEnum.PRODUCT_GIVEAWAYS;
-        break;
       case PromotionTypeEnum.PRODUCT_DISCOUNT:
-        promotionLine.type = PromotionTypeEnum.PRODUCT_DISCOUNT;
+      case PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT:
+        promotionLine.type = type;
         break;
       default:
-        promotionLine.type = PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT;
-        break;
+        throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
     }
+
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate < currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -384,6 +511,7 @@ export class PromotionLineService {
     }
     promotionLine.startDate = startDate;
     promotionLine.endDate = endDate;
+
     const promotionLineCouponCodeExist = await this.findOnePromotionLine({
       where: { couponCode },
       other: { withDeleted: true },
@@ -392,46 +520,75 @@ export class PromotionLineService {
       throw new BadRequestException('PROMOTION_LINE_COUPON_CODE_ALREADY_EXIST');
     }
     promotionLine.couponCode = couponCode;
+
     promotionLine.createdBy = adminId;
-    const savePromotionLine = await this.promotionLineRepository.save(
-      promotionLine,
-    );
+    let savePromotionLine;
+    let savePromotionDetail;
+    let applicableTG;
+    try {
+      savePromotionLine = await this.promotionLineRepository.save(
+        promotionLine,
+      );
+      let promotionDetail: PromotionDetail;
+      if (type === PromotionTypeEnum.PRODUCT_GIVEAWAYS && productGiveaway) {
+        promotionDetail = await this.validProductGiveaway(
+          productGiveaway,
+          savePromotionLine,
+        );
+      } else if (
+        type === PromotionTypeEnum.PRODUCT_DISCOUNT &&
+        productDiscount
+      ) {
+        promotionDetail = await this.validProductDiscount(
+          productDiscount,
+          savePromotionLine,
+        );
+      } else if (
+        type == PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT &&
+        productDiscountPercent
+      ) {
+        promotionDetail = await this.validProductDiscountPercent(
+          productDiscountPercent,
+          savePromotionLine,
+        );
+      } else {
+        throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
+      }
+      promotionDetail.promotionLineCode = savePromotionLine.code;
+      savePromotionDetail = await this.promotionDetailRepository.save(
+        promotionDetail,
+      );
 
-    let promotionDetail;
-    if (type === PromotionTypeEnum.PRODUCT_GIVEAWAYS) {
-      promotionDetail = await this.validProductGiveaway(
-        productGiveaway,
-        savePromotionLine,
+      applicableTG = await this.applicableTGService.createApplicableTicketGroup(
+        {
+          promotionDetailId: savePromotionDetail.id,
+          ticketGroupCode,
+        },
+        adminExist.id,
       );
-    } else if (type === PromotionTypeEnum.PRODUCT_DISCOUNT) {
-      promotionDetail = await this.validProductDiscount(
-        productDiscount,
-        savePromotionLine,
-      );
-    } else if (type == PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT) {
-      promotionDetail = await this.validProductDiscountPercent(
-        productDiscountPercent,
-        savePromotionLine,
-      );
-    } else {
-      throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
+      delete savePromotionLine.promotion;
+      delete savePromotionDetail.promotionLine;
+      delete savePromotionDetail.deletedAt;
+      savePromotionLine.promotionDetail = savePromotionDetail;
+      return savePromotionLine;
+    } catch (error) {
+      if (applicableTG) {
+        await this.applicableTGService.removeApplicableTicketGroup(
+          {
+            promotionDetailId: savePromotionDetail.id,
+            ticketGroupCode,
+          },
+          adminId,
+        );
+      }
+      if (savePromotionDetail) {
+        await this.promotionDetailRepository.remove(savePromotionDetail);
+      }
+      if (savePromotionLine) {
+        await this.promotionLineRepository.remove(savePromotionLine);
+      }
+      return error;
     }
-    const savePromotionDetail = await this.promotionDetailRepository.save(
-      promotionDetail,
-    );
-    if (!savePromotionDetail) {
-      throw new BadRequestException('PROMOTION_DETAIL_NOT_CREATED');
-    }
-    savePromotionLine.promotionDetail = savePromotionDetail;
-
-    await this.applicableTGService.createApplicableTicketGroup(
-      {
-        promotionDetailId: savePromotionDetail.id,
-        ticketGroupCode,
-      },
-      adminExist.id,
-    );
-    return savePromotionLine;
   }
 
   async updatePromotionLineById(
@@ -482,6 +639,7 @@ export class PromotionLineService {
     if (note) {
       promotionLine.note = note;
     }
+
     if (maxBudget) {
       if (maxBudget < 0) {
         throw new BadRequestException('BUDGET_MUST_BE_GREATER_THAN_0');
@@ -493,6 +651,7 @@ export class PromotionLineService {
       }
       promotionLine.maxBudget = maxBudget;
     }
+
     if (maxQuantity) {
       if (maxQuantity < 0) {
         throw new BadRequestException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
@@ -504,6 +663,7 @@ export class PromotionLineService {
       }
       promotionLine.maxQuantity = maxQuantity;
     }
+
     if (maxQuantityPerCustomer) {
       if (maxQuantityPerCustomer < 0) {
         throw new BadRequestException(
@@ -512,19 +672,17 @@ export class PromotionLineService {
       }
       promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
     }
+
     switch (type) {
       case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
-        promotionLine.type = PromotionTypeEnum.PRODUCT_GIVEAWAYS;
-        break;
       case PromotionTypeEnum.PRODUCT_DISCOUNT:
-        promotionLine.type = PromotionTypeEnum.PRODUCT_DISCOUNT;
-        break;
       case PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT:
-        promotionLine.type = PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT;
+        promotionLine.type = type;
         break;
       default:
         break;
     }
+
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (startDate < currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -537,6 +695,7 @@ export class PromotionLineService {
     }
     promotionLine.startDate = startDate;
     promotionLine.endDate = endDate;
+
     if (couponCode) {
       const promotionLineCouponCodeExist = await this.findOnePromotionLine({
         where: { couponCode },
@@ -549,19 +708,13 @@ export class PromotionLineService {
       }
       promotionLine.couponCode = couponCode;
     }
+
     promotionLine.updatedBy = adminId;
     const savePromotionLine = await this.promotionLineRepository.save(
       promotionLine,
     );
 
     if (ticketGroupCode) {
-      // await this.applicableTGService.createApplicableTicketGroup(
-      //   {
-      //     promotionDetailId: savePromotionDetail.id,
-      //     ticketGroupCode,
-      //   },
-      //   adminExist.id,
-      // );
       const ticketGroup = await this.dataSource
         .getRepository(TicketGroup)
         .findOne({
@@ -599,5 +752,26 @@ export class PromotionLineService {
     return savePromotionLine;
   }
 
-  // async updatePromotionLineByCode(id: string, dto, adminId: string) {}
+  // promotion detail
+  async findOnePromotionDetail(options: any) {
+    return await this.promotionDetailRepository.findOne({
+      where: { ...options?.where },
+      relations: {
+        ...options?.relations,
+      },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options?.other,
+    });
+  }
+
+  async findOnePromotionDetailByCode(code: string, options?: any) {}
+
+  async findOnePromotionDetailById(id: string, options?: any) {}
 }
