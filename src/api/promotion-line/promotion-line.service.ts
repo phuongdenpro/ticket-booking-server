@@ -6,6 +6,7 @@ import {
   ProductDiscountPercentDto,
   UpdatePromotionLineDto,
   FilterPromotionLineDto,
+  DeleteMultiPromotionLineDto,
 } from './dto';
 import {
   PromotionStatusEnum,
@@ -833,26 +834,107 @@ export class PromotionLineService {
     }
   }
 
-  // promotion detail
-  async findOnePromotionDetail(options: any) {
-    return await this.promotionDetailRepository.findOne({
-      where: { ...options?.where },
-      relations: {
-        ...options?.relations,
-      },
-      select: {
-        deletedAt: false,
-        ...options?.select,
-      },
-      order: {
-        createdAt: SortEnum.DESC,
-        ...options?.order,
-      },
-      ...options?.other,
+  async deletePromotionLineByIdOrCode(
+    adminId: string,
+    id?: string,
+    code?: string,
+  ) {
+    const adminExist = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: adminId },
     });
+    if (!adminExist) {
+      throw new NotFoundException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
+    }
+
+    let promotionLine;
+    if (id) {
+      promotionLine = await this.findOnePromotionLineById(id, {
+        relations: {
+          promotion: true,
+        },
+      });
+    } else if (code) {
+      promotionLine = await this.findOnePromotionLineByCode(code, {
+        relations: {
+          promotion: true,
+        },
+      });
+    }
+    if (!promotionLine) {
+      throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
+    }
+    if (promotionLine.promotion.status === PromotionStatusEnum.ACTIVE) {
+      throw new BadRequestException('PROMOTION_LINE_IS_ACTIVE');
+    }
+    promotionLine.updatedBy = adminId;
+    const promotionDetail = promotionLine.promotionDetail;
+    await this.promotionDetailRepository.softRemove(promotionDetail);
+    await this.promotionLineRepository.softRemove(promotionLine);
+    return {
+      id: promotionLine.id,
+      code: promotionLine.code,
+      message: 'Xoá thành công',
+    };
   }
 
-  // async findOnePromotionDetailByCode(code: string, options?: any) {}
+  async deleteMultiPromotionLineByIdOrCode(
+    dto: DeleteMultiPromotionLineDto,
+    adminId: string,
+    type: string,
+  ) {
+    const adminExist = await this.dataSource.getRepository(Staff).findOne({
+      where: { id: adminId },
+    });
+    if (!adminExist) {
+      throw new NotFoundException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
 
-  // async findOnePromotionDetailById(id: string, options?: any) {}
+    const { list } = dto;
+    const newList = await Promise.all(
+      list.map(async (data) => {
+        let promotionLine;
+        if (!data) {
+          return {
+            id: type === 'id' ? data : undefined,
+            code: type === 'code' ? data : undefined,
+            message: `${type} không được để trống`,
+          };
+        }
+        if (type === 'id') {
+          promotionLine = await this.findOnePromotionLineById(data);
+        } else if (type === 'code') {
+          promotionLine = await this.findOnePromotionLineByCode(data);
+        }
+        if (!promotionLine) {
+          return {
+            id: type === 'id' ? data : undefined,
+            code: type === 'code' ? data : undefined,
+            message: 'Không tìm thấy khuyến mãi',
+          };
+        }
+        promotionLine.updatedBy = adminExist.id;
+        const promotionDetail = promotionLine.promotionDetail;
+        await this.promotionDetailRepository.softRemove(promotionDetail);
+        const savePromotionLine = await this.promotionLineRepository.softRemove(
+          promotionLine,
+        );
+        return {
+          id: savePromotionLine.id,
+          code: savePromotionLine.code,
+          message: 'Xoá chương trình khuyến mãi thành công',
+        };
+      }),
+    );
+    return newList;
+  }
 }

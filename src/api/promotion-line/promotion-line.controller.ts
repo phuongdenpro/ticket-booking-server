@@ -9,6 +9,7 @@ import {
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -22,6 +23,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PromotionLineService } from './promotion-line.service';
 import {
   CreatePromotionLineDto,
+  DeleteMultiPromotionLineDto,
   FilterPromotionLineDto,
   UpdatePromotionLineDto,
 } from './dto';
@@ -103,5 +105,65 @@ export class PromotionLineController {
   @HttpCode(HttpStatus.OK)
   async getPromotionById(@Param('id') id: string) {
     return await this.promotionLineService.getPromotionLineById(id);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deletePromotionById(@Param('id') id: string, @CurrentUser() user) {
+    return await this.promotionLineService.deletePromotionLineByIdOrCode(
+      user.id,
+      id,
+    );
+  }
+
+  @Delete(':code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deletePromotionByCode(
+    @Param('code') code: string,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionLineService.deletePromotionLineByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
+  }
+
+  @Delete('multiple/ids')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiplePromotionByIds(
+    dto: DeleteMultiPromotionLineDto,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionLineService.deleteMultiPromotionLineByIdOrCode(
+      dto,
+      user.id,
+      'id',
+    );
+  }
+
+  @Delete('multiple/codes')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiplePromotionByCodes(
+    dto: DeleteMultiPromotionLineDto,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionLineService.deleteMultiPromotionLineByIdOrCode(
+      dto,
+      user.id,
+      'code',
+    );
   }
 }

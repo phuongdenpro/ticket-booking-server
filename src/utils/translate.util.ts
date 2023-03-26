@@ -408,6 +408,7 @@ export const mappingTranslate = {
   COUPON_CODE_IS_STRING: 'Mã coupon phải là chuỗi ký tự',
   COUPON_CODE_BETWEEN_1_100_CHARACTERS: 'Mã voucher phải có từ 1-100 ký tự',
   PROMOTION_LINE_COUPON_CODE_ALREADY_EXIST: 'Mã voucher khuyến mãi đã tồn tại',
+  PROMOTION_LINE_IS_ACTIVE: 'Khuyến mãi đang được sử dụng',
 
   // promotion detail
   PROMOTION_DETAIL_NOT_CREATED: 'Không thể tạo chi tiết khuyến mãi',
