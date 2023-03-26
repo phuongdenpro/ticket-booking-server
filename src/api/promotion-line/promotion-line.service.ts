@@ -1,7 +1,7 @@
 import { Pagination } from './../../decorator';
 import {
   CreatePromotionLineDto,
-  ProductGiveawayDto,
+  // ProductGiveawayDto,
   ProductDiscountDto,
   ProductDiscountPercentDto,
   UpdatePromotionLineDto,
@@ -43,57 +43,57 @@ export class PromotionLineService {
   ) {}
 
   // valid
-  private async validProductGiveaway(
-    dto: ProductGiveawayDto,
-    savePromotionLine: PromotionLine,
-  ): Promise<PromotionDetail> {
-    const { quantityBuy, quantityReceive, purchaseAmount } = dto;
+  // private async validProductGiveaway(
+  //   dto: ProductGiveawayDto,
+  //   savePromotionLine: PromotionLine,
+  // ): Promise<PromotionDetail> {
+  //   const { quantityBuy, quantityReceive, purchaseAmount } = dto;
 
-    const promotionDetail = new PromotionDetail();
-    promotionDetail.reductionAmount = null;
-    promotionDetail.percentDiscount = null;
-    promotionDetail.maxReductionAmount = null;
-    promotionDetail.promotionLine = savePromotionLine;
-    if (!quantityBuy) {
-      throw new BadRequestException('QUANTITY_BUY_IS_REQUIRED');
-    }
-    if (quantityBuy < 1) {
-      throw new BadRequestException('QUANTITY_BUY_MUST_BE_GREATER_THAN_0');
-    }
-    if (!Number.isInteger(quantityBuy)) {
-      throw new BadRequestException('QUANTITY_BUY_MUST_BE_INTEGER');
-    }
-    promotionDetail.quantityBuy = quantityBuy;
+  //   const promotionDetail = new PromotionDetail();
+  //   promotionDetail.reductionAmount = null;
+  //   promotionDetail.percentDiscount = null;
+  //   promotionDetail.maxReductionAmount = null;
+  //   promotionDetail.promotionLine = savePromotionLine;
+  //   if (!quantityBuy) {
+  //     throw new BadRequestException('QUANTITY_BUY_IS_REQUIRED');
+  //   }
+  //   if (quantityBuy < 1) {
+  //     throw new BadRequestException('QUANTITY_BUY_MUST_BE_GREATER_THAN_0');
+  //   }
+  //   if (!Number.isInteger(quantityBuy)) {
+  //     throw new BadRequestException('QUANTITY_BUY_MUST_BE_INTEGER');
+  //   }
+  //   promotionDetail.quantityBuy = quantityBuy;
 
-    if (!quantityReceive) {
-      throw new BadRequestException('QUANTITY_RECEIVE_IS_REQUIRED');
-    }
-    if (quantityReceive < 1) {
-      throw new BadRequestException(
-        'QUANTITY_RECEIVE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_1',
-      );
-    }
-    if (!Number.isInteger(quantityReceive)) {
-      throw new BadRequestException('QUANTITY_RECEIVE_IS_INT');
-    }
-    promotionDetail.quantityReceive = quantityReceive;
-    if (!purchaseAmount && purchaseAmount !== 0) {
-      throw new BadRequestException('PURCHASE_AMOUNT_IS_REQUIRED');
-    }
-    if (purchaseAmount < 0) {
-      throw new BadRequestException(
-        'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
-      );
-    }
-    if (!Number.isInteger(purchaseAmount)) {
-      throw new BadRequestException(
-        'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
-      );
-    }
-    promotionDetail.purchaseAmount = purchaseAmount;
+  //   if (!quantityReceive) {
+  //     throw new BadRequestException('QUANTITY_RECEIVE_IS_REQUIRED');
+  //   }
+  //   if (quantityReceive < 1) {
+  //     throw new BadRequestException(
+  //       'QUANTITY_RECEIVE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_1',
+  //     );
+  //   }
+  //   if (!Number.isInteger(quantityReceive)) {
+  //     throw new BadRequestException('QUANTITY_RECEIVE_IS_INT');
+  //   }
+  //   promotionDetail.quantityReceive = quantityReceive;
+  //   if (!purchaseAmount && purchaseAmount !== 0) {
+  //     throw new BadRequestException('PURCHASE_AMOUNT_IS_REQUIRED');
+  //   }
+  //   if (purchaseAmount < 0) {
+  //     throw new BadRequestException(
+  //       'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
+  //     );
+  //   }
+  //   if (!Number.isInteger(purchaseAmount)) {
+  //     throw new BadRequestException(
+  //       'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
+  //     );
+  //   }
+  //   promotionDetail.purchaseAmount = purchaseAmount;
 
-    return promotionDetail;
-  }
+  //   return promotionDetail;
+  // }
 
   private async validProductDiscount(
     dto: ProductDiscountDto,
@@ -354,7 +354,7 @@ export class PromotionLineService {
     switch (type) {
       case PromotionTypeEnum.PRODUCT_DISCOUNT:
       case PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT:
-      case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
+        // case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
         query.andWhere('q.type = :type', { type });
         break;
       default:
@@ -442,7 +442,7 @@ export class PromotionLineService {
       ticketGroupCode,
       productDiscount,
       productDiscountPercent,
-      productGiveaway,
+      // productGiveaway,
     } = dto;
     const adminExist = await this.dataSource.getRepository(Staff).findOne({
       where: { id: adminId },
@@ -501,7 +501,7 @@ export class PromotionLineService {
     promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
 
     switch (type) {
-      case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
+      // case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
       case PromotionTypeEnum.PRODUCT_DISCOUNT:
       case PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT:
         promotionLine.type = type;
@@ -554,15 +554,13 @@ export class PromotionLineService {
         promotionLine,
       );
       let promotionDetail: PromotionDetail;
-      if (type === PromotionTypeEnum.PRODUCT_GIVEAWAYS && productGiveaway) {
-        promotionDetail = await this.validProductGiveaway(
-          productGiveaway,
-          savePromotionLine,
-        );
-      } else if (
-        type === PromotionTypeEnum.PRODUCT_DISCOUNT &&
-        productDiscount
-      ) {
+      // if (type === PromotionTypeEnum.PRODUCT_GIVEAWAYS && productGiveaway) {
+      //   promotionDetail = await this.validProductGiveaway(
+      //     productGiveaway,
+      //     savePromotionLine,
+      //   );
+      // } else
+      if (type === PromotionTypeEnum.PRODUCT_DISCOUNT && productDiscount) {
         promotionDetail = await this.validProductDiscount(
           productDiscount,
           savePromotionLine,
@@ -630,7 +628,7 @@ export class PromotionLineService {
       ticketGroupCode,
       productDiscount,
       productDiscountPercent,
-      productGiveaway,
+      // productGiveaway,
     } = dto;
     const adminExist = await this.dataSource.getRepository(Staff).findOne({
       where: { id: adminId },
@@ -707,7 +705,7 @@ export class PromotionLineService {
     }
 
     switch (type) {
-      case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
+      // case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
       case PromotionTypeEnum.PRODUCT_DISCOUNT:
       case PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT:
         promotionLine.type = type;
@@ -776,16 +774,16 @@ export class PromotionLineService {
         promotionLine,
       );
       let promotionDetail = promotionLine.promotionDetail;
-      if (productGiveaway && type === PromotionTypeEnum.PRODUCT_GIVEAWAYS) {
-        promotionDetail = await this.validProductGiveaway(
-          productGiveaway,
-          savePromotionLine,
-        );
-        const savePromotionDetail = await this.promotionDetailRepository.save(
-          promotionDetail,
-        );
-        savePromotionLine.promotionDetail = savePromotionDetail;
-      }
+      // if (productGiveaway && type === PromotionTypeEnum.PRODUCT_GIVEAWAYS) {
+      //   promotionDetail = await this.validProductGiveaway(
+      //     productGiveaway,
+      //     savePromotionLine,
+      //   );
+      //   const savePromotionDetail = await this.promotionDetailRepository.save(
+      //     promotionDetail,
+      //   );
+      //   savePromotionLine.promotionDetail = savePromotionDetail;
+      // }
       if (productDiscount && type === PromotionTypeEnum.PRODUCT_DISCOUNT) {
         promotionDetail = await this.validProductDiscount(
           productDiscount,
@@ -795,8 +793,7 @@ export class PromotionLineService {
           promotionDetail,
         );
         savePromotionLine.promotionDetail = savePromotionDetail;
-      }
-      if (
+      } else if (
         productDiscountPercent &&
         type == PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT
       ) {

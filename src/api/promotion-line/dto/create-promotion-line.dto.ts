@@ -18,7 +18,7 @@ import {
 import {
   ProductDiscountDto,
   ProductDiscountPercentDto,
-  ProductGiveawayDto,
+  // ProductGiveawayDto,
 } from './promotion-type.dto';
 import * as moment from 'moment';
 moment.locale('vi');
@@ -139,12 +139,12 @@ export class CreatePromotionLineDto {
   @Type(() => ProductDiscountPercentDto)
   productDiscountPercent?: ProductDiscountPercentDto;
 
-  @ApiProperty({ type: ProductGiveawayDto })
-  @ValidateIf(
-    (dto: CreatePromotionLineDto) =>
-      dto.type === PromotionTypeEnum.PRODUCT_GIVEAWAYS,
-  )
-  @ValidateNested()
-  @Type(() => ProductGiveawayDto)
-  productGiveaway?: ProductGiveawayDto;
+  // @ApiProperty({ type: ProductGiveawayDto })
+  // @ValidateIf(
+  //   (dto: CreatePromotionLineDto) =>
+  //     dto.type === PromotionTypeEnum.PRODUCT_GIVEAWAYS,
+  // )
+  // @ValidateNested()
+  // @Type(() => ProductGiveawayDto)
+  // productGiveaway?: ProductGiveawayDto;
 }

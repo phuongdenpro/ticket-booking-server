@@ -17,7 +17,7 @@ import * as moment from 'moment';
 import {
   ProductDiscountDto,
   ProductDiscountPercentDto,
-  ProductGiveawayDto,
+  // ProductGiveawayDto,
 } from '.';
 moment.locale('vi');
 
@@ -118,12 +118,12 @@ export class UpdatePromotionLineDto {
   @Type(() => ProductDiscountPercentDto)
   productDiscountPercent?: ProductDiscountPercentDto;
 
-  @ApiProperty({ type: ProductGiveawayDto })
-  @ValidateIf(
-    (dto: UpdatePromotionLineDto) =>
-      dto.type === PromotionTypeEnum.PRODUCT_GIVEAWAYS,
-  )
-  @ValidateNested()
-  @Type(() => ProductGiveawayDto)
-  productGiveaway?: ProductGiveawayDto;
+  // @ApiProperty({ type: ProductGiveawayDto })
+  // @ValidateIf(
+  //   (dto: UpdatePromotionLineDto) =>
+  //     dto.type === PromotionTypeEnum.PRODUCT_GIVEAWAYS,
+  // )
+  // @ValidateNested()
+  // @Type(() => ProductGiveawayDto)
+  // productGiveaway?: ProductGiveawayDto;
 }

@@ -128,7 +128,7 @@ export class FilterPromotionLineDto {
     example: PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT,
     enum: [
       '',
-      PromotionTypeEnum.PRODUCT_GIVEAWAYS,
+      // PromotionTypeEnum.PRODUCT_GIVEAWAYS,
       PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT,
       PromotionTypeEnum.PRODUCT_DISCOUNT,
     ],

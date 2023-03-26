@@ -17,7 +17,6 @@ import {
 import { UpdateCustomerDto, UserUpdatePasswordDto } from '../user/dto';
 import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
-import { AuthService } from '../../auth/auth.service';
 import * as moment from 'moment';
 
 @Injectable()
@@ -25,7 +24,6 @@ export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-    private readonly authService: AuthService,
     private readonly dataSource: DataSource,
   ) {}
 

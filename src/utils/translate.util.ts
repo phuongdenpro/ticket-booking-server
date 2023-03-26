@@ -189,12 +189,12 @@ export const mappingTranslate = {
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
+  END_DATE_MUST_BE_GREATER_OR_EQUAL_TO_THAN_NOW:
+    'Ngày kết thúc phải lớn hơn hoặc bằng ngày hiện tại',
   END_DATE_MUST_BE_GREATER_THAN_START_DATE:
     'Ngày kết thúc phải lớn hơn ngày bắt đầu',
-  OLD_END_DATE_GREATER_THAN_START_DATE:
-    'Ngày kết thúc cũ phải lớn hơn ngày bắt đầu',
-  NEW_END_DATE_GREATER_THAN_START_DATE:
-    'Ngày kết thúc mới phải lớn hơn ngày bắt đầu',
+  END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE:
+    'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu',
   START_DATE_IS_REQUIRED: 'Ngày bắt đầu không được để trống',
   END_DATE_IS_REQUIRED: 'Ngày kết thúc không được để trống',
   FROM_STATION_ID_IS_REQUIRED: 'Mã bến xe đi không được để trống',
@@ -284,11 +284,12 @@ export const mappingTranslate = {
     'Id hoặc mã của nhóm vé không được để trống',
 
   // price list
+  PRICE_LIST_IS_ACTIVE: 'Bảng giá này đang được kích hoạt',
   PRICE_LIST_STATUS_INVALID:
     'Trạng thái của bảng giá không hợp lệ. Chỉ nhận 1 trong 2 giá trị: "Kích hoạt", "Tạm ngưng"',
   PRICE_LIST_STATUS_IS_STRING: 'Trạng thái của bảng giá phải là chuỗi ký tự',
   START_DATE_MUST_BE_LESS_THAN_END_DATE:
-    'Ngày bắt đầu phải nhỏ hơn ngày kết thúc',
+    'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc',
   PRICE_LIST_NOT_FOUND: 'Không tìm thấy bảng giá',
   PRICE_LIST_ID_IS_STRING: 'Id của bảng giá phải là chuỗi ký tự',
   PRICE_LIST_ID_IS_REQUIRED: 'Id của bảng giá không được để trống',
