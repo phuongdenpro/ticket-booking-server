@@ -3,13 +3,11 @@ import { Module } from '@nestjs/common';
 import { PromotionLineService } from './promotion-line.service';
 import { PromotionLineController } from './promotion-line.controller';
 import {
-  ApplicableTicketGroup,
   Promotion,
   PromotionDetail,
   PromotionLine,
   TicketGroup,
 } from './../../database/entities';
-import { ApplicableTicketGroupService } from '../applicable-ticket-group/applicable-ticket-group.service';
 
 @Module({
   imports: [
@@ -17,11 +15,10 @@ import { ApplicableTicketGroupService } from '../applicable-ticket-group/applica
       PromotionLine,
       Promotion,
       PromotionDetail,
-      ApplicableTicketGroup,
       TicketGroup,
     ]),
   ],
-  providers: [PromotionLineService, ApplicableTicketGroupService],
+  providers: [PromotionLineService],
   controllers: [PromotionLineController],
   exports: [PromotionLineService],
 })

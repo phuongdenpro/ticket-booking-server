@@ -13,13 +13,18 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PromotionLineService } from './promotion-line.service';
-import { CreatePromotionLineDto, FilterPromotionLineDto } from './dto';
+import {
+  CreatePromotionLineDto,
+  FilterPromotionLineDto,
+  UpdatePromotionLineDto,
+} from './dto';
 
 @Controller('promotion-line')
 @ApiTags('Promotion Line')
@@ -50,6 +55,41 @@ export class PromotionLineController {
     return await this.promotionLineService.findAllPromotionLine(
       dto,
       pagination,
+    );
+  }
+
+  @Patch('id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async UpdatePromotionLineById(
+    @Param('id') id: string,
+    @Body() dto: UpdatePromotionLineDto,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionLineService.updatePromotionLineByIdOrCode(
+      dto,
+      user.id,
+      id,
+    );
+  }
+
+  @Patch('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async UpdatePromotionLineByCode(
+    @Param('code') code: string,
+    @Body() dto: UpdatePromotionLineDto,
+    @CurrentUser() user,
+  ) {
+    return await this.promotionLineService.updatePromotionLineByIdOrCode(
+      dto,
+      user.id,
+      undefined,
+      code,
     );
   }
 

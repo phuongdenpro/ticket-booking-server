@@ -251,7 +251,9 @@ export class PriceListService {
         throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
       }
       if (startDate > endDate) {
-        throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
+        throw new BadRequestException(
+          'END_DATE_MUST_BE_GREATER_THAN_START_DATE',
+        );
       }
       const newEndDate = new Date(endDate);
       priceList.endDate = newEndDate;
@@ -302,10 +304,14 @@ export class PriceListService {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
       }
       if (startDate > endDate) {
-        throw new BadRequestException('NEW_END_DATE_GREATER_THAN_START_DATE');
+        throw new BadRequestException(
+          'NEW_END_DATE_MUST_BE_GREATER_THAN_START_DATE',
+        );
       }
       if (startDate > priceList.endDate) {
-        throw new BadRequestException('OLD_END_DATE_GREATER_THAN_START_DATE');
+        throw new BadRequestException(
+          'OLD_END_DATE_MUST_BE_GREATER_THAN_START_DATE',
+        );
       }
       const newStartDate = new Date(startDate);
       priceList.startDate = newStartDate;
@@ -315,10 +321,14 @@ export class PriceListService {
         throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
       }
       if (startDate > endDate) {
-        throw new BadRequestException('NEW_END_DATE_GREATER_THAN_START_DATE');
+        throw new BadRequestException(
+          'NEW_END_DATE_MUST_BE_GREATER_THAN_START_DATE',
+        );
       }
       if (startDate > priceList.endDate) {
-        throw new BadRequestException('OLD_END_DATE_GREATER_THAN_START_DATE');
+        throw new BadRequestException(
+          'OLD_END_DATE_MUST_BE_GREATER_THAN_START_DATE',
+        );
       }
       const newEndDate = new Date(endDate);
       priceList.endDate = newEndDate;

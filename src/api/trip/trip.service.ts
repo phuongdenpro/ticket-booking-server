@@ -141,7 +141,7 @@ export class TripService {
     trip.startDate = startDate;
     // check end date
     if (endDate < currentDate && endDate < startDate) {
-      throw new BadRequestException('END_DATE_GREATER_THAN_START_DATE');
+      throw new BadRequestException('END_DATE_MUST_BE_GREATER_THAN_START_DATE');
     }
     trip.endDate = endDate;
     // check from station

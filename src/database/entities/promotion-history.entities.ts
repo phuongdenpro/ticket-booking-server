@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { Order, PromotionLine, OrderDetail } from '.';
+import { PromotionLine, OrderDetail } from '.';
 
 @Entity({ name: 'promotion_history' })
 export class PromotionHistory {

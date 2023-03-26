@@ -8,6 +8,7 @@ export const mappingTranslate = {
   TEST: 'Test',
 
   // base
+  ID_OR_CODE_IS_REQUIRED: 'Id hoặc mã không được để trống',
   IDS_REQUIRE: 'Danh sách id không được để trống',
   CODES_IS_REQUIRED: 'Danh sách code không được để trống',
   NAME_IS_REQUIRED: 'Tên không được để trống',
@@ -188,7 +189,8 @@ export const mappingTranslate = {
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
-  END_DATE_GREATER_THAN_START_DATE: 'Ngày kết thúc phải lớn hơn ngày bắt đầu',
+  END_DATE_MUST_BE_GREATER_THAN_START_DATE:
+    'Ngày kết thúc phải lớn hơn ngày bắt đầu',
   OLD_END_DATE_GREATER_THAN_START_DATE:
     'Ngày kết thúc cũ phải lớn hơn ngày bắt đầu',
   NEW_END_DATE_GREATER_THAN_START_DATE:
@@ -250,6 +252,10 @@ export const mappingTranslate = {
   TICKET_GROUP_ID_IS_REQUIRED: 'Id của nhóm vé là không được để trống',
   TICKET_GROUP_ID_IS_STRING: 'Id của nhóm vé phải là chuỗi ký tự',
   TICKET_GROUP_ID_IS_36_CHARACTERS: 'Id của nhóm vé phải là 36 ký tự',
+  TICKET_GROUP_CODES_IS_REQUIRED: 'Danh sách mã nhóm vé không được để trống',
+  TICKET_GROUP_CODE_ITEM_MUST_BE_STRING:
+    'Mã nhóm vé trong danh sách phải là chuỗi ký tự',
+  TICKET_GROUP_CODES_MUST_BE_ARRAY: 'Danh sách mã nhóm vé phải là mảng',
   TICKET_GROUP_CODE_ALREADY_EXIST: 'Mã nhóm vé đã tồn tại',
   TICKET_GROUP_CODE_MUST_BE_STRING: 'Mã nhóm vé phải là chuỗi ký tự',
   TICKET_GROUP_CODE_IS_REQUIRED: 'Mã của nhóm vé là không được để trống',

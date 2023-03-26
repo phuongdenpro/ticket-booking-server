@@ -6,10 +6,10 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   JoinColumn,
-  OneToMany,
   OneToOne,
+  ManyToOne,
 } from 'typeorm';
-import { ApplicableTicketGroup, PromotionLine } from '.';
+import { PromotionLine, TicketGroup } from '.';
 
 @Entity({ name: 'promotion_detail' })
 export class PromotionDetail {
@@ -59,9 +59,7 @@ export class PromotionDetail {
   @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
   promotionLine: PromotionLine;
 
-  @OneToMany(
-    () => ApplicableTicketGroup,
-    (applicableTicketGroup) => applicableTicketGroup.promotionDetail,
-  )
-  applicableTicketGroup: ApplicableTicketGroup[];
+  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.promotionDetails)
+  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
+  ticketGroup: TicketGroup;
 }
