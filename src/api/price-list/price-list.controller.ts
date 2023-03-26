@@ -87,7 +87,11 @@ export class PriceListController {
     @Param('id') id: string,
     @Body() dto: UpdatePriceListDto,
   ) {
-    return await this.priceListService.updatePriceListById(user.id, id, dto);
+    return await this.priceListService.updatePriceListByIdOrCode(
+      user.id,
+      dto,
+      id,
+    );
   }
 
   @Patch('code/:code')
@@ -100,10 +104,11 @@ export class PriceListController {
     @Param('code') code: string,
     @Body() dto: UpdatePriceListDto,
   ) {
-    return await this.priceListService.updatePriceListByCode(
+    return await this.priceListService.updatePriceListByIdOrCode(
       user.id,
-      code,
       dto,
+      undefined,
+      code,
     );
   }
 
@@ -113,7 +118,23 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deletePriceListById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.priceListService.deletePriceListById(id, user.id);
+    return await this.priceListService.deletePriceListByIdOrCode(user.id, id);
+  }
+
+  @Delete('code/:code')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deletePriceListByCode(
+    @CurrentUser() user,
+    @Param('code') code: string,
+  ) {
+    return await this.priceListService.deletePriceListByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('multiple')
@@ -125,7 +146,27 @@ export class PriceListController {
     @CurrentUser() user,
     @Body() dto: DeletePriceListDto,
   ) {
-    return await this.priceListService.deleteMultiPriceListByIds(user.id, dto);
+    return await this.priceListService.deleteMultiPriceListByIdsOrCodes(
+      user.id,
+      dto,
+      'id',
+    );
+  }
+
+  @Delete('multiple/codes')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async deleteMultiplePriceListByCodes(
+    @CurrentUser() user,
+    @Body() dto: DeletePriceListDto,
+  ) {
+    return await this.priceListService.deleteMultiPriceListByIdsOrCodes(
+      user.id,
+      dto,
+      'code',
+    );
   }
 
   // price detail
@@ -201,7 +242,7 @@ export class PriceListController {
     @Param('id') id: string,
     @Body() dto: UpdatePriceDetailDto,
   ) {
-    return this.priceListService.updatePriceDetailById(user.id, id, dto);
+    return this.priceListService.updatePriceDetailByIdOrCode(user.id, dto, id);
   }
 
   @Patch('price-detail/code/:code')
@@ -214,7 +255,12 @@ export class PriceListController {
     @Param('code') code: string,
     @Body() dto: UpdatePriceDetailDto,
   ) {
-    return this.priceListService.updatePriceDetailByCode(user.id, code, dto);
+    return this.priceListService.updatePriceDetailByIdOrCode(
+      user.id,
+      dto,
+      undefined,
+      code,
+    );
   }
 
   @Delete('price-detail/id/:id')

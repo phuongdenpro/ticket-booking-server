@@ -1,4 +1,3 @@
-import { TicketGroupService } from './../ticket-group/ticket-group.service';
 import { PriceListService } from './../price-list/price-list.service';
 import { PriceList } from './../../database/entities/price-list.entities';
 import { SeatService } from './../seat/seat.service';
@@ -12,7 +11,6 @@ import {
   Seat,
   Ticket,
   TicketDetail,
-  TicketGroup,
   TripDetail,
   PriceDetail,
 } from './../../database/entities';
@@ -33,7 +31,6 @@ import { TicketService } from '../ticket/ticket.service';
       Ticket,
       TicketDetail,
       TripDetail,
-      TicketGroup,
       PriceList,
       PriceDetail,
     ]),
@@ -45,7 +42,6 @@ import { TicketService } from '../ticket/ticket.service';
     CustomerService,
     SeatService,
     TicketService,
-    TicketGroupService,
     PriceListService,
   ],
   exports: [OrderService],

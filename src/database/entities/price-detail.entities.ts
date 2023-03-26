@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { PriceList, OrderDetail, TicketGroup } from '.';
+import { PriceList, OrderDetail } from '.';
 
 @Entity({ name: 'price_detail' })
 export class PriceDetail {
@@ -49,10 +49,6 @@ export class PriceDetail {
   @ManyToOne(() => PriceList, (priceList) => priceList.priceDetails)
   @JoinColumn({ name: 'price_list_id', referencedColumnName: 'id' })
   priceList: PriceList;
-
-  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.priceDetail)
-  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
-  ticketGroup: TicketGroup;
 
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.priceDetail)
   orderDetails: OrderDetail[];

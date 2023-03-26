@@ -8,8 +8,6 @@ import {
   IsDate,
   MinDate,
   IsNumber,
-  IsNotEmpty,
-  Length,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
@@ -94,12 +92,6 @@ export class UpdatePromotionLineDto {
   type: PromotionTypeEnum;
 
   // promotion detail
-  @ApiProperty({ example: '' })
-  @IsNotEmpty({ message: 'TICKET_GROUP_CODE_IS_REQUIRED' })
-  @IsString({ message: 'TICKET_GROUP_CODE_MUST_BE_STRING' })
-  @Length(1, 100, { message: 'TICKET_GROUP_CODE_MUST_BE_BETWEEN_1_AND_100' })
-  ticketGroupCode: string;
-
   @ApiProperty({ type: ProductDiscountDto })
   @ValidateIf(
     (dto: UpdatePromotionLineDto) =>

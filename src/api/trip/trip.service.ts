@@ -10,7 +10,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Staff, Station, TicketGroup, Trip } from './../../database/entities';
+import { Staff, Station, Trip } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
 import { SortEnum, TripStatusEnum } from './../../enums';
 import { Pagination } from './../../decorator';
@@ -106,8 +106,6 @@ export class TripService {
       fromStationId,
       toStationId,
       status,
-      ticketGroupCode,
-      ticketGroupId,
     } = dto;
     // check permission
     const adminExist = await this.dataSource
@@ -171,23 +169,6 @@ export class TripService {
         trip.status = TripStatusEnum.INACTIVE;
         break;
     }
-    if (!ticketGroupId && !ticketGroupCode) {
-      throw new BadRequestException('TICKET_GROUP_ID_OR_CODE_REQUIRED');
-    }
-    let ticketGroup;
-    if (ticketGroupId) {
-      ticketGroup = await this.dataSource
-        .getRepository(TicketGroup)
-        .findOne({ where: { id: ticketGroupId } });
-    } else {
-      ticketGroup = await this.dataSource
-        .getRepository(TicketGroup)
-        .findOne({ where: { code: ticketGroupCode } });
-    }
-    if (!ticketGroup) {
-      throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
-    }
-    trip.ticketGroup = ticketGroup;
 
     trip.createdBy = adminExist.id;
     const saveTrip = await this.tripRepository.save(trip);
@@ -267,7 +248,12 @@ export class TripService {
     return trip;
   }
 
-  async updateTripById(id: string, dto: UpdateTripDto, userId: string) {
+  async updateTripByIdOrCode(
+    dto: UpdateTripDto,
+    userId: string,
+    id?: string,
+    code?: string,
+  ) {
     const {
       name,
       note,
@@ -276,8 +262,6 @@ export class TripService {
       fromStationId,
       toStationId,
       status,
-      ticketGroupCode,
-      ticketGroupId,
     } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -289,11 +273,26 @@ export class TripService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const trip = await this.getTripById(id, {
-      relations: {
-        ticketGroup: true,
-      },
-    });
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
+    }
+    let trip;
+    if (id) {
+      trip = await this.getTripById(id, {
+        relations: {
+          ticketGroup: true,
+        },
+      });
+    } else if (code) {
+      trip = await this.getTripByCode(code, {
+        relations: {
+          ticketGroup: true,
+        },
+      });
+    }
+    if (!trip) {
+      throw new BadRequestException('TRIP_NOT_FOUND');
+    }
     if (name) {
       trip.name = name;
     }
@@ -343,140 +342,6 @@ export class TripService {
       default:
         trip.status = TripStatusEnum.INACTIVE;
         break;
-    }
-    let ticketGroup;
-    if (ticketGroupId) {
-      ticketGroup = await this.dataSource
-        .getRepository(TicketGroup)
-        .findOne({ where: { id: ticketGroupId } });
-      if (!ticketGroup) {
-        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
-      }
-      trip.ticketGroup = ticketGroup;
-    } else {
-      ticketGroup = await this.dataSource
-        .getRepository(TicketGroup)
-        .findOne({ where: { code: ticketGroupCode } });
-      if (!ticketGroup) {
-        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
-      }
-      trip.ticketGroup = ticketGroup;
-    }
-    trip.updatedBy = adminExist.id;
-
-    const updateTrip = await this.tripRepository.save(trip);
-    return {
-      id: updateTrip.id,
-      name: updateTrip.name,
-      note: updateTrip.note,
-      startDate: updateTrip.startDate,
-      endDate: updateTrip.endDate,
-      isActive: updateTrip.status,
-      createdBy: updateTrip.createdBy,
-      updatedBy: updateTrip.updatedBy,
-      createdAt: updateTrip.createdAt,
-      updatedAt: updateTrip.updatedAt,
-      fromStation: {
-        id: updateTrip.fromStation.id,
-        name: updateTrip.fromStation.name,
-      },
-      toStation: {
-        id: updateTrip.toStation.id,
-        name: updateTrip.toStation.name,
-      },
-    };
-  }
-
-  async updateTripByCode(code: string, dto: UpdateTripDto, userId: string) {
-    const {
-      name,
-      note,
-      startDate,
-      endDate,
-      fromStationId,
-      toStationId,
-      status,
-      ticketGroupCode,
-      ticketGroupId,
-    } = dto;
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-
-    const trip = await this.getTripByCode(code, {});
-    if (name) {
-      trip.name = name;
-    }
-    if (note) {
-      trip.note = note;
-    }
-
-    const currentDate = new Date(moment().format('YYYY-MM-DD'));
-    if (startDate !== undefined || startDate !== null) {
-      if (startDate < currentDate) {
-        throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
-      }
-      trip.startDate = startDate;
-    }
-    if (endDate !== undefined || endDate !== null) {
-      if (endDate < currentDate) {
-        throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
-      }
-      trip.endDate = endDate;
-    }
-
-    if (fromStationId) {
-      const fromStation = await this.dataSource
-        .getRepository(Station)
-        .findOne({ where: { id: fromStationId } });
-      if (!fromStation) {
-        throw new BadRequestException('FROM_STATION_NOT_FOUND');
-      }
-      trip.fromStation = fromStation;
-    }
-    if (toStationId) {
-      const toStation = await this.dataSource
-        .getRepository(Station)
-        .findOne({ where: { id: toStationId } });
-      if (!toStation) {
-        throw new BadRequestException('TO_STATION_NOT_FOUND');
-      }
-      trip.toStation = toStation;
-    }
-    if (fromStationId === toStationId) {
-      throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
-    }
-    switch (status) {
-      case TripStatusEnum.ACTIVE:
-        trip.status = TripStatusEnum.ACTIVE;
-        break;
-      default:
-        trip.status = TripStatusEnum.INACTIVE;
-        break;
-    }
-    let ticketGroup;
-    if (ticketGroupId) {
-      ticketGroup = await this.dataSource
-        .getRepository(TicketGroup)
-        .findOne({ where: { id: ticketGroupId } });
-      if (!ticketGroup) {
-        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
-      }
-      trip.ticketGroup = ticketGroup;
-    } else {
-      ticketGroup = await this.dataSource
-        .getRepository(TicketGroup)
-        .findOne({ where: { code: ticketGroupCode } });
-      if (!ticketGroup) {
-        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
-      }
-      trip.ticketGroup = ticketGroup;
     }
     trip.updatedBy = adminExist.id;
 

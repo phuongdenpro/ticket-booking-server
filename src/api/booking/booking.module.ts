@@ -9,7 +9,6 @@ import {
   Staff,
   Customer,
   TripDetail,
-  TicketGroup,
   PriceList,
   PriceDetail,
 } from './../../database/entities';
@@ -21,7 +20,6 @@ import { OrderService } from '../order/order.service';
 import { CustomerService } from '../customer/customer.service';
 import { AdminService } from '../admin/admin.service';
 import { TicketService } from '../ticket/ticket.service';
-import { TicketGroupService } from '../ticket-group/ticket-group.service';
 import { PriceListService } from '../price-list/price-list.service';
 
 @Module({
@@ -36,7 +34,6 @@ import { PriceListService } from '../price-list/price-list.service';
       Staff,
       Customer,
       TripDetail,
-      TicketGroup,
       PriceList,
       PriceDetail,
     ]),
@@ -48,7 +45,6 @@ import { PriceListService } from '../price-list/price-list.service';
     AdminService,
     SeatService,
     TicketService,
-    TicketGroupService,
     PriceListService,
   ],
   controllers: [BookingController],

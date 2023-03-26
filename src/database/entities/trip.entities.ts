@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { Station, TicketGroup, TripDetail } from '.';
+import { Station, TripDetail } from '.';
 
 @Entity({ name: 'trip' })
 export class Trip {
@@ -63,10 +63,6 @@ export class Trip {
   @ManyToOne(() => Station, (station) => station.toTrips)
   @JoinColumn({ name: 'to_station_id', referencedColumnName: 'id' })
   toStation: Station;
-
-  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.trips)
-  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
-  ticketGroup: TicketGroup;
 
   @OneToMany(() => TripDetail, (tripDetail) => tripDetail.trip)
   tripDetails: TripDetail[];

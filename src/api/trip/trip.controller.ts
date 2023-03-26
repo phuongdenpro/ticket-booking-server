@@ -73,7 +73,7 @@ export class TripController {
     @Param('id') id: string,
     @Body() dto: UpdateTripDto,
   ) {
-    return await this.tripService.updateTripById(id, dto, user.id);
+    return await this.tripService.updateTripByIdOrCode(dto, user.id, id);
   }
 
   @Patch('code/:code')
@@ -86,7 +86,12 @@ export class TripController {
     @Param('code') code: string,
     @Body() dto: UpdateTripDto,
   ) {
-    return await this.tripService.updateTripByCode(code, dto, user.id);
+    return await this.tripService.updateTripByIdOrCode(
+      dto,
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('id/:id')

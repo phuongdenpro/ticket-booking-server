@@ -7,9 +7,8 @@ import {
   DeleteDateColumn,
   JoinColumn,
   OneToOne,
-  ManyToOne,
 } from 'typeorm';
-import { PromotionLine, TicketGroup } from '.';
+import { PromotionLine } from '.';
 
 @Entity({ name: 'promotion_detail' })
 export class PromotionDetail {
@@ -58,8 +57,4 @@ export class PromotionDetail {
   )
   @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
   promotionLine: PromotionLine;
-
-  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.promotionDetails)
-  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
-  ticketGroup: TicketGroup;
 }

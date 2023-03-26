@@ -18,7 +18,6 @@ import {
   PromotionDetail,
   PromotionLine,
   Staff,
-  TicketGroup,
 } from './../../database/entities';
 import {
   Injectable,
@@ -439,7 +438,6 @@ export class PromotionLineService {
       type,
       promotionCode,
       couponCode,
-      ticketGroupCode,
       productDiscount,
       productDiscountPercent,
       // productGiveaway,
@@ -576,18 +574,6 @@ export class PromotionLineService {
       } else {
         throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
       }
-      if (!ticketGroupCode) {
-        throw new BadRequestException('TICKET_GROUP_CODE_IS_REQUIRED');
-      }
-      const ticketGroup = await this.dataSource
-        .getRepository(TicketGroup)
-        .findOne({
-          where: { code: ticketGroupCode },
-        });
-      if (!ticketGroup) {
-        throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
-      }
-      promotionDetail.ticketGroup = ticketGroup;
       promotionDetail.promotionLineCode = savePromotionLine.code;
       savePromotionDetail = await this.promotionDetailRepository.save(
         promotionDetail,
@@ -625,7 +611,6 @@ export class PromotionLineService {
       endDate,
       type,
       couponCode,
-      ticketGroupCode,
       productDiscount,
       productDiscountPercent,
       // productGiveaway,
@@ -801,20 +786,6 @@ export class PromotionLineService {
           productDiscountPercent,
           savePromotionLine,
         );
-        const savePromotionDetail = await this.promotionDetailRepository.save(
-          promotionDetail,
-        );
-        savePromotionLine.promotionDetail = savePromotionDetail;
-      }
-      if (ticketGroupCode) {
-        const ticketGroup = await this.dataSource
-          .getRepository(TicketGroup)
-          .findOne({
-            where: { code: ticketGroupCode },
-          });
-        if (!ticketGroup) {
-          throw new BadRequestException('TICKET_GROUP_NOT_FOUND');
-        }
         const savePromotionDetail = await this.promotionDetailRepository.save(
           promotionDetail,
         );
