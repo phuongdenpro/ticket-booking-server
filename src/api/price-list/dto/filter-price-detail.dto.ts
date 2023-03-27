@@ -1,14 +1,7 @@
+import { VehicleTypeEnum } from './../../../enums';
 import { SortEnum } from './../../../enums/sort.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsNotEmpty,
-  IsString,
-  IsOptional,
-  Length,
-  IsNumber,
-  Min,
-  IsEnum,
-} from 'class-validator';
+import { IsString, IsOptional, IsNumber, Min, IsEnum } from 'class-validator';
 
 export class FilterPriceDetailDto {
   @ApiPropertyOptional({ example: 100000 })
@@ -25,15 +18,37 @@ export class FilterPriceDetailDto {
   @IsOptional()
   keywords: string;
 
-  @ApiPropertyOptional({ example: '1fbaba64-77c4-4403-9d14-73c03e3d0954' })
-  @IsString({ message: 'PRICE_LIST_ID_IS_STRING' })
-  @IsNotEmpty({ message: 'PRICE_LIST_ID_IS_REQUIRED' })
-  @Length(36, 36, { message: 'PRICE_LIST_ID_IS_36_CHARACTERS' })
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'PRICE_LIST_CODE_IS_STRING' })
   @IsOptional()
-  priceListId: string;
+  priceListCode: string;
 
-  @ApiPropertyOptional({ example: SortEnum.DESC, enum: SortEnum })
-  @IsString({ message: 'SORT_IS_STRING' })
-  @IsEnum(SortEnum, { message: 'SORT_IS_ENUM' })
+  @ApiPropertyOptional({
+    example: VehicleTypeEnum.LIMOUSINE,
+    enum: [
+      '',
+      VehicleTypeEnum.LIMOUSINE,
+      VehicleTypeEnum.SLEEPER_BUS,
+      VehicleTypeEnum.SEAT_BUS,
+    ],
+  })
+  @IsEnum(
+    [
+      '',
+      VehicleTypeEnum.LIMOUSINE,
+      VehicleTypeEnum.SLEEPER_BUS,
+      VehicleTypeEnum.SEAT_BUS,
+    ],
+    { message: 'SEAT_TYPE_IS_ENUM' },
+  )
+  @IsOptional()
+  seatType: VehicleTypeEnum;
+
+  @ApiPropertyOptional({
+    example: SortEnum.DESC,
+    enum: ['', SortEnum.ASC, SortEnum.DESC],
+  })
+  @IsEnum(['', SortEnum.ASC, SortEnum.DESC], { message: 'SORT_IS_ENUM' })
+  @IsOptional()
   sort: SortEnum;
 }

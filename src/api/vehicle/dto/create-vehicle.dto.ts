@@ -37,9 +37,9 @@ export class CreateVehicleDto {
     example: VehicleTypeEnum.SLEEPER_BUS,
     enum: VehicleTypeEnum,
   })
+  @IsNotEmpty({ message: 'VEHICLE_TYPE_REQUIRED' })
   @IsString({ message: 'VEHICLE_TYPE_STRING' })
   @IsEnum(VehicleTypeEnum, { message: 'VEHICLE_TYPE_IS_ENUM' })
-  @IsOptional()
   type?: VehicleTypeEnum;
 
   @ApiProperty({ example: '51A-111.11' })

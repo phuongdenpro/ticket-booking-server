@@ -269,7 +269,7 @@ export class PriceListController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deletePriceDetailById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.priceListService.deletePriceDetailById(user.id, id);
+    return await this.priceListService.deletePriceDetailByIdOrCode(user.id, id);
   }
 
   @Delete('price-detail/code/:code')
@@ -281,7 +281,11 @@ export class PriceListController {
     @CurrentUser() user,
     @Param('code') code: string,
   ) {
-    return await this.priceListService.deletePriceDetailByCode(user.id, code);
+    return await this.priceListService.deletePriceDetailByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('price-detail/multiple')
@@ -293,9 +297,10 @@ export class PriceListController {
     @CurrentUser() user,
     @Body() dto: DeletePriceDetailDto,
   ) {
-    return await this.priceListService.deleteMultiPriceDetailByIds(
+    return await this.priceListService.deleteMultiPriceDetailByIdsOrCodes(
       user.id,
       dto,
+      'id',
     );
   }
 
@@ -308,9 +313,10 @@ export class PriceListController {
     @CurrentUser() user,
     @Body() dto: DeletePriceDetailDto,
   ) {
-    return await this.priceListService.deleteMultiPriceDetailByCodes(
+    return await this.priceListService.deleteMultiPriceDetailByIdsOrCodes(
       user.id,
       dto,
+      'code',
     );
   }
 }

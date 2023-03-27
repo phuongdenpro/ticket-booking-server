@@ -1,4 +1,4 @@
-import { ActiveStatusEnum, SortEnum } from './../../enums';
+import { ActiveStatusEnum, SortEnum, VehicleTypeEnum } from './../../enums';
 import {
   CreatePriceListDto,
   FilterPriceListDto,
@@ -9,7 +9,7 @@ import {
   UpdatePriceDetailDto,
   DeletePriceDetailDto,
 } from './dto';
-import { PriceDetail, PriceList, Staff } from './../../database/entities';
+import { PriceDetail, PriceList, Staff, Trip } from './../../database/entities';
 import {
   BadRequestException,
   Injectable,
@@ -410,7 +410,15 @@ export class PriceListService {
   }
 
   async createPriceDetail(dto: CreatePriceDetailDto, adminId: string) {
-    const { code, price, note, priceListId, priceListCode } = dto;
+    const {
+      code,
+      price,
+      note,
+      priceListId,
+      priceListCode,
+      tripCode,
+      seatType,
+    } = dto;
 
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -440,38 +448,55 @@ export class PriceListService {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
 
-    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    const trip = await this.dataSource.getRepository(Trip).findOne({
+      where: { code: tripCode },
+    });
+    if (!trip) {
+      throw new BadRequestException('TRIP_NOT_FOUND');
+    }
+    const priceDetail = new PriceDetail();
+    priceDetail.trip = trip;
+    priceDetail.priceList = priceList;
+
+    switch (seatType) {
+      case VehicleTypeEnum.LIMOUSINE:
+      case VehicleTypeEnum.SEAT_BUS:
+      case VehicleTypeEnum.SLEEPER_BUS:
+        priceDetail.seatType = seatType;
+        break;
+      default:
+        throw new BadRequestException('SEAT_TYPE_NOT_FOUND');
+    }
+
     const priceDetailExist = await this.findOnePriceDetail({
       where: {
+        seatType,
         priceList: {
-          startDate: LessThanOrEqual(currentDate),
-          endDate: MoreThanOrEqual(currentDate),
-          // status: ActiveStatusEnum.ACTIVE,
+          startDate: LessThanOrEqual(priceList.startDate),
+          endDate: MoreThanOrEqual(priceList.startDate),
+          status: ActiveStatusEnum.ACTIVE,
         },
-        // ticketGroup: {
-        //   id: ticketGroup.id,
-        // },
+        trip: {
+          code: tripCode,
+        },
       },
       relations: {
         priceList: true,
-        ticketGroup: true,
+        trip: true,
       },
     });
-    console.log(priceDetailExist);
     if (priceDetailExist) {
-      // throw new BadRequestException('TICKET_GROUP_EXISTED_IN_PRICE_LIST', {
-      //   description: `Nhóm vé ${ticketGroup?.name} đã tồn tại trong bảng giá có mã ${priceList?.code}`,
-      // });
+      const priceList = priceDetailExist.priceList;
+      throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
+        description: `Loại ghế của tuyến "${trip?.name}" đã tồn tại trong bảng giá có mã ${priceList?.code}`,
+      });
     }
-    throw new BadRequestException('TEST');
-    const priceDetail = new PriceDetail();
     if (price < 0) {
       throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
     }
     priceDetail.price = price;
     priceDetail.code = code;
     priceDetail.note = note;
-    priceDetail.priceList = priceList;
     priceDetail.createdBy = adminExist.id;
 
     const savePriceDetail = await this.priceDetailRepository.save(priceDetail);
@@ -497,7 +522,7 @@ export class PriceListService {
   }
 
   async findAllPriceDetail(dto: FilterPriceDetailDto, pagination?: Pagination) {
-    const { price, keywords, priceListId, sort } = dto;
+    const { price, keywords, priceListCode, sort, seatType } = dto;
     const query = this.priceDetailRepository.createQueryBuilder('q');
 
     if (keywords) {
@@ -512,10 +537,19 @@ export class PriceListService {
     if (price) {
       query.andWhere('q.price <= :price', { price });
     }
-    if (priceListId) {
+    if (priceListCode) {
       query
         .leftJoinAndSelect('q.priceList', 'p')
-        .andWhere('p.id = :priceListId', { priceListId });
+        .andWhere('p.code = :priceListCode', { priceListCode });
+    }
+    switch (seatType) {
+      case VehicleTypeEnum.LIMOUSINE:
+      case VehicleTypeEnum.SLEEPER_BUS:
+      case VehicleTypeEnum.SEAT_BUS:
+        query.andWhere('q.seatType = :seatType', { seatType });
+        break;
+      default:
+        break;
     }
     query
       .orderBy('q.price', sort || SortEnum.ASC)
@@ -540,7 +574,7 @@ export class PriceListService {
     id?: string,
     code?: string,
   ) {
-    const { price, note } = dto;
+    const { price, note, tripCode, seatType } = dto;
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId } });
@@ -556,12 +590,64 @@ export class PriceListService {
       throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
     }
     if (id) {
-      priceDetail = await this.getPriceDetailById(id);
+      priceDetail = await this.getPriceDetailById(id, {
+        relations: {
+          priceList: true,
+          trip: true,
+        },
+      });
     } else if (code) {
-      priceDetail = await this.getPriceDetailByCode(code);
+      priceDetail = await this.getPriceDetailByCode(code, {
+        relations: {
+          priceList: true,
+          trip: true,
+        },
+      });
     }
     if (!priceDetail) {
       throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
+    switch (seatType) {
+      case VehicleTypeEnum.LIMOUSINE:
+      case VehicleTypeEnum.SEAT_BUS:
+      case VehicleTypeEnum.SLEEPER_BUS:
+        priceDetail.seatType = seatType;
+        break;
+      default:
+        throw new BadRequestException('SEAT_TYPE_NOT_FOUND');
+    }
+    if (tripCode) {
+      const trip = await this.dataSource.getRepository(Trip).findOne({
+        where: { code: tripCode },
+      });
+      if (!trip) {
+        throw new BadRequestException('TRIP_NOT_FOUND');
+      }
+      priceDetail.trip = trip;
+    }
+
+    const priceDetailExist = await this.findOnePriceDetail({
+      where: {
+        seatType: priceDetail.seatType,
+        priceList: {
+          startDate: LessThanOrEqual(priceDetail.priceList.startDate),
+          endDate: MoreThanOrEqual(priceDetail.priceList.startDate),
+          status: ActiveStatusEnum.ACTIVE,
+        },
+        trip: {
+          code: priceDetail.trip.code,
+        },
+      },
+      relations: {
+        priceList: true,
+        trip: true,
+      },
+    });
+    if (priceDetailExist) {
+      const priceList = priceDetailExist.priceList;
+      throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
+        description: `Loại ghế của tuyến "${priceDetail?.trip?.name}" đã tồn tại trong bảng giá có mã ${priceList?.code}`,
+      });
     }
 
     if (price) {
@@ -585,7 +671,11 @@ export class PriceListService {
     return updatePriceDetail;
   }
 
-  async deletePriceDetailById(adminId: string, id: string) {
+  async deletePriceDetailByIdOrCode(
+    adminId: string,
+    id?: string,
+    code?: string,
+  ) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId } });
@@ -596,7 +686,16 @@ export class PriceListService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const priceDetail = await this.getPriceDetailById(id);
+    let priceDetail;
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
+    }
+    if (id) {
+      priceDetail = await this.getPriceDetailById(id);
+    }
+    if (code) {
+      priceDetail = await this.getPriceDetailByCode(code);
+    }
     if (!priceDetail) {
       throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
     }
@@ -606,33 +705,13 @@ export class PriceListService {
     return await this.priceDetailRepository.save(priceDetail);
   }
 
-  async deletePriceDetailByCode(adminId: string, code: string) {
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId } });
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-
-    const priceDetail = await this.getPriceDetailByCode(code);
-    if (!priceDetail) {
-      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
-    }
-    priceDetail.updatedBy = adminExist.id;
-    priceDetail.deletedAt = new Date();
-
-    return await this.priceDetailRepository.save(priceDetail);
-  }
-
-  async deleteMultiPriceDetailByIds(
+  async deleteMultiPriceDetailByIdsOrCodes(
     adminId: string,
     dto: DeletePriceDetailDto,
+    type: string,
   ) {
     try {
-      const { ids } = dto;
+      const { list } = dto;
       const adminExist = await this.dataSource
         .getRepository(Staff)
         .findOne({ where: { id: adminId } });
@@ -643,14 +722,25 @@ export class PriceListService {
         throw new BadRequestException('USER_NOT_ACTIVE');
       }
 
-      const list = await Promise.all(
-        ids.map(async (id) => {
-          const priceDetail = await this.priceDetailRepository.findOne({
-            where: { id: id },
-          });
+      const newList = await Promise.all(
+        list.map(async (data) => {
+          if (!data) {
+            return {
+              id: type === 'id' ? data : undefined,
+              code: type === 'code' ? data : undefined,
+              message: 'ID_OR_CODE_IS_REQUIRED',
+            };
+          }
+          let priceDetail;
+          if (type === 'id') {
+            priceDetail = await this.getPriceDetailById(data);
+          } else {
+            priceDetail = await this.getPriceDetailByCode(data);
+          }
           if (!priceDetail) {
             return {
               id: priceDetail.id,
+              code: priceDetail.code,
               message: 'Không tìm thấy chi tiết bảng giá',
             };
           }
@@ -662,56 +752,12 @@ export class PriceListService {
           );
           return {
             id: deletedPriceList.id,
+            code: deletedPriceList.code,
             message: 'Xoá thành công',
           };
         }),
       );
-      return list;
-    } catch (err) {
-      throw new BadRequestException(err.message);
-    }
-  }
-
-  async deleteMultiPriceDetailByCodes(
-    adminId: string,
-    dto: DeletePriceDetailDto,
-  ) {
-    try {
-      const { ids } = dto;
-      const adminExist = await this.dataSource
-        .getRepository(Staff)
-        .findOne({ where: { id: adminId } });
-      if (!adminExist) {
-        throw new UnauthorizedException('UNAUTHORIZED');
-      }
-      if (!adminExist.isActive) {
-        throw new BadRequestException('USER_NOT_ACTIVE');
-      }
-
-      const list = await Promise.all(
-        ids.map(async (code) => {
-          const priceDetail = await this.priceDetailRepository.findOne({
-            where: { code },
-          });
-          if (!priceDetail) {
-            return {
-              id: priceDetail.id,
-              message: 'Không tìm thấy chi tiết bảng giá',
-            };
-          }
-          priceDetail.deletedAt = new Date();
-          priceDetail.updatedBy = adminExist.id;
-
-          const deletedPriceList = await this.priceDetailRepository.save(
-            priceDetail,
-          );
-          return {
-            id: deletedPriceList.id,
-            message: 'Xoá thành công',
-          };
-        }),
-      );
-      return list;
+      return newList;
     } catch (err) {
       throw new BadRequestException(err.message);
     }

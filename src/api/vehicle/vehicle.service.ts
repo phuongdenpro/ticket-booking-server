@@ -116,10 +116,9 @@ export class VehicleService {
     vehicle.description = description;
 
     if (!type) {
-      vehicle.type = VehicleTypeEnum.OTHER;
-    } else {
-      vehicle.type = type;
+      throw new BadRequestException('VEHICLE_TYPE_REQUIRED');
     }
+    vehicle.type = type;
     if (licensePlate.match(LICENSE_PLATE_REGEX)) {
       vehicle.licensePlate = licensePlate;
     } else {
@@ -225,8 +224,7 @@ export class VehicleService {
     if (
       type == VehicleTypeEnum.LIMOUSINE ||
       type == VehicleTypeEnum.SLEEPER_BUS ||
-      type == VehicleTypeEnum.SEAT_BUS ||
-      type == VehicleTypeEnum.OTHER
+      type == VehicleTypeEnum.SEAT_BUS
     ) {
       query.andWhere('q.type = :type', { type });
     }

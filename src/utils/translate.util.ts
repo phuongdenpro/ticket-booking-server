@@ -158,6 +158,7 @@ export const mappingTranslate = {
 
   // seat
   SEAT_NOT_FOUND: 'Không tìm thấy thông tin ghế',
+  SEAT_TYPE_IS_REQUIRED: 'Loại ghế không được để trống',
   SEAT_TYPE_IS_STRING: 'Loại ghế phải là chuỗi ký tự',
   SEAT_TYPE_IS_ENUM: 'Loại ghế không hợp lệ',
   FLOOR_IS_NUMBER: 'Số tầng phải là số',
@@ -239,6 +240,7 @@ export const mappingTranslate = {
   LICENSE_PLATE_STRING: 'Biển số xe không hợp lệ',
   LICENSE_PLATE_BETWEEN_1_20_CHARACTERS: 'Biển số xe phải có 1 đến 20 ký tự',
   FLOOR_NUMBER_INVALID: 'Số tầng không hợp lệ',
+  VEHICLE_TYPE_REQUIRED: 'Loại xe không được để trống',
   VEHICLE_TYPE_STRING: 'Loại xe phải là chuỗi',
   VEHICLE_TYPE_IS_ENUM:
     'Loại xe phải thuộc 1 trong cái loại sau: "xe limousine", "xe giường nằm", "xe ghế ngồi", "khác"',
@@ -293,13 +295,14 @@ export const mappingTranslate = {
   START_DATE_MUST_BE_LESS_THAN_END_DATE:
     'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc',
   PRICE_LIST_NOT_FOUND: 'Không tìm thấy bảng giá',
+  PRICE_LIST_CODE_IS_STRING: 'Mã của bảng giá phải là chuỗi ký tự',
   PRICE_LIST_ID_IS_STRING: 'Id của bảng giá phải là chuỗi ký tự',
   PRICE_LIST_ID_IS_REQUIRED: 'Id của bảng giá không được để trống',
   PRICE_LIST_ID_IS_36_CHARACTERS: 'Id của bảng giá phải là 36 ký tự',
   PRICE_LIST_ID_OR_CODE_REQUIRED: 'Id hoặc mã của bảng giá không được để trống',
   PRICE_LIST_CODE_IS_EXIST: 'mã của bảng giá đã tồn tại',
-  TICKET_GROUP_EXISTED_IN_PRICE_LIST:
-    'Nhóm vé đã tồn tại trong khác bảng giá đang hoạt động',
+  TRIP_EXISTED_IN_PRICE_LIST:
+    'Loại ghế của tuyến này đã tồn tại trong khác bảng giá đang hoạt động',
   // price details
   PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết bảng giá',
   PRICE_IS_NUMBER: 'Giá phải là số',
