@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { Station, TripDetail } from '.';
+import { Station, TripDetail, PromotionDetail } from '.';
 
 @Entity({ name: 'trip' })
 export class Trip {
@@ -66,4 +66,7 @@ export class Trip {
 
   @OneToMany(() => TripDetail, (tripDetail) => tripDetail.trip)
   tripDetails: TripDetail[];
+
+  @OneToMany(() => PromotionDetail, (promotionDetail) => promotionDetail.trip)
+  promotionDetails: PromotionDetail[];
 }

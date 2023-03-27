@@ -18,6 +18,7 @@ import {
   PromotionDetail,
   PromotionLine,
   Staff,
+  Trip,
 } from './../../database/entities';
 import {
   Injectable,
@@ -248,6 +249,7 @@ export class PromotionLineService {
     });
   }
 
+  // promotion line
   async findOnePromotionLine(options: any) {
     return await this.promotionLineRepository.findOne({
       where: { ...options?.where },
@@ -438,6 +440,7 @@ export class PromotionLineService {
       type,
       promotionCode,
       couponCode,
+      tripCode,
       productDiscount,
       productDiscountPercent,
       // productGiveaway,
@@ -513,7 +516,7 @@ export class PromotionLineService {
     if (!startDate) {
       throw new BadRequestException('START_DATE_IS_REQUIRED');
     }
-    if (startDate < currentDate) {
+    if (startDate <= currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     promotionLine.startDate = startDate;
@@ -522,11 +525,15 @@ export class PromotionLineService {
     if (!endDate) {
       throw new BadRequestException('END_DATE_IS_REQUIRED');
     }
-    if (endDate < currentDate) {
-      throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
-    }
     if (endDate < startDate) {
-      throw new BadRequestException('END_DATE_MUST_BE_GREATER_THAN_START_DATE');
+      throw new BadRequestException(
+        'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
+      );
+    }
+    if (endDate < currentDate) {
+      throw new BadRequestException(
+        'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
+      );
     }
     promotionLine.endDate = endDate;
 
@@ -574,6 +581,17 @@ export class PromotionLineService {
       } else {
         throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
       }
+
+      if (!tripCode) {
+        throw new BadRequestException('TRIP_CODE_IS_REQUIRED');
+      }
+      const trip = await this.dataSource.getRepository(Trip).findOne({
+        where: { code: tripCode },
+      });
+      if (!trip) {
+        throw new BadRequestException('TRIP_NOT_FOUND');
+      }
+      promotionDetail.trip = trip;
       promotionDetail.promotionLineCode = savePromotionLine.code;
       savePromotionDetail = await this.promotionDetailRepository.save(
         promotionDetail,
@@ -611,6 +629,7 @@ export class PromotionLineService {
       endDate,
       type,
       couponCode,
+      tripCode,
       productDiscount,
       productDiscountPercent,
       // productGiveaway,
@@ -628,7 +647,6 @@ export class PromotionLineService {
     if (!id && !code) {
       throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
     }
-
     let promotionLine;
     if (id) {
       promotionLine = await this.findOnePromotionLineById(id, {
@@ -645,6 +663,9 @@ export class PromotionLineService {
     }
     if (!promotionLine) {
       throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
+    }
+    if (promotionLine.promotion.status !== PromotionStatusEnum.ACTIVE) {
+      throw new BadRequestException('PROMOTION_LINE_IS_ACTIVE');
     }
     if (title) {
       promotionLine.title = title;
@@ -669,6 +690,9 @@ export class PromotionLineService {
     }
 
     if (maxQuantity && maxQuantity !== 0) {
+      if (!Number.isInteger(maxQuantity)) {
+        throw new BadRequestException('MAX_QUANTITY_MUST_BE_INTEGER');
+      }
       if (maxQuantity < 0) {
         throw new BadRequestException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
       }
@@ -681,6 +705,11 @@ export class PromotionLineService {
     }
 
     if (maxQuantityPerCustomer && maxQuantityPerCustomer !== 0) {
+      if (!Number.isInteger(maxQuantity)) {
+        throw new BadRequestException(
+          'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_INTEGER',
+        );
+      }
       if (maxQuantityPerCustomer < 0) {
         throw new BadRequestException(
           'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
@@ -701,20 +730,16 @@ export class PromotionLineService {
 
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
     // validate start date
-    if (promotionLine.promotion.status === PromotionStatusEnum.INACTIVE) {
-      if (startDate) {
-        const startDateMoment = moment(startDate);
-        if (!startDateMoment.isValid()) {
-          throw new BadRequestException('START_DATE_IS_INVALID');
-        }
-        const startDateCompare = startDateMoment.toDate();
-        if (startDateCompare < currentDate) {
-          throw new BadRequestException(
-            'START_DATE_MUST_BE_GREATER_THAN_TODAY',
-          );
-        }
-        promotionLine.startDate = startDateCompare;
+    if (startDate) {
+      const startDateMoment = moment(startDate);
+      if (!startDateMoment.isValid()) {
+        throw new BadRequestException('START_DATE_IS_INVALID');
       }
+      const startDateCompare = startDateMoment.toDate();
+      if (startDateCompare <= currentDate) {
+        throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
+      }
+      promotionLine.startDate = startDateCompare;
     }
     // validate end date
     if (endDate) {
@@ -724,12 +749,14 @@ export class PromotionLineService {
       }
       const endDateCompare = endDateMoment.toDate();
       if (endDateCompare < currentDate) {
-        throw new BadRequestException('END_DATE_MUST_BE_GREATER_THAN_TODAY');
+        throw new BadRequestException(
+          'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
+        );
       }
       if (promotionLine?.startDate) {
         if (endDateCompare < promotionLine.startDate) {
           throw new BadRequestException(
-            'END_DATE_MUST_BE_GREATER_THAN_START_DATE',
+            'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
           );
         }
       }
@@ -786,10 +813,19 @@ export class PromotionLineService {
           productDiscountPercent,
           savePromotionLine,
         );
-        const savePromotionDetail = await this.promotionDetailRepository.save(
-          promotionDetail,
-        );
+        const savePromotionDetail: PromotionDetail =
+          await this.promotionDetailRepository.save(promotionDetail);
+        delete savePromotionDetail.deletedAt;
         savePromotionLine.promotionDetail = savePromotionDetail;
+      }
+      if (tripCode) {
+        const trip = await this.dataSource.getRepository(Trip).findOne({
+          where: { code: tripCode },
+        });
+        if (!trip) {
+          throw new NotFoundException('TRIP_NOT_FOUND');
+        }
+        savePromotionLine.trip = trip;
       }
 
       await queryRunner.commitTransaction();

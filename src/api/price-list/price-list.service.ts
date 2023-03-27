@@ -170,7 +170,7 @@ export class PriceListService {
     }
     if (endDate < currentDate) {
       throw new BadRequestException(
-        'END_DATE_MUST_BE_GREATER_OR_EQUAL_TO_THAN_NOW',
+        'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
       );
     }
     if (startDate > endDate) {

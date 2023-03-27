@@ -12,6 +12,8 @@ import {
   ValidateNested,
 } from 'class-validator';
 import * as moment from 'moment';
+moment.locale('vi');
+
 import {
   ProductDiscountDto,
   ProductDiscountPercentDto,
@@ -39,6 +41,11 @@ export class UpdatePromotionLineDto {
   @IsString({ message: 'COUPON_CODE_IS_STRING' })
   @IsOptional()
   couponCode: string;
+
+  @ApiProperty({ example: '' })
+  @IsString({ message: 'TRIP_CODE_IS_STRING' })
+  @IsOptional()
+  tripCode: string;
 
   @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD') })
   @IsDate({ message: 'START_DATE_IS_DATE' })

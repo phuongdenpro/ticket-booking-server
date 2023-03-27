@@ -53,6 +53,12 @@ export class CreatePromotionLineDto {
   @Length(1, 100, { message: 'COUPON_CODE_BETWEEN_1_100_CHARACTERS' })
   couponCode: string;
 
+  @ApiProperty({ example: '' })
+  @IsNotEmpty({ message: 'TRIP_CODE_IS_REQUIRED' })
+  @IsString({ message: 'TRIP_CODE_IS_STRING' })
+  @Length(1, 100, { message: 'TRIP_CODE_BETWEEN_1_100_CHARACTERS' })
+  tripCode: string;
+
   @ApiProperty({ example: moment().format('YYYY-MM-DD') })
   @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
   @IsDate({ message: 'START_DATE_IS_DATE' })

@@ -183,13 +183,15 @@ export const mappingTranslate = {
   TRIP_ID_IS_STRING: 'Id của tuyến đi phải là chuỗi ký tự',
   TRIP_ID_INVALID: 'Id của tuyến đi không hợp lệ',
   TRIP_CODE_IS_STRING: 'Mã của tuyến đi phải là chuỗi ký tự',
+  TRIP_CODE_IS_REQUIRED: 'Mã của tuyến đi không được để trống',
+  TRIP_CODE_BETWEEN_1_100_CHARACTERS: 'Mã của tuyến đi phải từ 1 đến 100 ký tự',
   TRIP_CODE_EXIST: 'Mã tuyến đi đã tồn tại',
   TRIP_ID_OR_CODE_REQUIRED: 'Id hoặc mã của tuyến đi không được để trống',
   TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
-  END_DATE_MUST_BE_GREATER_OR_EQUAL_TO_THAN_NOW:
+  END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW:
     'Ngày kết thúc phải lớn hơn hoặc bằng ngày hiện tại',
   END_DATE_MUST_BE_GREATER_THAN_START_DATE:
     'Ngày kết thúc phải lớn hơn ngày bắt đầu',

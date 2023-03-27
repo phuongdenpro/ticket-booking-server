@@ -6,11 +6,12 @@ import {
   Promotion,
   PromotionDetail,
   PromotionLine,
+  Trip,
 } from './../../database/entities';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PromotionLine, Promotion, PromotionDetail]),
+    TypeOrmModule.forFeature([PromotionLine, Promotion, PromotionDetail, Trip]),
   ],
   providers: [PromotionLineService],
   controllers: [PromotionLineController],
