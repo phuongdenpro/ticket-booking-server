@@ -1,4 +1,9 @@
-import { ActiveStatusEnum, SortEnum, VehicleTypeEnum } from './../../enums';
+import {
+  ActiveStatusEnum,
+  DeleteDtoTypeEnum,
+  SortEnum,
+  VehicleTypeEnum,
+} from './../../enums';
 import {
   CreatePriceListDto,
   FilterPriceListDto,
@@ -274,7 +279,7 @@ export class PriceListService {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
-    if (priceList.endDate < currentDate) {
+    if (priceList.endDate <= currentDate) {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
     if (name) {
@@ -286,9 +291,6 @@ export class PriceListService {
 
     if (startDate) {
       if (startDate !== priceList.startDate) {
-        if (priceList.status === ActiveStatusEnum.ACTIVE && priceList.startDate <= currentDate) {
-          throw new BadRequestException('PRICE_LIST_IS_ACTIVE');
-        }
         const priceListStartDateExist = await this.findOnePriceList({
           where: {
             startDate: MoreThanOrEqual(startDate),
@@ -311,6 +313,13 @@ export class PriceListService {
           throw new BadRequestException(
             'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
           );
+        }
+        if (
+          priceList.status === ActiveStatusEnum.ACTIVE &&
+          currentDate >= priceList.startDate &&
+          currentDate <= priceList.endDate
+        ) {
+          throw new BadRequestException('PRICE_LIST_IS_ACTIVE_AND_IN_USE');
         }
         priceList.startDate = startDate;
       }
@@ -383,7 +392,7 @@ export class PriceListService {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
-    if (priceList.endDate < currentDate) {
+    if (priceList.endDate <= currentDate) {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
     priceList.updatedBy = adminExist.id;
@@ -429,7 +438,7 @@ export class PriceListService {
             };
           }
           const currentDate = new Date(moment().format('YYYY-MM-DD'));
-          if (priceList.endDate < currentDate) {
+          if (priceList.endDate <= currentDate) {
             throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
           }
           priceList.updatedBy = adminExist.id;
@@ -517,6 +526,13 @@ export class PriceListService {
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    if (priceList.endDate <= currentDate) {
+      throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
+    }
+
+    const priceDetail = new PriceDetail();
+    priceDetail.priceList = priceList;
 
     const trip = await this.dataSource.getRepository(Trip).findOne({
       where: { code: tripCode },
@@ -524,9 +540,7 @@ export class PriceListService {
     if (!trip) {
       throw new BadRequestException('TRIP_NOT_FOUND');
     }
-    const priceDetail = new PriceDetail();
     priceDetail.trip = trip;
-    priceDetail.priceList = priceList;
 
     switch (seatType) {
       case VehicleTypeEnum.LIMOUSINE:
@@ -558,7 +572,7 @@ export class PriceListService {
     if (priceDetailStartDateExist) {
       const priceList: PriceList = priceDetailStartDateExist.priceList;
       throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
-        description: `Loại ghế của tuyến "${trip?.name}" đã tồn tại trong bảng giá có mã ${priceList?.code}`,
+        description: `Loại ghế của tuyến "${trip?.name}" đã tồn tại trong bảng giá đang học động khác có mã ${priceList?.code}`,
       });
     }
     const priceDetailEndDateExist = await this.findOnePriceDetail({
@@ -581,15 +595,20 @@ export class PriceListService {
     if (priceDetailEndDateExist) {
       const priceList: PriceList = priceDetailEndDateExist.priceList;
       throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
-        description: `Loại ghế của tuyến "${trip?.name}" đã tồn tại trong bảng giá có mã ${priceList?.code}`,
+        description: `Loại ghế của tuyến "${trip?.name}" đã tồn tại trong bảng giá đang học động khác có mã ${priceList?.code}`,
       });
     }
 
-    if (price < 0) {
+    const priceDetailExist = await this.findOnePriceDetailByCode(code);
+    if (priceDetailExist) {
+      throw new BadRequestException('PRICE_DETAIL_CODE_EXISTED');
+    }
+    priceDetail.code = code;
+
+    if (price < 0 || isNaN(price)) {
       throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
     }
     priceDetail.price = price;
-    priceDetail.code = code;
     priceDetail.note = note;
     priceDetail.createdBy = adminExist.id;
 
@@ -701,6 +720,20 @@ export class PriceListService {
     if (!priceDetail) {
       throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
     }
+    const priceList: PriceList = priceDetail.priceList;
+
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    if (priceList.endDate <= currentDate) {
+      throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
+    }
+    if (
+      priceList.status === ActiveStatusEnum.ACTIVE &&
+      currentDate >= priceList.startDate &&
+      currentDate <= priceList.endDate
+    ) {
+      throw new BadRequestException('PRICE_LIST_IS_ACTIVE_AND_IN_USE');
+    }
+
     switch (seatType) {
       case VehicleTypeEnum.LIMOUSINE:
       case VehicleTypeEnum.SEAT_BUS:
@@ -720,7 +753,6 @@ export class PriceListService {
       priceDetail.trip = trip;
     }
 
-    const priceList: PriceList = priceDetail.priceList;
     const priceDetailStartDateExist = await this.findOnePriceDetail({
       where: {
         seatType,
@@ -741,7 +773,7 @@ export class PriceListService {
     if (priceDetailStartDateExist) {
       const priceList: PriceList = priceDetailStartDateExist.priceList;
       throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
-        description: `Loại ghế của tuyến "${priceDetail.trip?.name}" đã tồn tại trong bảng giá có mã ${priceList?.code}`,
+        description: `Loại ghế của tuyến "${priceDetail.trip?.name}" đã tồn tại trong bảng giá đang kích hoạt có mã ${priceList?.code}`,
       });
     }
     const priceDetailEndDateExist = await this.findOnePriceDetail({
@@ -764,12 +796,12 @@ export class PriceListService {
     if (priceDetailEndDateExist) {
       const priceList: PriceList = priceDetailEndDateExist.priceList;
       throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
-        description: `Loại ghế của tuyến "${priceDetail.trip?.name}" đã tồn tại trong bảng giá có mã ${priceList?.code}`,
+        description: `Loại ghế của tuyến "${priceDetail.trip?.name}" đã tồn tại trong bảng giá đang kích hoạt có mã ${priceList?.code}`,
       });
     }
 
     if (price) {
-      if (price < 0) {
+      if (price < 0 || isNaN(price)) {
         throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
       }
       if (price > Number.MAX_VALUE) {
@@ -809,13 +841,22 @@ export class PriceListService {
       throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
     }
     if (id) {
-      priceDetail = await this.getPriceDetailById(id);
+      priceDetail = await this.getPriceDetailById(id, {
+        relations: { priceList: true },
+      });
     }
     if (code) {
-      priceDetail = await this.getPriceDetailByCode(code);
+      priceDetail = await this.getPriceDetailByCode(code, {
+        relations: { priceList: true },
+      });
     }
     if (!priceDetail) {
       throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
+    const priceList: PriceList = priceDetail.priceList;
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    if (priceList.endDate <= currentDate) {
+      throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
     priceDetail.updatedBy = adminExist.id;
 
@@ -830,7 +871,7 @@ export class PriceListService {
   async deleteMultiPriceDetailByIdsOrCodes(
     adminId: string,
     dto: DeletePriceDetailDto,
-    type: string,
+    type: DeleteDtoTypeEnum,
   ) {
     try {
       const { list } = dto;
@@ -854,10 +895,14 @@ export class PriceListService {
             };
           }
           let priceDetail;
-          if (type === 'id') {
-            priceDetail = await this.getPriceDetailById(data);
+          if (type === DeleteDtoTypeEnum.ID) {
+            priceDetail = await this.getPriceDetailById(data, {
+              relations: { priceList: true },
+            });
           } else {
-            priceDetail = await this.getPriceDetailByCode(data);
+            priceDetail = await this.getPriceDetailByCode(data, {
+              relations: { priceList: true },
+            });
           }
           if (!priceDetail) {
             return {
@@ -865,6 +910,11 @@ export class PriceListService {
               code: type === 'code' ? data : undefined,
               message: 'Không tìm thấy chi tiết bảng giá',
             };
+          }
+          const priceList: PriceList = priceDetail.priceList;
+          const currentDate = new Date(moment().format('YYYY-MM-DD'));
+          if (priceList.endDate <= currentDate) {
+            throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
           }
           priceDetail.updatedBy = adminExist.id;
 

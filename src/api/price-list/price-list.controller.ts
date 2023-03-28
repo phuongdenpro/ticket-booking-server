@@ -1,5 +1,5 @@
 import { JwtAuthGuard } from './../../auth/guards';
-import { RoleEnum } from './../../enums';
+import { DeleteDtoTypeEnum, RoleEnum } from './../../enums';
 import {
   CurrentUser,
   GetPagination,
@@ -300,7 +300,7 @@ export class PriceListController {
     return await this.priceListService.deleteMultiPriceDetailByIdsOrCodes(
       user.id,
       dto,
-      'id',
+      DeleteDtoTypeEnum.ID,
     );
   }
 
@@ -316,7 +316,7 @@ export class PriceListController {
     return await this.priceListService.deleteMultiPriceDetailByIdsOrCodes(
       user.id,
       dto,
-      'code',
+      DeleteDtoTypeEnum.CODE,
     );
   }
 }

@@ -291,6 +291,8 @@ export const mappingTranslate = {
     'Id hoặc mã của nhóm vé không được để trống',
 
   // price list
+  PRICE_LIST_IS_ACTIVE_AND_IN_USE:
+    'Bảng giá này đang được kích hoạt và đang được sử dụng',
   ANOTHER_PRICE_LIST_IS_EXIST_IN_THIS_DATE:
     'Đã tồn tại bảng giá trong khoảng thời gian này',
   PRICE_LIST_IS_EXPIRED: 'Bảng giá này đã hết hạn',
@@ -308,7 +310,7 @@ export const mappingTranslate = {
   PRICE_LIST_ID_OR_CODE_REQUIRED: 'Id hoặc mã của bảng giá không được để trống',
   PRICE_LIST_CODE_IS_EXIST: 'mã của bảng giá đã tồn tại',
   TRIP_EXISTED_IN_PRICE_LIST:
-    'Loại ghế của tuyến này đã tồn tại trong khác bảng giá đang hoạt động',
+    'Loại ghế của tuyến này đã tồn tại trong bảng giá đang hoạt động khác',
   // price details
   PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết bảng giá',
   PRICE_IS_NUMBER: 'Giá phải là số',
