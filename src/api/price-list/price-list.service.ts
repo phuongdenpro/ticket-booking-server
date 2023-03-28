@@ -670,7 +670,6 @@ export class PriceListService {
       .addOrderBy('q.note', sort || SortEnum.DESC);
 
     const dataResult = await query
-      .leftJoinAndSelect('q.ticketGroup', 't')
       .select(this.selectFieldsPriceDetailWithQ)
       .skip(pagination.skip)
       .take(pagination.take)
