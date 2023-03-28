@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { ArrayNotEmpty, IsArray, IsString } from 'class-validator';
 
-export class DeletePriceDetailDto {
+export class DistrictDeleteMultiByIdsOrCodes {
   @ApiProperty({
     example: ['idOrCode1', 'idOrCode2', 'idOrCode3'],
     description: 'list id/code',

@@ -1,5 +1,5 @@
 import { JwtAuthGuard } from './../../../auth/guards';
-import { RoleEnum } from './../../../enums/roles.enum';
+import { RoleEnum, DeleteDtoTypeEnum } from './../../../enums';
 import { DistrictService } from './district.service';
 import {
   CurrentUser,
@@ -10,10 +10,9 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
   SaveDistrictDto,
-  DistrictDeleteMultiCode,
   UpdateDistrictDto,
   FilterDistrictDto,
-  DistrictDeleteMultiId,
+  DistrictDeleteMultiByIdsOrCodes,
 } from './dto';
 import {
   Body,
@@ -83,7 +82,7 @@ export class DistrictController {
     @Body() dto: UpdateDistrictDto,
     @CurrentUser() user,
   ) {
-    return this.districtService.updateById(id, dto, user.id);
+    return this.districtService.updateByIdOrCode(dto, user.id, id);
   }
 
   @Patch('code/:code')
@@ -96,7 +95,7 @@ export class DistrictController {
     @Body() dto: UpdateDistrictDto,
     @CurrentUser() user,
   ) {
-    return this.districtService.updateByCode(code, dto, user.id);
+    return this.districtService.updateByIdOrCode(dto, user.id, undefined, code);
   }
 
   @Delete('code/:code')
@@ -105,7 +104,7 @@ export class DistrictController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async hiddenByCode(@Param('code') code: number, @CurrentUser() user) {
-    return this.districtService.deleteByCode(code, user.id);
+    return this.districtService.deleteByIdOrCode(user.id, undefined, code);
   }
 
   @Delete('id/:id')
@@ -114,7 +113,7 @@ export class DistrictController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async hiddenById(@Param('id') id: string, @CurrentUser() user) {
-    return this.districtService.deleteById(id, user.id);
+    return this.districtService.deleteByIdOrCode(user.id, id);
   }
 
   @Delete('multiple/id')
@@ -124,9 +123,13 @@ export class DistrictController {
   @ApiBearerAuth()
   async deleteMultipleId(
     @CurrentUser() user,
-    @Body() dto: DistrictDeleteMultiId,
+    @Body() dto: DistrictDeleteMultiByIdsOrCodes,
   ) {
-    return await this.districtService.deleteMultipleDistrictById(user.id, dto);
+    return await this.districtService.deleteMultipleDistrictByIdsOrCodes(
+      user.id,
+      dto,
+      DeleteDtoTypeEnum.ID,
+    );
   }
 
   @Delete('multiple/code')
@@ -136,11 +139,12 @@ export class DistrictController {
   @ApiBearerAuth()
   async deleteMultipleCode(
     @CurrentUser() user,
-    @Body() dto: DistrictDeleteMultiCode,
+    @Body() dto: DistrictDeleteMultiByIdsOrCodes,
   ) {
-    return await this.districtService.deleteMultipleDistrictByCode(
+    return await this.districtService.deleteMultipleDistrictByIdsOrCodes(
       user.id,
       dto,
+      DeleteDtoTypeEnum.CODE,
     );
   }
 

@@ -13,3 +13,4 @@ export * from './province-type.enum';
 export * from './promotion-status.enum';
 export * from './promotion-type.enum';
 export * from './order-status.enum';
+export * from './delete-dto-type.enum';

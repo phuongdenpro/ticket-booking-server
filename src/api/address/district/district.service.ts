@@ -1,20 +1,19 @@
 import { AdminService } from './../../admin/admin.service';
-import { SortEnum } from './../../../enums';
+import { DeleteDtoTypeEnum, SortEnum } from './../../../enums';
 import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { District, Province } from './../../../database/entities';
+import { District, Province, Staff } from './../../../database/entities';
 import { Pagination } from './../../../decorator';
 import { DataSource, Repository } from 'typeorm';
 import {
   UpdateDistrictDto,
   FilterDistrictDto,
   SaveDistrictDto,
-  DistrictDeleteMultiId,
-  DistrictDeleteMultiCode,
+  DistrictDeleteMultiByIdsOrCodes,
 } from './dto';
 
 @Injectable()
@@ -141,9 +140,22 @@ export class DistrictService {
   }
 
   // update a record by id
-  async updateById(id: string, dto: UpdateDistrictDto, userId: string) {
+  async updateByIdOrCode(
+    dto: UpdateDistrictDto,
+    userId: string,
+    id?: string,
+    code?: number,
+  ) {
     const { codename, name, provinceCode, type } = dto;
-    const district = await this.findOneById(id);
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_REQUIRED');
+    }
+    let district;
+    if (id) {
+      district = await this.findOneById(id);
+    } else {
+      district = await this.findOneByCode(code);
+    }
     if (!district) {
       throw new BadRequestException('DISTRICT_NOT_FOUND');
     }
@@ -167,44 +179,6 @@ export class DistrictService {
       district.province = province;
     }
 
-    const adminExist = await this.adminService.findOneBydId(userId);
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (adminExist && !adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-    district.updatedBy = adminExist.id;
-
-    return await this.districtRepository.save(district);
-  }
-
-  // update a record by code
-  async updateByCode(code: number, dto: UpdateDistrictDto, userId: string) {
-    const { codename, name, provinceCode, type } = dto;
-    const district = await this.findOneByCode(code);
-    if (!district) {
-      throw new BadRequestException('DISTRICT_NOT_FOUND');
-    }
-    if (district.name) {
-      district.name = name;
-    }
-    if (type) {
-      district.type = type;
-    }
-    if (codename) {
-      district.codename = codename;
-    }
-    if (provinceCode) {
-      const province = await this.dataSource.getRepository(Province).findOne({
-        where: { code: provinceCode },
-      });
-      if (!province) {
-        throw new BadRequestException('PROVINCE_NOT_FOUND');
-      }
-      district.provinceCode = province.code;
-      district.province = province;
-    }
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -218,67 +192,81 @@ export class DistrictService {
   }
 
   // delete a record by id
-  async deleteById(id: string, userId: string) {
-    const district = await this.findOneById(id);
+  async deleteByIdOrCode(userId: string, id?: string, code?: number) {
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_REQUIRED');
+    }
+    let district;
+    if (id) {
+      district = await this.findOneById(id);
+    } else {
+      district = await this.findOneByCode(code);
+    }
     if (!district) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
+
     const adminExist = await this.adminService.findOneBydId(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (adminExist && !adminExist.isActive) {
+    if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
     district.updatedBy = adminExist.id;
-    district.deletedAt = new Date();
-
-    return await this.districtRepository.save(district);
+    return await this.districtRepository.delete(district);
   }
 
-  // delete a record by code
-  async deleteByCode(code: number, userId: string) {
-    const district = await this.findOneByCode(code);
-    if (!district) {
-      throw new BadRequestException('PROVINCE_NOT_FOUND');
-    }
-    const adminExist = await this.adminService.findOneBydId(userId);
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (adminExist && !adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-    district.updatedBy = adminExist.id;
-    district.deletedAt = new Date();
-
-    return await this.districtRepository.save(district);
-  }
-
-  async deleteMultipleDistrictById(userId: string, dto: DistrictDeleteMultiId) {
-    try {
-      const { ids } = dto;
-
-      const list = await Promise.all(
-        ids.map(async (id) => await this.deleteById(id, userId)),
-      );
-      return list;
-    } catch (err) {
-      throw new BadRequestException(err.message);
-    }
-  }
-
-  async deleteMultipleDistrictByCode(
+  async deleteMultipleDistrictByIdsOrCodes(
     userId: string,
-    dto: DistrictDeleteMultiCode,
+    dto: DistrictDeleteMultiByIdsOrCodes,
+    type: DeleteDtoTypeEnum,
   ) {
     try {
-      const { codes } = dto;
-
-      const list = await Promise.all(
-        codes.map(async (code) => await this.deleteByCode(code, userId)),
+      const { list } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: userId } });
+      if (!adminExist) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!adminExist.isActive) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
+      const newList = await Promise.all(
+        list.map(async (data) => {
+          if (!data) {
+            return {
+              id: type === DeleteDtoTypeEnum.ID ? data : undefined,
+              code: type === DeleteDtoTypeEnum.CODE ? data : undefined,
+              message: `${type} không được để trống`,
+            };
+          }
+          let district: District;
+          if (type === DeleteDtoTypeEnum.ID) {
+            district = await this.findOneById(data);
+          } else {
+            const code = parseInt(data);
+            district = await this.findOneByCode(code);
+          }
+          if (!district) {
+            return {
+              id: type === DeleteDtoTypeEnum.ID ? data : undefined,
+              code: type === DeleteDtoTypeEnum.CODE ? data : undefined,
+              message: 'Không tìm thấy quận/huyện',
+            };
+          }
+          district.updatedBy = adminExist.id;
+          await this.districtRepository.delete(district);
+          return {
+            id: district.id,
+            code: district.code,
+            message: 'Xoá thành công',
+          };
+        }),
       );
-      return list;
+      return newList;
     } catch (err) {
       throw new BadRequestException(err.message);
     }

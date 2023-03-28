@@ -12,7 +12,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Staff, Station, Trip } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
-import { SortEnum, TripStatusEnum } from './../../enums';
+import { SortEnum, TripStatusEnum, DeleteDtoTypeEnum } from './../../enums';
 import { Pagination } from './../../decorator';
 import * as moment from 'moment';
 moment.locale('vi');
@@ -133,13 +133,19 @@ export class TripService {
     trip.note = note;
     // check start date
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
-    if (startDate < currentDate) {
+    if (startDate <= currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
     trip.startDate = startDate;
     // check end date
-    if (endDate < currentDate && endDate < startDate) {
-      throw new BadRequestException('END_DATE_MUST_BE_GREATER_THAN_START_DATE');
+
+    if (endDate < currentDate) {
+      throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
+    }
+    if (endDate <= startDate) {
+      throw new BadRequestException(
+        'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
+      );
     }
     trip.endDate = endDate;
     // check from station
@@ -163,14 +169,14 @@ export class TripService {
     }
     switch (status) {
       case TripStatusEnum.ACTIVE:
-        trip.status = TripStatusEnum.ACTIVE;
+      case TripStatusEnum.INACTIVE:
+        trip.status = status;
         break;
       default:
-        trip.status = TripStatusEnum.INACTIVE;
-        break;
+        throw new BadRequestException('TRIP_STATUS_IS_ENUM');
     }
-
     trip.createdBy = adminExist.id;
+
     const saveTrip = await this.tripRepository.save(trip);
     delete saveTrip.fromStation;
     delete saveTrip.toStation;
@@ -179,52 +185,81 @@ export class TripService {
       ...saveTrip,
       fromStation: {
         id: fromStation.id,
+        code: fromStation.code,
         name: fromStation.name,
       },
       toStation: {
         id: toStation.id,
+        code: toStation.code,
         name: toStation.name,
       },
     };
   }
 
   async findAllTrip(dto: FilterTripDto, pagination?: Pagination) {
-    const { keywords, fromStationId, toStationId, status } = dto;
-    let { startDate, endDate } = dto;
+    const {
+      keywords,
+      fromStationId,
+      toStationId,
+      status,
+      startDate,
+      endDate,
+      toStationCode,
+      fromStationCode,
+      sort,
+    } = dto;
     const query = this.tripRepository.createQueryBuilder('q');
 
     if (keywords) {
-      query
-        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
+      const newKeywords = keywords.trim();
+      const subQuery = this.tripRepository.createQueryBuilder('q2');
+      subQuery
+        .orWhere('q2.code like :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name like :name', { name: `%${newKeywords}%` })
+        .orWhere('q2.note like :note', { note: `%${newKeywords}%` })
+        .getQuery();
+      query.andWhere(`EXISTS ${subQuery}`, {});
     }
 
-    const currentDate = new Date(moment().format('YYYY-MM-DD'));
-    if (startDate && startDate >= currentDate) {
-      startDate = new Date(startDate);
-      query.andWhere('q.startDate >= :startDate', { startDate });
+    if (startDate) {
+      const newStartDate = new Date(startDate);
+      query.andWhere('q.startDate >= :startDate', { startDate: newStartDate });
     }
-    if (endDate && endDate >= currentDate && endDate >= startDate) {
-      endDate = new Date(endDate);
-      query.andWhere('q.endDate >= :endDate', { endDate });
+    if (endDate) {
+      const newEndDate = new Date(endDate);
+      query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
     if (fromStationId) {
-      query.andWhere('q.fromStation = :fromStationId', { fromStationId });
+      query.leftJoinAndSelect('q.fromStation', 'fs');
+      query.andWhere('fs.id = :fromStationId', { fromStationId });
     }
     if (toStationId) {
-      query.andWhere('q.toStation = :toStationId', { toStationId });
+      query.leftJoinAndSelect('q.toStation', 'ts');
+      query.andWhere('ts.id = :toStationId', { toStationId });
     }
-    if (status) {
-      query.andWhere('q.status = :status', { status });
+    if (fromStationCode) {
+      query.leftJoinAndSelect('q.fromStation', 'fs');
+      query.andWhere('fs.code = :fromStationCode', { fromStationCode });
+    }
+    if (toStationCode) {
+      query.leftJoinAndSelect('q.toStation', 'ts');
+      query.andWhere('ts.code = :toStationCode', { toStationCode });
+    }
+    switch (status) {
+      case TripStatusEnum.ACTIVE:
+      case TripStatusEnum.INACTIVE:
+        query.andWhere('q.status = :status', { status });
+        break;
+      default:
+        break;
     }
 
     const total = await query.getCount();
     const dataResult = await query
-      .leftJoinAndSelect('q.fromStation', 'fs')
-      .leftJoinAndSelect('q.toStation', 'to')
       .select(this.tripSelectFieldsWithQ)
-      .orderBy('q.createdAt', SortEnum.ASC)
+      .orderBy('q.name', SortEnum.ASC)
+      .addOrderBy('q.code', SortEnum.ASC)
+      .addOrderBy('q.createdAt', sort || SortEnum.DESC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
@@ -276,22 +311,17 @@ export class TripService {
     if (!id && !code) {
       throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
     }
-    let trip;
+    let trip: Trip;
     if (id) {
-      trip = await this.getTripById(id, {
-        relations: {
-          ticketGroup: true,
-        },
-      });
+      trip = await this.getTripById(id);
     } else if (code) {
-      trip = await this.getTripByCode(code, {
-        relations: {
-          ticketGroup: true,
-        },
-      });
+      trip = await this.getTripByCode(code);
     }
     if (!trip) {
       throw new BadRequestException('TRIP_NOT_FOUND');
+    }
+    if (trip.status === TripStatusEnum.ACTIVE) {
+      throw new BadRequestException('TRIP_IS_ACTIVE');
     }
     if (name) {
       trip.name = name;
@@ -301,15 +331,33 @@ export class TripService {
     }
 
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
-    if (startDate !== undefined || startDate !== null) {
-      if (startDate < currentDate) {
+    if (startDate) {
+      if (startDate <= currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
+      }
+      if (
+        (endDate && startDate > endDate) ||
+        (!endDate && startDate > trip.endDate)
+      ) {
+        throw new BadRequestException(
+          'END_DATE_MUST_BE_GREATER_THAN_START_DATE',
+        );
       }
       trip.startDate = startDate;
     }
-    if (endDate !== undefined || endDate !== null) {
-      if (endDate < currentDate) {
-        throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
+    if (endDate) {
+      if (endDate <= currentDate) {
+        throw new BadRequestException(
+          'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
+        );
+      }
+      if (
+        (startDate && endDate < startDate) ||
+        (!startDate && endDate < trip.startDate)
+      ) {
+        throw new BadRequestException(
+          'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
+        );
       }
       trip.endDate = endDate;
     }
@@ -337,10 +385,10 @@ export class TripService {
     }
     switch (status) {
       case TripStatusEnum.ACTIVE:
-        trip.status = TripStatusEnum.ACTIVE;
+      case TripStatusEnum.INACTIVE:
+        trip.status = status;
         break;
       default:
-        trip.status = TripStatusEnum.INACTIVE;
         break;
     }
     trip.updatedBy = adminExist.id;
@@ -359,16 +407,18 @@ export class TripService {
       updatedAt: updateTrip.updatedAt,
       fromStation: {
         id: updateTrip.fromStation.id,
+        code: updateTrip.fromStation.code,
         name: updateTrip.fromStation.name,
       },
       toStation: {
         id: updateTrip.toStation.id,
+        code: updateTrip.toStation.code,
         name: updateTrip.toStation.name,
       },
     };
   }
 
-  async deleteTripById(id: string, adminId: string) {
+  async deleteTripByIdOrCode(adminId: string, id?: string, code?: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: adminId } });
@@ -378,35 +428,34 @@ export class TripService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-
-    const trip = await this.getTripById(id);
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
+    }
+    let trip: Trip;
+    if (id) {
+      trip = await this.getTripById(id);
+    } else if (code) {
+      trip = await this.getTripByCode(code);
+    }
+    if (!trip) {
+      throw new BadRequestException('TRIP_NOT_FOUND');
+    }
     trip.deletedAt = new Date();
     trip.updatedBy = adminExist.id;
 
     const saveTrip = await this.tripRepository.save(trip);
-    return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
+    return {
+      id: saveTrip.id,
+      code: saveTrip.code,
+      message: 'Xoá tuyến xe thành công',
+    };
   }
 
-  async deleteTripByCode(code: string, adminId: string) {
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId } });
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-
-    const trip = await this.getTripByCode(code);
-    trip.deletedAt = new Date();
-    trip.updatedBy = adminExist.id;
-
-    const saveTrip = await this.tripRepository.save(trip);
-    return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
-  }
-
-  async deleteMultipleTrip(userId: string, dto: TripDeleteMultiInput) {
+  async deleteMultipleTripByIdsOrCodes(
+    userId: string,
+    dto: TripDeleteMultiInput,
+    type: DeleteDtoTypeEnum,
+  ) {
     try {
       const adminExist = await this.dataSource
         .getRepository(Staff)
@@ -420,48 +469,36 @@ export class TripService {
       const { ids } = dto;
 
       const list = await Promise.all(
-        ids.map(async (id) => {
-          const trip = await this.findOneTripById(id);
+        ids.map(async (data) => {
+          if (!data) {
+            return {
+              id: type === DeleteDtoTypeEnum.ID ? data : undefined,
+              code: type === DeleteDtoTypeEnum.CODE ? data : undefined,
+              message: `${type} không được để trống`,
+            };
+          }
+          let trip;
+          if (type === DeleteDtoTypeEnum.ID) {
+            trip = await this.getTripById(data);
+          } else if (type === DeleteDtoTypeEnum.CODE) {
+            trip = await this.getTripByCode(data);
+          }
           if (!trip) {
-            return { id: id, message: 'Không tìm thấy tuyến xe' };
+            return {
+              id: type === DeleteDtoTypeEnum.ID ? data : undefined,
+              code: type === DeleteDtoTypeEnum.CODE ? data : undefined,
+              message: 'Không tìm thấy tuyến xe',
+            };
           }
           trip.deletedAt = new Date();
           trip.updatedBy = adminExist.id;
 
-          const saveTrip = await this.tripRepository.save(trip);
-          return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
-        }),
-      );
-      return list;
-    } catch (err) {
-      throw new BadRequestException(err.message);
-    }
-  }
-
-  async deleteMultipleTripByCodes(userId: string, dto: TripDeleteMultiInput) {
-    try {
-      const adminExist = await this.dataSource
-        .getRepository(Staff)
-        .findOne({ where: { id: userId } });
-      if (!adminExist) {
-        throw new UnauthorizedException('UNAUTHORIZED');
-      }
-      if (!adminExist.isActive) {
-        throw new BadRequestException('USER_NOT_ACTIVE');
-      }
-      const { ids } = dto;
-
-      const list = await Promise.all(
-        ids.map(async (code) => {
-          const trip = await this.findOneTripByCode(code);
-          if (!trip) {
-            return { code, message: 'Không tìm thấy tuyến xe' };
-          }
-          trip.deletedAt = new Date();
-          trip.updatedBy = adminExist.id;
-
-          const saveTrip = await this.tripRepository.save(trip);
-          return { id: saveTrip.id, message: 'Xoá tuyến xe thành công' };
+          const saveTrip = await this.tripRepository.softRemove(trip);
+          return {
+            id: saveTrip.id,
+            code: saveTrip.code,
+            message: 'Xoá tuyến xe thành công',
+          };
         }),
       );
       return list;

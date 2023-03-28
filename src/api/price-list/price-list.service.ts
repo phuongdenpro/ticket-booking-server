@@ -188,11 +188,12 @@ export class PriceListService {
 
     const query = this.priceListRepository.createQueryBuilder('q');
     if (keywords) {
+      const newKeywords = keywords.trim();
       const subQuery = this.priceListRepository
         .createQueryBuilder('q2')
-        .where('q2.code LIKE :code', { code: `%${keywords}%` })
-        .orWhere('q2.name LIKE :name', { name: `%${keywords}%` })
-        .orWhere('q2.note LIKE :note', { note: `%${keywords}%` })
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`EXISTS ${subQuery}`, {});
@@ -728,7 +729,7 @@ export class PriceListService {
             return {
               id: type === 'id' ? data : undefined,
               code: type === 'code' ? data : undefined,
-              message: 'ID_OR_CODE_IS_REQUIRED',
+              message: `${type} không được để trống`,
             };
           }
           let priceDetail;
@@ -739,8 +740,8 @@ export class PriceListService {
           }
           if (!priceDetail) {
             return {
-              id: priceDetail.id,
-              code: priceDetail.code,
+              id: type === 'id' ? data : undefined,
+              code: type === 'code' ? data : undefined,
               message: 'Không tìm thấy chi tiết bảng giá',
             };
           }
