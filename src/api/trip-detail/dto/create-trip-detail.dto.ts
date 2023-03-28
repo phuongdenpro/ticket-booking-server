@@ -8,6 +8,8 @@ import {
   Length,
 } from 'class-validator';
 import { TripDetailStatusEnum } from '../../../enums';
+import * as moment from 'moment';
+moment.locale('vi');
 
 export class CreateTripDetailDto {
   @ApiProperty({ example: '' })
@@ -36,10 +38,14 @@ export class CreateTripDetailDto {
   status: string;
 
   @ApiProperty({ example: '59464f9b-0be3-4929-b1ea-d2aa80c21a6a' })
-  @IsNotEmpty({ message: 'TRIP_ID_REQUIRED' })
   @IsString({ message: 'TRIP_ID_IS_STRING' })
-  @Length(36, 36, { message: 'TRIP_ID_INVALID' })
+  @IsOptional()
   tripId: string;
+
+  @ApiProperty({ example: '' })
+  @IsString({ message: 'TRIP_CODE_IS_STRING' })
+  @IsOptional()
+  tripCode: string;
 
   @ApiProperty({ example: '8d453086-e6a2-4a2e-a407-5ce2be3b0ba8' })
   @IsNotEmpty({ message: 'VEHICLE_ID_REQUIRED' })

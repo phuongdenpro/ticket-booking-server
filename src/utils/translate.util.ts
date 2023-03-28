@@ -219,9 +219,9 @@ export const mappingTranslate = {
   DEPARTURE_DATE_INVALID: 'Thời gian khởi hành là không đúng định dạng',
   EXPECTED_DATE_REQUIRED: 'Thời gian đến là không được để trống',
   EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE:
-    'Ngày đến phải lớn hơn hoặc bằng ngày khởi hành',
+    'Thời gian đến phải lớn hơn hoặc bằng thời gian khởi hành',
   DEPARTURE_DATE_GREATER_THAN_CURRENT_DATE:
-    'Ngày khởi hành phải lớn hơn ngày hiện tại',
+    'Thời gian khởi hành phải lớn hơn hiện tại',
   INVALID_TRIP_DETAIL_STATUS: 'Trang thái của chi tiết chuyến đi không hợp lệ',
   TRIP_DETAIL_STATUS_REQUIRED: 'Trang thái của chi tiết chuyến đi không hợp lệ',
   TRIP_DETAIL_NOT_FOUND: 'Không tìm thấy thông tin chuyến đi',
@@ -291,6 +291,9 @@ export const mappingTranslate = {
     'Id hoặc mã của nhóm vé không được để trống',
 
   // price list
+  ANOTHER_PRICE_LIST_IS_EXIST_IN_THIS_DATE:
+    'Đã tồn tại bảng giá trong khoảng thời gian này',
+  PRICE_LIST_IS_EXPIRED: 'Bảng giá này đã hết hạn',
   PRICE_LIST_IS_ACTIVE: 'Bảng giá này đang được kích hoạt',
   PRICE_LIST_STATUS_INVALID:
     'Trạng thái của bảng giá không hợp lệ. Chỉ nhận 1 trong 2 giá trị: "Kích hoạt", "Tạm ngưng"',

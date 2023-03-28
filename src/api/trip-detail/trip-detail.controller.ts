@@ -76,7 +76,11 @@ export class TripDetailController {
     @Param('id') id: string,
     @Body() dto: UpdateTripDetailDto,
   ) {
-    return await this.tripDetailService.updateTripDetailById(dto, id, user.id);
+    return await this.tripDetailService.updateTripDetailByIdOrCode(
+      dto,
+      user.id,
+      id,
+    );
   }
 
   @Patch('code/:code')
@@ -89,10 +93,11 @@ export class TripDetailController {
     @Param('code') code: string,
     @Body() dto: UpdateTripDetailDto,
   ) {
-    return await this.tripDetailService.updateTripDetailById(
+    return await this.tripDetailService.updateTripDetailByIdOrCode(
       dto,
-      code,
       user.id,
+      undefined,
+      code,
     );
   }
 
