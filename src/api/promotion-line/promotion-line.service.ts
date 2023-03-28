@@ -443,7 +443,6 @@ export class PromotionLineService {
       tripCode,
       productDiscount,
       productDiscountPercent,
-      // productGiveaway,
     } = dto;
     const adminExist = await this.dataSource.getRepository(Staff).findOne({
       where: { id: adminId },
@@ -467,6 +466,11 @@ export class PromotionLineService {
     }
     promotionLine.promotion = promotion;
 
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    if (promotion.endDate < currentDate) {
+      throw new BadRequestException('PROMOTION_HAS_EXPIRED');
+    }
+
     const promotionLineCodeExist = await this.findOnePromotionLineByCode(code, {
       other: { withDeleted: true },
     });
@@ -478,7 +482,7 @@ export class PromotionLineService {
     promotionLine.title = title;
     promotionLine.description = description;
     promotionLine.note = note;
-    if (maxBudget < 0) {
+    if (maxBudget < 0 || isNaN(maxBudget)) {
       throw new BadRequestException('BUDGET_MUST_BE_GREATER_THAN_0');
     }
     promotionLine.maxBudget = maxBudget;
@@ -502,7 +506,6 @@ export class PromotionLineService {
     promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
 
     switch (type) {
-      // case PromotionTypeEnum.PRODUCT_GIVEAWAYS:
       case PromotionTypeEnum.PRODUCT_DISCOUNT:
       case PromotionTypeEnum.PRODUCT_DISCOUNT_PERCENT:
         promotionLine.type = type;
@@ -511,7 +514,6 @@ export class PromotionLineService {
         throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
     }
 
-    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     // validate startDate
     if (!startDate) {
       throw new BadRequestException('START_DATE_IS_REQUIRED');
@@ -525,14 +527,14 @@ export class PromotionLineService {
     if (!endDate) {
       throw new BadRequestException('END_DATE_IS_REQUIRED');
     }
-    if (endDate < startDate) {
-      throw new BadRequestException(
-        'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
-      );
-    }
     if (endDate < currentDate) {
       throw new BadRequestException(
         'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
+      );
+    }
+    if (endDate < startDate) {
+      throw new BadRequestException(
+        'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
       );
     }
     promotionLine.endDate = endDate;
@@ -547,8 +549,8 @@ export class PromotionLineService {
     promotionLine.couponCode = couponCode;
 
     promotionLine.createdBy = adminId;
-    let savePromotionLine;
-    let savePromotionDetail;
+    let savePromotionLine: PromotionLine;
+    let savePromotionDetail: PromotionDetail;
 
     const queryRunner =
       this.promotionLineRepository.manager.connection.createQueryRunner();
@@ -559,12 +561,6 @@ export class PromotionLineService {
         promotionLine,
       );
       let promotionDetail: PromotionDetail;
-      // if (type === PromotionTypeEnum.PRODUCT_GIVEAWAYS && productGiveaway) {
-      //   promotionDetail = await this.validProductGiveaway(
-      //     productGiveaway,
-      //     savePromotionLine,
-      //   );
-      // } else
       if (type === PromotionTypeEnum.PRODUCT_DISCOUNT && productDiscount) {
         promotionDetail = await this.validProductDiscount(
           productDiscount,
@@ -632,7 +628,6 @@ export class PromotionLineService {
       tripCode,
       productDiscount,
       productDiscountPercent,
-      // productGiveaway,
     } = dto;
     const adminExist = await this.dataSource.getRepository(Staff).findOne({
       where: { id: adminId },
@@ -664,9 +659,12 @@ export class PromotionLineService {
     if (!promotionLine) {
       throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
     }
-    if (promotionLine.promotion.status !== PromotionStatusEnum.ACTIVE) {
-      throw new BadRequestException('PROMOTION_LINE_IS_ACTIVE');
+    const promotion: Promotion = promotionLine.promotion;
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    if (promotion.endDate < currentDate) {
+      throw new BadRequestException('PROMOTION_HAS_EXPIRED');
     }
+
     if (title) {
       promotionLine.title = title;
     }
@@ -728,7 +726,6 @@ export class PromotionLineService {
         break;
     }
 
-    const currentDate = new Date(moment().format('YYYY-MM-DD'));
     // validate start date
     if (startDate) {
       const startDateMoment = moment(startDate);

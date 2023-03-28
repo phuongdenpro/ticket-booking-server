@@ -319,6 +319,9 @@ export const mappingTranslate = {
   PRICE_DETAIL_CODE_EXISTED: 'Mã chi tiết giá đã tồn tại',
 
   // promotion
+  PROMOTION_HAS_EXPIRED: 'Chương trình khuyến mãi này đã hết hạn',
+  PROMOTION_IS_ACTIVE_AND_IN_USE:
+    'Khuyến mãi này đang được kích hoạt và đang được sử dụng',
   USE_BUDGET_IS_NUMBER: 'Ngân sách đã dùng phải là số',
   USE_BUDGET_MUST_BE_GREATER_THAN_0:
     'Ngân sách đã dùng phải lớn hơn hoặc bằng 0',

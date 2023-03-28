@@ -11,7 +11,7 @@ import {
   Pagination,
   Roles,
 } from './../../decorator';
-import { RoleEnum } from './../../enums';
+import { DeleteDtoTypeEnum, RoleEnum } from './../../enums';
 import { PromotionService } from './promotion.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import {
@@ -69,7 +69,7 @@ export class PromotionController {
     return await this.promotionService.getPromotionById(id);
   }
 
-  @Patch(':id')
+  @Patch('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
@@ -79,10 +79,14 @@ export class PromotionController {
     @Body() dto: UpdatePromotionDto,
     @CurrentUser() user,
   ) {
-    return await this.promotionService.updatePromotionById(id, dto, user.id);
+    return await this.promotionService.updatePromotionByIdOrCode(
+      dto,
+      user.id,
+      id,
+    );
   }
 
-  @Patch(':code')
+  @Patch('code/:code')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
@@ -92,23 +96,24 @@ export class PromotionController {
     @Body() dto: UpdatePromotionDto,
     @CurrentUser() user,
   ) {
-    return await this.promotionService.updatePromotionByCode(
-      code,
+    return await this.promotionService.updatePromotionByIdOrCode(
       dto,
       user.id,
+      undefined,
+      code,
     );
   }
 
-  @Delete(':id')
+  @Delete('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deletePromotionById(@Param('id') id: string, @CurrentUser() user) {
-    return await this.promotionService.deletePromotionById(id, user.id);
+    return await this.promotionService.deletePromotionByIdOrCode(user.id, id);
   }
 
-  @Delete(':code')
+  @Delete('code/:code')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
@@ -117,7 +122,11 @@ export class PromotionController {
     @Param('code') code: string,
     @CurrentUser() user,
   ) {
-    return await this.promotionService.deletePromotionByCode(code, user.id);
+    return await this.promotionService.deletePromotionByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('multiple/ids')
@@ -129,9 +138,10 @@ export class PromotionController {
     dto: DeleteMultiPromotionDto,
     @CurrentUser() user,
   ) {
-    return await this.promotionService.deleteMultiplePromotionByIds(
+    return await this.promotionService.deleteMultiplePromotionByIdsOrCodes(
       dto,
       user.id,
+      DeleteDtoTypeEnum.ID,
     );
   }
 
@@ -144,9 +154,10 @@ export class PromotionController {
     dto: DeleteMultiPromotionDto,
     @CurrentUser() user,
   ) {
-    return await this.promotionService.deleteMultiplePromotionByCodes(
+    return await this.promotionService.deleteMultiplePromotionByIdsOrCodes(
       dto,
       user.id,
+      DeleteDtoTypeEnum.CODE,
     );
   }
 }
