@@ -285,10 +285,10 @@ export class PriceListService {
     }
 
     if (startDate) {
-      if (priceList.status === ActiveStatusEnum.ACTIVE) {
-        throw new BadRequestException('PRICE_LIST_IS_ACTIVE');
-      }
       if (startDate !== priceList.startDate) {
+        if (priceList.status === ActiveStatusEnum.ACTIVE) {
+          throw new BadRequestException('PRICE_LIST_IS_ACTIVE');
+        }
         const priceListStartDateExist = await this.findOnePriceList({
           where: {
             startDate: MoreThanOrEqual(startDate),
