@@ -147,16 +147,21 @@ export class PriceListService {
     }
     const priceListStartDateExist = await this.findOnePriceList({
       where: {
+        status: ActiveStatusEnum.ACTIVE,
         startDate: MoreThanOrEqual(startDate),
         endDate: LessThanOrEqual(startDate),
       },
     });
     const priceListEndDateExist = await this.findOnePriceList({
       where: {
+        status: ActiveStatusEnum.ACTIVE,
         startDate: MoreThanOrEqual(endDate),
         endDate: LessThanOrEqual(endDate),
       },
     });
+    console.log(priceListStartDateExist);
+    console.log(priceListEndDateExist);
+
     if (priceListStartDateExist || priceListEndDateExist) {
       let code;
       if (priceListStartDateExist) {
@@ -390,9 +395,13 @@ export class PriceListService {
     }
     let priceList: PriceList;
     if (id) {
-      priceList = await this.findOnePriceListById(id);
+      priceList = await this.findOnePriceListById(id, {
+        relations: { priceDetails: true },
+      });
     } else if (code) {
-      priceList = await this.findOnePriceListByCode(id);
+      priceList = await this.findOnePriceListByCode(id, {
+        relations: { priceDetails: true },
+      });
     }
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
@@ -401,9 +410,20 @@ export class PriceListService {
     if (priceList.endDate <= currentDate) {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
+    if (
+      priceList.status === ActiveStatusEnum.ACTIVE &&
+      currentDate >= priceList.startDate &&
+      currentDate <= priceList.endDate
+    ) {
+      throw new BadRequestException('PRICE_LIST_IS_ACTIVE_AND_IN_USE');
+    }
+    if (priceList?.priceDetails?.length > 0) {
+      throw new BadRequestException('PRICE_LIST_HAS_PRICE_DETAIL');
+    }
     priceList.updatedBy = adminExist.id;
+    priceList.deletedAt = new Date();
 
-    await this.priceListRepository.delete(priceList);
+    await this.priceListRepository.save(priceList);
     return {
       id: priceList.id,
       code: priceList.code,
@@ -447,9 +467,20 @@ export class PriceListService {
           if (priceList.endDate <= currentDate) {
             throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
           }
+          if (
+            priceList.status === ActiveStatusEnum.ACTIVE &&
+            currentDate >= priceList.startDate &&
+            currentDate <= priceList.endDate
+          ) {
+            throw new BadRequestException('PRICE_LIST_IS_ACTIVE_AND_IN_USE');
+          }
+          if (priceList?.priceDetails?.length > 0) {
+            throw new BadRequestException('PRICE_LIST_HAS_PRICE_DETAIL');
+          }
           priceList.updatedBy = adminExist.id;
+          priceList.deletedAt = new Date();
 
-          await this.priceListRepository.delete(priceList);
+          await this.priceListRepository.save(priceList);
           return {
             id: priceList.id,
             code: priceList.code,
@@ -869,8 +900,9 @@ export class PriceListService {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
     priceDetail.updatedBy = adminExist.id;
+    priceDetail.deletedAt = new Date();
 
-    await this.priceDetailRepository.delete(priceDetail);
+    await this.priceDetailRepository.save(priceDetail);
     return {
       id: priceDetail.id,
       code: priceDetail.code,
@@ -927,8 +959,9 @@ export class PriceListService {
             throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
           }
           priceDetail.updatedBy = adminExist.id;
+          priceDetail.deletedAt = new Date();
 
-          await this.priceDetailRepository.delete(priceDetail);
+          await this.priceDetailRepository.save(priceDetail);
           return {
             id: type === 'id' ? data : undefined,
             code: type === 'code' ? data : undefined,

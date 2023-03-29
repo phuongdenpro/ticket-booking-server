@@ -215,7 +215,8 @@ export class DistrictService {
     }
 
     district.updatedBy = adminExist.id;
-    return await this.districtRepository.delete(district);
+    district.deletedAt = new Date();
+    return await this.districtRepository.save(district);
   }
 
   async deleteMultipleDistrictByIdsOrCodes(
@@ -258,7 +259,8 @@ export class DistrictService {
             };
           }
           district.updatedBy = adminExist.id;
-          await this.districtRepository.delete(district);
+          district.deletedAt = new Date();
+          await this.districtRepository.save(district);
           return {
             id: district.id,
             code: district.code,

@@ -329,6 +329,7 @@ export const mappingTranslate = {
 
   // promotion
   PROMOTION_HAS_EXPIRED: 'Chương trình khuyến mãi này đã hết hạn',
+  PROMOTION_IS_OUT_OF_BUDGET: 'Chương trình khuyến mãi này đã hết ngân sách',
   PROMOTION_IS_ACTIVE_AND_IN_USE:
     'Khuyến mãi này đang được kích hoạt và đang được sử dụng',
   USE_BUDGET_IS_NUMBER: 'Ngân sách đã dùng phải là số',

@@ -199,10 +199,17 @@ export class PromotionService {
       throw new BadRequestException('START_DATE_MUST_BE_LESS_THAN_END_DATE');
     }
     promotion.endDate = endDate;
-    if (status) {
-      promotion.status = status;
-    } else {
-      promotion.status = PromotionStatusEnum.ACTIVE;
+    switch (status) {
+      case PromotionStatusEnum.ACTIVE:
+      case PromotionStatusEnum.INACTIVE:
+      case PromotionStatusEnum.OUT_OF_BUDGET:
+      case PromotionStatusEnum.OUT_OF_DATE:
+      case PromotionStatusEnum.OUT_OF_QUANTITY:
+        promotion.status = status;
+        break;
+      default:
+        promotion.status = PromotionStatusEnum.INACTIVE;
+        break;
     }
 
     promotion.createdBy = adminExist.id;
