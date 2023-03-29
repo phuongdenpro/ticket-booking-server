@@ -40,9 +40,9 @@ export class TripService {
     'fs.id',
     'fs.code',
     'fs.name',
-    'to.id',
-    'to.code',
-    'to.name',
+    'ts.id',
+    'ts.code',
+    'ts.name',
   ];
 
   async findOneTrip(options?: any) {
@@ -230,19 +230,15 @@ export class TripService {
       query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
     if (fromStationId) {
-      query.leftJoinAndSelect('q.fromStation', 'fs');
       query.andWhere('fs.id = :fromStationId', { fromStationId });
     }
     if (toStationId) {
-      query.leftJoinAndSelect('q.toStation', 'ts');
       query.andWhere('ts.id = :toStationId', { toStationId });
     }
     if (fromStationCode) {
-      query.leftJoinAndSelect('q.fromStation', 'fs');
       query.andWhere('fs.code = :fromStationCode', { fromStationCode });
     }
     if (toStationCode) {
-      query.leftJoinAndSelect('q.toStation', 'ts');
       query.andWhere('ts.code = :toStationCode', { toStationCode });
     }
     switch (status) {
@@ -256,6 +252,8 @@ export class TripService {
 
     const total = await query.getCount();
     const dataResult = await query
+      .leftJoinAndSelect('q.fromStation', 'fs')
+      .leftJoinAndSelect('q.toStation', 'ts')
       .select(this.tripSelectFieldsWithQ)
       .orderBy('q.name', SortEnum.ASC)
       .addOrderBy('q.code', SortEnum.ASC)

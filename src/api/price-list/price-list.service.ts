@@ -45,18 +45,12 @@ export class PriceListService {
     'q.id',
     'q.code',
     'q.price',
+    'q.seatType',
     'q.note',
     'q.createdBy',
     'q.updatedBy',
     'q.createdAt',
     'q.updatedAt',
-    't.id',
-    't.code',
-    't.name',
-    't.description',
-    't.note',
-    't.createdBy',
-    't.createdAt',
   ];
 
   private selectFieldsPriceListWithQ = [
@@ -641,7 +635,7 @@ export class PriceListService {
     if (keywords) {
       const subQuery = this.priceDetailRepository
         .createQueryBuilder('q2')
-        .where('q2.code LIKE :code', { code: `%${keywords}%` })
+        .orWhere('q2.code LIKE :code', { code: `%${keywords}%` })
         .orWhere('q2.note LIKE :note', { note: `%${keywords}%` })
         .getQuery();
 
