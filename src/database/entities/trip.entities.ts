@@ -32,14 +32,14 @@ export class Trip {
   @Column({ name: 'end_date', type: 'date', nullable: true })
   endDate: Date;
 
+  @Column({ name: 'status', type: 'varchar', length: 100, default: false })
+  status: TripStatusEnum;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
-
-  @Column({ name: 'status', type: 'varchar', length: 100, default: false })
-  status: TripStatusEnum;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;

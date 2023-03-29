@@ -51,6 +51,13 @@ export class PriceListService {
     'q.updatedBy',
     'q.createdAt',
     'q.updatedAt',
+    't.id',
+    't.code',
+    't.name',
+    't.note',
+    't.startDate',
+    't.endDate',
+    't.status',
   ];
 
   private selectFieldsPriceListWithQ = [
@@ -664,6 +671,7 @@ export class PriceListService {
       .addOrderBy('q.note', sort || SortEnum.DESC);
 
     const dataResult = await query
+      .leftJoinAndSelect('q.trip', 't')
       .select(this.selectFieldsPriceDetailWithQ)
       .skip(pagination.skip)
       .take(pagination.take)
