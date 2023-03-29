@@ -191,7 +191,15 @@ export const mappingTranslate = {
   TRIP_ID_OR_CODE_REQUIRED: 'Id hoặc mã của tuyến đi không được để trống',
   TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
+  START_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE:
+    'Ngày bắt đầu phải lớn hơn hoặc bằng ngày bắt đầu của chương trình khuyến mãi',
+  START_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE:
+    'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc của chương trình khuyến mãi',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
+  END_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE:
+    'Ngày kết thúc phải nhỏ hơn hoặc bằng ngày kết thúc của chương trình khuyến mãi',
+  END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE:
+    'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu của chương trình khuyến mãi',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
   END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW:
     'Ngày kết thúc phải lớn hơn hoặc bằng ngày hiện tại',
@@ -291,6 +299,7 @@ export const mappingTranslate = {
     'Id hoặc mã của nhóm vé không được để trống',
 
   // price list
+  PRICE_LIST_HAS_PRICE_DETAIL: 'Bảng giá này vẫn còn có chi tiết bảng giá',
   PRICE_LIST_IS_ACTIVE_AND_IN_USE:
     'Bảng giá này đang được kích hoạt và đang được sử dụng',
   ANOTHER_PRICE_LIST_IS_EXIST_IN_THIS_DATE:
@@ -323,8 +332,7 @@ export const mappingTranslate = {
   PROMOTION_IS_ACTIVE_AND_IN_USE:
     'Khuyến mãi này đang được kích hoạt và đang được sử dụng',
   USE_BUDGET_IS_NUMBER: 'Ngân sách đã dùng phải là số',
-  USE_BUDGET_MUST_BE_GREATER_THAN_0:
-    'Ngân sách đã dùng phải lớn hơn hoặc bằng 0',
+  USE_BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách đã dùng phải lớn hơn 0',
   MIN_OF_MAX_BUDGET_IS_NUMBER: 'Số tối thiểu của ngân sách tối đa phải là số',
   MIN_OF_MAX_BUDGET_MUST_BE_GREATER_THAN_0:
     'Số tối thiểu của ngân sách tối đa phải lớn hơn hoặc bằng 0',
@@ -344,7 +352,7 @@ export const mappingTranslate = {
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
   BUDGET_MUST_BE_INT: 'Ngân sách phải là số nguyên',
-  BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách phải lớn hơn hoặc bằng 0',
+  BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách phải lớn hơn 0',
   BUDGET_MUST_BE_GREATER_THAN_USED_BUDGET:
     'Ngân sách phải lớn hơn ngân sách đã dùng',
   PROMOTION_STATUS_IS_ON_ACTIVE:
@@ -378,27 +386,27 @@ export const mappingTranslate = {
   MAX_QUANTITY_MUST_BE_INTEGER: 'Số lượng tối đa phải là số nguyên',
   MAX_QUANTITY_MUST_BE_GREATER_THAN_USED_QUANTITY:
     'Số lượng tối đa phải lớn hơn số lượng đã dùng',
-  MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng tối đa phải lớn hơn 0',
+  MAX_QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng áp dụng tối đa phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_MIN_1:
-    'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 1',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn hoặc bằng 1',
   MAX_QUANTITY_PER_CUSTOMER_MIN_0:
-    'Số lượng tối đa cho mỗi khách hàng phải lớn hơn hoặc bằng 0',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn hoặc bằng 0',
   MAX_QUANTITY_PER_CUSTOMER_MUST_BE_INTEGER:
-    'Số lượng tối đa cho mỗi khách hàng phải 1 số nguyên',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng phải 1 số nguyên',
   MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED:
-    'Số lượng tối đa cho mỗi khách hàng không được để trống',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng không được để trống',
   MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
-    'Số lượng tối đa cho mỗi khách hàng phải là số',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng phải là số',
   MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0:
-    'Số lượng tối đa cho mỗi khách hàng phải lớn hơn 0',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_REQUIRED:
-    'Số lượng tối đa cho mỗi khách hàng mỗi ngày không được để trống',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng mỗi ngày không được để trống',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_NUMBER:
-    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải là số',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng mỗi ngày phải là số',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MUST_BE_GREATER_THAN_0:
-    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng mỗi ngày phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_MIN_1:
-    'Số lượng tối đa cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
+    'Số lượng tối đa áp dụng cho mỗi khách hàng mỗi ngày phải lớn hơn hoặc bằng 1',
   PROMOTION_ID_IS_REQUIRED:
     'Id của chương trình khuyến mãi không được để trống',
   PROMOTION_ID_IS_36_CHARACTERS:

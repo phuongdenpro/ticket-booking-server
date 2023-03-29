@@ -223,12 +223,17 @@ export class PriceListService {
       const newKeywords = keywords.trim();
       const subQuery = this.priceListRepository
         .createQueryBuilder('q2')
+        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
-      query.andWhere(`EXISTS ${subQuery}`, {});
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
     }
     if (status) {
       query.where('q.status = :status', { status });
@@ -640,13 +645,18 @@ export class PriceListService {
     const query = this.priceDetailRepository.createQueryBuilder('q');
 
     if (keywords) {
+      const newKeywords = keywords.trim();
       const subQuery = this.priceDetailRepository
         .createQueryBuilder('q2')
-        .orWhere('q2.code LIKE :code', { code: `%${keywords}%` })
-        .orWhere('q2.note LIKE :note', { note: `%${keywords}%` })
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
-      query.andWhere(`EXISTS ${subQuery}`, {});
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
     }
     if (price) {
       query.andWhere('q.price <= :price', { price });
@@ -676,7 +686,6 @@ export class PriceListService {
       .skip(pagination.skip)
       .take(pagination.take)
       .getMany();
-
     const total = await query.clone().getCount();
 
     return { dataResult, pagination, total };

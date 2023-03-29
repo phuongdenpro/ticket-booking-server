@@ -227,7 +227,7 @@ export class UploadService {
     }
   }
 
-  async uploadMutiFile(files: {
+  async uploadMultiFile(files: {
     files?: Express.Multer.File[];
     images?: Express.Multer.File[];
   }) {

@@ -212,13 +212,19 @@ export class TripService {
 
     if (keywords) {
       const newKeywords = keywords.trim();
-      const subQuery = this.tripRepository.createQueryBuilder('q2');
-      subQuery
-        .orWhere('q2.code like :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.name like :name', { name: `%${newKeywords}%` })
-        .orWhere('q2.note like :note', { note: `%${newKeywords}%` })
+      const subQuery = this.tripRepository
+        .createQueryBuilder('q')
+        .select('q.id')
+        .where('q.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q.name LIKE :name', { name: `%${newKeywords}%` })
+        .orWhere('q.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
-      query.andWhere(`EXISTS ${subQuery}`, {});
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
     }
 
     if (startDate) {
@@ -250,7 +256,6 @@ export class TripService {
         break;
     }
 
-    const total = await query.getCount();
     const dataResult = await query
       .leftJoinAndSelect('q.fromStation', 'fs')
       .leftJoinAndSelect('q.toStation', 'ts')
@@ -261,6 +266,7 @@ export class TripService {
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
+    const total = await query.getCount();
 
     return { dataResult, pagination, total };
   }
