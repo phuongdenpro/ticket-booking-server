@@ -178,6 +178,7 @@ export const mappingTranslate = {
   SEAT_IS_SOLD: 'Ghế này đã được bán',
 
   // trip
+  TRIP_HAS_ENDED: 'Tuyến xe này đã kết thúc',
   TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
   TRIP_NOT_ACTIVE: 'Tuyến xe này không hoạt động',
   TRIP_IS_ACTIVE: 'Tuyến xe này đang hoạt động',
@@ -191,15 +192,7 @@ export const mappingTranslate = {
   TRIP_ID_OR_CODE_REQUIRED: 'Id hoặc mã của tuyến đi không được để trống',
   TRIP_START_DATE_INVALID: 'Ngày bắt đầu áp dụng tuyến không đúng định dạng',
   TRIP_END_DATE_INVALID: 'Ngày kết trúc áp dụng tuyến không đúng định dạng',
-  START_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE:
-    'Ngày bắt đầu phải lớn hơn hoặc bằng ngày bắt đầu của chương trình khuyến mãi',
-  START_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE:
-    'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc của chương trình khuyến mãi',
   START_DATE_GREATER_THAN_NOW: 'Ngày bắt đầu phải lớn hơn ngày hiện tại',
-  END_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE:
-    'Ngày kết thúc phải nhỏ hơn hoặc bằng ngày kết thúc của chương trình khuyến mãi',
-  END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE:
-    'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu của chương trình khuyến mãi',
   END_DATE_GREATER_THAN_NOW: 'Ngày kết thúc phải lớn hơn ngày hiện tại',
   END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW:
     'Ngày kết thúc phải lớn hơn hoặc bằng ngày hiện tại',
@@ -223,15 +216,23 @@ export const mappingTranslate = {
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
 
   // trip detail
-  DEPARTURE_DATE_REQUIRED: 'Thời gian khởi hành là không được để trống',
+  DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE:
+    'Thời gian khởi hành phải lớn hơn hoặc bằng ngày bắt đầu của tuyến',
+  DEPARTURE_DATE_LESS_THAN_OR_EQUAL_TO_TRIP_END_DATE:
+    'Thời gian khởi hành phải nhỏ hơn hoặc bằng ngày kết thúc của tuyến',
+  EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE:
+    'Thời gian đến phải lớn hơn hoặc bằng ngày bắt đầu của tuyến',
+  DEPARTURE_TIME_REQUIRED: 'Thời gian khởi hành là không được để trống',
   DEPARTURE_DATE_INVALID: 'Thời gian khởi hành là không đúng định dạng',
-  EXPECTED_DATE_REQUIRED: 'Thời gian đến là không được để trống',
+  EXPECTED_TIME_REQUIRED: 'Thời gian đến là không được để trống',
   EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE:
     'Thời gian đến phải lớn hơn hoặc bằng thời gian khởi hành',
   DEPARTURE_DATE_GREATER_THAN_CURRENT_DATE:
     'Thời gian khởi hành phải lớn hơn hiện tại',
-  INVALID_TRIP_DETAIL_STATUS: 'Trang thái của chi tiết chuyến đi không hợp lệ',
-  TRIP_DETAIL_STATUS_REQUIRED: 'Trang thái của chi tiết chuyến đi không hợp lệ',
+  EXPECTED_DATE_GREATER_THAN_CURRENT_DATE:
+    'Thời gian đến phải lớn hơn hiện tại',
+  INVALID_TRIP_DETAIL_STATUS: 'Trang thái của chuyến không hợp lệ',
+  TRIP_DETAIL_STATUS_REQUIRED: 'Trang thái của chuyến không hợp lệ',
   TRIP_DETAIL_NOT_FOUND: 'Không tìm thấy thông tin chuyến đi',
   TRIP_DETAIL_CODE_EXIST: 'Mã chuyến đi đã tồn tại',
   TRIP_DETAIL_ID_REQUIRED: 'Id của chuyến xe là không được để trống',
@@ -331,7 +332,7 @@ export const mappingTranslate = {
   PROMOTION_HAS_EXPIRED: 'Chương trình khuyến mãi này đã hết hạn',
   PROMOTION_IS_OUT_OF_BUDGET: 'Chương trình khuyến mãi này đã hết ngân sách',
   PROMOTION_IS_ACTIVE_AND_IN_USE:
-    'Khuyến mãi này đang được kích hoạt và đang được sử dụng',
+    'Chương trình khuyến mãi này đang được kích hoạt và đang được sử dụng',
   USE_BUDGET_IS_NUMBER: 'Ngân sách đã dùng phải là số',
   USE_BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách đã dùng phải lớn hơn 0',
   MIN_OF_MAX_BUDGET_IS_NUMBER: 'Số tối thiểu của ngân sách tối đa phải là số',
@@ -350,12 +351,12 @@ export const mappingTranslate = {
   MAX_USE_BUDGET_MUST_BE_GREATER_THAN_0:
     'Ngân sách đã sử dụng tối đa phải lớn hơn hoặc bằng 0',
   MAX_USE_BUDGET_IS_NUMBER: 'Ngân sách đã sử dụng tối đa phải là số',
+  MAX_BUDGET_MUST_BE_DOUBLE: 'Ngân sách tối đa phải là kiểu double',
   BUDGET_IS_REQUIRED: 'Ngân sách không được để trống',
   BUDGET_IS_NUMBER: 'Ngân sách phải là số',
   BUDGET_MUST_BE_INT: 'Ngân sách phải là số nguyên',
-  BUDGET_MUST_BE_GREATER_THAN_0: 'Ngân sách phải lớn hơn 0',
-  BUDGET_MUST_BE_GREATER_THAN_USED_BUDGET:
-    'Ngân sách phải lớn hơn ngân sách đã dùng',
+  MAX_BUDGET_MUST_BE_GREATER_THAN_USED_BUDGET:
+    'Ngân sách tối đa phải lớn hơn ngân sách đã dùng',
   PROMOTION_STATUS_IS_ON_ACTIVE:
     'Chương trình khuyến mãi đang kích hoạt nên không thể cập nhật ngày bắt đầu',
   PROMOTION_NOT_FOUND: 'Không tìm thấy chương trình khuyến mãi',
@@ -398,6 +399,8 @@ export const mappingTranslate = {
     'Số lượng tối đa áp dụng cho mỗi khách hàng không được để trống',
   MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER:
     'Số lượng tối đa áp dụng cho mỗi khách hàng phải là số',
+  MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_USED_QUANTITY_PER_CUSTOMER:
+    'Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn hoặc bằng số lượng cũ',
   MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0:
     'Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn 0',
   MAX_QUANTITY_PER_CUSTOMER_PER_DAY_IS_REQUIRED:
@@ -423,6 +426,7 @@ export const mappingTranslate = {
     'Số tổi đa của Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn hoặc bằng 0',
 
   // promotion line
+  PROMOTION_LINE_HAS_EXPIRED: 'Khuyến mãi đã hết hạn',
   PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy khuyến mãi',
   PROMOTION_LINE_TYPE_IS_STRING: 'Loại khuyến mãi phải là chuỗi ký tự',
   PROMOTION_LINE_TYPE_IS_REQUIRED: 'Loại khuyến mãi không được để trống',
@@ -435,6 +439,16 @@ export const mappingTranslate = {
   COUPON_CODE_BETWEEN_1_100_CHARACTERS: 'Mã voucher phải có từ 1-100 ký tự',
   PROMOTION_LINE_COUPON_CODE_ALREADY_EXIST: 'Mã voucher khuyến mãi đã tồn tại',
   PROMOTION_LINE_IS_ACTIVE: 'Khuyến mãi đang được sử dụng',
+  START_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE:
+    'Ngày bắt đầu phải lớn hơn hoặc bằng ngày bắt đầu của chương trình khuyến mãi',
+  START_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE:
+    'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc của chương trình khuyến mãi',
+  END_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE:
+    'Ngày kết thúc phải nhỏ hơn hoặc bằng ngày kết thúc của chương trình khuyến mãi',
+  END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE:
+    'Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu của chương trình khuyến mãi',
+  START_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_LINE_END_DATE:
+    'Ngày bắt đầu phải nhỏ hơn hoặc bằng ngày kết thúc của khuyến mãi',
 
   // promotion detail
   PROMOTION_DETAIL_NOT_CREATED: 'Không thể tạo chi tiết khuyến mãi',

@@ -103,7 +103,7 @@ export class CreatePromotionLineDto {
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 3 },
     { message: 'MAX_BUDGET_IS_NUMBER' },
   )
-  @Min(0, { message: 'BUDGET_MUST_BE_GREATER_THAN_0' })
+  @Min(0, { message: 'MAX_BUDGET_MUST_BE_GREATER_THAN_0' })
   maxBudget: number;
 
   @ApiProperty({ example: '' })

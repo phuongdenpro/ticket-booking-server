@@ -107,7 +107,7 @@ export class PromotionLineController {
     return await this.promotionLineService.getPromotionLineById(id);
   }
 
-  @Delete(':id')
+  @Delete('id/:id')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
@@ -119,7 +119,7 @@ export class PromotionLineController {
     );
   }
 
-  @Delete(':code')
+  @Delete('code/:code')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)

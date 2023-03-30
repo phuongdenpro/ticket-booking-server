@@ -49,7 +49,7 @@ export class PromotionLine {
   @Column({ name: 'use_budget', type: 'double', nullable: false, default: 0 })
   useBudget: number;
 
-  @Column({ name: 'max_budget', type: 'double', nullable: false, default: 0 })
+  @Column({ name: 'max_budget', type: 'double', nullable: false, default: 1 })
   maxBudget: number;
 
   @Column({ name: 'use_quantity', type: 'double', nullable: false, default: 0 })

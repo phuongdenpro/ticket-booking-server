@@ -248,6 +248,9 @@ export class PromotionService {
       throw new NotFoundException('PROMOTION_NOT_FOUND');
     }
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    if (promotion.endDate < currentDate) {
+      throw new BadRequestException('PROMOTION_HAS_EXPIRED');
+    }
 
     if (name) {
       promotion.name = name;
@@ -282,7 +285,7 @@ export class PromotionService {
       ) {
         throw new BadRequestException('PROMOTION_IS_ACTIVE_AND_IN_USE', {
           description:
-            'Không thể cập nhật ngày bắt đầu khi khuyến mãi đang hoạt động',
+            'Không thể cập nhật ngày bắt đầu khi chương trình khuyến mãi được sử dụng',
         });
       }
       if (startDate <= currentDate) {
@@ -333,6 +336,13 @@ export class PromotionService {
     } else {
       promotion = await this.findOnePromotionByCode(code);
     }
+    if (!promotion) {
+      throw new NotFoundException('PROMOTION_NOT_FOUND');
+    }
+    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    if (promotion.endDate < currentDate) {
+      throw new BadRequestException('PROMOTION_HAS_EXPIRED');
+    }
 
     promotion.deletedAt = new Date();
     promotion.updatedBy = adminExist.id;
@@ -370,12 +380,19 @@ export class PromotionService {
         } else {
           promotion = await this.findOnePromotionByCode(data);
         }
-
         if (!promotion) {
           return {
             id: type === DeleteDtoTypeEnum.ID ? data : undefined,
             code: type === DeleteDtoTypeEnum.CODE ? data : undefined,
             message: 'Không tìm thấy chương trình khuyến mãi',
+          };
+        }
+        const currentDate = new Date(moment().format('YYYY-MM-DD'));
+        if (promotion.endDate < currentDate) {
+          return {
+            id: type === DeleteDtoTypeEnum.ID ? data : undefined,
+            code: type === DeleteDtoTypeEnum.CODE ? data : undefined,
+            message: 'Chương trình khuyến mãi đã hết hạn không thể xoá',
           };
         }
         promotion.updatedBy = adminExist.id;

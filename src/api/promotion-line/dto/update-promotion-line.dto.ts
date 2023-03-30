@@ -31,17 +31,14 @@ export class UpdatePromotionLineDto {
   @IsOptional()
   note: string;
 
-  @ApiPropertyOptional({ example: '' })
-  @IsString({ message: 'COUPON_CODE_IS_STRING' })
-  @IsOptional()
-  couponCode: string;
-
   @ApiProperty({ example: '' })
   @IsString({ message: 'TRIP_CODE_IS_STRING' })
   @IsOptional()
   tripCode: string;
 
-  @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD') })
+  @ApiPropertyOptional({
+    example: moment().add(1, 'days').format('YYYY-MM-DD'),
+  })
   @IsDate({ message: 'START_DATE_IS_DATE' })
   @MinDate(new Date(moment().format('YYYY-MM-DD')), {
     message: 'START_DATE_GREATER_THAN_NOW',
