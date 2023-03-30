@@ -19,7 +19,7 @@ import {
   Pagination,
   Roles,
 } from './../../decorator';
-import { RoleEnum } from './../../enums';
+import { DeleteDtoTypeEnum, RoleEnum } from './../../enums';
 import { TripDetailService } from './trip-detail.service';
 import {
   FilterTripDetailDto,
@@ -107,7 +107,7 @@ export class TripDetailController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteTripDetailById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.tripDetailService.deleteTripDetailById(id, user.id);
+    return await this.tripDetailService.deleteTripDetailByIdOrCode(user.id, id);
   }
 
   @Delete('code/:code')
@@ -119,7 +119,11 @@ export class TripDetailController {
     @CurrentUser() user,
     @Param('code') code: string,
   ) {
-    return await this.tripDetailService.deleteTripDetailByCode(code, user.id);
+    return await this.tripDetailService.deleteTripDetailByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('multiple')
@@ -131,9 +135,10 @@ export class TripDetailController {
     @CurrentUser() user,
     @Body() dto: TripDetailDeleteMultiInput,
   ) {
-    return await this.tripDetailService.deleteMultipleTripDetailByIds(
+    return await this.tripDetailService.deleteMultipleTripDetailByIdsOrCodes(
       user.id,
       dto,
+      DeleteDtoTypeEnum.ID,
     );
   }
 
@@ -146,9 +151,10 @@ export class TripDetailController {
     @CurrentUser() user,
     @Body() dto: TripDetailDeleteMultiInput,
   ) {
-    return await this.tripDetailService.deleteMultipleTripDetailByCodes(
+    return await this.tripDetailService.deleteMultipleTripDetailByIdsOrCodes(
       user.id,
       dto,
+      DeleteDtoTypeEnum.CODE,
     );
   }
 }

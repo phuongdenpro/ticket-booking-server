@@ -19,12 +19,12 @@ export class CreateTripDetailDto {
   code: string;
 
   @ApiProperty({ example: '2023-02-12' })
-  @IsNotEmpty({ message: 'DEPARTURE_DATE_REQUIRED' })
+  @IsNotEmpty({ message: 'DEPARTURE_TIME_REQUIRED' })
   @IsDate({ message: 'INVALID_DATE' })
   departureTime: Date;
 
   @ApiProperty({ example: '2023-02-12' })
-  @IsNotEmpty({ message: 'EXPECTED_DATE_REQUIRED' })
+  @IsNotEmpty({ message: 'EXPECTED_TIME_REQUIRED' })
   @IsDate({ context: { errorCode: 400, description: 'INVALID_DATE' } })
   expectedTime: Date;
 
