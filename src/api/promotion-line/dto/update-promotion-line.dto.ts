@@ -12,13 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import * as moment from 'moment';
-moment.locale('vi');
-
-import {
-  ProductDiscountDto,
-  ProductDiscountPercentDto,
-  // ProductGiveawayDto,
-} from '.';
+import { ProductDiscountDto, ProductDiscountPercentDto } from '.';
 moment.locale('vi');
 
 export class UpdatePromotionLineDto {
@@ -116,13 +110,4 @@ export class UpdatePromotionLineDto {
   @ValidateNested()
   @Type(() => ProductDiscountPercentDto)
   productDiscountPercent?: ProductDiscountPercentDto;
-
-  // @ApiProperty({ type: ProductGiveawayDto })
-  // @ValidateIf(
-  //   (dto: UpdatePromotionLineDto) =>
-  //     dto.type === PromotionTypeEnum.PRODUCT_GIVEAWAYS,
-  // )
-  // @ValidateNested()
-  // @Type(() => ProductGiveawayDto)
-  // productGiveaway?: ProductGiveawayDto;
 }

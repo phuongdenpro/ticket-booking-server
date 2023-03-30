@@ -1,5 +1,5 @@
 import { JwtAuthGuard } from './../../auth/guards';
-import { RoleEnum } from './../../enums';
+import { DeleteDtoTypeEnum, RoleEnum } from './../../enums';
 import {
   CurrentUser,
   GetPagination,
@@ -147,7 +147,7 @@ export class PromotionLineController {
     return await this.promotionLineService.deleteMultiPromotionLineByIdOrCode(
       dto,
       user.id,
-      'id',
+      DeleteDtoTypeEnum.ID,
     );
   }
 
@@ -163,7 +163,7 @@ export class PromotionLineController {
     return await this.promotionLineService.deleteMultiPromotionLineByIdOrCode(
       dto,
       user.id,
-      'code',
+      DeleteDtoTypeEnum.CODE,
     );
   }
 }

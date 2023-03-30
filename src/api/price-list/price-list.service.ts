@@ -73,6 +73,25 @@ export class PriceListService {
     'q.createdBy',
     'q.updatedBy',
   ];
+  // validate
+  private async validOverlappingPriceList(date: Date) {
+    const priceListExist = await this.findOnePriceList({
+      where: {
+        status: ActiveStatusEnum.ACTIVE,
+        startDate: LessThanOrEqual(date),
+        endDate: MoreThanOrEqual(date),
+      },
+    });
+    if (priceListExist) {
+      const code = priceListExist.code;
+      throw new BadRequestException(
+        'ANOTHER_PRICE_LIST_IS_EXIST_IN_THIS_DATE',
+        {
+          description: `Bảng giá có mã ${code} đã tồn tại trong khoảng thời gian này`,
+        },
+      );
+    }
+  }
 
   // price list
   async findOnePriceList(options?: any) {
@@ -145,37 +164,8 @@ export class PriceListService {
     if (priceListCodeExist) {
       throw new BadRequestException('PRICE_LIST_CODE_IS_EXIST');
     }
-    const priceListStartDateExist = await this.findOnePriceList({
-      where: {
-        status: ActiveStatusEnum.ACTIVE,
-        startDate: MoreThanOrEqual(startDate),
-        endDate: LessThanOrEqual(startDate),
-      },
-    });
-    const priceListEndDateExist = await this.findOnePriceList({
-      where: {
-        status: ActiveStatusEnum.ACTIVE,
-        startDate: MoreThanOrEqual(endDate),
-        endDate: LessThanOrEqual(endDate),
-      },
-    });
-    console.log(priceListStartDateExist);
-    console.log(priceListEndDateExist);
-
-    if (priceListStartDateExist || priceListEndDateExist) {
-      let code;
-      if (priceListStartDateExist) {
-        code = priceListStartDateExist.code;
-      } else {
-        code = priceListEndDateExist.code;
-      }
-      throw new BadRequestException(
-        'ANOTHER_PRICE_LIST_IS_EXIST_IN_THIS_DATE',
-        {
-          description: `Bảng giá có mã ${code} đã tồn tại trong khoảng thời gian này`,
-        },
-      );
-    }
+    await this.validOverlappingPriceList(startDate);
+    await this.validOverlappingPriceList(endDate);
 
     const priceList = new PriceList();
     if (!name) {
@@ -302,21 +292,6 @@ export class PriceListService {
 
     if (startDate) {
       if (startDate !== priceList.startDate) {
-        const priceListStartDateExist = await this.findOnePriceList({
-          where: {
-            startDate: MoreThanOrEqual(startDate),
-            endDate: LessThanOrEqual(startDate),
-          },
-        });
-        if (priceListStartDateExist) {
-          const code = priceListStartDateExist.code;
-          throw new BadRequestException(
-            'ANOTHER_PRICE_LIST_IS_EXIST_IN_THIS_DATE',
-            {
-              description: `Bảng giá có mã ${code} đã tồn tại trong khoảng thời gian này`,
-            },
-          );
-        }
         if (startDate <= currentDate) {
           throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
         }
@@ -332,6 +307,7 @@ export class PriceListService {
         ) {
           throw new BadRequestException('PRICE_LIST_IS_ACTIVE_AND_IN_USE');
         }
+        await this.validOverlappingPriceList(startDate);
         priceList.startDate = startDate;
       }
     }
@@ -350,26 +326,16 @@ export class PriceListService {
             'END_DATE_MUST_BE_GREATER_THAN_START_DATE',
           );
         }
-        const priceListEndDateExist = await this.findOnePriceList({
-          where: {
-            startDate: MoreThanOrEqual(endDate),
-            endDate: LessThanOrEqual(endDate),
-          },
-        });
-        if (priceListEndDateExist) {
-          const code = priceListEndDateExist.code;
-          throw new BadRequestException(
-            'ANOTHER_PRICE_LIST_IS_EXIST_IN_THIS_DATE',
-            {
-              description: `Bảng giá có mã ${code} đã tồn tại trong khoảng thời gian này`,
-            },
-          );
-        }
+        await this.validOverlappingPriceList(endDate);
         priceList.endDate = endDate;
       }
     }
     switch (status) {
       case ActiveStatusEnum.ACTIVE:
+        priceList.status = status;
+        await this.validOverlappingPriceList(startDate);
+        await this.validOverlappingPriceList(endDate);
+        break;
       case ActiveStatusEnum.INACTIVE:
         priceList.status = status;
         break;
@@ -452,9 +418,13 @@ export class PriceListService {
         ids.map(async (data) => {
           let priceList: PriceList;
           if (type === 'id') {
-            priceList = await this.findOnePriceListById(data);
+            priceList = await this.findOnePriceListById(data, {
+              relations: { priceDetails: true },
+            });
           } else if (type === 'code') {
-            priceList = await this.findOnePriceListByCode(data);
+            priceList = await this.findOnePriceListByCode(data, {
+              relations: { priceDetails: true },
+            });
           }
           if (!priceList) {
             return {
@@ -464,18 +434,30 @@ export class PriceListService {
             };
           }
           const currentDate = new Date(moment().format('YYYY-MM-DD'));
-          if (priceList.endDate <= currentDate) {
-            throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
+          if (priceList.endDate < currentDate) {
+            return {
+              id: priceList.id,
+              code: priceList.code,
+              message: 'Bảng giá này đã hết hạn',
+            };
           }
           if (
             priceList.status === ActiveStatusEnum.ACTIVE &&
             currentDate >= priceList.startDate &&
             currentDate <= priceList.endDate
           ) {
-            throw new BadRequestException('PRICE_LIST_IS_ACTIVE_AND_IN_USE');
+            return {
+              id: priceList.id,
+              code: priceList.code,
+              message: 'Bảng giá này đang được kích hoạt và đang được sử dụng',
+            };
           }
           if (priceList?.priceDetails?.length > 0) {
-            throw new BadRequestException('PRICE_LIST_HAS_PRICE_DETAIL');
+            return {
+              id: priceList.id,
+              code: priceList.code,
+              message: 'Bảng giá này vẫn còn có chi tiết bảng giá',
+            };
           }
           priceList.updatedBy = adminExist.id;
           priceList.deletedAt = new Date();

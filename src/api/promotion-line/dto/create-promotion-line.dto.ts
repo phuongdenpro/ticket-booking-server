@@ -59,22 +59,22 @@ export class CreatePromotionLineDto {
   @Length(1, 100, { message: 'TRIP_CODE_BETWEEN_1_100_CHARACTERS' })
   tripCode: string;
 
-  @ApiProperty({ example: moment().format('YYYY-MM-DD') })
-  @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
+  @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD') })
   @IsDate({ message: 'START_DATE_IS_DATE' })
   @MinDate(new Date(moment().format('YYYY-MM-DD')), {
     message: 'START_DATE_GREATER_THAN_NOW',
   })
+  @IsOptional()
   startDate: Date;
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     example: moment().add(10, 'days').format('YYYY-MM-DD'),
   })
-  @IsNotEmpty({ message: 'START_DATE_IS_REQUIRED' })
   @IsDate({ message: 'END_DATE_IS_DATE' })
   @MinDate(new Date(moment().format('YYYY-MM-DD')), {
     message: 'END_DATE_GREATER_THAN_NOW',
   })
+  @IsOptional()
   endDate: Date;
 
   @ApiProperty({ example: 100 })
