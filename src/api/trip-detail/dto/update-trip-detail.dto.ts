@@ -23,7 +23,12 @@ export class UpdateTripDetailDto {
   status: string;
 
   @ApiPropertyOptional({ example: '8d453086-e6a2-4a2e-a407-5ce2be3b0ba8' })
-  @IsOptional()
   @IsString({ message: 'VEHICLE_ID_IS_STRING' })
+  @IsOptional()
   vehicleId: string;
+
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'VEHICLE_CODE_IS_STRING' })
+  @IsOptional()
+  vehicleCode: string;
 }

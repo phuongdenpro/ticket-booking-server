@@ -114,6 +114,10 @@ export const mappingTranslate = {
   // province
   TO_PROVINCE_CODE_INVALID_NUMBER: 'mã tỉnh thành đi phải là số',
   FROM_PROVINCE_CODE_INVALID_NUMBER: 'mã tỉnh thành đến phải là số',
+  FROM_PROVINCE_CODE_GREATER_THAN_OR_EQUAL_TO_0:
+    'mã tỉnh thành đến phải lớn hơn hoặc bằng 0',
+  TO_PROVINCE_CODE_GREATER_THAN_OR_EQUAL_TO_0:
+    'mã tỉnh thành đi phải lớn hơn hoặc bằng 0',
   CODENAME_IS_STRING: 'Mã tên phải là chuỗi ký tự',
   CODENAME_BETWEEN_1_255_CHARACTERS: 'Mã tên phải từ 1 đến 255 ký tự',
   PROVINCE_NOT_FOUND: 'Không tìm thấy tỉnh/thành phố',
@@ -216,6 +220,12 @@ export const mappingTranslate = {
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
 
   // trip detail
+  DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_CURRENT_DATE_PLUS_15_MINUTES:
+    'Thời gian khởi hành phải lớn hơn hoặc bằng hiện tại + 15 phút',
+  DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TOMORROW:
+    'Thời gian khởi hành phải lớn hơn hoặc bằng ngày mai',
+  EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_DEPARTURE_DATE_PLUS_2_HOURS:
+    'Thời gian đến phải lớn hơn hoặc bằng thời gian khởi hành 2 giờ',
   DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE:
     'Thời gian khởi hành phải lớn hơn hoặc bằng ngày bắt đầu của tuyến',
   DEPARTURE_DATE_LESS_THAN_OR_EQUAL_TO_TRIP_END_DATE:
@@ -240,12 +250,18 @@ export const mappingTranslate = {
   TRIP_DETAIL_ID_IS_36_CHARACTERS: 'Id của chuyến xe phải có 36 ký tự',
   TRIP_DETAIL_HAS_PASSED: 'Chuyến xe đã khởi hành không thể đặt vé',
   TRIP_DETAIL_NOT_ACTIVE: 'Chuyến xe không còn hoạt động',
+  TRIP_DETAIL_HAS_ENDED_NOT_UPDATE: 'Chuyến xe đã khởi hành không thể cập nhật',
+  TRIP_HAS_ENDED_NOT_UPDATE: 'Tuyến xe đã kết thúc không thể cập nhật',
+  TRIP_DETAIL_HAS_ENDED_NOT_DELETE: 'Chuyến xe đã khởi hành không thể xóa',
+  VEHICLE_HAS_BEEN_USED_IN_OTHER_TRIP_DETAIL:
+    'Xe đã được sử dụng trong chuyến khác',
 
   // vehicle
   VEHICLE_NOT_FOUND: 'Không tìm thấy xe',
   VEHICLE_ID_REQUIRED: 'Id của xe là không được để trống',
   VEHICLE_ID_IS_STRING: 'Id của xe phải là chuỗi ký tự',
   VEHICLE_ID_INVALID: 'Id của xe không hợp lệ',
+  VEHICLE_CODE_IS_STRING: 'Mã của xe phải là chuỗi ký tự',
   VEHICLE_CODE_ALREADY_EXIST: 'Mã xe đã tồn tại',
   LICENSE_PLATE_INVALID: 'Biển số xe không hợp lệ',
   LICENSE_PLATE_REQUIRED: 'Biển số xe không hợp lệ',

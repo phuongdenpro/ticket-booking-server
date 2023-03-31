@@ -20,6 +20,7 @@ import {
   SeatTypeEnum,
   TicketStatusEnum,
   UserStatusEnum,
+  TripStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -29,6 +30,7 @@ import { TicketService } from '../ticket/ticket.service';
 import { PriceListService } from '../price-list/price-list.service';
 import { UpdateTicketDetailDto } from '../ticket/dto';
 import * as moment from 'moment';
+import { PromotionLineService } from '../promotion-line/promotion-line.service';
 moment.locale('vi');
 
 @Injectable()
@@ -44,7 +46,11 @@ export class OrderService {
     private readonly ticketService: TicketService,
     private readonly tripDetailService: TripDetailService,
     private readonly priceListService: PriceListService,
+    private readonly promotionLineService: PromotionLineService,
   ) {}
+
+  private SEAT_TYPE_DTO_ID = 'id';
+  private SEAT_TYPE_DTO_CODE = 'code';
 
   // order
   async findOneOrder(options: any) {
@@ -81,13 +87,29 @@ export class OrderService {
     return await this.findOneOrder(options);
   }
 
+  async getOrderById(id: string, options?: any) {
+    const order = await this.findOneOrderById(id, options);
+    if (!order) {
+      throw new UnauthorizedException('ORDER_NOT_FOUND');
+    }
+    return order;
+  }
+
+  async getOrderByCode(code: string, options?: any) {
+    const order = await this.findOneOrderByCode(code, options);
+    if (!order) {
+      throw new UnauthorizedException('ORDER_NOT_FOUND');
+    }
+    return order;
+  }
+
   async createOrder(dto: CreateOrderDto, userId: string) {
     const { note, status, seatIds, seatCodes, tripDetailId } = dto;
     // check permission
     const customer = await this.customerService.findOneById(userId);
     const admin = await this.adminService.findOneBydId(userId);
-    if (!customer && !admin) {
-      throw new NotFoundException('USER_NOT_FOUND');
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (
       (customer && customer.status === UserStatusEnum.INACTIVATE) ||
@@ -100,23 +122,18 @@ export class OrderService {
     const tripDetail = await this.tripDetailService.getTripDetailById(
       tripDetailId,
       {
-        relations: ['trip'],
+        relations: { trip: true },
       },
     );
     const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-    if (currentDate > tripDetail.departureTime) {
+    if (currentDate >= tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
     }
-    if (!tripDetail.isActive) {
-      throw new UnauthorizedException('TRIP_DETAIL_NOT_ACTIVE');
-    }
-
     // check trip
     const trip = tripDetail.trip;
     if (
-      !trip.status ||
-      trip.startDate > currentDate ||
-      trip.endDate < currentDate
+      trip.status === TripStatusEnum.ACTIVE &&
+      (trip.startDate > currentDate || trip.endDate < currentDate)
     ) {
       throw new BadRequestException('TRIP_NOT_ACTIVE');
     }
@@ -130,20 +147,14 @@ export class OrderService {
       order.staff = admin;
       order.createdBy = admin.id;
     }
-    if (status) {
-      switch (status) {
-        case OrderStatusEnum.PAID:
-          order.status = OrderStatusEnum.PAID;
-          break;
-        case OrderStatusEnum.CANCEL:
-          order.status = OrderStatusEnum.CANCEL;
-          break;
-        default:
-          order.status = OrderStatusEnum.UNPAID;
-          break;
-      }
-    } else {
-      order.status = OrderStatusEnum.UNPAID;
+    switch (status) {
+      case OrderStatusEnum.PAID:
+      case OrderStatusEnum.CANCEL:
+        order.status = status;
+        break;
+      default:
+        order.status = OrderStatusEnum.UNPAID;
+        break;
     }
     // generate order code
     let code = generateOrderCode();
@@ -164,56 +175,33 @@ export class OrderService {
     if (!seatIds && !seatCodes) {
       throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
     }
+    let seatType;
     if (seatIds && seatIds.length > 0) {
-      const orderDetails = await seatIds.map(async (seatId) => {
-        const dto = new CreateOrderDetailDto();
-        dto.note = '';
-        dto.orderId = createOrder.id;
-        dto.seatId = seatId;
-        dto.tripDetailId = tripDetailId;
-        return await this.createOrderDetail(dto, userId);
-      });
-      createOrder.orderDetails = await Promise.all(orderDetails);
-      createOrder.total = createOrder.orderDetails.reduce(
-        (total, orderDetail) => total + orderDetail.total,
-        0,
-      );
-      createOrder.finalTotal = createOrder.total;
+      seatType = this.SEAT_TYPE_DTO_ID;
     } else if (seatCodes && seatCodes.length > 0) {
-      const orderDetails = await seatCodes.map(async (seatCode) => {
-        const dto = new CreateOrderDetailDto();
-        dto.note = '';
-        dto.orderId = createOrder.id;
-        dto.seatCode = seatCode;
-        dto.tripDetailId = tripDetailId;
-        return await this.createOrderDetail(dto, userId);
-      });
-      createOrder.orderDetails = await Promise.all(orderDetails);
-      createOrder.total = createOrder.orderDetails.reduce(
-        (total, orderDetail) => total + orderDetail.total,
-        0,
-      );
-      createOrder.finalTotal = createOrder.total;
+      seatType = this.SEAT_TYPE_DTO_ID;
     }
+    const orderDetails = await seatCodes.map(async (seatCode) => {
+      const dto = new CreateOrderDetailDto();
+      dto.note = '';
+      if (seatType === this.SEAT_TYPE_DTO_ID) {
+        dto.seatId = seatCode;
+      } else if (seatType === this.SEAT_TYPE_DTO_CODE) {
+        dto.seatCode = seatCode;
+      }
+      dto.orderId = createOrder.id;
+      dto.tripDetailId = tripDetailId;
+      return await this.createOrderDetail(dto, userId);
+    });
+    createOrder.orderDetails = await Promise.all(orderDetails);
+    createOrder.total = createOrder.orderDetails.reduce(
+      (total, orderDetail) => total + orderDetail.total,
+      0,
+    );
+    createOrder.finalTotal = createOrder.total;
     const saveOrder = await this.orderRepository.save(order);
     delete saveOrder.deletedAt;
     return saveOrder;
-  }
-
-  async getOrderById(id: string, options?: any) {
-    const order = await this.findOneOrderById(id, options);
-    if (!order) {
-      throw new UnauthorizedException('ORDER_NOT_FOUND');
-    }
-    return order;
-  }
-
-  async getOrderByCode(code: string, options?: any) {
-    const order = await this.findOneOrderByCode(code, options);
-    if (!order) {
-      throw new UnauthorizedException('ORDER_NOT_FOUND');
-    }
-    return order;
   }
 
   async updateOrderById(id: string, dto: UpdateOrderDto, userId: string) {
@@ -260,8 +248,6 @@ export class OrderService {
       }
     }
   }
-
-  // async updateOrderByCode(id: string, dto: CreateOrderDto, userId: string) {}
 
   // order detail
   async findOrderDetail(options?: any) {
@@ -314,13 +300,16 @@ export class OrderService {
     if (!orderExist) {
       throw new NotFoundException('ORDER_NOT_FOUND');
     }
-    if (orderExist.status === OrderStatusEnum.CANCEL) {
-      throw new BadRequestException('ORDER_IS_CANCELLED');
+    switch (orderExist.status) {
+      case OrderStatusEnum.CANCEL:
+        throw new BadRequestException('ORDER_IS_CANCELLED');
+        break;
+      case OrderStatusEnum.PAID:
+        throw new BadRequestException('ORDER_IS_PAID');
+        break;
+      default:
+        break;
     }
-    if (orderExist.status === OrderStatusEnum.PAID) {
-      throw new BadRequestException('ORDER_IS_PAID');
-    }
-
     const orderDetail = new OrderDetail();
     orderDetail.note = note;
     orderDetail.order = orderExist;
@@ -472,8 +461,6 @@ export class OrderService {
     delete createOrderDetail.deletedAt;
     return createOrderDetail;
   }
-
-  // async updateOrderDetailById(dto: UpdateOrderDetailDto, userId: string) {}
 
   async getOrderDetailById(id: string, options?: any) {
     const order = await this.findOrderDetailById(id, options);

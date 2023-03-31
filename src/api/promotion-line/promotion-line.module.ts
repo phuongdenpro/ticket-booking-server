@@ -11,7 +11,7 @@ import {
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([PromotionLine, Promotion, PromotionDetail, Trip]),
+    TypeOrmModule.forFeature([Trip, PromotionLine, Promotion, PromotionDetail]),
   ],
   providers: [PromotionLineService],
   controllers: [PromotionLineController],
