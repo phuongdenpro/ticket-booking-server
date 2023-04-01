@@ -147,18 +147,29 @@ export class CustomerGroupService {
     const query = this.customerGroupRepository.createQueryBuilder('q');
 
     if (keywords) {
-      query.orWhere('q.code LIKE :code', { code: `%${keywords}%` });
-      query.orWhere('q.name LIKE :name', { name: `%${keywords}%` });
-      query.orWhere('q.description LIKE :description', {
-        description: `%${keywords}%`,
+      const newKeywords = keywords.trim();
+      const subQuery = this.customerGroupRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .orWhere('q2.description LIKE :description', {
+          description: `%${newKeywords}%`,
+        })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        description: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
       });
-      query.orWhere('q.note LIKE :note', { note: `%${keywords}%` });
     }
-    if (sort) {
-      query.orderBy('q.createdAt', sort);
-    } else {
-      query.orderBy('q.createdAt', SortEnum.DESC);
-    }
+    query
+      .orderBy('q.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('q.code', SortEnum.ASC)
+      .addOrderBy('q.name', SortEnum.ASC);
 
     // get customer groups
     const dataResult = await query

@@ -96,13 +96,24 @@ export class PromotionService {
     const query = this.promotionRepository.createQueryBuilder('q');
 
     if (keywords) {
-      query
-        .orWhere(`q.code LIKE :code`, { code: `%${keywords}%` })
-        .orWhere(`q.name LIKE :name`, { name: `%${keywords}%` })
-        .orWhere(`q.description LIKE :description`, {
+      const newKeywords = keywords.trim();
+      const subQuery = this.promotionRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .orWhere(`q2.description LIKE :description`, {
           description: `%${keywords}%`,
         })
-        .orWhere(`q.note LIKE :note`, { note: `%${keywords}%` });
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        description: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
     }
     if (startDate) {
       query.andWhere(`q.startDate >= :startDate`, { startDate });
@@ -112,29 +123,11 @@ export class PromotionService {
     }
     switch (status) {
       case PromotionStatusEnum.ACTIVE:
-        query.andWhere(`q.status = :status`, {
-          status: PromotionStatusEnum.ACTIVE,
-        });
-        break;
       case PromotionStatusEnum.INACTIVE:
-        query.andWhere(`q.status = :status`, {
-          status: PromotionStatusEnum.INACTIVE,
-        });
-        break;
       case PromotionStatusEnum.OUT_OF_BUDGET:
-        query.andWhere(`q.status = :status`, {
-          status: PromotionStatusEnum.OUT_OF_BUDGET,
-        });
-        break;
       case PromotionStatusEnum.OUT_OF_BUDGET:
-        query.andWhere(`q.status = :status`, {
-          status: PromotionStatusEnum.OUT_OF_BUDGET,
-        });
-        break;
       case PromotionStatusEnum.OUT_OF_BUDGET:
-        query.andWhere(`q.status = :status`, {
-          status: PromotionStatusEnum.OUT_OF_BUDGET,
-        });
+        query.andWhere(`q.status = :status`, { status });
         break;
       default:
         break;

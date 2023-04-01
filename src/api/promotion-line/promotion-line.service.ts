@@ -276,20 +276,28 @@ export class PromotionLineService {
     } = dto;
     const query = this.promotionLineRepository.createQueryBuilder('q');
     if (keywords) {
+      const newKeywords = keywords.trim();
       const subQuery = this.promotionLineRepository
         .createQueryBuilder('q2')
-        .where('q2.code LIKE :code', { code: `%${keywords}%` })
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.couponCode LIKE :couponCode', {
-          couponCode: `%${keywords}%`,
+          couponCode: `%${newKeywords}%`,
         })
-        .where('q2.title LIKE :title', { title: `%${keywords}%` })
+        .where('q2.title LIKE :title', { title: `%${newKeywords}%` })
         .where('q2.description LIKE :description', {
-          description: `%${keywords}%`,
+          description: `%${newKeywords}%`,
         })
-        .where('q2.note LIKE :note', { note: `%${keywords}%` })
+        .where('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
-      query.andWhere(`EXISTS ${subQuery}`, {});
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        couponCode: `%${newKeywords}%`,
+        title: `%${newKeywords}%`,
+        description: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
     }
     if (promotionCode) {
       query.leftJoinAndSelect('q.promotion', 'p');

@@ -1,5 +1,5 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { UserStatusEnum } from '../../../enums';
+import { SortEnum, UserStatusEnum } from '../../../enums';
 import { IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class FilterCustomerDto {
@@ -15,4 +15,10 @@ export class FilterCustomerDto {
   @IsOptional()
   @IsEnum(UserStatusEnum, { message: 'CUSTOMER_STATUS_IS_ENUM' })
   status: UserStatusEnum;
+
+  @ApiPropertyOptional({ example: SortEnum.ASC, enum: SortEnum })
+  @IsString({ message: 'SORT_IS_STRING' })
+  @IsEnum(SortEnum, { message: 'SORT_IS_ENUM' })
+  @IsOptional()
+  sort: SortEnum;
 }

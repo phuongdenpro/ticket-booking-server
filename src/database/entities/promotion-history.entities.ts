@@ -43,13 +43,6 @@ export class PromotionHistory {
   @JoinColumn({ name: 'buy_order_detail_id', referencedColumnName: 'id' })
   buyOrderDetail: OrderDetail;
 
-  @OneToOne(
-    () => OrderDetail,
-    (orderDetail) => orderDetail.receivePromotionHistory,
-  )
-  @JoinColumn({ name: 'receive_order_detail_id', referencedColumnName: 'id' })
-  receiveOrderDetail: OrderDetail;
-
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -57,7 +50,6 @@ export class PromotionHistory {
     name: 'updated_at',
     type: 'timestamp',
     nullable: true,
-    select: false,
   })
   public updatedAt?: Date;
 

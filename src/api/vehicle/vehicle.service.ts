@@ -215,18 +215,35 @@ export class VehicleService {
     const query = this.vehicleService.createQueryBuilder('q');
 
     if (keywords) {
-      query
-        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.licensePlate like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.description like :keywords', { keywords: `%${keywords}%` });
+      const newKeywords = keywords.trim();
+      const subQuery = this.vehicleService
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.licensePlate LIKE :licensePlate', {
+          licensePlate: `%${newKeywords}%`,
+        })
+        .where('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .where('q2.description LIKE :description', {
+          description: `%${newKeywords}%`,
+        })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        licensePlate: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        description: `%${newKeywords}%`,
+      });
     }
-    if (
-      type == VehicleTypeEnum.LIMOUSINE ||
-      type == VehicleTypeEnum.SLEEPER_BUS ||
-      type == VehicleTypeEnum.SEAT_BUS
-    ) {
-      query.andWhere('q.type = :type', { type });
+    switch (type) {
+      case VehicleTypeEnum.LIMOUSINE:
+      case VehicleTypeEnum.SLEEPER_BUS:
+      case VehicleTypeEnum.SEAT_BUS:
+        query.andWhere('q.type = :type', { type });
+        break;
+      default:
+        break;
     }
     if (floorNumber == 1 || floorNumber == 2) {
       query.andWhere('q.floorNumber = :floorNumber', { floorNumber });

@@ -103,6 +103,8 @@ export class OrderService {
     return order;
   }
 
+  async findAllOrder(dto, userId: string) {}
+
   async createOrder(dto: CreateOrderDto, userId: string) {
     const { note, status, seatIds, seatCodes, tripDetailId } = dto;
     // check permission
@@ -281,6 +283,22 @@ export class OrderService {
     return await this.findOneOrder(options);
   }
 
+  async getOrderDetailById(id: string, options?: any) {
+    const order = await this.findOrderDetailById(id, options);
+    if (!order) {
+      throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
+    }
+    return order;
+  }
+
+  async getOrderDetailByCode(code: string, options?: any) {
+    const order = await this.findOrderDetailByCode(code, options);
+    if (!order) {
+      throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
+    }
+    return order;
+  }
+
   async createOrderDetail(dto: CreateOrderDetailDto, userId: string) {
     // check permission
     const customer = await this.customerService.findOneById(userId);
@@ -331,15 +349,11 @@ export class OrderService {
       ) {
         throw new BadRequestException('SEAT_IS_SOLD');
       }
-      ticketDetail = await this.ticketService.findOneTicketDetailBy({
+      ticketDetail = await this.ticketService.findOneTicketDetail({
         where: {
-          seat: {
-            id: seat.id,
-          },
+          seat: { id: seat.id },
           ticket: {
-            tripDetail: {
-              id: tripDetailId,
-            },
+            tripDetail: { id: tripDetailId },
           },
         },
         relations: ['seat.vehicle.tripDetails'],
@@ -357,7 +371,7 @@ export class OrderService {
       } else if (seat.type === SeatTypeEnum.PENDING) {
         throw new BadRequestException('SEAT_IS_SOLD');
       }
-      ticketDetail = await this.ticketService.findOneTicketDetailBy({
+      ticketDetail = await this.ticketService.findOneTicketDetail({
         where: {
           seat: {
             id: seat.id,
@@ -460,21 +474,5 @@ export class OrderService {
     }
     delete createOrderDetail.deletedAt;
     return createOrderDetail;
-  }
-
-  async getOrderDetailById(id: string, options?: any) {
-    const order = await this.findOrderDetailById(id, options);
-    if (!order) {
-      throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
-    }
-    return order;
-  }
-
-  async getOrderDetailByCode(code: string, options?: any) {
-    const order = await this.findOrderDetailByCode(code, options);
-    if (!order) {
-      throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
-    }
-    return order;
   }
 }

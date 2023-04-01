@@ -55,23 +55,6 @@ export class TicketService {
     't',
   ];
 
-  private selectTicketDetailFieldsJson = {
-    ticket: {
-      id: true,
-      code: true,
-      status: true,
-      note: true,
-      startDate: true,
-      endDate: true,
-    },
-    seat: {
-      id: true,
-      name: true,
-      type: true,
-      floor: true,
-    },
-  };
-
   private selectTicketDetailFieldsWithQ = [
     'q.id',
     'q.code',
@@ -87,7 +70,9 @@ export class TicketService {
   private async getTripDetailById(id: string) {
     return await this.dataSource.getRepository(TripDetail).findOne({
       where: { id },
-      relations: ['vehicle', 'vehicle.seats'],
+      relations: {
+        vehicle: { seats: true },
+      },
       select: {
         deletedAt: false,
         vehicle: {
@@ -104,10 +89,10 @@ export class TicketService {
   }
 
   // ticket service
-  async findOneTicketByCode(code: string, options?: any) {
+  async findOneTicket(options: any) {
     return await this.ticketRepository.findOne({
-      where: { code, ...options?.where },
-      relations: ['ticketDetails'].concat(options?.relations || []),
+      where: { ...options?.where },
+      relations: { ticketDetails: true, ...options?.relations },
       select: {
         deletedAt: false,
         ...options?.select,
@@ -120,28 +105,33 @@ export class TicketService {
     });
   }
 
+  async findOneTicketByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneTicket(options);
+  }
+
   async findOneTicketById(id: string, options?: any) {
-    return await this.ticketRepository.findOne({
-      where: { id, ...options?.where },
-      relations: ['ticketDetails'].concat(options?.relations || []),
-      select: {
-        deletedAt: false,
-        ...options?.select,
-      },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options,
-    });
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneTicket(options);
   }
 
   async createTicket(dto: CreateTicketDto, adminId: string) {
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
 
     const { code, note, startDate, endDate, tripDetailId } = dto;
@@ -194,16 +184,16 @@ export class TicketService {
     return saveTicket;
   }
 
-  async getTicketById(id: string) {
-    const ticket = await this.findOneTicketById(id);
+  async getTicketById(id: string, options?: any) {
+    const ticket = await this.findOneTicketById(id, options);
     if (!ticket) {
       throw new BadRequestException('TICKET_NOT_FOUND');
     }
     return ticket;
   }
 
-  async getTicketByCode(code: string) {
-    const ticket = await this.findOneTicketByCode(code);
+  async getTicketByCode(code: string, options?: any) {
+    const ticket = await this.findOneTicketByCode(code, options);
     if (!ticket) {
       throw new BadRequestException('TICKET_NOT_FOUND');
     }
@@ -220,20 +210,15 @@ export class TicketService {
         .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
     }
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-    if (startDate && startDate >= currentDate) {
+    if (startDate) {
       startDate = new Date(startDate);
       query.andWhere('q.startDate >= :startDate', { startDate });
     }
-    if (endDate && endDate >= currentDate && endDate >= startDate) {
+    if (endDate) {
       endDate = new Date(endDate);
       query.andWhere('q.endDate <= :endDate', { endDate });
     }
-    if (sort) {
-      query.orderBy('q.createdAt', sort);
-    } else {
-      query.orderBy('q.createdAt', SortEnum.DESC);
-    }
+    query.orderBy('q.createdAt', sort || SortEnum.DESC);
 
     const total = await query.getCount();
     const dataResult = await query
@@ -281,9 +266,12 @@ export class TicketService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ticket.updatedBy = adminExist.id;
     const saveTicket = await this.ticketRepository.save(ticket);
@@ -330,9 +318,12 @@ export class TicketService {
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: adminId, isActive: true } });
+      .findOne({ where: { id: adminId } });
     if (!adminExist) {
       throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
     ticket.updatedBy = adminExist.id;
     const saveTicket = await this.ticketRepository.save(ticket);
@@ -341,10 +332,14 @@ export class TicketService {
   }
 
   // ticket detail service
-  async findOneTicketDetailByCode(code: string, options?: any) {
+  async findOneTicketDetail(options: any) {
     return await this.ticketDetailRepository.findOne({
-      where: { code, ...options?.where },
-      relations: ['ticket', 'seat'].concat(options?.relations || []),
+      where: { ...options?.where },
+      relations: {
+        ticket: true,
+        seat: true,
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         ...options?.select,
@@ -355,51 +350,88 @@ export class TicketService {
       },
       ...options,
     });
+  }
+
+  async findOneTicketDetailByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneTicketDetail(options);
   }
 
   async findOneTicketDetailById(id: string, options?: any) {
-    return await this.ticketDetailRepository.findOne({
-      where: { id, ...options?.where },
-      relations: ['ticket', 'seat'].concat(options?.relations || []),
-      select: {
-        deletedAt: false,
-        ...options?.select,
-      },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options,
-    });
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneTicketDetail(options);
   }
 
-  async findOneTicketDetailBy(options: any) {
-    // options = {
-    //   where: {
-    //     seat: {
-    //       id: '7b1e022a-96da-47c5-85b6-81858fd0f601',
-    //       vehicle: {
-    //         tripDetails: {
-    //           id: 'b87985ac-3b08-46bf-8e6f-02902dcaedaf',
-    //         },
-    //       },
-    //     },
-    //   },
-    //   relations: ['seat.vehicle.tripDetails'],
-    // };
-    return await this.ticketDetailRepository.findOne({
-      where: options?.where,
-      relations: ['ticket', 'seat'].concat(options?.relations || []),
-      select: {
-        deletedAt: false,
-        ...options?.select,
-      },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options,
-    });
+  async getTicketDetailById(id: string, options?: any) {
+    const ticketDetail = await this.findOneTicketDetailById(id, options);
+    if (!ticketDetail) {
+      throw new BadRequestException('TICKET_DETAIL_NOT_FOUND');
+    }
+    return ticketDetail;
+  }
+
+  async getTicketDetailByCode(code: string, options?: any) {
+    const ticketDetail = await this.findOneTicketDetailByCode(code, options);
+    if (!ticketDetail) {
+      throw new BadRequestException('TICKET_DETAIL_NOT_FOUND');
+    }
+    return ticketDetail;
+  }
+
+  async findAllTicketDetail(
+    dto: FilterTicketDetailDto,
+    pagination?: Pagination,
+  ) {
+    const { keywords, status, sort, ticketCode, ticketId } = dto;
+
+    const query = this.ticketDetailRepository.createQueryBuilder('q');
+    if (keywords) {
+      const newKeywords = keywords.trim();
+      const subQuery = this.ticketDetailRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
+    }
+    if (status) {
+      query.andWhere('q.status = :status', {
+        status: status === TicketStatusEnum.NON_SOLD ? 0 : 1,
+      });
+    }
+    query.leftJoinAndSelect('q.ticket', 't');
+    if (ticketCode) {
+      query.andWhere('id.code = :ticketCode', { ticketCode });
+    }
+    if (ticketId) {
+      query.andWhere('t.id = :ticketId', { ticketId });
+    }
+    query
+      .orderBy('q.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('q.code', SortEnum.DESC);
+
+    const dataResult = await query
+      .select(this.selectTicketDetailFieldsWithQ)
+      .offset(pagination.skip)
+      .limit(pagination.take)
+      .getMany();
+
+    const total = await query.getCount();
+
+    return { dataResult, pagination, total };
   }
 
   async createTicketDetail(ticketId: string, seatId: string, adminId: string) {
@@ -439,18 +471,14 @@ export class TicketService {
     if (note) {
       ticketDetail.note = note;
     }
-    if (status) {
-      switch (status) {
-        case TicketStatusEnum.SOLD:
-          ticketDetail.status = TicketStatusEnum.SOLD;
-          break;
-        case TicketStatusEnum.PENDING:
-          ticketDetail.status = TicketStatusEnum.PENDING;
-          break;
-        default:
-          ticketDetail.status = TicketStatusEnum.NON_SOLD;
-          break;
-      }
+    switch (status) {
+      case TicketStatusEnum.SOLD:
+      case TicketStatusEnum.PENDING:
+      case TicketStatusEnum.NON_SOLD:
+        ticketDetail.status = status;
+        break;
+      default:
+        break;
     }
 
     const admin = await this.dataSource
@@ -470,66 +498,5 @@ export class TicketService {
       ticketDetail,
     );
     return saveTicketDetail;
-  }
-
-  async getTicketDetailById(id: string) {
-    const ticketDetail = await this.findOneTicketDetailById(id, {
-      select: this.selectTicketDetailFieldsJson,
-    });
-    if (!ticketDetail) {
-      throw new BadRequestException('TICKET_DETAIL_NOT_FOUND');
-    }
-    return ticketDetail;
-  }
-
-  async getTicketDetailByCode(code: string) {
-    const ticketDetail = await this.findOneTicketDetailByCode(code, {
-      select: this.selectTicketDetailFieldsJson,
-    });
-    if (!ticketDetail) {
-      throw new BadRequestException('TICKET_DETAIL_NOT_FOUND');
-    }
-    return ticketDetail;
-  }
-
-  async findAllTicketDetail(
-    dto: FilterTicketDetailDto,
-    pagination?: Pagination,
-  ) {
-    const { keywords, status, sort, ticketCode, ticketId } = dto;
-
-    const query = this.ticketDetailRepository.createQueryBuilder('q');
-    if (keywords) {
-      query
-        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
-    }
-    if (status) {
-      query.andWhere('q.status = :status', {
-        status: status === TicketStatusEnum.NON_SOLD ? 0 : 1,
-      });
-    }
-    query.leftJoinAndSelect('q.ticket', 't');
-    if (ticketCode) {
-      query.andWhere('id.code = :ticketCode', { ticketCode });
-    }
-    if (ticketId) {
-      query.andWhere('t.id = :ticketId', { ticketId });
-    }
-    if (sort) {
-      query.orderBy('q.createdAt', sort);
-    } else {
-      query.orderBy('q.createdAt', SortEnum.DESC);
-    }
-
-    const dataResult = await query
-      .select(this.selectTicketDetailFieldsWithQ)
-      .offset(pagination.skip)
-      .limit(pagination.take)
-      .getMany();
-
-    const total = await query.getCount();
-
-    return { dataResult, pagination, total };
   }
 }

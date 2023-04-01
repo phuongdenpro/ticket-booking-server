@@ -160,18 +160,31 @@ export class CustomerService {
   }
 
   async findAll(dto: FilterCustomerDto, pagination: Pagination) {
-    const { keywords, status } = dto;
+    const { keywords, status, sort } = dto;
 
     const query = this.customerRepository.createQueryBuilder('u');
     if (keywords) {
-      query
-        .orWhere('u.fullName like :query')
-        .orWhere('u.email like :query')
-        .orWhere('u.phone like :query')
-        .orWhere('u.address like :query')
-        .orWhere('u.fullAddress like :query')
-        .orWhere('u.note like :query')
-        .setParameter('query', `%${keywords}%`);
+      const newKeywords = keywords.trim();
+      const subQuery = this.customerRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
+        .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
+        .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
+        .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
+        .orWhere('q2.fullAddress LIKE :fullAddress', {
+          fullAddress: `%${newKeywords}%`,
+        })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        fullName: `%${newKeywords}%`,
+        email: `%${newKeywords}%`,
+        phone: `%${newKeywords}%`,
+        address: `%${newKeywords}%`,
+        fullAddress: `%${newKeywords}%`,
+      });
     }
 
     if (status) {
@@ -183,7 +196,9 @@ export class CustomerService {
       .leftJoinAndSelect('u.customerGroup', 'cg')
       .offset(pagination.skip)
       .limit(pagination.take)
-      .orderBy('u.createdAt', SortEnum.DESC)
+      .orderBy('u.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('u.fullName', SortEnum.ASC)
+      .addOrderBy('u.email', SortEnum.ASC)
       .select(this.selectFieldsWithQ)
       .getMany();
 

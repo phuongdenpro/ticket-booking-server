@@ -68,10 +68,4 @@ export class OrderDetail {
     (promotionHistory) => promotionHistory.buyOrderDetail,
   )
   buyPromotionHistory: PromotionHistory;
-
-  @OneToOne(
-    () => PromotionHistory,
-    (promotionHistory) => promotionHistory.receiveOrderDetail,
-  )
-  receivePromotionHistory: PromotionHistory;
 }
