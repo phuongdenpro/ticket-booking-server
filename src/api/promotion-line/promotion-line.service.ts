@@ -1,7 +1,6 @@
 import { Pagination } from './../../decorator';
 import {
   CreatePromotionLineDto,
-  // ProductGiveawayDto,
   ProductDiscountDto,
   ProductDiscountPercentDto,
   UpdatePromotionLineDto,
@@ -51,7 +50,6 @@ export class PromotionLineService {
     const { quantityBuy, purchaseAmount, maxReductionAmount, reductionAmount } =
       dto;
     const promotionDetail = new PromotionDetail();
-    promotionDetail.quantityReceive = null;
     promotionDetail.percentDiscount = null;
     promotionDetail.promotionLine = savePromotionLine;
     if (!quantityBuy) {
@@ -116,7 +114,6 @@ export class PromotionLineService {
     const { quantityBuy, purchaseAmount, maxReductionAmount, percentDiscount } =
       dto;
     const promotionDetail = new PromotionDetail();
-    promotionDetail.quantityReceive = null;
     promotionDetail.reductionAmount = null;
     promotionDetail.promotionLine = savePromotionLine;
     if (!quantityBuy) {

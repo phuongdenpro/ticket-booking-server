@@ -30,13 +30,13 @@ export class CreatePromotionLineDto {
   @Length(1, 100, { message: 'CODE_BETWEEN_1_100_CHARACTERS' })
   code: string;
 
-  @ApiProperty({ example: '' })
+  @ApiProperty({ example: 'Khuyến mãi tháng 4/2023' })
   @IsNotEmpty({ message: 'TITLE_IS_REQUIRED' })
   @IsString({ message: 'TITLE_IS_STRING' })
   @Length(1, 100, { message: 'TITLE_LENGTH' })
   title: string;
 
-  @ApiProperty({ example: 'Chương trình khuyến mãi tháng 3/2023' })
+  @ApiProperty({ example: 'Khuyến mãi tháng 4/2023' })
   @IsNotEmpty({ message: 'DESCRIPTION_IS_REQUIRED' })
   @IsString({ message: 'DESCRIPTION_IS_STRING' })
   @Length(0, 1000, { message: 'DESCRIPTION_BETWEEN_1_1000_CHARACTERS' })
@@ -47,19 +47,21 @@ export class CreatePromotionLineDto {
   @IsOptional()
   note: string;
 
-  @ApiProperty({ example: '' })
+  @ApiProperty({ example: 'KM1' })
   @IsNotEmpty({ message: 'COUPON_CODE_IS_REQUIRED' })
   @IsString({ message: 'COUPON_CODE_IS_STRING' })
   @Length(1, 100, { message: 'COUPON_CODE_BETWEEN_1_100_CHARACTERS' })
   couponCode: string;
 
-  @ApiProperty({ example: '' })
+  @ApiProperty({ example: 'MDBL' })
   @IsNotEmpty({ message: 'TRIP_CODE_IS_REQUIRED' })
   @IsString({ message: 'TRIP_CODE_IS_STRING' })
   @Length(1, 100, { message: 'TRIP_CODE_BETWEEN_1_100_CHARACTERS' })
   tripCode: string;
 
-  @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD') })
+  @ApiPropertyOptional({
+    example: moment().add(1, 'days').format('YYYY-MM-DD'),
+  })
   @IsDate({ message: 'START_DATE_IS_DATE' })
   @MinDate(new Date(moment().format('YYYY-MM-DD')), {
     message: 'START_DATE_GREATER_THAN_NOW',
@@ -106,7 +108,7 @@ export class CreatePromotionLineDto {
   @Min(0, { message: 'MAX_BUDGET_MUST_BE_GREATER_THAN_0' })
   maxBudget: number;
 
-  @ApiProperty({ example: '' })
+  @ApiProperty({ example: 'KM11' })
   @IsNotEmpty({ message: 'PROMOTION_CODE_IS_REQUIRED' })
   @IsString({ message: 'PROMOTION_CODE_IS_STRING' })
   @Length(1, 100, { message: 'PROMOTION_CODE_BETWEEN_1_100_CHARACTERS' })
@@ -138,13 +140,4 @@ export class CreatePromotionLineDto {
   @ValidateNested()
   @Type(() => ProductDiscountPercentDto)
   productDiscountPercent?: ProductDiscountPercentDto;
-
-  // @ApiProperty({ type: ProductGiveawayDto })
-  // @ValidateIf(
-  //   (dto: CreatePromotionLineDto) =>
-  //     dto.type === PromotionTypeEnum.PRODUCT_GIVEAWAYS,
-  // )
-  // @ValidateNested()
-  // @Type(() => ProductGiveawayDto)
-  // productGiveaway?: ProductGiveawayDto;
 }
