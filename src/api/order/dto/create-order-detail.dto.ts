@@ -23,9 +23,9 @@ export class CreateOrderDetailDto {
   @IsOptional()
   seatCode: string;
 
-  @ApiProperty({ example: 'b87985ac-3b08-46bf-8e6f-02902dcaedaf' })
-  @IsNotEmpty({ message: 'TRIP_DETAIL_ID_REQUIRED' })
-  @IsString({ message: 'TRIP_DETAIL_ID_IS_STRING' })
-  @Length(36, 36, { message: 'TRIP_DETAIL_ID_IS_36_CHARACTERS' })
-  tripDetailId: string;
+  @ApiProperty({ example: '' })
+  @IsNotEmpty({ message: 'TRIP_DETAIL_CODE_REQUIRED' })
+  @IsString({ message: 'TRIP_DETAIL_CODE_IS_STRING' })
+  @Length(1, 100, { message: 'TRIP_DETAIL_CODE_BETWEEN_1_AND_100_CHARACTERS' })
+  tripDetailCode: string;
 }

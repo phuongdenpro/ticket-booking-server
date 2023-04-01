@@ -19,7 +19,7 @@ import { Pagination } from './../../decorator';
 import {
   VehicleTypeEnum,
   VehicleSeatsEnum,
-  SeatTypeEnum,
+  SeatStatusEnum,
   SortEnum,
 } from './../../enums';
 import { SeatService } from '../seat/seat.service';
@@ -46,7 +46,7 @@ export class VehicleService {
         seats: {
           id: true,
           name: true,
-          type: true,
+          status: true,
           floor: true,
         },
         images: {
@@ -186,7 +186,7 @@ export class VehicleService {
           dto.floor = 2;
         }
       }
-      dto.type = SeatTypeEnum.NON_SOLD;
+      dto.status = SeatStatusEnum.NON_SOLD;
       dto.vehicleId = newVehicle.id;
       await this.seatService.createSeat(dto, userId);
     }

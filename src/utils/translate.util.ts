@@ -161,6 +161,7 @@ export const mappingTranslate = {
   ADDRESS_BETWEEN_1_255_CHARACTERS: 'Địa chỉ phải từ 1 đến 255 ký tự',
 
   // seat
+  UPDATE_SEAT_FAILED: 'Cập nhật thông tin ghế thất bại',
   SEAT_NOT_FOUND: 'Không tìm thấy thông tin ghế',
   SEAT_TYPE_IS_REQUIRED: 'Loại ghế không được để trống',
   SEAT_TYPE_IS_STRING: 'Loại ghế phải là chuỗi ký tự',
@@ -245,10 +246,16 @@ export const mappingTranslate = {
   TRIP_DETAIL_STATUS_REQUIRED: 'Trang thái của chuyến không hợp lệ',
   TRIP_DETAIL_NOT_FOUND: 'Không tìm thấy thông tin chuyến đi',
   TRIP_DETAIL_CODE_EXIST: 'Mã chuyến đi đã tồn tại',
+  TRIP_DETAIL_CODE_REQUIRED: 'Mã chuyến đi là không được để trống',
+  TRIP_DETAIL_CODE_IS_STRING: 'Mã chuyến đi phải là chuỗi ký tự',
+  TRIP_DETAIL_CODE_BETWEEN_1_AND_100_CHARACTERS:
+    'Mã chuyến đi phải từ 1 đến 100 ký tự',
   TRIP_DETAIL_ID_REQUIRED: 'Id của chuyến xe là không được để trống',
   TRIP_DETAIL_ID_IS_STRING: 'Id của chuyến xe phải là chuỗi ký tự',
   TRIP_DETAIL_ID_IS_36_CHARACTERS: 'Id của chuyến xe phải có 36 ký tự',
   TRIP_DETAIL_HAS_PASSED: 'Chuyến xe đã khởi hành không thể đặt vé',
+  TRIP_DETAIL_HAS_PASSED_15_MINUTES:
+    'Chuyến xe còn 15 phút nữa sẽ khởi hành không thể đặt vé, vui lòng liên hệ với nhân viên để được hỗ trợ đặt vé',
   TRIP_DETAIL_NOT_ACTIVE: 'Chuyến xe không còn hoạt động',
   TRIP_DETAIL_HAS_ENDED_NOT_UPDATE: 'Chuyến xe đã khởi hành không thể cập nhật',
   TRIP_HAS_ENDED_NOT_UPDATE: 'Tuyến xe đã kết thúc không thể cập nhật',
@@ -314,6 +321,8 @@ export const mappingTranslate = {
   TICKET_DETAIL_IS_SOLD: 'Vé này đã được bán',
   TICKET_GROUP_ID_OR_CODE_REQUIRED:
     'Id hoặc mã của nhóm vé không được để trống',
+  UPDATE_TICKET_DETAIL_FAILED: 'Cập nhật thông tin vé thất bại',
+  UPDATE_TICKET_DETAIL_FAIL: 'Cập nhật thông tin vé thất bại',
 
   // price list
   PRICE_LIST_HAS_PRICE_DETAIL: 'Bảng giá này vẫn còn có chi tiết bảng giá',
@@ -513,7 +522,9 @@ export const mappingTranslate = {
   ORDER_ID_IS_REQUIRED: 'Id của đơn hàng không được để trống',
   ORDER_ID_IS_STRING: 'Id của đơn hàng phải là chuỗi ký tự',
   ORDER_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết đơn hàng',
+  CREATE_ORDER_DETAIL_FAILED: 'Tạo chi tiết hoá đơn thất bại',
   ORDER_IS_CANCELLED: 'Đơn hàng đã bị hủy',
   ORDER_IS_PAID: 'Đơn hàng đã thanh toán',
   ORDER_IS_PENDING: 'Đơn hàng đang chờ xử lý',
+  CREATE_ORDER_FAILED: 'Tạo hoá đơn thất bại',
 };

@@ -122,8 +122,8 @@ export class TripDetailService {
     return tripDetail;
   }
 
-  async getTripDetailByCode(code: string) {
-    const tripDetail = await this.findTripDetailByCode(code);
+  async getTripDetailByCode(code: string, options?: any) {
+    const tripDetail = await this.findTripDetailByCode(code, options);
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
     }

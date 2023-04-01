@@ -1,4 +1,4 @@
-import { SeatTypeEnum, SortEnum, UserStatusEnum } from './../../enums';
+import { SeatStatusEnum, SortEnum, UserStatusEnum } from './../../enums';
 import {
   BadRequestException,
   Injectable,
@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Customer, Seat, Staff, Vehicle } from './../../database/entities';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, EntityManager, Repository } from 'typeorm';
 import {
   FilterSeatDto,
   CreateSeatDto,
@@ -77,7 +77,7 @@ export class SeatService {
   }
 
   async createSeat(dto: CreateSeatDto, userId: string) {
-    const { code, name, type, floor, vehicleId } = dto;
+    const { code, name, status, floor, vehicleId } = dto;
     const vehicle = await this.dataSource
       .getRepository(Vehicle)
       .findOne({ where: { id: vehicleId } });
@@ -102,9 +102,9 @@ export class SeatService {
     seat.code = code;
     seat.name = name;
     if (!seat) {
-      seat.type = SeatTypeEnum.NON_SOLD;
+      seat.status = SeatStatusEnum.NON_SOLD;
     } else {
-      seat.type = type;
+      seat.status = status;
     }
     if (floor < 1 || floor > 2 || !floor) {
       seat.floor = 1;
@@ -121,7 +121,7 @@ export class SeatService {
   }
 
   async searchSeat(dto: FilterSeatDto, pagination?: Pagination) {
-    const { keywords, type, floor } = dto;
+    const { keywords, status, floor } = dto;
     const query = this.seatRepository.createQueryBuilder('q');
 
     if (keywords) {
@@ -140,8 +140,8 @@ export class SeatService {
         name: `%${newKeywords}%`,
       });
     }
-    if (type) {
-      query.andWhere('q.type = :type', { type });
+    if (status) {
+      query.andWhere('q.type = :type', { type: status });
     }
     if (floor && floor > 0 && floor < 3) {
       query.andWhere('q.floor = :floor', { floor });
@@ -172,7 +172,7 @@ export class SeatService {
     vehicleId: string,
     pagination?: Pagination,
   ) {
-    const { keywords, type, floor } = dto;
+    const { keywords, status, floor } = dto;
     const query = this.seatRepository.createQueryBuilder('q');
     query.where('q.vehicle = :vehicleId', { vehicleId });
 
@@ -181,8 +181,8 @@ export class SeatService {
         .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.name like :keywords', { keywords: `%${keywords}%` });
     }
-    if (type) {
-      query.andWhere('q.type = :type', { type });
+    if (status) {
+      query.andWhere('q.type = :type', { type: status });
     }
     if (floor && floor > 0 && floor < 3) {
       query.andWhere('q.floor = :floor', { floor });
@@ -232,11 +232,22 @@ export class SeatService {
     return { dataResult, pagination, total };
   }
 
-  async updateSeatById(id: string, dto: UpdateSeatDto, userId: string) {
-    const { name, type, floor, vehicleId } = dto;
-    const seat = await this.seatRepository.findOne({ where: { id } });
-    if (!seat) {
-      throw new NotFoundException('SEAT_NOT_FOUND');
+  async updateSeatByIdOrCode(
+    dto: UpdateSeatDto,
+    userId: string,
+    id?: string,
+    code?: string,
+    manager?: EntityManager,
+  ) {
+    const { name, status, floor, vehicleId } = dto;
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_REQUIRED');
+    }
+    let seat: Seat;
+    if (id) {
+      seat = await this.getSeatById(id);
+    } else if (code) {
+      seat = await this.getSeatByCode(code);
     }
     const adminExist = await this.dataSource
       .getRepository(Staff)
@@ -258,9 +269,7 @@ export class SeatService {
       seat.name = name;
     }
     if (seat) {
-      seat.type = SeatTypeEnum.NON_SOLD;
-    } else {
-      seat.type = type;
+      seat.status = status;
     }
     if (floor < 1 || floor > 2 || !floor) {
       seat.floor = 1;
@@ -278,52 +287,17 @@ export class SeatService {
     }
     seat.updatedBy = adminExist.id;
     delete seat.vehicle;
-
-    return await this.seatRepository.save(seat);
-  }
-
-  async updateSeatByCode(code: string, dto: UpdateSeatDto, userId: string) {
-    const { name, type, floor, vehicleId } = dto;
-    const seat = await this.seatRepository.findOne({ where: { code } });
-    if (!seat) {
-      throw new NotFoundException('SEAT_NOT_FOUND');
-    }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-
-    if (name) {
-      seat.name = name;
-    }
-    if (seat) {
-      seat.type = SeatTypeEnum.NON_SOLD;
-    } else {
-      seat.type = type;
-    }
-    if (floor < 1 || floor > 2 || !floor) {
-      seat.floor = 1;
-    } else {
-      seat.floor = floor;
-    }
-    if (vehicleId) {
-      const vehicle = await this.dataSource
-        .getRepository(Vehicle)
-        .findOne({ where: { id: vehicleId } });
-      if (!vehicle) {
-        throw new BadRequestException('VEHICLE_NOT_FOUND');
+    let saveSeat: Seat;
+    if (manager) {
+      try {
+        saveSeat = await manager.save(seat);
+      } catch (error) {
+        throw new BadRequestException('UPDATE_SEAT_FAILED');
       }
-      seat.vehicle = vehicle;
+    } else {
+      saveSeat = await this.seatRepository.save(seat);
     }
-    seat.updatedBy = adminExist.id;
-    delete seat.vehicle;
-
-    return await this.seatRepository.save(seat);
+    return saveSeat;
   }
 
   async deleteSeatById(id: string, userId: string) {

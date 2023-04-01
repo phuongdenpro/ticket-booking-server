@@ -96,7 +96,7 @@ export class SeatController {
     @Param('id') id: string,
     @Body() dto: UpdateSeatDto,
   ) {
-    return await this.seatService.updateSeatById(id, dto, user.id);
+    return await this.seatService.updateSeatByIdOrCode(dto, user.id, id);
   }
 
   @Patch('code/:code')
@@ -109,7 +109,12 @@ export class SeatController {
     @Param('code') code: string,
     @Body() dto: UpdateSeatDto,
   ) {
-    return await this.seatService.updateSeatByCode(code, dto, user.id);
+    return await this.seatService.updateSeatByIdOrCode(
+      dto,
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('id/:id')

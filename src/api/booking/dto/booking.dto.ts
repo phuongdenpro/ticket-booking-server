@@ -31,5 +31,5 @@ export class CreateBookingDto {
   @IsNotEmpty({ message: 'TRIP_DETAIL_ID_REQUIRED' })
   @IsString({ message: 'TRIP_DETAIL_ID_IS_STRING' })
   @Length(36, 36, { message: 'TRIP_DETAIL_ID_IS_36_CHARACTERS' })
-  tripDetailId: string;
+  tripDetailCode: string;
 }

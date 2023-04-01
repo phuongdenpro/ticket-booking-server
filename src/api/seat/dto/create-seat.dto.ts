@@ -1,4 +1,4 @@
-import { SeatTypeEnum } from '../../../enums';
+import { SeatStatusEnum } from '../../../enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsNotEmpty,
@@ -24,11 +24,14 @@ export class CreateSeatDto {
   @Length(1, 100, { message: 'NAME_BETWEEN_1_100_CHARACTERS' })
   name: string;
 
-  @ApiPropertyOptional({ example: SeatTypeEnum.NON_SOLD, enum: SeatTypeEnum })
+  @ApiPropertyOptional({
+    example: SeatStatusEnum.NON_SOLD,
+    enum: SeatStatusEnum,
+  })
   @IsString({ message: 'SEAT_TYPE_IS_STRING' })
-  @IsEnum(SeatTypeEnum, { message: 'SEAT_TYPE_IS_ENUM' })
+  @IsEnum(SeatStatusEnum, { message: 'SEAT_TYPE_IS_ENUM' })
   @IsOptional()
-  type: SeatTypeEnum;
+  status: SeatStatusEnum;
 
   @ApiPropertyOptional({ example: 1, enum: [1, 2] })
   @IsNumber(

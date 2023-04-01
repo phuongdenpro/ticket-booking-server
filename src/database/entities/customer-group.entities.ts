@@ -50,9 +50,9 @@ export class CustomerGroup {
   @OneToMany(() => Customer, (customer) => customer.customerGroup)
   customers?: Customer[];
 
-  @OneToMany(
-    () => ApplicableCustomerGroup,
-    (applicableCustomerGroup) => applicableCustomerGroup.customerGroups,
-  )
-  applicableCustomerGroup?: ApplicableCustomerGroup[];
+  // @OneToMany(
+  //   () => ApplicableCustomerGroup,
+  //   (applicableCustomerGroup) => applicableCustomerGroup.customerGroups,
+  // )
+  // applicableCustomerGroup?: ApplicableCustomerGroup[];
 }

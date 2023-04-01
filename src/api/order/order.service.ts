@@ -1,5 +1,11 @@
 import { TripDetailService } from './../trip-detail/trip-detail.service';
-import { Order, OrderDetail } from './../../database/entities';
+import {
+  Order,
+  OrderDetail,
+  PromotionLine,
+  Seat,
+  Vehicle,
+} from './../../database/entities';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
 import {
   CreateOrderDto,
@@ -17,10 +23,12 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   OrderStatusEnum,
   SortEnum,
-  SeatTypeEnum,
+  SeatStatusEnum,
   TicketStatusEnum,
   UserStatusEnum,
   TripStatusEnum,
+  ActiveStatusEnum,
+  PromotionStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -31,6 +39,7 @@ import { PriceListService } from '../price-list/price-list.service';
 import { UpdateTicketDetailDto } from '../ticket/dto';
 import * as moment from 'moment';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
+import { UpdateSeatDto } from '../seat/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -40,6 +49,8 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(OrderDetail)
     private readonly orderDetailRepository: Repository<OrderDetail>,
+    @InjectRepository(PromotionLine)
+    private readonly promotionLineRepository: Repository<PromotionLine>,
     private readonly customerService: CustomerService,
     private readonly adminService: AdminService,
     private readonly seatService: SeatService,
@@ -56,11 +67,11 @@ export class OrderService {
   async findOneOrder(options: any) {
     return await this.orderRepository.findOne({
       where: { ...options?.where },
+      select: { deletedAt: false, ...options?.select },
       relations: {
         orderDetails: true,
         ...options?.relations,
       },
-      select: { deletedAt: false, ...options?.select },
       order: {
         createdAt: SortEnum.DESC,
         ...options?.orderBy,
@@ -90,7 +101,7 @@ export class OrderService {
   async getOrderById(id: string, options?: any) {
     const order = await this.findOneOrderById(id, options);
     if (!order) {
-      throw new UnauthorizedException('ORDER_NOT_FOUND');
+      throw new BadRequestException('ORDER_NOT_FOUND');
     }
     return order;
   }
@@ -98,15 +109,13 @@ export class OrderService {
   async getOrderByCode(code: string, options?: any) {
     const order = await this.findOneOrderByCode(code, options);
     if (!order) {
-      throw new UnauthorizedException('ORDER_NOT_FOUND');
+      throw new BadRequestException('ORDER_NOT_FOUND');
     }
     return order;
   }
 
-  async findAllOrder(dto, userId: string) {}
-
   async createOrder(dto: CreateOrderDto, userId: string) {
-    const { note, status, seatIds, seatCodes, tripDetailId } = dto;
+    const { note, status, seatIds, seatCodes, tripDetailCode } = dto;
     // check permission
     const customer = await this.customerService.findOneById(userId);
     const admin = await this.adminService.findOneBydId(userId);
@@ -121,22 +130,27 @@ export class OrderService {
     }
 
     // check trip detail
-    const tripDetail = await this.tripDetailService.getTripDetailById(
-      tripDetailId,
+    const tripDetail = await this.tripDetailService.getTripDetailByCode(
+      tripDetailCode,
       {
         relations: { trip: true },
       },
     );
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+    const currentDatePlus15Minutes = new Date(
+      moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm'),
+    );
     if (currentDate >= tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
+    } else if (
+      customer &&
+      currentDatePlus15Minutes >= tripDetail.departureTime
+    ) {
+      throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_15_MINUTES');
     }
     // check trip
     const trip = tripDetail.trip;
-    if (
-      trip.status === TripStatusEnum.ACTIVE &&
-      (trip.startDate > currentDate || trip.endDate < currentDate)
-    ) {
+    if (trip.startDate > currentDate || trip.endDate < currentDate) {
       throw new BadRequestException('TRIP_NOT_ACTIVE');
     }
 
@@ -172,82 +186,86 @@ export class OrderService {
     order.code = code;
     order.total = 0;
     order.finalTotal = 0;
-    const createOrder = await this.orderRepository.save(order);
 
-    if (!seatIds && !seatCodes) {
-      throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
-    }
-    let seatType;
-    if (seatIds && seatIds.length > 0) {
-      seatType = this.SEAT_TYPE_DTO_ID;
-    } else if (seatCodes && seatCodes.length > 0) {
-      seatType = this.SEAT_TYPE_DTO_ID;
-    }
-    const orderDetails = await seatCodes.map(async (seatCode) => {
-      const dto = new CreateOrderDetailDto();
-      dto.note = '';
-      if (seatType === this.SEAT_TYPE_DTO_ID) {
-        dto.seatId = seatCode;
-      } else if (seatType === this.SEAT_TYPE_DTO_CODE) {
-        dto.seatCode = seatCode;
+    const queryRunner =
+      this.orderRepository.manager.connection.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    let createOrder: Order;
+    try {
+      createOrder = await queryRunner.manager.save(order);
+
+      if (!seatIds && !seatCodes) {
+        throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
       }
-      dto.orderId = createOrder.id;
-      dto.tripDetailId = tripDetailId;
-      return await this.createOrderDetail(dto, userId);
-    });
-    createOrder.orderDetails = await Promise.all(orderDetails);
-    createOrder.total = createOrder.orderDetails.reduce(
-      (total, orderDetail) => total + orderDetail.total,
-      0,
-    );
-    createOrder.finalTotal = createOrder.total;
-    const saveOrder = await this.orderRepository.save(order);
-    delete saveOrder.deletedAt;
-    return saveOrder;
-  }
-
-  async updateOrderById(id: string, dto: UpdateOrderDto, userId: string) {
-    const order = await this.getOrderById(id);
-    if (!order) {
-      throw new NotFoundException('ORDER_NOT_FOUND');
-    }
-    const { note, status, seatCodes, seatIds } = dto;
-    if (note) {
-      order.note = note;
-    }
-    // update seat
-    if (order.status === OrderStatusEnum.UNPAID) {
-      // if old status = unpaid
+      let seatType;
       if (seatIds && seatIds.length > 0) {
-        seatIds.forEach(async (seatId, index) => {
-          const seat = await this.seatService.getSeatById(seatId);
-          if (index + 1 <= order.orderDetails.length) {
-          }
+        seatType = this.SEAT_TYPE_DTO_ID;
+      } else if (seatCodes && seatCodes.length > 0) {
+        seatType = this.SEAT_TYPE_DTO_CODE;
+      }
+      // create order detail
+      let orderDetails;
+      if (seatType === this.SEAT_TYPE_DTO_ID) {
+        orderDetails = seatIds.map(async (seatId) => {
+          const dto = new CreateOrderDetailDto();
+          dto.note = '';
+          dto.seatId = seatId;
+          dto.orderId = createOrder.id;
+          dto.tripDetailCode = tripDetail.code;
+          return await this.createOrderDetail(dto, userId, createOrder);
+        });
+      } else if (seatType === this.SEAT_TYPE_DTO_CODE) {
+        orderDetails = seatCodes.map(async (seatCode) => {
+          const dto = new CreateOrderDetailDto();
+          dto.note = '';
+          dto.seatCode = seatCode;
+          dto.orderId = createOrder.id;
+          dto.tripDetailCode = tripDetail.code;
+          return await this.createOrderDetail(dto, userId, createOrder);
         });
       }
-    }
-    // update status
-    if (status) {
-      // if old status is unpaid => update status paid and cancel
-      if (order.status === OrderStatusEnum.UNPAID) {
-        switch (status) {
-          case OrderStatusEnum.PAID:
-            order.status = OrderStatusEnum.PAID;
-            break;
-          case OrderStatusEnum.CANCEL:
-            order.status = OrderStatusEnum.CANCEL;
-            break;
-          default:
-            order.status = OrderStatusEnum.UNPAID;
-            break;
-        }
+
+      createOrder.orderDetails = await Promise.all(orderDetails);
+      if (!createOrder.orderDetails || createOrder.orderDetails?.length === 0) {
+        throw new BadRequestException('CREATE_ORDER_DETAIL_FAILED');
       }
-      // if old status is paid => update status cancel
-      if (order.status === OrderStatusEnum.PAID) {
-        if (status === OrderStatusEnum.CANCEL) {
-          order.status = OrderStatusEnum.CANCEL;
-        }
-      }
+      createOrder.total = createOrder.orderDetails.reduce(
+        (total, orderDetail) => total + orderDetail.total,
+        0,
+      );
+      createOrder.finalTotal = createOrder.total;
+      const promotionLines =
+        await this.promotionLineRepository.createQueryBuilder('pl');
+      promotionLines
+        .where('pl.startDate <= :startDate', { startDate: currentDate })
+        .andWhere('pl.endDate >= :startDate', { endDate: currentDate })
+        .leftJoinAndSelect('pl.promotion', 'p')
+        .andWhere('p.status = :status', { status: PromotionStatusEnum.ACTIVE })
+        .leftJoinAndSelect('pl.promotionDetail', 'pd')
+        .andWhere('pd.quantityBuy >= :quantityBuy', {
+          quantityBuy: createOrder.orderDetails?.length,
+        })
+        .andWhere('pd.purchaseAmount >= :purchaseAmount', {
+          purchaseAmount: createOrder.total,
+        })
+        .leftJoinAndSelect('pl.trip', 't')
+        .andWhere('t.id = :tripId', { tripId: trip.id })
+        .having('pl.useBudget <= pl.maxBudget')
+        .andHaving('pl.useQuantity <= pl.maxQuantity')
+        .getMany();
+
+      const saveOrder = await queryRunner.manager.save(createOrder);
+      delete saveOrder.deletedAt;
+      delete saveOrder?.staff;
+      delete saveOrder?.customer;
+      await queryRunner.commitTransaction();
+      return saveOrder;
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw new BadRequestException(error.message);
+    } finally {
+      await queryRunner.release();
     }
   }
 
@@ -299,180 +317,171 @@ export class OrderService {
     return order;
   }
 
-  async createOrderDetail(dto: CreateOrderDetailDto, userId: string) {
-    // check permission
-    const customer = await this.customerService.findOneById(userId);
-    const admin = await this.adminService.findOneBydId(userId);
-    if (!customer && !admin) {
-      throw new UnauthorizedException('USER_NOT_FOUND');
-    }
-    if (
-      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      (admin && !admin.isActive)
-    ) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
+  async createOrderDetail(
+    dto: CreateOrderDetailDto,
+    userId: string,
+    order?: Order,
+  ) {
+    const queryRunnerOrderDetail =
+      this.orderDetailRepository.manager.connection.createQueryRunner();
+    await queryRunnerOrderDetail.connect();
+    await queryRunnerOrderDetail.startTransaction();
+    try {
+      // check permission
+      const customer = await this.customerService.findOneById(userId);
+      const admin = await this.adminService.findOneBydId(userId);
 
-    const { note, orderId, seatId, seatCode, tripDetailId } = dto;
-    const orderExist = await this.findOneOrderById(orderId);
-    if (!orderExist) {
-      throw new NotFoundException('ORDER_NOT_FOUND');
-    }
-    switch (orderExist.status) {
-      case OrderStatusEnum.CANCEL:
-        throw new BadRequestException('ORDER_IS_CANCELLED');
-        break;
-      case OrderStatusEnum.PAID:
-        throw new BadRequestException('ORDER_IS_PAID');
-        break;
-      default:
-        break;
-    }
-    const orderDetail = new OrderDetail();
-    orderDetail.note = note;
-    orderDetail.order = orderExist;
-    if (customer) {
-      orderDetail.createdBy = customer.id;
-    } else if (admin) {
-      orderDetail.createdBy = admin.id;
-    }
-    // get ticket detail
-    if (!seatId && !seatCode) {
-      throw new BadRequestException('SEAT_ID_OR_SEAT_CODE_REQUIRED');
-    }
-    let ticketDetail;
-    if (seatId) {
-      const seat = await this.seatService.getSeatById(seatId);
+      if (!customer && !admin) {
+        throw new UnauthorizedException('USER_NOT_FOUND');
+      }
       if (
-        seat.type === SeatTypeEnum.SOLD ||
-        seat.type === SeatTypeEnum.PENDING
+        (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+        (admin && !admin.isActive)
+      ) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
+
+      const { note, orderId, seatId, seatCode, tripDetailCode } = dto;
+      const orderExist = order || (await this.findOneOrderById(orderId));
+      if (!orderExist) {
+        throw new BadRequestException('ORDER_NOT_FOUND');
+      }
+      switch (orderExist.status) {
+        case OrderStatusEnum.CANCEL:
+          throw new BadRequestException('ORDER_IS_CANCELLED');
+          break;
+        case OrderStatusEnum.PAID:
+          throw new BadRequestException('ORDER_IS_PAID');
+          break;
+        default:
+          break;
+      }
+
+      const orderDetail = new OrderDetail();
+      orderDetail.note = note;
+      orderDetail.order = orderExist;
+      if (customer) {
+        orderDetail.createdBy = customer.id;
+      } else if (admin) {
+        orderDetail.createdBy = admin.id;
+      }
+      // get ticket detail
+      if (!seatId && !seatCode) {
+        throw new BadRequestException('SEAT_ID_OR_SEAT_CODE_REQUIRED');
+      }
+
+      let seat: Seat;
+      if (seatId) {
+        seat = await this.seatService.findOneSeatById(seatId);
+      } else if (seatCode) {
+        seat = await this.seatService.findOneSeatByCode(seatCode);
+      }
+      if (
+        seat.status === SeatStatusEnum.SOLD ||
+        seat.status === SeatStatusEnum.PENDING
       ) {
         throw new BadRequestException('SEAT_IS_SOLD');
       }
-      ticketDetail = await this.ticketService.findOneTicketDetail({
+
+      const ticketDetail = await this.ticketService.findOneTicketDetail({
         where: {
           seat: { id: seat.id },
           ticket: {
-            tripDetail: { id: tripDetailId },
+            tripDetail: { code: tripDetailCode },
           },
         },
-        relations: ['seat.vehicle.tripDetails'],
+        relations: {
+          seat: { vehicle: true },
+          ticket: { tripDetail: { trip: true } },
+        },
       });
-
       if (!ticketDetail) {
         throw new NotFoundException('TICKET_NOT_FOUND');
       }
+      const vehicle: Vehicle = ticketDetail.seat.vehicle;
+      const trip = ticketDetail.ticket.tripDetail.trip;
       delete ticketDetail.seat;
+      delete ticketDetail.ticket;
+
       orderDetail.ticketDetail = ticketDetail;
-    } else if (seatCode) {
-      const seat = await this.seatService.getSeatByCode(seatCode);
-      if (seat.type === SeatTypeEnum.SOLD) {
-        throw new BadRequestException('SEAT_IS_SOLD');
-      } else if (seat.type === SeatTypeEnum.PENDING) {
-        throw new BadRequestException('SEAT_IS_SOLD');
-      }
-      ticketDetail = await this.ticketService.findOneTicketDetail({
+      // get price detail
+      const ticketDetailId = ticketDetail.id;
+      const currentDate = new Date(moment().format('YYYY-MM-DD'));
+      const priceDetail = await this.priceListService.findOnePriceDetail({
         where: {
-          seat: {
-            id: seat.id,
-            vehicle: {
-              tripDetails: {
-                id: tripDetailId,
-              },
-            },
+          seatType: vehicle.type,
+          trip: { id: trip.id },
+          priceList: {
+            startDate: LessThanOrEqual(currentDate),
+            endDate: MoreThanOrEqual(currentDate),
+            status: ActiveStatusEnum.ACTIVE,
           },
         },
-        relations: ['seat.vehicle.tripDetails'],
+        relations: { priceList: true, trip: true },
       });
-      if (!ticketDetail) {
-        throw new UnauthorizedException('TICKET_DETAIL_NOT_FOUND');
+      delete priceDetail.trip;
+      delete priceDetail.priceList;
+      if (!priceDetail) {
+        throw new NotFoundException('PRICE_DETAIL_NOT_FOUND');
       }
-      delete ticketDetail.seat;
-      orderDetail.ticketDetail = ticketDetail;
-    }
-    // get price detail
-    const ticketDetailId = ticketDetail.id;
-    console.log(ticketDetailId);
-
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-    const priceDetail = await this.priceListService.findOnePriceDetail({
-      where: {
-        applicablePriceDetails: {
-          trip: {
-            tripDetails: {
-              id: tripDetailId,
-            },
-          },
-        },
-        ticketGroup: {
-          ticketGroupDetail: {
-            ticket: {
-              ticketDetails: {
-                id: ticketDetailId,
-              },
-            },
-          },
-        },
-        priceList: {
-          startDate: LessThanOrEqual(currentDate),
-          endDate: MoreThanOrEqual(currentDate),
-          status: 1,
-        },
-      },
-      relations: [
-        'applicablePriceDetails.trip.tripDetails',
-        'ticketGroup.ticketGroupDetail.ticket.ticketDetails',
-        'priceList',
-      ],
-      orderBy: {
-        startDate: SortEnum.ASC,
-        createdAt: SortEnum.ASC,
-      },
-    });
-    console.log(priceDetail);
-    if (!priceDetail) {
-      throw new NotFoundException('PRICE_DETAIL_NOT_FOUND');
-    }
-    orderDetail.priceDetail = priceDetail;
-    orderDetail.total = priceDetail.price;
-
-    const createOrderDetail = await this.orderDetailRepository.save(
-      orderDetail,
-    );
-    // update ticket detail status
-    const ticketDetailDto = new UpdateTicketDetailDto();
-    ticketDetailDto.status = TicketStatusEnum.PENDING;
-    await this.ticketService.updateTicketDetailById(
-      ticketDetailId,
-      ticketDetailDto,
-      userId,
-    );
-
-    // // update seat status
-    if (seatId) {
-      await this.seatService.updateSeatById(
-        seatId,
-        {
-          name: undefined,
-          type: SeatTypeEnum.PENDING,
-          floor: undefined,
-          vehicleId: undefined,
-        },
-        userId,
+      orderDetail.priceDetail = priceDetail;
+      orderDetail.total = priceDetail.price;
+      const createOrderDetail = await queryRunnerOrderDetail.manager.save(
+        orderDetail,
       );
-    } else if (seatCode) {
-      await this.seatService.updateSeatByCode(
-        seatCode,
-        {
-          name: undefined,
-          type: SeatTypeEnum.PENDING,
-          floor: undefined,
-          vehicleId: undefined,
-        },
+      if (!createOrderDetail) {
+        throw new BadRequestException('CREATE_ORDER_DETAIL_FAILED');
+      }
+
+      // update ticket detail status
+      const ticketDetailDto = new UpdateTicketDetailDto();
+      ticketDetailDto.status = TicketStatusEnum.PENDING;
+      const saveTicketDetail = await this.ticketService.updateTicketDetailById(
+        ticketDetailId,
+        ticketDetailDto,
         userId,
+        queryRunnerOrderDetail.manager,
       );
+      if (!saveTicketDetail) {
+        throw new BadRequestException('UPDATE_TICKET_DETAIL_FAILED');
+      }
+
+      // // update seat status
+      const seatDto = new UpdateSeatDto();
+      seatDto.status = SeatStatusEnum.PENDING;
+      let saveSeat: Seat;
+      if (seatId) {
+        saveSeat = await this.seatService.updateSeatByIdOrCode(
+          seatDto,
+          userId,
+          seatId,
+          undefined,
+          queryRunnerOrderDetail.manager,
+        );
+      } else if (seatCode) {
+        saveSeat = await this.seatService.updateSeatByIdOrCode(
+          seatDto,
+          userId,
+          undefined,
+          seatCode,
+          queryRunnerOrderDetail.manager,
+        );
+      }
+      if (!saveSeat) {
+        throw new BadRequestException('UPDATE_SEAT_FAILED');
+      }
+      await queryRunnerOrderDetail.commitTransaction();
+
+      delete createOrderDetail.deletedAt;
+      delete createOrderDetail.order;
+      delete createOrderDetail.priceDetail;
+      delete createOrderDetail.ticketDetail;
+      return createOrderDetail;
+    } catch (error) {
+      await queryRunnerOrderDetail.rollbackTransaction();
+      throw new BadRequestException(error.message);
+    } finally {
+      await queryRunnerOrderDetail.release();
     }
-    delete createOrderDetail.deletedAt;
-    return createOrderDetail;
   }
 }

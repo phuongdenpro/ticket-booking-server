@@ -26,7 +26,7 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, EntityManager } from 'typeorm';
 import { SeatService } from '../seat/seat.service';
 import * as moment from 'moment';
 moment.locale('vi');
@@ -464,6 +464,7 @@ export class TicketService {
     id: string,
     dto: UpdateTicketDetailDto,
     userId: string,
+    manager?: EntityManager,
   ) {
     const { note, status } = dto;
     const ticketDetail = await this.getTicketDetailById(id);
@@ -490,13 +491,23 @@ export class TicketService {
     if (!admin && !customer) {
       throw new UnauthorizedException('USER_NOT_FOUND');
     }
-    if (!admin.isActive || customer.status === UserStatusEnum.INACTIVATE) {
-      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const saveTicketDetail = await this.ticketDetailRepository.save(
-      ticketDetail,
-    );
+    let saveTicketDetail: TicketDetail;
+    if (manager) {
+      try {
+        saveTicketDetail = await manager.save(ticketDetail);
+      } catch (error) {
+        throw new BadRequestException('UPDATE_TICKET_DETAIL_FAIL');
+      }
+    } else {
+      saveTicketDetail = await this.ticketDetailRepository.save(ticketDetail);
+    }
     return saveTicketDetail;
   }
 }

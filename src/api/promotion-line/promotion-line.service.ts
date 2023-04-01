@@ -199,13 +199,20 @@ export class PromotionLineService {
   async findOnePromotionLine(options: any) {
     return await this.promotionLineRepository.findOne({
       where: { ...options?.where },
-      relations: {
-        promotionDetail: true,
-        ...options?.relations,
-      },
       select: {
+        promotionDetail: {
+          trip: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
         deletedAt: false,
         ...options?.select,
+      },
+      relations: {
+        promotionDetail: { trip: true },
+        ...options?.relations,
       },
       order: {
         createdAt: SortEnum.DESC,
@@ -532,9 +539,7 @@ export class PromotionLineService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      savePromotionLine = await this.promotionLineRepository.save(
-        promotionLine,
-      );
+      savePromotionLine = await queryRunner.manager.save(promotionLine);
       let promotionDetail: PromotionDetail;
       if (type === PromotionTypeEnum.PRODUCT_DISCOUNT && productDiscount) {
         promotionDetail = await this.validProductDiscount(
@@ -567,6 +572,9 @@ export class PromotionLineService {
       savePromotionDetail = await this.promotionDetailRepository.save(
         promotionDetail,
       );
+      if (!savePromotionDetail) {
+        throw new BadRequestException('PROMOTION_DETAIL_NOT_CREATED');
+      }
 
       delete savePromotionLine.promotion;
       delete savePromotionDetail.promotionLine;
@@ -786,9 +794,7 @@ export class PromotionLineService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
-      const savePromotionLine = await this.promotionLineRepository.save(
-        promotionLine,
-      );
+      const savePromotionLine = await queryRunner.manager.save(promotionLine);
       let promotionDetail: PromotionDetail = promotionLine.promotionDetail;
       if (type !== promotionLine.type) {
         if (productDiscount && type === PromotionTypeEnum.PRODUCT_DISCOUNT) {
