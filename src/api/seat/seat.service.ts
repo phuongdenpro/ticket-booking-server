@@ -76,6 +76,12 @@ export class SeatService {
     return seat;
   }
 
+  async getSeatStatus() {
+    return {
+      dataResult: Object.keys(SeatStatusEnum).map((key) => SeatStatusEnum[key]),
+    };
+  }
+
   async createSeat(dto: CreateSeatDto, userId: string) {
     const { code, name, status, floor, vehicleId } = dto;
     const vehicle = await this.dataSource
@@ -300,25 +306,16 @@ export class SeatService {
     return saveSeat;
   }
 
-  async deleteSeatById(id: string, userId: string) {
-    const seat = await this.getSeatById(id);
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId } });
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
+  async deleteSeatByIdOrCode(userId: string, id?: string, code?: string) {
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_REQUIRED');
     }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
+    let seat: Seat;
+    if (id) {
+      seat = await this.getSeatById(id);
+    } else if (code) {
+      seat = await this.getSeatByCode(code);
     }
-    seat.updatedBy = adminExist.id;
-    seat.deletedAt = new Date();
-
-    return await this.seatRepository.save(seat);
-  }
-
-  async deleteSeatByCode(code: string, userId: string) {
-    const seat = await this.getSeatByCode(code);
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId } });

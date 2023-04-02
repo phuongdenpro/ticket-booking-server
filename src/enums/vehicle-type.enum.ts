@@ -1,5 +1,5 @@
 export enum VehicleTypeEnum {
-  LIMOUSINE = 'xe limousine',
-  SLEEPER_BUS = 'xe giường nằm',
-  SEAT_BUS = 'xe ghế ngồi',
+  LIMOUSINE = 'ghế limousine',
+  SLEEPER_BUS = 'ghế giường nằm',
+  SEAT_BUS = 'ghế ghế ngồi',
 }

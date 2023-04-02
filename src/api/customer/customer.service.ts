@@ -365,13 +365,9 @@ export class CustomerService {
     customer.note = note;
     switch (gender) {
       case GenderEnum.FEMALE:
-        customer.gender = GenderEnum.FEMALE;
-        break;
       case GenderEnum.MALE:
-        customer.gender = GenderEnum.MALE;
-        break;
       case GenderEnum.OTHER:
-        customer.gender = GenderEnum.OTHER;
+        customer.gender = gender;
         break;
       default:
         customer.gender = GenderEnum.OTHER;

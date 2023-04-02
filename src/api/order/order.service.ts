@@ -1,3 +1,4 @@
+import { Pagination } from './../../decorator';
 import { TripDetailService } from './../trip-detail/trip-detail.service';
 import {
   Order,
@@ -7,12 +8,7 @@ import {
   Vehicle,
 } from './../../database/entities';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
-import {
-  CreateOrderDto,
-  CreateOrderDetailDto,
-  UpdateOrderDto,
-  UpdateOrderDetailDto,
-} from './dto';
+import { CreateOrderDto, CreateOrderDetailDto } from './dto';
 import {
   BadRequestException,
   Injectable,
@@ -26,9 +22,7 @@ import {
   SeatStatusEnum,
   TicketStatusEnum,
   UserStatusEnum,
-  TripStatusEnum,
   ActiveStatusEnum,
-  PromotionStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -70,6 +64,9 @@ export class OrderService {
       select: { deletedAt: false, ...options?.select },
       relations: {
         orderDetails: true,
+        staff: true,
+        customer: true,
+        promotionHistories: true,
         ...options?.relations,
       },
       order: {
@@ -114,18 +111,27 @@ export class OrderService {
     return order;
   }
 
-  async createOrder(dto: CreateOrderDto, userId: string) {
-    const { note, status, seatIds, seatCodes, tripDetailCode } = dto;
+  async createOrder(dto: CreateOrderDto, creatorId: string) {
+    const { note, seatIds, seatCodes, tripDetailCode, customerId } = dto;
     // check permission
-    const customer = await this.customerService.findOneById(userId);
-    const admin = await this.adminService.findOneBydId(userId);
-    if (!userId) {
+    const customerCreator = await this.customerService.findOneById(creatorId);
+    const admin = await this.adminService.findOneBydId(creatorId);
+    if (!creatorId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (
-      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (customerCreator &&
+        customerCreator.status === UserStatusEnum.INACTIVATE) ||
       (admin && !admin.isActive)
     ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const customer = await this.customerService.findOneById(customerId);
+    if (!customerId) {
+      throw new UnauthorizedException('CUSTOMER_NOT_FOUND');
+    }
+    if (customer && customer.status === UserStatusEnum.INACTIVATE) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
@@ -143,7 +149,7 @@ export class OrderService {
     if (currentDate >= tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
     } else if (
-      customer &&
+      customerCreator &&
       currentDatePlus15Minutes >= tripDetail.departureTime
     ) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_15_MINUTES');
@@ -156,22 +162,14 @@ export class OrderService {
 
     const order = new Order();
     order.note = note;
-    if (customer) {
-      order.customer = customer;
-      order.createdBy = customer.id;
+    order.customer = customer;
+    if (customerCreator) {
+      order.createdBy = customerCreator.id;
     } else if (admin) {
       order.staff = admin;
       order.createdBy = admin.id;
     }
-    switch (status) {
-      case OrderStatusEnum.PAID:
-      case OrderStatusEnum.CANCEL:
-        order.status = status;
-        break;
-      default:
-        order.status = OrderStatusEnum.UNPAID;
-        break;
-    }
+    order.status = OrderStatusEnum.UNPAID;
     // generate order code
     let code = generateOrderCode();
     let flag = true;
@@ -213,7 +211,7 @@ export class OrderService {
           dto.seatId = seatId;
           dto.orderId = createOrder.id;
           dto.tripDetailCode = tripDetail.code;
-          return await this.createOrderDetail(dto, userId, createOrder);
+          return await this.createOrderDetail(dto, creatorId, createOrder);
         });
       } else if (seatType === this.SEAT_TYPE_DTO_CODE) {
         orderDetails = seatCodes.map(async (seatCode) => {
@@ -222,7 +220,7 @@ export class OrderService {
           dto.seatCode = seatCode;
           dto.orderId = createOrder.id;
           dto.tripDetailCode = tripDetail.code;
-          return await this.createOrderDetail(dto, userId, createOrder);
+          return await this.createOrderDetail(dto, creatorId, createOrder);
         });
       }
 
@@ -235,25 +233,6 @@ export class OrderService {
         0,
       );
       createOrder.finalTotal = createOrder.total;
-      const promotionLines =
-        await this.promotionLineRepository.createQueryBuilder('pl');
-      promotionLines
-        .where('pl.startDate <= :startDate', { startDate: currentDate })
-        .andWhere('pl.endDate >= :startDate', { endDate: currentDate })
-        .leftJoinAndSelect('pl.promotion', 'p')
-        .andWhere('p.status = :status', { status: PromotionStatusEnum.ACTIVE })
-        .leftJoinAndSelect('pl.promotionDetail', 'pd')
-        .andWhere('pd.quantityBuy >= :quantityBuy', {
-          quantityBuy: createOrder.orderDetails?.length,
-        })
-        .andWhere('pd.purchaseAmount >= :purchaseAmount', {
-          purchaseAmount: createOrder.total,
-        })
-        .leftJoinAndSelect('pl.trip', 't')
-        .andWhere('t.id = :tripId', { tripId: trip.id })
-        .having('pl.useBudget <= pl.maxBudget')
-        .andHaving('pl.useQuantity <= pl.maxQuantity')
-        .getMany();
 
       const saveOrder = await queryRunner.manager.save(createOrder);
       delete saveOrder.deletedAt;
@@ -267,6 +246,10 @@ export class OrderService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async findAllOrder(dto, pagination?: Pagination) {
+    const query = this.orderRepository.createQueryBuilder('q');
   }
 
   // order detail

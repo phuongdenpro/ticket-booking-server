@@ -1,4 +1,4 @@
-import { RoleEnum } from './../../enums/roles.enum';
+import { RoleEnum } from './../../enums';
 import {
   Body,
   Controller,
@@ -32,6 +32,12 @@ import {
 @ApiTags('Seat')
 export class SeatController {
   constructor(private seatService: SeatService) {}
+
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getPromotionStatusEnum() {
+    return await this.seatService.getSeatStatus();
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -123,7 +129,7 @@ export class SeatController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.seatService.deleteSeatById(id, user.id);
+    return await this.seatService.deleteSeatByIdOrCode(user.id, id);
   }
 
   @Delete('code/:code')
@@ -132,7 +138,11 @@ export class SeatController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteStationByCode(@CurrentUser() user, @Param('code') code: string) {
-    return await this.seatService.deleteSeatByCode(code, user.id);
+    return await this.seatService.deleteSeatByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('multiple/ids')

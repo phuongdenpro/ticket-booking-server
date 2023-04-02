@@ -1,5 +1,5 @@
 export enum SeatStatusEnum {
-  SOLD = 'Đã bán',
+  SOLD = 'Đã đặt',
   PENDING = 'Chờ xác nhận',
   NON_SOLD = 'trống',
 }

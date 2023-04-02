@@ -21,17 +21,17 @@ export class OrderDetailController {
   constructor(private orderService: OrderService) {}
 
   // order detail
-  @Post('')
-  @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async createOrderDetail(
-    @Body() dto: CreateOrderDetailDto,
-    @CurrentUser() user,
-  ) {
-    return await this.orderService.createOrderDetail(dto, user.id);
-  }
+  // @Post('')
+  // @HttpCode(HttpStatus.CREATED)
+  // @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // async createOrderDetail(
+  //   @Body() dto: CreateOrderDetailDto,
+  //   @CurrentUser() user,
+  // ) {
+  //   return await this.orderService.createOrderDetail(dto, user.id);
+  // }
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)

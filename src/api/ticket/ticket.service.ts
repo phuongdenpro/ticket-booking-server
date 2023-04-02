@@ -1,10 +1,5 @@
 import { Pagination } from './../../decorator';
-import {
-  ActiveStatusEnum,
-  SortEnum,
-  TicketStatusEnum,
-  UserStatusEnum,
-} from './../../enums';
+import { SortEnum, TicketStatusEnum, UserStatusEnum } from './../../enums';
 import {
   CreateTicketDto,
   FilterTicketDto,
@@ -231,66 +226,24 @@ export class TicketService {
     return { dataResult, pagination, total };
   }
 
-  async updateTicketById(dto: UpdateTicketDto, id: string, adminId: string) {
-    const ticket = await this.getTicketById(id);
-    const { note, status, startDate, endDate, tripDetailId } = dto;
-    if (note) {
-      ticket.note = note;
-    }
-    if (status) {
-      ticket.status = status === ActiveStatusEnum.ACTIVE ? true : false;
-    }
-    if (tripDetailId) {
-      const tripDetail = await this.getTripDetailById(tripDetailId);
-      if (!tripDetail) {
-        throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
-      }
-      ticket.tripDetail = tripDetail;
-    }
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-    if (startDate) {
-      if (startDate <= currentDate) {
-        throw new BadRequestException(
-          'TICKET_START_DATE_GREATER_THAN_CURRENT_DATE',
-        );
-      }
-      ticket.startDate = startDate;
-    }
-    if (endDate) {
-      if (endDate <= startDate) {
-        throw new BadRequestException(
-          'TICKET_END_DATE_GREATER_THAN_TICKET_START_DATE',
-        );
-      }
-      ticket.endDate = endDate;
-    }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: adminId } });
-    if (!adminExist) {
-      throw new UnauthorizedException('USER_NOT_FOUND');
-    }
-    if (!adminExist.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-    ticket.updatedBy = adminExist.id;
-    const saveTicket = await this.ticketRepository.save(ticket);
-    delete saveTicket.deletedAt;
-    return saveTicket;
-  }
-
-  async updateTicketByCode(
+  async updateTicketByIdOrCode(
     dto: UpdateTicketDto,
-    code: string,
     adminId: string,
+    id?: string,
+    code?: string,
   ) {
-    const ticket = await this.getTicketByCode(code);
-    const { note, status, startDate, endDate, tripDetailId } = dto;
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_IS_REQUIRED');
+    }
+    let ticket: Ticket;
+    if (id) {
+      ticket = await this.getTicketById(id);
+    } else if (code) {
+      ticket = await this.getTicketByCode(code);
+    }
+    const { note, startDate, endDate, tripDetailId } = dto;
     if (note) {
       ticket.note = note;
-    }
-    if (status) {
-      ticket.status = status === ActiveStatusEnum.ACTIVE ? true : false;
     }
     if (tripDetailId) {
       const tripDetail = await this.getTripDetailById(tripDetailId);
@@ -386,6 +339,14 @@ export class TicketService {
     return ticketDetail;
   }
 
+  async getTicketDetailStatus() {
+    return {
+      dataResult: Object.keys(TicketStatusEnum).map(
+        (key) => TicketStatusEnum[key],
+      ),
+    };
+  }
+
   async findAllTicketDetail(
     dto: FilterTicketDetailDto,
     pagination?: Pagination,
@@ -408,9 +369,7 @@ export class TicketService {
       });
     }
     if (status) {
-      query.andWhere('q.status = :status', {
-        status: status === TicketStatusEnum.NON_SOLD ? 0 : 1,
-      });
+      query.andWhere('q.status = :status', { status: status });
     }
     query.leftJoinAndSelect('q.ticket', 't');
     if (ticketCode) {
@@ -466,20 +425,11 @@ export class TicketService {
     userId: string,
     manager?: EntityManager,
   ) {
-    const { note, status } = dto;
+    const { note } = dto;
     const ticketDetail = await this.getTicketDetailById(id);
 
     if (note) {
       ticketDetail.note = note;
-    }
-    switch (status) {
-      case TicketStatusEnum.SOLD:
-      case TicketStatusEnum.PENDING:
-      case TicketStatusEnum.NON_SOLD:
-        ticketDetail.status = status;
-        break;
-      default:
-        break;
     }
 
     const admin = await this.dataSource

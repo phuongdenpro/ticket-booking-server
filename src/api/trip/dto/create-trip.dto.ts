@@ -1,4 +1,4 @@
-import { TripStatusEnum } from '../../../enums/trip-status.enum';
+import { ActiveStatusEnum } from './../../../enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsNotEmpty,
@@ -52,9 +52,14 @@ export class CreateTripDto {
   @Length(36, 36, { message: 'TO_STATION_ID_IS_36_CHARACTERS' })
   toStationId: string;
 
-  @ApiPropertyOptional({ example: TripStatusEnum.ACTIVE, enum: TripStatusEnum })
-  @IsEnum(TripStatusEnum, { message: 'TRIP_STATUS_IS_ENUM' })
+  @ApiPropertyOptional({
+    example: ActiveStatusEnum.ACTIVE,
+    enum: ['', ActiveStatusEnum.ACTIVE, ActiveStatusEnum.INACTIVE],
+  })
+  @IsEnum(['', ActiveStatusEnum.ACTIVE, ActiveStatusEnum.INACTIVE], {
+    message: 'TRIP_STATUS_IS_ENUM',
+  })
   @IsString({ message: 'TRIP_STATUS_IS_STRING' })
   @IsOptional()
-  status: TripStatusEnum;
+  status: ActiveStatusEnum;
 }

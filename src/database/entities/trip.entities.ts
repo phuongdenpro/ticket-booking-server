@@ -1,4 +1,4 @@
-import { TripStatusEnum } from './../../enums';
+import { ActiveStatusEnum } from './../../enums';
 import {
   Column,
   Entity,
@@ -33,7 +33,7 @@ export class Trip {
   endDate: Date;
 
   @Column({ name: 'status', type: 'varchar', length: 100, default: false })
-  status: TripStatusEnum;
+  status: ActiveStatusEnum;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;

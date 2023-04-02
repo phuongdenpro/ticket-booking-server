@@ -38,6 +38,12 @@ export class PriceListController {
   constructor(private priceListService: PriceListService) {}
 
   // price list
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getPriceListStatus() {
+    return await this.priceListService.getTripStatus();
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
@@ -170,6 +176,12 @@ export class PriceListController {
   }
 
   // price detail
+  @Get('price-detail/seat-type')
+  @HttpCode(HttpStatus.OK)
+  async getPriceDetailSeatType() {
+    return await this.priceListService.getPriceDetailSeatType();
+  }
+
   @Post('price-detail')
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)

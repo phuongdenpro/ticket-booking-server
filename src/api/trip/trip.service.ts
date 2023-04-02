@@ -12,7 +12,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Staff, Station, Trip } from './../../database/entities';
 import { DataSource, Repository } from 'typeorm';
-import { SortEnum, TripStatusEnum, DeleteDtoTypeEnum } from './../../enums';
+import { SortEnum, DeleteDtoTypeEnum, ActiveStatusEnum } from './../../enums';
 import { Pagination } from './../../decorator';
 import * as moment from 'moment';
 moment.locale('vi');
@@ -96,6 +96,14 @@ export class TripService {
     return await this.findOneTrip(options);
   }
 
+  async getTripStatus() {
+    return {
+      dataResult: Object.keys(ActiveStatusEnum).map(
+        (key) => ActiveStatusEnum[key],
+      ),
+    };
+  }
+
   async createTrip(dto: CreateTripDto, userId: string) {
     const {
       code,
@@ -168,8 +176,8 @@ export class TripService {
       throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
     switch (status) {
-      case TripStatusEnum.ACTIVE:
-      case TripStatusEnum.INACTIVE:
+      case ActiveStatusEnum.ACTIVE:
+      case ActiveStatusEnum.INACTIVE:
         trip.status = status;
         break;
       default:
@@ -248,8 +256,8 @@ export class TripService {
       query.andWhere('ts.code = :toStationCode', { toStationCode });
     }
     switch (status) {
-      case TripStatusEnum.ACTIVE:
-      case TripStatusEnum.INACTIVE:
+      case ActiveStatusEnum.ACTIVE:
+      case ActiveStatusEnum.INACTIVE:
         query.andWhere('q.status = :status', { status });
         break;
       default:
@@ -324,7 +332,7 @@ export class TripService {
     if (!trip) {
       throw new BadRequestException('TRIP_NOT_FOUND');
     }
-    if (trip.status === TripStatusEnum.ACTIVE) {
+    if (trip.status === ActiveStatusEnum.ACTIVE) {
       throw new BadRequestException('TRIP_IS_ACTIVE');
     }
     if (name) {
@@ -388,8 +396,8 @@ export class TripService {
       throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
     }
     switch (status) {
-      case TripStatusEnum.ACTIVE:
-      case TripStatusEnum.INACTIVE:
+      case ActiveStatusEnum.ACTIVE:
+      case ActiveStatusEnum.INACTIVE:
         trip.status = status;
         break;
       default:

@@ -33,6 +33,12 @@ import {
 export class PromotionLineController {
   constructor(private promotionLineService: PromotionLineService) {}
 
+  @Get('type')
+  @HttpCode(HttpStatus.OK)
+  async getPromotionLineTypeEnum() {
+    return await this.promotionLineService.getPromotionLineTypeEnum();
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)

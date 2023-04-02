@@ -67,7 +67,7 @@ export class TicketController {
     @Param('id') id: string,
     @Body() dto: UpdateTicketDto,
   ) {
-    return await this.ticketService.updateTicketById(dto, id, user.id);
+    return await this.ticketService.updateTicketByIdOrCode(dto, id, user.id);
   }
 
   @Patch('code/:code')
@@ -80,10 +80,16 @@ export class TicketController {
     @Param('code') code: string,
     @Body() dto: UpdateTicketDto,
   ) {
-    return await this.ticketService.updateTicketByCode(dto, code, user.id);
+    return await this.ticketService.updateTicketByIdOrCode(dto, code, user.id);
   }
 
   // ticket detail
+  @Get('ticket-detail/status')
+  @HttpCode(HttpStatus.OK)
+  async getPromotionStatusEnum() {
+    return await this.ticketService.getTicketDetailStatus();
+  }
+
   @Get('ticket-detail')
   @HttpCode(HttpStatus.OK)
   async findAllTicketDetail(

@@ -83,11 +83,11 @@ export const mappingTranslate = {
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',
   CUSTOMER_ID_IS_REQUIRED: 'Mã khách hàng không được để trống',
-  CUSTOMER_NAME_IS_REQUIRED: 'Tên khách hàng không được để trống',
   CUSTOMER_ID_IS_STRING: 'Mã khách hàng phải là chuỗi ký tự',
-  CUSTOMER_NAME_IS_STRING: 'Tên khách hàng phải là chuỗi ký tự',
   CUSTOMER_ID_MUST_BE_36_CHARACTERS: 'Mã khách hàng phải có 36 ký tự',
   CUSTOMER_ID_IS_ARRAY: 'Mã khách hàng phải là mảng',
+  CUSTOMER_NAME_IS_REQUIRED: 'Tên khách hàng không được để trống',
+  CUSTOMER_NAME_IS_STRING: 'Tên khách hàng phải là chuỗi ký tự',
   CUSTOMER_STATUS_IS_ENUM: 'Trạng thái khách hàng không hợp lệ',
   CUSTOMER_STATUS_IS_STRING: 'Trạng thái khách hàng phải là chuỗi',
 
@@ -513,6 +513,8 @@ export const mappingTranslate = {
   QUANTITY_RECEIVE_IS_REQUIRED: 'Số lượng được tặng không được để trống',
   QUANTITY_RECEIVE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_1:
     'Số lượng được tặng phải lớn hơn hoặc bằng 1',
+  QUANTITY_BUY_OR_PURCHASE_AMOUNT_IS_REQUIRED:
+    'Số lượng vé mua tối thiểu hoặc số tiền mua tối thiểu không được để trống',
 
   // order
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',

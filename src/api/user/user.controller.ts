@@ -19,6 +19,12 @@ import { UpdateCustomerDto, UserUpdatePasswordDto } from './dto';
 export class UserController {
   constructor(private userService: UserService) {}
 
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getCustomerStatus() {
+    return this.userService.getCustomerStatus();
+  }
+
   @Get('profile')
   @Roles(RoleEnum.CUSTOMER)
   @HttpCode(HttpStatus.OK)

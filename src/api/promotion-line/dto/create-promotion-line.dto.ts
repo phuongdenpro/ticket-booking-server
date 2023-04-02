@@ -18,7 +18,6 @@ import {
 import {
   ProductDiscountDto,
   ProductDiscountPercentDto,
-  // ProductGiveawayDto,
 } from './promotion-type.dto';
 import * as moment from 'moment';
 moment.locale('vi');
