@@ -18,6 +18,7 @@ import { UpdateCustomerDto, UserUpdatePasswordDto } from '../user/dto';
 import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
 import * as moment from 'moment';
+import { OrderCustomerSearch } from './dto/search-customer.dto';
 
 @Injectable()
 export class CustomerService {
@@ -94,6 +95,7 @@ export class CustomerService {
   async findOneCustomer(options: any) {
     return await this.customerRepository.findOne({
       where: { ...options?.where },
+
       select: {
         id: true,
         lastLogin: true,
@@ -702,5 +704,20 @@ export class CustomerService {
       id: customer.id,
       message: 'Xoá khách hàng thành công',
     };
+  }
+
+  async getCustomer(dto: OrderCustomerSearch) {
+    const { key } = dto;
+
+    const query = this.customerRepository.createQueryBuilder('u');
+
+    query
+      .orWhere('u.phone like :query')
+      .orWhere('u.email like :query')
+      .setParameter('query', `%${key}%`);
+
+    const dataResult = await query.getMany();
+
+    return { dataResult };
   }
 }
