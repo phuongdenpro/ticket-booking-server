@@ -1,9 +1,5 @@
 import { Pagination } from './../../decorator';
-import {
-  SortEnum,
-  PromotionStatusEnum,
-  DeleteDtoTypeEnum,
-} from './../../enums';
+import { SortEnum, DeleteDtoTypeEnum, ActiveStatusEnum } from './../../enums';
 import { IMAGE_REGEX } from './../../utils/regex.util';
 import {
   CreatePromotionDto,
@@ -33,8 +29,8 @@ export class PromotionService {
 
   async getPromotionStatusEnum() {
     return {
-      dataResult: Object.keys(PromotionStatusEnum).map(
-        (key) => PromotionStatusEnum[key],
+      dataResult: Object.keys(ActiveStatusEnum).map(
+        (key) => ActiveStatusEnum[key],
       ),
     };
   }
@@ -122,11 +118,8 @@ export class PromotionService {
       query.andWhere(`q.endDate <= :endDate`, { endDate });
     }
     switch (status) {
-      case PromotionStatusEnum.ACTIVE:
-      case PromotionStatusEnum.INACTIVE:
-      case PromotionStatusEnum.OUT_OF_BUDGET:
-      case PromotionStatusEnum.OUT_OF_BUDGET:
-      case PromotionStatusEnum.OUT_OF_BUDGET:
+      case ActiveStatusEnum.ACTIVE:
+      case ActiveStatusEnum.INACTIVE:
         query.andWhere(`q.status = :status`, { status });
         break;
       default:
@@ -193,15 +186,12 @@ export class PromotionService {
     }
     promotion.endDate = endDate;
     switch (status) {
-      case PromotionStatusEnum.ACTIVE:
-      case PromotionStatusEnum.INACTIVE:
-      case PromotionStatusEnum.OUT_OF_BUDGET:
-      case PromotionStatusEnum.OUT_OF_DATE:
-      case PromotionStatusEnum.OUT_OF_QUANTITY:
+      case ActiveStatusEnum.ACTIVE:
+      case ActiveStatusEnum.INACTIVE:
         promotion.status = status;
         break;
       default:
-        promotion.status = PromotionStatusEnum.INACTIVE;
+        promotion.status = ActiveStatusEnum.INACTIVE;
         break;
     }
 
@@ -258,21 +248,18 @@ export class PromotionService {
       promotion.image = image;
     }
     switch (status) {
-      case PromotionStatusEnum.ACTIVE:
-      case PromotionStatusEnum.INACTIVE:
-      case PromotionStatusEnum.OUT_OF_BUDGET:
-      case PromotionStatusEnum.OUT_OF_QUANTITY:
-      case PromotionStatusEnum.OUT_OF_DATE:
+      case ActiveStatusEnum.ACTIVE:
+      case ActiveStatusEnum.INACTIVE:
         promotion.status = status;
         break;
       default:
-        promotion.status = PromotionStatusEnum.ACTIVE;
+        promotion.status = ActiveStatusEnum.ACTIVE;
         break;
     }
 
     if (startDate && promotion.startDate !== startDate) {
       if (
-        promotion.status === PromotionStatusEnum.ACTIVE &&
+        promotion.status === ActiveStatusEnum.ACTIVE &&
         promotion.startDate <= currentDate &&
         promotion.endDate >= currentDate
       ) {

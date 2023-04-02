@@ -7,7 +7,7 @@ import {
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { Customer, ApplicableCustomerGroup } from '.';
+import { Customer } from '.';
 
 @Entity({ name: 'customer_group' })
 export class CustomerGroup {

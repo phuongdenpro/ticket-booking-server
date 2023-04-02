@@ -33,6 +33,12 @@ import {
 export class TripController {
   constructor(private tripService: TripService) {}
 
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getPromotionStatusEnum() {
+    return await this.tripService.getTripStatus();
+  }
+
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)

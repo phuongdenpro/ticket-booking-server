@@ -5,13 +5,14 @@ import {
   ProductDiscountPercentDto,
   UpdatePromotionLineDto,
   FilterPromotionLineDto,
+  FilterAvailablePromotionLineDto,
   DeleteMultiPromotionLineDto,
 } from './dto';
 import {
   DeleteDtoTypeEnum,
   PromotionTypeEnum,
-  PromotionStatusEnum,
   SortEnum,
+  ActiveStatusEnum,
 } from './../../enums';
 import {
   Promotion,
@@ -52,8 +53,13 @@ export class PromotionLineService {
     const promotionDetail = new PromotionDetail();
     promotionDetail.percentDiscount = null;
     promotionDetail.promotionLine = savePromotionLine;
-    if (!quantityBuy) {
-      throw new BadRequestException('QUANTITY_BUY_IS_REQUIRED');
+    if (
+      (!quantityBuy && purchaseAmount !== 0) ||
+      (!purchaseAmount && purchaseAmount !== 0)
+    ) {
+      throw new BadRequestException(
+        'QUANTITY_BUY_OR_PURCHASE_AMOUNT_IS_REQUIRED',
+      );
     }
     if (quantityBuy < 1) {
       throw new BadRequestException('QUANTITY_BUY_MUST_BE_GREATER_THAN_0');
@@ -63,9 +69,6 @@ export class PromotionLineService {
     }
     promotionDetail.quantityBuy = quantityBuy;
 
-    if (!purchaseAmount && purchaseAmount !== 0) {
-      throw new BadRequestException('PURCHASE_AMOUNT_IS_REQUIRED');
-    }
     if (purchaseAmount < 0) {
       throw new BadRequestException(
         'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
@@ -116,8 +119,13 @@ export class PromotionLineService {
     const promotionDetail = new PromotionDetail();
     promotionDetail.reductionAmount = null;
     promotionDetail.promotionLine = savePromotionLine;
-    if (!quantityBuy) {
-      throw new BadRequestException('QUANTITY_BUY_IS_REQUIRED');
+    if (
+      (!quantityBuy && purchaseAmount !== 0) ||
+      (!purchaseAmount && purchaseAmount !== 0)
+    ) {
+      throw new BadRequestException(
+        'QUANTITY_BUY_OR_PURCHASE_AMOUNT_IS_REQUIRED',
+      );
     }
     if (quantityBuy < 1) {
       throw new BadRequestException('QUANTITY_BUY_MUST_BE_GREATER_THAN_0');
@@ -127,9 +135,6 @@ export class PromotionLineService {
     }
     promotionDetail.quantityBuy = quantityBuy;
 
-    if (!purchaseAmount && purchaseAmount !== 0) {
-      throw new BadRequestException('PURCHASE_AMOUNT_IS_REQUIRED');
-    }
     if (purchaseAmount < 0) {
       throw new BadRequestException(
         'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
@@ -254,6 +259,14 @@ export class PromotionLineService {
       throw new NotFoundException('PROMOTION_LINE_NOT_FOUND');
     }
     return line;
+  }
+
+  async getPromotionLineTypeEnum() {
+    return {
+      dataResult: Object.keys(PromotionTypeEnum).map(
+        (key) => PromotionTypeEnum[key],
+      ),
+    };
   }
 
   async findAllPromotionLine(
@@ -384,6 +397,37 @@ export class PromotionLineService {
     const total = await query.clone().getCount();
 
     return { dataResult, total, pagination };
+  }
+
+  async findPromotionLineUsingOrder(dto: FilterAvailablePromotionLineDto) {
+    const { startDate, endDate, minPurchaseAmount, minQuantityBuy, tripCode } =
+      dto;
+
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+    const query = await this.promotionLineRepository
+      .createQueryBuilder('pl')
+      .where('pl.startDate <= :startDate', {
+        startDate: startDate || currentDate,
+      })
+      .andWhere('pl.endDate >= :startDate', { endDate: endDate || currentDate })
+      .leftJoinAndSelect('pl.promotion', 'p')
+      .andWhere('p.status = :status', { status: ActiveStatusEnum.ACTIVE })
+      .leftJoinAndSelect('pl.promotionDetail', 'pd')
+      .andWhere('pd.quantityBuy >= :quantityBuy', {
+        quantityBuy: minQuantityBuy || 0,
+      })
+      .andWhere('pd.purchaseAmount >= :purchaseAmount', {
+        purchaseAmount: minPurchaseAmount || 0,
+      })
+      .leftJoinAndSelect('pd.trip', 't')
+      .andWhere('t.code = :tripCode', { tripCode: tripCode })
+      .having('pl.useBudget < pl.maxBudget')
+      .andHaving('pl.useQuantity < pl.maxQuantity');
+
+    const dataResult = await query.getMany();
+    const total = await query.clone().getCount();
+
+    return { dataResult, total };
   }
 
   async createPromotionLine(dto: CreatePromotionLineDto, adminId: string) {
@@ -531,15 +575,22 @@ export class PromotionLineService {
     promotionLine.couponCode = couponCode;
 
     promotionLine.createdBy = adminId;
-    let savePromotionLine: PromotionLine;
     let savePromotionDetail: PromotionDetail;
 
-    const queryRunner =
+    const savePromotionLine = await this.promotionLineRepository.manager.save(
+      promotionLine,
+    );
+
+    const queryRunnerPL =
       this.promotionLineRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    await queryRunnerPL.connect();
+    await queryRunnerPL.startTransaction();
+
+    const queryRunnerPD =
+      this.promotionDetailRepository.manager.connection.createQueryRunner();
+    await queryRunnerPD.connect();
+    await queryRunnerPD.startTransaction();
     try {
-      savePromotionLine = await queryRunner.manager.save(promotionLine);
       let promotionDetail: PromotionDetail;
       if (type === PromotionTypeEnum.PRODUCT_DISCOUNT && productDiscount) {
         promotionDetail = await this.validProductDiscount(
@@ -569,25 +620,29 @@ export class PromotionLineService {
       }
       promotionDetail.trip = trip;
       promotionDetail.promotionLineCode = savePromotionLine.code;
-      savePromotionDetail = await this.promotionDetailRepository.save(
-        promotionDetail,
-      );
+      savePromotionDetail = await queryRunnerPD.manager.save(promotionDetail);
       if (!savePromotionDetail) {
         throw new BadRequestException('PROMOTION_DETAIL_NOT_CREATED');
       }
+      await queryRunnerPD.commitTransaction();
 
       delete savePromotionLine.promotion;
       delete savePromotionDetail.promotionLine;
       delete savePromotionDetail.deletedAt;
-      savePromotionLine.promotionDetail = savePromotionDetail;
 
-      await queryRunner.commitTransaction();
-      return savePromotionLine;
+      savePromotionLine.promotionDetail = savePromotionDetail;
+      const newSavePromotionLine = await queryRunnerPL.manager.save(
+        savePromotionLine,
+      );
+      await queryRunnerPL.commitTransaction();
+      return newSavePromotionLine;
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      await queryRunnerPD.rollbackTransaction();
+      await queryRunnerPL.rollbackTransaction();
       return error;
     } finally {
-      await queryRunner.release();
+      await queryRunnerPD.release();
+      await queryRunnerPL.release();
     }
   }
 
@@ -748,7 +803,7 @@ export class PromotionLineService {
         );
       }
       if (
-        promotion.status === PromotionStatusEnum.ACTIVE &&
+        promotion.status === ActiveStatusEnum.ACTIVE &&
         promotion.startDate <= currentDate &&
         promotion.endDate >= currentDate
       ) {

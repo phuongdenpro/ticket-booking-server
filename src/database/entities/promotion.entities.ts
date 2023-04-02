@@ -1,4 +1,4 @@
-import { PromotionStatusEnum } from './../../enums';
+import { ActiveStatusEnum } from './../../enums';
 import { PromotionLine } from '.';
 import {
   Column,
@@ -37,9 +37,9 @@ export class Promotion {
     name: 'status',
     type: 'varchar',
     nullable: false,
-    default: PromotionStatusEnum.INACTIVE,
+    default: ActiveStatusEnum.INACTIVE,
   })
-  status: string;
+  status: ActiveStatusEnum;
 
   @Column({ name: 'image', type: 'text', nullable: true })
   image: string;

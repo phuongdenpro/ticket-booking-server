@@ -144,6 +144,14 @@ export class PriceListService {
     return priceList;
   }
 
+  async getTripStatus() {
+    return {
+      dataResult: Object.keys(ActiveStatusEnum).map(
+        (key) => ActiveStatusEnum[key],
+      ),
+    };
+  }
+
   async createPriceList(dto: CreatePriceListDto, adminId: string) {
     const { code, name, note, startDate, endDate, status } = dto;
     const adminExist = await this.dataSource
@@ -507,6 +515,31 @@ export class PriceListService {
     return await this.findOnePriceDetail(options);
   }
 
+  async getPriceDetailById(id: string, options?: any) {
+    const priceDetail = await this.findOnePriceDetailById(id, options);
+    if (!priceDetail) {
+      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
+    return priceDetail;
+  }
+
+  async getPriceDetailByCode(code: string, options?: any) {
+    console.log('options', options);
+    const priceDetail = await this.findOnePriceDetailByCode(code, options);
+    if (!priceDetail) {
+      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
+    return priceDetail;
+  }
+
+  async getPriceDetailSeatType() {
+    return {
+      dataResult: Object.keys(VehicleTypeEnum).map(
+        (key) => VehicleTypeEnum[key],
+      ),
+    };
+  }
+
   async createPriceDetail(dto: CreatePriceDetailDto, adminId: string) {
     const {
       code,
@@ -634,23 +667,6 @@ export class PriceListService {
     const savePriceDetail = await this.priceDetailRepository.save(priceDetail);
     delete savePriceDetail.deletedAt;
     return savePriceDetail;
-  }
-
-  async getPriceDetailById(id: string, options?: any) {
-    const priceDetail = await this.findOnePriceDetailById(id, options);
-    if (!priceDetail) {
-      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
-    }
-    return priceDetail;
-  }
-
-  async getPriceDetailByCode(code: string, options?: any) {
-    console.log('options', options);
-    const priceDetail = await this.findOnePriceDetailByCode(code, options);
-    if (!priceDetail) {
-      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
-    }
-    return priceDetail;
   }
 
   async findAllPriceDetail(dto: FilterPriceDetailDto, pagination?: Pagination) {

@@ -1,9 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { OrderStatusEnum } from './../../../enums';
 import {
   IsString,
   IsOptional,
-  IsEnum,
   IsArray,
   IsNotEmpty,
   Length,
@@ -15,14 +13,11 @@ export class CreateOrderDto {
   @IsOptional()
   note: string;
 
-  @ApiPropertyOptional({
-    example: OrderStatusEnum.UNPAID,
-    enum: OrderStatusEnum,
-  })
-  @IsString({ message: 'ORDER_STATUS_IS_STRING' })
-  @IsEnum(OrderStatusEnum, { message: 'ORDER_STATUS_IS_ENUM' })
-  @IsOptional()
-  status: OrderStatusEnum;
+  @ApiProperty({ example: '' })
+  @IsNotEmpty({ message: 'CUSTOMER_ID_IS_REQUIRED' })
+  @IsString({ message: 'CUSTOMER_ID_IS_STRING' })
+  @Length(36, 36, { message: 'CUSTOMER_ID_MUST_BE_36_CHARACTERS' })
+  customerId: string;
 
   @ApiPropertyOptional({
     example: [

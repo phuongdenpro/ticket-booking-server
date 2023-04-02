@@ -23,7 +23,7 @@ export class OrderController {
   // order
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.CUSTOMER)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async createOrder(@Body() dto: CreateOrderDto, @CurrentUser() user) {

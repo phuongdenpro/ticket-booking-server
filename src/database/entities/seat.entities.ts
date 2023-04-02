@@ -23,7 +23,13 @@ export class Seat {
   @Column({ name: 'name', type: 'varchar', length: 255, nullable: true })
   name: string;
 
-  @Column({ name: 'status', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'status',
+    type: 'varchar',
+    length: 255,
+    nullable: false,
+    default: SeatStatusEnum.NON_SOLD,
+  })
   status: SeatStatusEnum;
 
   @Column({ name: 'floor', type: 'int', nullable: true, default: 1 })

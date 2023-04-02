@@ -20,7 +20,7 @@ export class BookingController {
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.CUSTOMER, RoleEnum.STAFF)
+  @Roles(RoleEnum.CUSTOMER)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async booking(@Body() dto: CreateBookingDto, @CurrentUser() user) {
