@@ -38,6 +38,7 @@ export const mappingTranslate = {
   CODE_IS_REQUIRED: 'Mã không được để trống',
   CODE_BETWEEN_1_100_CHARACTERS: 'Mã phải từ 1 đến 100 ký tự',
   KEYWORDS_IS_STRING: 'Từ khóa phải là chuỗi ký tự',
+  KEYWORDS_IS_REQUIRED: 'Từ khóa không được để trống',
   IMAGE_IS_STRING: 'url ảnh phải là chuỗi ký tự',
   LIST_ITEM_IS_STRING: 'Id/code trong danh sách phải là chuỗi ký tự',
   LIST_IS_ARRAY: 'Danh sách phải là mảng',

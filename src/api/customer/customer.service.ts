@@ -13,12 +13,12 @@ import {
   CreateCustomerForAdminDto,
   FilterCustomerDto,
   UpdateCustomerForAdminDto,
+  OrderCustomerSearch,
 } from './dto';
 import { UpdateCustomerDto, UserUpdatePasswordDto } from '../user/dto';
 import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
 import * as moment from 'moment';
-import { OrderCustomerSearch } from './dto/search-customer.dto';
 
 @Injectable()
 export class CustomerService {
@@ -80,11 +80,7 @@ export class CustomerService {
       },
     },
     relations: {
-      ward: {
-        district: {
-          province: true,
-        },
-      },
+      ward: { district: { province: true } },
     },
   };
 
@@ -399,7 +395,7 @@ export class CustomerService {
       select: {
         ...this.selectFieldsAddress.select.ward,
       },
-      relations: ['district', 'district.province'],
+      relations: { district: { province: true } },
     });
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
@@ -486,26 +482,22 @@ export class CustomerService {
     if (gender) {
       switch (gender) {
         case GenderEnum.FEMALE:
-          customer.gender = GenderEnum.FEMALE;
-          break;
         case GenderEnum.MALE:
-          customer.gender = GenderEnum.MALE;
-          break;
         case GenderEnum.OTHER:
-          customer.gender = GenderEnum.OTHER;
+          customer.gender = gender;
+          break;
+        default:
           break;
       }
     }
     if (status) {
       switch (status) {
         case UserStatusEnum.ACTIVE:
-          customer.status = UserStatusEnum.ACTIVE;
-          break;
         case UserStatusEnum.INACTIVATE:
-          customer.status = UserStatusEnum.INACTIVATE;
-          break;
         case UserStatusEnum.SUSPENSION:
-          customer.status = UserStatusEnum.SUSPENSION;
+          customer.status = status;
+          break;
+        default:
           break;
       }
     }
@@ -545,7 +537,7 @@ export class CustomerService {
         where: {
           code: wardCode,
         },
-        relations: ['district', 'district.province'],
+        relations: { district: { province: true } },
       });
       if (!ward) {
         throw new NotFoundException('WARD_NOT_FOUND');
@@ -702,15 +694,37 @@ export class CustomerService {
     };
   }
 
-  async getCustomer(dto: OrderCustomerSearch) {
-    const { key } = dto;
+  async searchCustomerForOrder(dto: OrderCustomerSearch) {
+    const { key: keywords } = dto;
 
     const query = this.customerRepository.createQueryBuilder('u');
 
     query
       .orWhere('u.phone like :query')
       .orWhere('u.email like :query')
-      .setParameter('query', `%${key}%`);
+      .setParameter('query', `%${keywords}%`)
+      .leftJoinAndSelect('u.ward', 'w')
+      .leftJoinAndSelect('w.district', 'd')
+      .leftJoinAndSelect('d.province', 'p')
+      .select([
+        'u.id',
+        'u.lastLogin',
+        'u.status',
+        'u.phone',
+        'u.email',
+        'u.fullName',
+        'u.gender',
+        'u.address',
+        'u.fullAddress',
+        'u.note',
+        'u.birthday',
+        'u.createdAt',
+        'u.updatedAt',
+        'u.updatedBy',
+        'w',
+        'd',
+        'p',
+      ]);
 
     const dataResult = await query.getMany();
 

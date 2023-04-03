@@ -1,6 +1,5 @@
-
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class OrderCustomerSearch {
   @ApiProperty({
@@ -8,9 +7,7 @@ export class OrderCustomerSearch {
     type: 'string',
     required: false,
   })
-  @IsOptional()
+  @IsNotEmpty({ message: 'KEYWORDS_IS_REQUIRED' })
+  @IsString({ message: 'KEYWORDS_IS_STRING' })
   key: string;
 }
-
-
-

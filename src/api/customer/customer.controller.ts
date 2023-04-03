@@ -129,6 +129,6 @@ export class CustomerController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getCustomer(@Query() dto: OrderCustomerSearch) {
-    return await this.customerService.getCustomer(dto);
+    return await this.customerService.searchCustomerForOrder(dto);
   }
 }
