@@ -70,6 +70,9 @@ export class TripDetailService {
     'v.licensePlate',
     'v.floorNumber',
     'v.totalSeat',
+    't',
+    'fs',
+    'ts',
   ];
 
   async findOneTripDetail(options: any) {
@@ -132,7 +135,9 @@ export class TripDetailService {
 
   async findAll(dto: FilterTripDetailDto, pagination?: Pagination) {
     const {
+      minDepartureTime,
       departureTime,
+      maxDepartureTime,
       status,
       tripId,
       tripCode,
@@ -142,11 +147,29 @@ export class TripDetailService {
     } = dto;
     const query = this.tripDetailRepository.createQueryBuilder('q');
 
-    if (departureTime) {
-      query.andWhere('q.departureTime > :departureTime', {
-        departureTime,
+    if (minDepartureTime) {
+      query.andWhere('q.departureTime > :minDepartureTime', {
+        minDepartureTime,
       });
     }
+
+    if (departureTime) {
+      // set 00:00:00 to 23:59:59 of departureTime
+      const minTime = moment(departureTime).startOf('day').toDate();
+      const maxTime = moment(departureTime).endOf('day').toDate();
+      console.log(minTime);
+      console.log(maxTime);
+      query
+        .andWhere('q.departureTime >= :minTime', { minTime })
+        .andWhere('q.departureTime <= :maxTime', { maxTime });
+    }
+
+    if (maxDepartureTime) {
+      query.andWhere('q.departureTime <= :maxDepartureTime', {
+        maxDepartureTime,
+      });
+    }
+
     switch (status) {
       case TripDetailStatusEnum.ACTIVE:
       case TripDetailStatusEnum.INACTIVE:
@@ -154,35 +177,40 @@ export class TripDetailService {
       case TripDetailStatusEnum.SOLD_OUT:
         query.andWhere('q.status = :status', { status });
         break;
+      default:
+        break;
     }
     if (tripId) {
-      query.leftJoinAndSelect('q.trip', 't');
       query.andWhere('t.id = :tripId', { tripId: tripId });
     } else if (tripCode) {
-      query.leftJoinAndSelect('q.trip', 't');
       query.andWhere('t.code = :tripCode', { tripCode: tripCode });
     }
     if (fromProvinceCode) {
-      query.leftJoinAndSelect('q.fromProvince', 'fp');
-      query.andWhere('fp.code = :fromProvinceCode', {
-        fromProvinceCode,
-      });
+      query
+        .leftJoinAndSelect('q.fromProvince', 'fp')
+        .andWhere('fp.code = :fromProvinceCode', {
+          fromProvinceCode,
+        });
     }
     if (toProvinceCode) {
-      query.leftJoinAndSelect('q.toProvince', 'tp');
-      query.andWhere('tp.code = :toProvinceCode', { toProvinceCode });
+      query
+        .leftJoinAndSelect('q.fromProvince', 'fp')
+        .andWhere('tp.code = :toProvinceCode', { toProvinceCode });
     }
 
-    const total = await query.getCount();
     const dataResult = await query
+      .leftJoinAndSelect('q.trip', 't')
+      .leftJoinAndSelect('t.fromStation', 'fs')
+      .leftJoinAndSelect('t.toStation', 'ts')
       .leftJoinAndSelect('q.vehicle', 'v')
       .select(this.tripDetailSelect)
       .orderBy('q.createdAt', SortEnum.ASC)
       .addOrderBy('q.departureTime', sort)
       .addOrderBy('q.code', SortEnum.ASC)
-      .offset(pagination.skip)
-      .limit(pagination.take)
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10)
       .getMany();
+    const total = await query.getCount();
 
     return { dataResult, pagination, total };
   }

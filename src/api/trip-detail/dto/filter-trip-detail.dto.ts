@@ -15,7 +15,17 @@ export class FilterTripDetailDto {
   @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD HH:mm') })
   @IsDate({ message: 'INVALID_DATE' })
   @IsOptional()
+  minDepartureTime: Date;
+
+  @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD HH:mm') })
+  @IsDate({ message: 'INVALID_DATE' })
+  @IsOptional()
   departureTime: Date;
+
+  @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD HH:mm') })
+  @IsDate({ message: 'INVALID_DATE' })
+  @IsOptional()
+  maxDepartureTime: Date;
 
   @ApiPropertyOptional({
     example: TripDetailStatusEnum.NOT_SOLD_OUT,
