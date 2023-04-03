@@ -66,6 +66,14 @@ export class PromotionLine {
   })
   maxQuantityPerCustomer: number;
 
+  @Column({
+    name: 'apply_all',
+    type: 'boolean',
+    nullable: false,
+    default: false,
+  })
+  applyAll: boolean;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
 

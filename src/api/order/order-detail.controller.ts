@@ -1,19 +1,6 @@
-import { CreateOrderDetailDto } from './dto';
-import { JwtAuthGuard } from '../../auth/guards';
-import { RoleEnum } from '../../enums';
-import { CurrentUser, Roles } from '../../decorator';
 import { OrderService } from './order.service';
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Post,
-  UseGuards,
-} from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Controller, Get, HttpCode, HttpStatus, Param } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('order-detail')
 @ApiTags('Order Detail')

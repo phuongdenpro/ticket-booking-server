@@ -261,12 +261,13 @@ export class SeatService {
     const customerExist = await this.dataSource
       .getRepository(Customer)
       .findOne({ where: { id: userId } });
+
     if (!adminExist || !customerExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (
-      !adminExist.isActive ||
-      customerExist.status === UserStatusEnum.INACTIVATE
+      (adminExist && !adminExist.isActive) ||
+      (customerExist && customerExist.status === UserStatusEnum.INACTIVATE)
     ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }

@@ -3,5 +3,4 @@ export enum OrderStatusEnum {
   PAID = 'Đã thanh toán',
   CANCEL = 'Đã hủy',
   RETURNED = 'Đã trả',
-  PENDING_RETURN = 'Đang xử lý trả hàng',
 }

@@ -30,7 +30,7 @@ export class Seat {
     nullable: false,
     default: SeatStatusEnum.NON_SOLD,
   })
-  status: SeatStatusEnum;
+  status: string;
 
   @Column({ name: 'floor', type: 'int', nullable: true, default: 1 })
   floor: number;

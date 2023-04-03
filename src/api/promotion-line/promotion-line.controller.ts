@@ -22,7 +22,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PromotionLineService } from './promotion-line.service';
 import {
-  CreatePromotionLineDto,
+  CreatePromotionLinesDto,
   DeleteMultiPromotionLineDto,
   FilterPromotionLineDto,
   UpdatePromotionLineDto,
@@ -45,10 +45,10 @@ export class PromotionLineController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async createPromotion(
-    @Body() dto: CreatePromotionLineDto,
+    @Body() dto: CreatePromotionLinesDto,
     @CurrentUser() user,
   ) {
-    return await this.promotionLineService.createPromotionLine(dto, user.id);
+    return await this.promotionLineService.createPromotionLines(dto, user.id);
   }
 
   @Get()

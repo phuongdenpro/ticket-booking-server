@@ -1,7 +1,12 @@
-import { CreateOrderDto } from './dto';
+import { CreateOrderDto, FilterOrderDto } from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums';
-import { CurrentUser, Roles } from './../../decorator';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
 import { OrderService } from './order.service';
 import {
   Body,
@@ -11,6 +16,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -23,11 +29,30 @@ export class OrderController {
   // order
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async createOrder(@Body() dto: CreateOrderDto, @CurrentUser() user) {
     return await this.orderService.createOrder(dto, user.id);
+  }
+
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getOrderStatus() {
+    return await this.orderService.getOrderStatus();
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllPriceList(
+    @Query() dto: FilterOrderDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.orderService.findAllOrder(dto, user.id, pagination);
   }
 
   @Get('id/:id')

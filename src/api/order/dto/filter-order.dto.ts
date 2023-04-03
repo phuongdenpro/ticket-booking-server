@@ -1,6 +1,6 @@
 import { OrderStatusEnum, SortEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class FilterOrderDto {
   @ApiPropertyOptional({ example: 'Bảng giá tháng 3/2023' })
@@ -15,7 +15,6 @@ export class FilterOrderDto {
       OrderStatusEnum.PAID,
       OrderStatusEnum.UNPAID,
       OrderStatusEnum.CANCEL,
-      OrderStatusEnum.PENDING_RETURN,
       OrderStatusEnum.RETURNED,
     ],
   })
@@ -26,13 +25,22 @@ export class FilterOrderDto {
       OrderStatusEnum.PAID,
       OrderStatusEnum.UNPAID,
       OrderStatusEnum.CANCEL,
-      OrderStatusEnum.PENDING_RETURN,
       OrderStatusEnum.RETURNED,
     ],
     { message: 'ORDER_STATUS_IS_ENUM' },
   )
   @IsOptional()
   status: OrderStatusEnum;
+
+  @ApiPropertyOptional({ example: 0 })
+  @IsNumber({}, { message: 'MIN_FINAL_TOTAL_IS_NUMBER' })
+  @IsOptional()
+  minFinalTotal: number;
+
+  @ApiPropertyOptional({ example: 0 })
+  @IsNumber({}, { message: 'MAX_FINAL_TOTAL_IS_NUMBER' })
+  @IsOptional()
+  maxFinalTotal: number;
 
   @ApiPropertyOptional({ example: SortEnum.ASC, enum: SortEnum })
   @IsString({ message: 'SORT_IS_STRING' })

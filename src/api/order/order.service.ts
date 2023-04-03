@@ -8,7 +8,7 @@ import {
   Vehicle,
 } from './../../database/entities';
 import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
-import { CreateOrderDto, CreateOrderDetailDto } from './dto';
+import { CreateOrderDto, CreateOrderDetailDto, FilterOrderDto } from './dto';
 import {
   BadRequestException,
   Injectable,
@@ -56,6 +56,28 @@ export class OrderService {
 
   private SEAT_TYPE_DTO_ID = 'id';
   private SEAT_TYPE_DTO_CODE = 'code';
+
+  private selectFieldsOrderWithQ = [
+    'q.id',
+    'q.code',
+    'q.status',
+    'q.note',
+    'q.total',
+    'q.finalTotal',
+    'q.createdAt',
+    'q.updatedAt',
+    'c.id',
+    'c.lastLogin',
+    'c.status',
+    'c.phone',
+    'c.email',
+    'c.fullName',
+    'c.gender',
+    'c.address',
+    'c.fullAddress',
+    'c.note',
+    'c.birthday',
+  ];
 
   // order
   async findOneOrder(options: any) {
@@ -109,6 +131,14 @@ export class OrderService {
       throw new BadRequestException('ORDER_NOT_FOUND');
     }
     return order;
+  }
+
+  async getOrderStatus() {
+    return {
+      dataResult: Object.keys(OrderStatusEnum).map(
+        (key) => OrderStatusEnum[key],
+      ),
+    };
   }
 
   async createOrder(dto: CreateOrderDto, creatorId: string) {
@@ -189,10 +219,8 @@ export class OrderService {
       this.orderRepository.manager.connection.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
-    let createOrder: Order;
+    const createOrder = await this.orderRepository.save(order);
     try {
-      createOrder = await queryRunner.manager.save(order);
-
       if (!seatIds && !seatCodes) {
         throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
       }
@@ -241,22 +269,96 @@ export class OrderService {
       await queryRunner.commitTransaction();
       return saveOrder;
     } catch (error) {
+      await this.orderRepository.remove(createOrder);
       await queryRunner.rollbackTransaction();
+      console.log(error.message);
       throw new BadRequestException(error.message);
     } finally {
       await queryRunner.release();
     }
   }
 
-  async findAllOrder(dto, pagination?: Pagination) {
+  async findAllOrder(
+    dto: FilterOrderDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const { keywords, status, sort, minFinalTotal, maxFinalTotal } = dto;
+    const customer = await this.customerService.findOneById(userId);
+    const admin = await this.adminService.findOneBydId(userId);
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
     const query = this.orderRepository.createQueryBuilder('q');
+
+    if (keywords) {
+      const newKeywords = keywords.trim();
+      const subQuery = this.orderRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .getQuery();
+
+      query.andWhere(`q.id IN (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
+    }
+
+    switch (status) {
+      case OrderStatusEnum.UNPAID:
+      case OrderStatusEnum.CANCEL:
+      case OrderStatusEnum.PAID:
+      case OrderStatusEnum.RETURNED:
+        query.andWhere('q.status = :status', { status });
+        break;
+      default:
+        break;
+    }
+
+    if (minFinalTotal) {
+      query.andWhere('q.finalTotal >= :minFinalTotal', { minFinalTotal });
+    }
+    if (maxFinalTotal) {
+      query.andWhere('q.finalTotal <= :maxFinalTotal', { maxFinalTotal });
+    }
+
+    if (customer) {
+      query.andWhere('c.id = :customerId', { customerId: userId });
+    }
+
+    query
+      .orderBy('q.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('q.code', SortEnum.ASC)
+      .addOrderBy('q.finalTotal', SortEnum.ASC);
+
+    const dataResult = await query
+      .leftJoinAndSelect('q.customer', 'c')
+      .select(this.selectFieldsOrderWithQ)
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10)
+      .getMany();
+
+    const total = await query.getCount();
+
+    return { dataResult, total, pagination };
   }
 
   // order detail
   async findOrderDetail(options?: any) {
     return await this.orderDetailRepository.findOne({
       where: { ...options?.where },
-      relations: ['orderDetails'].concat(options?.relations),
+      relations: {
+        ...options?.relations,
+      },
       select: { deletedAt: false, ...options?.select },
       orderBy: {
         createdAt: SortEnum.DESC,

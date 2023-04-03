@@ -192,6 +192,7 @@ export const mappingTranslate = {
   TRIP_ID_IS_STRING: 'Id của tuyến đi phải là chuỗi ký tự',
   TRIP_ID_INVALID: 'Id của tuyến đi không hợp lệ',
   TRIP_CODE_IS_STRING: 'Mã của tuyến đi phải là chuỗi ký tự',
+  TRIP_CODES_IS_REQUIRED: 'Danh sách mã của tuyến đi không được để trống',
   TRIP_CODE_IS_REQUIRED: 'Mã của tuyến đi không được để trống',
   TRIP_CODE_BETWEEN_1_100_CHARACTERS: 'Mã của tuyến đi phải từ 1 đến 100 ký tự',
   TRIP_CODE_EXIST: 'Mã tuyến đi đã tồn tại',
@@ -279,7 +280,7 @@ export const mappingTranslate = {
   VEHICLE_TYPE_REQUIRED: 'Loại xe không được để trống',
   VEHICLE_TYPE_STRING: 'Loại xe phải là chuỗi',
   VEHICLE_TYPE_IS_ENUM:
-    'Loại xe phải thuộc 1 trong cái loại sau: "xe limousine", "xe giường nằm", "xe ghế ngồi", "khác"',
+    'Loại xe phải thuộc 1 trong cái loại sau: "limousine", "giường nằm", "ghế ngồi"',
   VEHICLE_FLOOR_NUMBER_IS_NUMBER: 'Số tầng của xe phải là số',
   VEHICLE_FLOOR_NUMBER_MIN_MAX: 'Số tầng của xe chỉ nhận 2 giá trị: 1, 2',
   VEHICLE_TOTAL_SEAT_IS_REQUIRE: 'Tổng số ghế của xe không được để trống',
@@ -530,4 +531,6 @@ export const mappingTranslate = {
   ORDER_IS_PAID: 'Đơn hàng đã thanh toán',
   ORDER_IS_PENDING: 'Đơn hàng đang chờ xử lý',
   CREATE_ORDER_FAILED: 'Tạo hoá đơn thất bại',
+  MIN_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối thiểu phải là số',
+  MAX_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối đa phải là số',
 };
