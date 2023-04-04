@@ -34,8 +34,6 @@ export class CreateTripDetailDto {
     example: TripDetailStatusEnum.NOT_SOLD_OUT,
     enum: [
       '',
-      TripDetailStatusEnum.ACTIVE,
-      TripDetailStatusEnum.INACTIVE,
       TripDetailStatusEnum.NOT_SOLD_OUT,
       TripDetailStatusEnum.SOLD_OUT,
     ],
@@ -43,13 +41,7 @@ export class CreateTripDetailDto {
   @IsOptional()
   @IsString({ message: 'INVALID_STRING' })
   @IsEnum(
-    [
-      '',
-      TripDetailStatusEnum.ACTIVE,
-      TripDetailStatusEnum.INACTIVE,
-      TripDetailStatusEnum.NOT_SOLD_OUT,
-      TripDetailStatusEnum.SOLD_OUT,
-    ],
+    ['', TripDetailStatusEnum.NOT_SOLD_OUT, TripDetailStatusEnum.SOLD_OUT],
     { message: 'INVALID_TRIP_DETAIL_STATUS' },
   )
   status: string;

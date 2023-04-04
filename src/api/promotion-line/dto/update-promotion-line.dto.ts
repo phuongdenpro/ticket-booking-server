@@ -59,7 +59,7 @@ export class UpdatePromotionLineDto {
   @ApiPropertyOptional({ example: 100 })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'MAX_QUANTITY_IS_NUMBER' },
+    { message: 'MAX_QUANTITY_MUST_BE_INTEGER' },
   )
   @IsOptional()
   maxQuantity: number;

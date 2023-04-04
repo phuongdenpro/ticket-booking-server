@@ -1,4 +1,4 @@
-import { ActiveStatusEnum } from './../../enums';
+import { PromotionStatusEnum } from './../../enums';
 import { PromotionLine } from '.';
 import {
   Column,
@@ -27,19 +27,19 @@ export class Promotion {
   @Column({ name: 'note', type: 'text', nullable: true })
   note: string;
 
-  @Column({ name: 'start_date', type: 'date', nullable: false })
+  @Column({ name: 'start_date', type: 'timestamp', nullable: false })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'date', nullable: false })
+  @Column({ name: 'end_date', type: 'timestamp', nullable: false })
   endDate: Date;
 
   @Column({
     name: 'status',
     type: 'varchar',
     nullable: false,
-    default: ActiveStatusEnum.INACTIVE,
+    default: PromotionStatusEnum.INACTIVE,
   })
-  status: ActiveStatusEnum;
+  status: PromotionStatusEnum;
 
   @Column({ name: 'image', type: 'text', nullable: true })
   image: string;

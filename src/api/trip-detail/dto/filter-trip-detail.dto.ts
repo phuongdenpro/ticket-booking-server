@@ -31,8 +31,6 @@ export class FilterTripDetailDto {
     example: TripDetailStatusEnum.NOT_SOLD_OUT,
     enum: [
       '',
-      TripDetailStatusEnum.ACTIVE,
-      TripDetailStatusEnum.INACTIVE,
       TripDetailStatusEnum.NOT_SOLD_OUT,
       TripDetailStatusEnum.SOLD_OUT,
     ],
@@ -40,16 +38,10 @@ export class FilterTripDetailDto {
   @IsOptional()
   @IsString({ message: 'INVALID_STRING' })
   @IsEnum(
-    [
-      '',
-      TripDetailStatusEnum.ACTIVE,
-      TripDetailStatusEnum.INACTIVE,
-      TripDetailStatusEnum.NOT_SOLD_OUT,
-      TripDetailStatusEnum.SOLD_OUT,
-    ],
+    ['', TripDetailStatusEnum.NOT_SOLD_OUT, TripDetailStatusEnum.SOLD_OUT],
     { message: 'INVALID_TRIP_DETAIL_STATUS' },
   )
-  status: TripDetailStatusEnum;
+  status: string;
 
   @ApiPropertyOptional({ example: '59464f9b-0be3-4929-b1ea-d2aa80c21a6a' })
   @IsOptional()

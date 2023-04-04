@@ -1,5 +1,10 @@
 import { Pagination } from './../../decorator';
-import { SortEnum, DeleteDtoTypeEnum, ActiveStatusEnum } from './../../enums';
+import {
+  SortEnum,
+  DeleteDtoTypeEnum,
+  ActiveStatusEnum,
+  PromotionStatusEnum,
+} from './../../enums';
 import { IMAGE_REGEX } from './../../utils/regex.util';
 import {
   CreatePromotionDto,
@@ -186,12 +191,12 @@ export class PromotionService {
     }
     promotion.endDate = endDate;
     switch (status) {
-      case ActiveStatusEnum.ACTIVE:
-      case ActiveStatusEnum.INACTIVE:
+      case PromotionStatusEnum.ACTIVE:
+      case PromotionStatusEnum.INACTIVE:
         promotion.status = status;
         break;
       default:
-        promotion.status = ActiveStatusEnum.INACTIVE;
+        promotion.status = PromotionStatusEnum.INACTIVE;
         break;
     }
 
@@ -248,18 +253,18 @@ export class PromotionService {
       promotion.image = image;
     }
     switch (status) {
-      case ActiveStatusEnum.ACTIVE:
-      case ActiveStatusEnum.INACTIVE:
+      case PromotionStatusEnum.ACTIVE:
+      case PromotionStatusEnum.INACTIVE:
         promotion.status = status;
         break;
       default:
-        promotion.status = ActiveStatusEnum.ACTIVE;
+        promotion.status = PromotionStatusEnum.ACTIVE;
         break;
     }
 
     if (startDate && promotion.startDate !== startDate) {
       if (
-        promotion.status === ActiveStatusEnum.ACTIVE &&
+        promotion.status === PromotionStatusEnum.ACTIVE &&
         promotion.startDate <= currentDate &&
         promotion.endDate >= currentDate
       ) {

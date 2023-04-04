@@ -1,4 +1,4 @@
-import { ActiveStatusEnum } from './../../../enums';
+import { PromotionStatusEnum } from './../../../enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsNotEmpty,
@@ -58,11 +58,11 @@ export class CreatePromotionDto {
   endDate: Date;
 
   @ApiPropertyOptional({
-    example: ActiveStatusEnum.ACTIVE,
-    enum: ActiveStatusEnum,
+    example: PromotionStatusEnum.ACTIVE,
+    enum: PromotionStatusEnum,
   })
   @IsString({ message: 'PROMOTION_STATUS_IS_STRING' })
-  @IsEnum(ActiveStatusEnum, { message: 'PROMOTION_STATUS_IS_ENUM' })
+  @IsEnum(PromotionStatusEnum, { message: 'PROMOTION_STATUS_IS_ENUM' })
   @IsOptional()
-  status: ActiveStatusEnum;
+  status: PromotionStatusEnum;
 }

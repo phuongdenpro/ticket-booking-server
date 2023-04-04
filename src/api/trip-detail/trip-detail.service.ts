@@ -171,8 +171,6 @@ export class TripDetailService {
     }
 
     switch (status) {
-      case TripDetailStatusEnum.ACTIVE:
-      case TripDetailStatusEnum.INACTIVE:
       case TripDetailStatusEnum.NOT_SOLD_OUT:
       case TripDetailStatusEnum.SOLD_OUT:
         query.andWhere('q.status = :status', { status });
@@ -312,13 +310,11 @@ export class TripDetailService {
 
     // check status
     switch (status) {
-      case TripDetailStatusEnum.NOT_SOLD_OUT:
-      case TripDetailStatusEnum.ACTIVE:
       case TripDetailStatusEnum.SOLD_OUT:
         tripDetail.status = status;
         break;
       default:
-        tripDetail.status = TripDetailStatusEnum.INACTIVE;
+        tripDetail.status = TripDetailStatusEnum.NOT_SOLD_OUT;
         break;
     }
     // check vehicle
@@ -469,8 +465,6 @@ export class TripDetailService {
     }
     switch (status) {
       case TripDetailStatusEnum.NOT_SOLD_OUT:
-      case TripDetailStatusEnum.ACTIVE:
-      case TripDetailStatusEnum.INACTIVE:
       case TripDetailStatusEnum.SOLD_OUT:
         tripDetail.status = status;
         break;

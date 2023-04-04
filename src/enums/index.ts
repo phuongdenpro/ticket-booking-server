@@ -11,5 +11,6 @@ export * from './vehicle-type.enum';
 export * from './province-type.enum';
 export * from './promotion-line-note-status.enum';
 export * from './promotion-type.enum';
+export * from './promotion-status.enum';
 export * from './order-status.enum';
 export * from './delete-dto-type.enum';

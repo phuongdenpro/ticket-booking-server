@@ -1,4 +1,4 @@
-import { ActiveStatusEnum } from '../../../enums';
+import { PromotionStatusEnum } from '../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEnum, IsDate, MinDate } from 'class-validator';
 
@@ -40,13 +40,13 @@ export class UpdatePromotionDto {
   endDate: Date;
 
   @ApiPropertyOptional({
-    example: ActiveStatusEnum.ACTIVE,
-    enum: ['', ActiveStatusEnum.ACTIVE, ActiveStatusEnum.INACTIVE],
+    example: PromotionStatusEnum.ACTIVE,
+    enum: ['', PromotionStatusEnum.ACTIVE, PromotionStatusEnum.INACTIVE],
   })
   @IsString({ message: 'PROMOTION_STATUS_IS_STRING' })
-  @IsEnum(['', ActiveStatusEnum.ACTIVE, ActiveStatusEnum.INACTIVE], {
+  @IsEnum(['', PromotionStatusEnum.ACTIVE, PromotionStatusEnum.INACTIVE], {
     message: 'PROMOTION_STATUS_INVALID',
   })
   @IsOptional()
-  status: ActiveStatusEnum;
+  status: PromotionStatusEnum;
 }
