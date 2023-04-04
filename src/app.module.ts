@@ -28,6 +28,7 @@ import { BookingModule } from './api/booking/booking.module';
 import { TicketModule } from './api/ticket/ticket.module';
 import { OrderModule } from './api/order/order.module';
 import { PromotionLineModule } from './api/promotion-line/promotion-line.module';
+import { PromotionHistoryModule } from './api/promotion-history/promotion-history.module';
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import { PromotionLineModule } from './api/promotion-line/promotion-line.module'
     BookingModule,
     OrderModule,
     UploadModule,
+    PromotionHistoryModule,
   ],
   providers: [
     {

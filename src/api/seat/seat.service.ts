@@ -1,4 +1,4 @@
-import { SeatStatusEnum, SortEnum, UserStatusEnum } from './../../enums';
+import { SortEnum, UserStatusEnum } from './../../enums';
 import {
   BadRequestException,
   Injectable,
@@ -76,14 +76,8 @@ export class SeatService {
     return seat;
   }
 
-  async getSeatStatus() {
-    return {
-      dataResult: Object.keys(SeatStatusEnum).map((key) => SeatStatusEnum[key]),
-    };
-  }
-
   async createSeat(dto: CreateSeatDto, userId: string) {
-    const { code, name, status, floor, vehicleId } = dto;
+    const { code, name, floor, vehicleId } = dto;
     const vehicle = await this.dataSource
       .getRepository(Vehicle)
       .findOne({ where: { id: vehicleId } });
@@ -107,11 +101,7 @@ export class SeatService {
     const seat = new Seat();
     seat.code = code;
     seat.name = name;
-    if (!seat) {
-      seat.status = SeatStatusEnum.NON_SOLD;
-    } else {
-      seat.status = status;
-    }
+
     if (floor < 1 || floor > 2 || !floor) {
       seat.floor = 1;
     } else {
@@ -127,7 +117,7 @@ export class SeatService {
   }
 
   async searchSeat(dto: FilterSeatDto, pagination?: Pagination) {
-    const { keywords, status, floor } = dto;
+    const { keywords, floor } = dto;
     const query = this.seatRepository.createQueryBuilder('q');
 
     if (keywords) {
@@ -146,9 +136,11 @@ export class SeatService {
         name: `%${newKeywords}%`,
       });
     }
-    if (status) {
-      query.andWhere('q.type = :type', { type: status });
-    }
+    // if (status) {
+    //   query
+    //     .leftJoinAndSelect('q.ticketDetails', 'td')
+    //     .andWhere('td.status = :type', { type: status });
+    // }
     if (floor && floor > 0 && floor < 3) {
       query.andWhere('q.floor = :floor', { floor });
     }
@@ -178,7 +170,7 @@ export class SeatService {
     vehicleId: string,
     pagination?: Pagination,
   ) {
-    const { keywords, status, floor } = dto;
+    const { keywords, floor } = dto;
     const query = this.seatRepository.createQueryBuilder('q');
     query.where('q.vehicle = :vehicleId', { vehicleId });
 
@@ -187,9 +179,11 @@ export class SeatService {
         .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
         .orWhere('q.name like :keywords', { keywords: `%${keywords}%` });
     }
-    if (status) {
-      query.andWhere('q.type = :type', { type: status });
-    }
+    // if (status) {
+    //   query
+    //     .leftJoinAndSelect('q.ticketDetails', 'td')
+    //     .andWhere('td.status = :type', { type: status });
+    // }
     if (floor && floor > 0 && floor < 3) {
       query.andWhere('q.floor = :floor', { floor });
     }
@@ -245,7 +239,7 @@ export class SeatService {
     code?: string,
     manager?: EntityManager,
   ) {
-    const { name, status, floor, vehicleId } = dto;
+    const { name, floor, vehicleId } = dto;
     if (!id && !code) {
       throw new BadRequestException('ID_OR_CODE_REQUIRED');
     }
@@ -262,7 +256,7 @@ export class SeatService {
       .getRepository(Customer)
       .findOne({ where: { id: userId } });
 
-    if (!adminExist || !customerExist) {
+    if (!adminExist && !customerExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (
@@ -274,9 +268,6 @@ export class SeatService {
 
     if (name) {
       seat.name = name;
-    }
-    if (seat) {
-      seat.status = status;
     }
     if (floor < 1 || floor > 2 || !floor) {
       seat.floor = 1;

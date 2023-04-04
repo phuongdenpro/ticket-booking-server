@@ -1,7 +1,6 @@
 export * from './active-status.enum';
 export * from './gender.enum';
 export * from './roles.enum';
-export * from './seat-type.enum';
 export * from './sort.enum';
 export * from './trip-detail-status.enum';
 export * from './ticket-status.enum';

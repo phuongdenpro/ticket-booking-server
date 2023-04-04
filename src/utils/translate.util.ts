@@ -181,7 +181,7 @@ export const mappingTranslate = {
   SEAT_IDS_OR_SEAT_CODES_REQUIRED:
     'Danh sách id ghế hoặc danh sách mã ghế không được để trống',
   SEAT_ID_OR_SEAT_CODE_REQUIRED: 'Id ghế hoặc mã ghế không được để trống',
-  SEAT_IS_SOLD: 'Ghế này đã được bán',
+  SEAT_IS_SOLD: 'Ghế này đã được đặt',
 
   // trip
   TRIP_DETAIL_CODE_OR_TRIP_CODE_REQUIRED:
@@ -401,7 +401,7 @@ export const mappingTranslate = {
   PROMOTION_STATUS_IS_REQUIRED:
     'Trạng thái chương trình khuyến mãi không được để trống',
   PROMOTION_STATUS_IS_ENUM:
-    'Trạng thái chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Đang hoạt động", "Ngừng hoạt động", "Hết hạn", "Hết số lượng", "Hết ngân sách"',
+    'Trạng thái chương trình khuyến mãi phải thuộc 1 trong các loại sau: "Đang hoạt động", "Ngừng hoạt động"',
   USE_QUANTITY_IS_NUMBER: 'Số lượng đã dùng phải là số',
   MIN_USE_QUANTITY_IS_NUMBER: 'Số lượng đã dùng tối thiểu phải là số',
   MAX_USE_QUANTITY_IS_NUMBER: 'Số lượng đã dùng tối đa phải là số',
@@ -544,4 +544,7 @@ export const mappingTranslate = {
   CREATE_ORDER_FAILED: 'Tạo hoá đơn thất bại',
   MIN_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối thiểu phải là số',
   MAX_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối đa phải là số',
+
+  // promotion history
+  PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',
 };

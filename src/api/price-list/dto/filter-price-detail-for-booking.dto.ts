@@ -45,5 +45,5 @@ export class FilterPriceDetailForBookingDto {
     { message: 'SEAT_TYPE_IS_ENUM' },
   )
   @IsNotEmpty({ message: 'SEAT_TYPE_IS_REQUIRED' })
-  seatType: VehicleTypeEnum;
+  seatType: string;
 }

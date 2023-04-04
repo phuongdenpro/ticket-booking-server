@@ -1,4 +1,3 @@
-import { SeatStatusEnum } from './../../../enums/seat-type.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
@@ -6,7 +5,6 @@ import {
   Min,
   Max,
   IsOptional,
-  IsEnum,
   Length,
 } from 'class-validator';
 
@@ -15,15 +13,6 @@ export class UpdateSeatDto {
   @IsString({ message: 'Name is string' })
   @Length(0, 100, { message: 'Name must be between 1 and 100 characters' })
   name: string;
-
-  @ApiPropertyOptional({
-    example: SeatStatusEnum.NON_SOLD,
-    enum: SeatStatusEnum,
-  })
-  @IsOptional()
-  @IsString()
-  @IsEnum(SeatStatusEnum)
-  status: SeatStatusEnum;
 
   @ApiPropertyOptional({ example: 1 })
   @IsOptional()

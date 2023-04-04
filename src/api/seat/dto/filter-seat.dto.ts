@@ -1,4 +1,4 @@
-import { SeatStatusEnum } from './../../../enums';
+import { TicketStatusEnum } from './../../../enums/ticket-status.enum';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsString,
@@ -15,14 +15,14 @@ export class FilterSeatDto {
   @IsOptional()
   keywords: string;
 
-  @ApiPropertyOptional({
-    example: SeatStatusEnum.NON_SOLD,
-    enum: SeatStatusEnum,
-  })
-  @IsString({ message: 'SEAT_TYPE_IS_STRING' })
-  @IsEnum(SeatStatusEnum, { message: 'SEAT_TYPE_IS_ENUM' })
-  @IsOptional()
-  status: SeatStatusEnum;
+  // @ApiPropertyOptional({
+  //   example: TicketStatusEnum.NON_SOLD,
+  //   enum: TicketStatusEnum,
+  // })
+  // @IsString({ message: 'SEAT_TYPE_IS_STRING' })
+  // @IsEnum(TicketStatusEnum, { message: 'SEAT_TYPE_IS_ENUM' })
+  // @IsOptional()
+  // status: TicketStatusEnum;
 
   @ApiPropertyOptional({ example: 1, enum: [1, 2] })
   @IsNumber(

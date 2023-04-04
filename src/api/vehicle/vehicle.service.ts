@@ -16,12 +16,7 @@ import {
 } from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
 import { Pagination } from './../../decorator';
-import {
-  VehicleTypeEnum,
-  VehicleSeatsEnum,
-  SeatStatusEnum,
-  SortEnum,
-} from './../../enums';
+import { VehicleTypeEnum, VehicleSeatsEnum, SortEnum } from './../../enums';
 import { SeatService } from '../seat/seat.service';
 
 @Injectable()
@@ -186,7 +181,6 @@ export class VehicleService {
           dto.floor = 2;
         }
       }
-      dto.status = SeatStatusEnum.NON_SOLD;
       dto.vehicleId = newVehicle.id;
       await this.seatService.createSeat(dto, userId);
     }

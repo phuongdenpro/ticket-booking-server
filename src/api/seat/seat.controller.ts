@@ -33,12 +33,6 @@ import {
 export class SeatController {
   constructor(private seatService: SeatService) {}
 
-  @Get('status')
-  @HttpCode(HttpStatus.OK)
-  async getPromotionStatusEnum() {
-    return await this.seatService.getSeatStatus();
-  }
-
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)

@@ -3,11 +3,12 @@ import { TripDetailService } from './../trip-detail/trip-detail.service';
 import {
   Order,
   OrderDetail,
+  PriceDetail,
   PromotionLine,
   Seat,
   Vehicle,
 } from './../../database/entities';
-import { LessThanOrEqual, MoreThanOrEqual, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateOrderDto, CreateOrderDetailDto, FilterOrderDto } from './dto';
 import {
   BadRequestException,
@@ -19,10 +20,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import {
   OrderStatusEnum,
   SortEnum,
-  SeatStatusEnum,
   TicketStatusEnum,
   UserStatusEnum,
-  ActiveStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -33,7 +32,7 @@ import { PriceListService } from '../price-list/price-list.service';
 import { UpdateTicketDetailDto } from '../ticket/dto';
 import * as moment from 'moment';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
-import { UpdateSeatDto } from '../seat/dto';
+import { FilterPriceDetailForBookingDto } from '../price-list/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -468,12 +467,6 @@ export class OrderService {
       } else if (seatCode) {
         seat = await this.seatService.findOneSeatByCode(seatCode);
       }
-      if (
-        seat.status === SeatStatusEnum.SOLD ||
-        seat.status === SeatStatusEnum.PENDING
-      ) {
-        throw new BadRequestException('SEAT_IS_SOLD');
-      }
 
       const ticketDetail = await this.ticketService.findOneTicketDetail({
         where: {
@@ -490,6 +483,12 @@ export class OrderService {
       if (!ticketDetail) {
         throw new NotFoundException('TICKET_NOT_FOUND');
       }
+      if (
+        ticketDetail.status === TicketStatusEnum.SOLD ||
+        ticketDetail.status === TicketStatusEnum.PENDING
+      ) {
+        throw new BadRequestException('SEAT_IS_SOLD');
+      }
       const vehicle: Vehicle = ticketDetail.seat.vehicle;
       const trip = ticketDetail.ticket.tripDetail.trip;
       delete ticketDetail.seat;
@@ -499,18 +498,17 @@ export class OrderService {
       // get price detail
       const ticketDetailId = ticketDetail.id;
       const currentDate = new Date(moment().format('YYYY-MM-DD'));
-      const priceDetail = await this.priceListService.findOnePriceDetail({
-        where: {
-          seatType: vehicle.type,
-          trip: { id: trip.id },
-          priceList: {
-            startDate: LessThanOrEqual(currentDate),
-            endDate: MoreThanOrEqual(currentDate),
-            status: ActiveStatusEnum.ACTIVE,
-          },
-        },
-        relations: { priceList: true, trip: true },
-      });
+
+      const dtoFilterPriceDetail = new FilterPriceDetailForBookingDto();
+      dtoFilterPriceDetail.seatType = vehicle.type;
+      dtoFilterPriceDetail.tripCode = trip.code;
+      dtoFilterPriceDetail.applyDate = currentDate;
+      const { dataResult } =
+        await this.priceListService.findPriceDetailForBooking(
+          dtoFilterPriceDetail,
+        );
+
+      const priceDetail: PriceDetail = dataResult;
       delete priceDetail.trip;
       delete priceDetail.priceList;
       if (!priceDetail) {
@@ -536,31 +534,6 @@ export class OrderService {
       );
       if (!saveTicketDetail) {
         throw new BadRequestException('UPDATE_TICKET_DETAIL_FAILED');
-      }
-
-      // // update seat status
-      const seatDto = new UpdateSeatDto();
-      seatDto.status = SeatStatusEnum.PENDING;
-      let saveSeat: Seat;
-      if (seatId) {
-        saveSeat = await this.seatService.updateSeatByIdOrCode(
-          seatDto,
-          userId,
-          seatId,
-          undefined,
-          queryRunnerOrderDetail.manager,
-        );
-      } else if (seatCode) {
-        saveSeat = await this.seatService.updateSeatByIdOrCode(
-          seatDto,
-          userId,
-          undefined,
-          seatCode,
-          queryRunnerOrderDetail.manager,
-        );
-      }
-      if (!saveSeat) {
-        throw new BadRequestException('UPDATE_SEAT_FAILED');
       }
       await queryRunnerOrderDetail.commitTransaction();
 

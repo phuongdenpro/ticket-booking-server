@@ -63,9 +63,9 @@ export class OrderDetail {
   @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.orderRefundDetail)
   orderRefundDetail: OrderRefundDetail;
 
-  @OneToOne(
-    () => PromotionHistory,
-    (promotionHistory) => promotionHistory.buyOrderDetail,
-  )
-  buyPromotionHistory: PromotionHistory;
+  // @OneToOne(
+  //   () => PromotionHistory,
+  //   (promotionHistory) => promotionHistory.buyOrderDetail,
+  // )
+  // buyPromotionHistory: PromotionHistory;
 }

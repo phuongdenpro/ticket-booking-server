@@ -34,8 +34,8 @@ export class PromotionService {
 
   async getPromotionStatusEnum() {
     return {
-      dataResult: Object.keys(ActiveStatusEnum).map(
-        (key) => ActiveStatusEnum[key],
+      dataResult: Object.keys(PromotionStatusEnum).map(
+        (key) => PromotionStatusEnum[key],
       ),
     };
   }

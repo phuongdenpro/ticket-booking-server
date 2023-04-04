@@ -425,11 +425,20 @@ export class TicketService {
     userId: string,
     manager?: EntityManager,
   ) {
-    const { note } = dto;
+    const { note, status } = dto;
     const ticketDetail = await this.getTicketDetailById(id);
 
     if (note) {
       ticketDetail.note = note;
+    }
+    switch (status) {
+      case TicketStatusEnum.NON_SOLD:
+      case TicketStatusEnum.PENDING:
+      case TicketStatusEnum.SOLD:
+        ticketDetail.status = status;
+        break;
+      default:
+        break;
     }
 
     const admin = await this.dataSource

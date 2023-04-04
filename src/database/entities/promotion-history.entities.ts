@@ -61,7 +61,7 @@ export class PromotionHistory {
   @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
   promotionLine: PromotionLine[];
 
-  @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.buyPromotionHistory)
-  @JoinColumn({ name: 'buy_order_detail_id', referencedColumnName: 'id' })
-  buyOrderDetail: OrderDetail;
+  // @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.buyPromotionHistory)
+  // @JoinColumn({ name: 'buy_order_detail_id', referencedColumnName: 'id' })
+  // buyOrderDetail: OrderDetail;
 }

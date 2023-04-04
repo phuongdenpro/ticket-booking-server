@@ -64,6 +64,7 @@ export class TripDetailService {
   private tripDetailSelect = [
     'q',
     'v.id',
+    'v.code',
     'v.name',
     'v.description',
     'v.type',
@@ -73,6 +74,8 @@ export class TripDetailService {
     't',
     'fs',
     'ts',
+    'i.id',
+    'i.url',
   ];
 
   async findOneTripDetail(options: any) {
@@ -138,7 +141,7 @@ export class TripDetailService {
     return tripDetail;
   }
 
-  async findAll(dto: FilterTripDetailDto, pagination?: Pagination) {
+  async findAllTripDetail(dto: FilterTripDetailDto, pagination?: Pagination) {
     const {
       minDepartureTime,
       departureTime,
@@ -159,7 +162,6 @@ export class TripDetailService {
     }
 
     if (departureTime) {
-      // set 00:00:00 to 23:59:59 of departureTime
       const minTime = moment(departureTime).startOf('day').toDate();
       const maxTime = moment(departureTime).endOf('day').toDate();
       console.log(minTime);
@@ -206,6 +208,7 @@ export class TripDetailService {
       .leftJoinAndSelect('t.fromStation', 'fs')
       .leftJoinAndSelect('t.toStation', 'ts')
       .leftJoinAndSelect('q.vehicle', 'v')
+      .leftJoinAndSelect('v.images', 'i')
       .select(this.tripDetailSelect)
       .orderBy('q.createdAt', SortEnum.ASC)
       .addOrderBy('q.departureTime', sort)

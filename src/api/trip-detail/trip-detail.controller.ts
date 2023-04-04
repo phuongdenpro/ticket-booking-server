@@ -51,7 +51,7 @@ export class TripDetailController {
     @Query() dto: FilterTripDetailDto,
     @GetPagination() pagination?: Pagination,
   ) {
-    return await this.tripDetailService.findAll(dto, pagination);
+    return await this.tripDetailService.findAllTripDetail(dto, pagination);
   }
 
   @Get('id/:id')
