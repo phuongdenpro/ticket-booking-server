@@ -1,4 +1,4 @@
-import { ActiveStatusEnum, SortEnum } from '../../../enums';
+import { PromotionStatusEnum, SortEnum } from '../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsEnum, IsDate } from 'class-validator';
 import * as moment from 'moment';
@@ -23,14 +23,14 @@ export class FilterPromotionDto {
   endDate: Date;
 
   @ApiPropertyOptional({
-    example: ActiveStatusEnum.ACTIVE,
-    enum: ['', ActiveStatusEnum.ACTIVE, ActiveStatusEnum.INACTIVE],
+    example: PromotionStatusEnum.ACTIVE,
+    enum: ['', PromotionStatusEnum.ACTIVE, PromotionStatusEnum.INACTIVE],
   })
-  @IsEnum(['', ActiveStatusEnum.ACTIVE, ActiveStatusEnum.INACTIVE], {
+  @IsEnum(['', PromotionStatusEnum.ACTIVE, PromotionStatusEnum.INACTIVE], {
     message: 'PROMOTION_STATUS_IS_ENUM',
   })
   @IsOptional()
-  status: ActiveStatusEnum;
+  status: PromotionStatusEnum;
 
   @ApiPropertyOptional({
     example: SortEnum.ASC,

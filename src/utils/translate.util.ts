@@ -463,6 +463,8 @@ export const mappingTranslate = {
   // promotion line
   PROMOTION_LINE_HAS_EXPIRED: 'Khuyến mãi đã hết hạn',
   PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy khuyến mãi',
+  PROMOTION_LINE_CODE_IS_REQUIRED: 'Mã khuyến mãi không được để trống',
+  PROMOTION_LINE_CODE_IS_STRING: 'Mã khuyến mãi phải là chuỗi ký tự',
   PROMOTION_LINE_CODES_IS_ARRAY: 'Mã khuyến mãi phải là mảng',
   PROMOTION_LINE_CODES_IS_STRING:
     'thành phần trong danh sách mã khuyến mãi phải là chuỗi ký tự',
@@ -531,6 +533,8 @@ export const mappingTranslate = {
 
   // order
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',
+  ORDER_CODE_IS_REQUIRED: 'Mã đơn hàng không được để trống',
+  ORDER_CODE_IS_STRING: 'Mã đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_STRING: 'Trạng thái của đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_ENUM: 'Trạng thái của đơn hàng không hợp lệ',
   ORDER_ID_IS_36_CHARACTERS: 'Id của đơn hàng phải là 36 ký tự',
@@ -544,7 +548,12 @@ export const mappingTranslate = {
   CREATE_ORDER_FAILED: 'Tạo hoá đơn thất bại',
   MIN_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối thiểu phải là số',
   MAX_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối đa phải là số',
+  ORDER_CODE_BETWEEN_1_100_CHARACTERS: 'Mã đơn hàng phải có từ 1-100 ký tự',
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',
+  AMOUNT_IS_REQUIRED: 'Số tiền không được để trống',
+  AMOUNT_IS_NUMBER: 'Số tiền phải là số',
+  QUANTITY_IS_REQUIRED: 'Số lượng không được để trống',
+  QUANTITY_IS_NUMBER: 'Số lượng phải là số',
 };

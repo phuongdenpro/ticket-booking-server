@@ -123,8 +123,8 @@ export class PromotionService {
       query.andWhere(`q.endDate <= :endDate`, { endDate });
     }
     switch (status) {
-      case ActiveStatusEnum.ACTIVE:
-      case ActiveStatusEnum.INACTIVE:
+      case PromotionStatusEnum.ACTIVE:
+      case PromotionStatusEnum.INACTIVE:
         query.andWhere(`q.status = :status`, { status });
         break;
       default:
