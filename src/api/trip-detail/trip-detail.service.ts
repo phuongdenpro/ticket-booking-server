@@ -192,7 +192,7 @@ export class TripDetailService {
     }
     if (toProvinceCode) {
       query
-        .leftJoinAndSelect('q.fromProvince', 'fp')
+        .leftJoinAndSelect('q.toProvince', 'tp')
         .andWhere('tp.code = :toProvinceCode', { toProvinceCode });
     }
 

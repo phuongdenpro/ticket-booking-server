@@ -147,7 +147,7 @@ export class PromotionLineController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteMultiplePromotionByIds(
-    dto: DeleteMultiPromotionLineDto,
+    @Body() dto: DeleteMultiPromotionLineDto,
     @CurrentUser() user,
   ) {
     return await this.promotionLineService.deleteMultiPromotionLineByIdOrCode(
@@ -163,7 +163,7 @@ export class PromotionLineController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteMultiplePromotionByCodes(
-    dto: DeleteMultiPromotionLineDto,
+    @Body() dto: DeleteMultiPromotionLineDto,
     @CurrentUser() user,
   ) {
     return await this.promotionLineService.deleteMultiPromotionLineByIdOrCode(

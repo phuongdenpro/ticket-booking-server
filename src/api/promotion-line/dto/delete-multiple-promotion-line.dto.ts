@@ -3,7 +3,7 @@ import { ApiProperty } from '@nestjs/swagger';
 
 export class DeleteMultiPromotionLineDto {
   @ApiProperty({
-    example: ['', ''],
+    example: [''],
     type: [String],
     description: 'List id/code',
   })
