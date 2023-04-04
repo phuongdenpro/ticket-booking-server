@@ -55,33 +55,33 @@ export class PromotionLineService {
     const promotionDetail = new PromotionDetail();
     promotionDetail.percentDiscount = null;
     promotionDetail.promotionLine = savePromotionLine;
-    if (
-      (!quantityBuy && purchaseAmount !== 0) ||
-      (!purchaseAmount && purchaseAmount !== 0)
-    ) {
+    if (quantityBuy) {
+      if (!Number.isInteger(quantityBuy)) {
+        throw new BadRequestException('QUANTITY_BUY_MUST_BE_INTEGER');
+      }
+      if (quantityBuy < 1) {
+        throw new BadRequestException('QUANTITY_BUY_MUST_BE_GREATER_THAN_0');
+      }
+      promotionDetail.quantityBuy = quantityBuy;
+    }
+    if (purchaseAmount) {
+      if (!Number.isInteger(purchaseAmount)) {
+        throw new BadRequestException(
+          'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
+        );
+      }
+      if (purchaseAmount < 0) {
+        throw new BadRequestException(
+          'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
+        );
+      }
+      promotionDetail.purchaseAmount = purchaseAmount;
+    }
+    if (!quantityBuy && !purchaseAmount) {
       throw new BadRequestException(
         'QUANTITY_BUY_OR_PURCHASE_AMOUNT_IS_REQUIRED',
       );
     }
-    if (quantityBuy < 1) {
-      throw new BadRequestException('QUANTITY_BUY_MUST_BE_GREATER_THAN_0');
-    }
-    if (!Number.isInteger(quantityBuy)) {
-      throw new BadRequestException('QUANTITY_BUY_MUST_BE_INTEGER');
-    }
-    promotionDetail.quantityBuy = quantityBuy;
-
-    if (purchaseAmount < 0) {
-      throw new BadRequestException(
-        'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
-      );
-    }
-    if (!Number.isInteger(purchaseAmount)) {
-      throw new BadRequestException(
-        'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
-      );
-    }
-    promotionDetail.purchaseAmount = purchaseAmount;
 
     if (!maxReductionAmount && maxReductionAmount !== 0) {
       throw new BadRequestException('MAX_REDUCTION_AMOUNT_IS_REQUIRED');
@@ -121,33 +121,33 @@ export class PromotionLineService {
     const promotionDetail = new PromotionDetail();
     promotionDetail.reductionAmount = null;
     promotionDetail.promotionLine = savePromotionLine;
-    if (
-      (!quantityBuy && purchaseAmount !== 0) ||
-      (!purchaseAmount && purchaseAmount !== 0)
-    ) {
+    if (!quantityBuy && !purchaseAmount) {
       throw new BadRequestException(
         'QUANTITY_BUY_OR_PURCHASE_AMOUNT_IS_REQUIRED',
       );
     }
-    if (quantityBuy < 1) {
-      throw new BadRequestException('QUANTITY_BUY_MUST_BE_GREATER_THAN_0');
+    if (quantityBuy) {
+      if (quantityBuy < 1) {
+        throw new BadRequestException('QUANTITY_BUY_MUST_BE_GREATER_THAN_0');
+      }
+      if (!Number.isInteger(quantityBuy)) {
+        throw new BadRequestException('QUANTITY_BUY_MUST_BE_INTEGER');
+      }
+      promotionDetail.quantityBuy = quantityBuy;
     }
-    if (!Number.isInteger(quantityBuy)) {
-      throw new BadRequestException('QUANTITY_BUY_MUST_BE_INTEGER');
+    if (purchaseAmount) {
+      if (purchaseAmount < 0) {
+        throw new BadRequestException(
+          'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
+        );
+      }
+      if (!Number.isInteger(purchaseAmount)) {
+        throw new BadRequestException(
+          'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
+        );
+      }
+      promotionDetail.purchaseAmount = purchaseAmount;
     }
-    promotionDetail.quantityBuy = quantityBuy;
-
-    if (purchaseAmount < 0) {
-      throw new BadRequestException(
-        'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
-      );
-    }
-    if (!Number.isInteger(purchaseAmount)) {
-      throw new BadRequestException(
-        'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0',
-      );
-    }
-    promotionDetail.purchaseAmount = purchaseAmount;
 
     if (!maxReductionAmount && maxReductionAmount !== 0) {
       throw new BadRequestException('MAX_REDUCTION_AMOUNT_IS_REQUIRED');
@@ -221,7 +221,6 @@ export class PromotionLineService {
             status: true,
           },
         },
-        deletedAt: false,
         ...options?.select,
       },
       relations: {
@@ -554,6 +553,7 @@ export class PromotionLineService {
     await queryRunnerPD.connect();
     await queryRunnerPD.startTransaction();
     let savePromotionDetail: PromotionDetail;
+    let savePromotionLine: PromotionLine;
     try {
       const adminExist = await this.dataSource.getRepository(Staff).findOne({
         where: { id: adminId },
@@ -688,7 +688,7 @@ export class PromotionLineService {
       promotionLine.createdBy = adminId;
       promotionLine.applyAll = isAllTrip || false;
 
-      const savePromotionLine = await this.promotionLineRepository.save(
+      savePromotionLine = await this.promotionLineRepository.save(
         promotionLine,
       );
 
@@ -741,6 +741,7 @@ export class PromotionLineService {
       await queryRunnerPL.commitTransaction();
       return newSavePromotionLine;
     } catch (error) {
+      await this.promotionLineRepository.remove(savePromotionLine);
       await queryRunnerPD.rollbackTransaction();
       await queryRunnerPL.rollbackTransaction();
       return error;
@@ -1013,22 +1014,19 @@ export class PromotionLineService {
 
     let promotionLine: PromotionLine;
     if (id) {
-      promotionLine = await this.findOnePromotionLineById(id, {
+      promotionLine = await this.getPromotionLineById(id, {
         relations: {
           promotion: true,
         },
       });
     } else if (code) {
-      promotionLine = await this.findOnePromotionLineByCode(code, {
+      promotionLine = await this.getPromotionLineById(code, {
         relations: {
           promotion: true,
         },
       });
     }
     const promotion: Promotion = promotionLine.promotion;
-    if (!promotionLine) {
-      throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
-    }
     const currentDate = new Date(moment().format('YYYY-MM-DD'));
     if (promotion.endDate < currentDate) {
       throw new BadRequestException('PROMOTION_HAS_EXPIRED');
@@ -1039,8 +1037,10 @@ export class PromotionLineService {
     promotionLine.updatedBy = adminId;
     promotionLine.deletedAt = new Date();
     const promotionDetail: PromotionDetail = promotionLine.promotionDetail;
-    promotionDetail.deletedAt = new Date();
-    await this.promotionDetailRepository.save(promotionDetail);
+    if (promotionDetail) {
+      promotionDetail.deletedAt = new Date();
+      await this.promotionDetailRepository.save(promotionDetail);
+    }
     await this.promotionLineRepository.save(promotionLine);
     return {
       id: promotionLine.id,
@@ -1095,6 +1095,7 @@ export class PromotionLineService {
             message: 'Không tìm thấy khuyến mãi',
           };
         }
+
         const currentDate = new Date(moment().format('YYYY-MM-DD'));
         if (promotionLine.promotion.endDate < currentDate) {
           throw new BadRequestException('PROMOTION_HAS_EXPIRED');
@@ -1104,8 +1105,10 @@ export class PromotionLineService {
         }
         promotionLine.updatedBy = adminExist.id;
         const promotionDetail: PromotionDetail = promotionLine.promotionDetail;
-        promotionDetail.deletedAt = new Date();
-        await this.promotionDetailRepository.save(promotionDetail);
+        if (promotionDetail) {
+          promotionDetail.deletedAt = new Date();
+          await this.promotionDetailRepository.save(promotionDetail);
+        }
         await this.promotionLineRepository.save(promotionLine);
         return {
           id: promotionLine.id,
