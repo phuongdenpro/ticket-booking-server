@@ -471,7 +471,7 @@ export const mappingTranslate = {
   PROMOTION_LINE_TYPE_IS_STRING: 'Loại khuyến mãi phải là chuỗi ký tự',
   PROMOTION_LINE_TYPE_IS_REQUIRED: 'Loại khuyến mãi không được để trống',
   PROMOTION_LINE_TYPE_IS_ENUM:
-    'Loại khuyến mãi phải thuộc 1 trong các loại sau: "Tặng sản phẩm", "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
+    'Loại khuyến mãi phải thuộc 1 trong các loại sau: "Giảm giá sản phẩm (bằng tiền trực tiếp)", "Giảm giá sản phẩm (bằng phần trăm)"',
   PROMOTION_LINE_CODE_ALREADY_EXIST: 'Mã khuyến mãi đã tồn tại',
   PROMOTION_CODE_IS_REQUIRED: 'Mã khuyến mãi không được để trống',
   COUPON_CODE_IS_REQUIRED: 'Mã coupon không được để trống',

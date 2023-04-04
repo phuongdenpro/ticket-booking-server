@@ -709,7 +709,9 @@ export class PromotionLineService {
       await queryRunnerPL.commitTransaction();
       return newSavePromotionLine;
     } catch (error) {
-      await this.promotionLineRepository.remove(savePromotionLine);
+      if (savePromotionDetail) {
+        await this.promotionDetailRepository.remove(savePromotionDetail);
+      }
       await queryRunnerPD.rollbackTransaction();
       await queryRunnerPL.rollbackTransaction();
       return error;

@@ -2,7 +2,6 @@ import { Pagination } from './../../decorator';
 import {
   SortEnum,
   DeleteDtoTypeEnum,
-  ActiveStatusEnum,
   PromotionStatusEnum,
 } from './../../enums';
 import { IMAGE_REGEX } from './../../utils/regex.util';
