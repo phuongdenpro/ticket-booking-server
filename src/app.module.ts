@@ -47,14 +47,14 @@ import { PromotionLineModule } from './api/promotion-line/promotion-line.module'
     TripDetailModule,
     VehicleModule,
     SeatModule,
+    TicketModule,
     ImageResourceModule,
     PriceListModule,
-    UploadModule,
     PromotionModule,
-    BookingModule,
-    TicketModule,
-    OrderModule,
     PromotionLineModule,
+    BookingModule,
+    OrderModule,
+    UploadModule,
   ],
   providers: [
     {

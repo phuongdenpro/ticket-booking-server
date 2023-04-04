@@ -184,6 +184,8 @@ export const mappingTranslate = {
   SEAT_IS_SOLD: 'Ghế này đã được bán',
 
   // trip
+  TRIP_DETAIL_CODE_OR_TRIP_CODE_REQUIRED:
+    'Mã chuyến xe hoặc mã tuyến không được để trống',
   TRIP_HAS_ENDED: 'Tuyến xe này đã kết thúc',
   TRIP_NOT_FOUND: 'Không tìm thấy tuyến xe',
   TRIP_NOT_ACTIVE: 'Tuyến xe này không hoạt động',
@@ -351,7 +353,13 @@ export const mappingTranslate = {
   // price details
   PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết bảng giá',
   PRICE_IS_NUMBER: 'Giá phải là số',
+  MAX_PRICE_IS_NUMBER: 'Giá tối đa phải là số',
+  MIN_PRICE_IS_NUMBER: 'Giá tối thiểu phải là số',
   PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Giá phải lớn hơn hoặc bằng 0',
+  MAX_PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
+    'Giá tối đa phải lớn hơn hoặc bằng 0',
+  MIN_PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
+    'Giá tối thiểu phải lớn hơn hoặc bằng 0',
   PRICE_IS_TOO_BIG: 'Giá lớn hơn miền giá trị của double',
   PRICE_DETAIL_CODE_EXISTED: 'Mã chi tiết giá đã tồn tại',
 
@@ -455,6 +463,9 @@ export const mappingTranslate = {
   // promotion line
   PROMOTION_LINE_HAS_EXPIRED: 'Khuyến mãi đã hết hạn',
   PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy khuyến mãi',
+  PROMOTION_LINE_CODES_IS_ARRAY: 'Mã khuyến mãi phải là mảng',
+  PROMOTION_LINE_CODES_IS_STRING:
+    'thành phần trong danh sách mã khuyến mãi phải là chuỗi ký tự',
   PROMOTION_LINE_TYPE_IS_STRING: 'Loại khuyến mãi phải là chuỗi ký tự',
   PROMOTION_LINE_TYPE_IS_REQUIRED: 'Loại khuyến mãi không được để trống',
   PROMOTION_LINE_TYPE_IS_ENUM:

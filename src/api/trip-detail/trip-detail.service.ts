@@ -79,19 +79,24 @@ export class TripDetailService {
     return await this.tripDetailRepository.findOne({
       where: { ...options?.where },
       relations: {
-        vehicle: true,
+        vehicle: { images: true },
         ...options?.relations,
       },
       select: {
         deletedAt: false,
         vehicle: {
           id: true,
+          code: true,
           name: true,
           description: true,
           type: true,
           licensePlate: true,
           floorNumber: true,
           totalSeat: true,
+          images: {
+            id: true,
+            url: true,
+          },
         },
         ...options?.select,
       },

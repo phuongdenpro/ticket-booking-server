@@ -7,11 +7,20 @@ export class FilterPriceDetailDto {
   @ApiPropertyOptional({ example: 100000 })
   @IsNumber(
     { allowInfinity: false, allowNaN: false },
-    { message: 'PRICE_IS_NUMBER' },
+    { message: 'MAX_PRICE_IS_NUMBER' },
   )
-  @Min(0, { message: 'PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0' })
+  @Min(0, { message: 'MAX_PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0' })
   @IsOptional()
-  price: number;
+  maxPrice: number;
+
+  @ApiPropertyOptional({ example: 100000 })
+  @IsNumber(
+    { allowInfinity: false, allowNaN: false },
+    { message: 'MIN_PRICE_IS_NUMBER' },
+  )
+  @Min(0, { message: 'MIN_PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0' })
+  @IsOptional()
+  minPrice: number;
 
   @ApiPropertyOptional({ example: 'chuyến xe lúc 5h sài gòn - đà lạt' })
   @IsString({ message: 'KEYWORDS_IS_STRING' })

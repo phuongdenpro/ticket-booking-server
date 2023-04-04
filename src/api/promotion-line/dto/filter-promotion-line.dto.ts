@@ -65,24 +65,6 @@ export class FilterPromotionLineDto {
   @IsOptional()
   minOfMaxQuantity: number;
 
-  @ApiPropertyOptional({ example: 100 })
-  @IsNumber(
-    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'MIN_OF_MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
-  )
-  @Min(0, { message: 'MIN_OF_MAX_QUANTITY_PER_CUSTOMER_MIN_0' })
-  @IsOptional()
-  minOfMaxQuantityPerCustomer: number;
-
-  @ApiPropertyOptional({ example: 100 })
-  @IsNumber(
-    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'MAX_OF_MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
-  )
-  @Min(0, { message: 'MAX_OF_MAX_QUANTITY_PER_CUSTOMER_MIN_0' })
-  @IsOptional()
-  maxOfMaxQuantityPerCustomer: number;
-
   @ApiPropertyOptional({ example: 1_000_000 })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 3 },

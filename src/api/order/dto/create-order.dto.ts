@@ -39,4 +39,10 @@ export class CreateOrderDto {
   @IsString({ message: 'TRIP_DETAIL_CODE_IS_STRING' })
   @Length(1, 100, { message: 'TRIP_DETAIL_CODE_BETWEEN_1_AND_100_CHARACTERS' })
   tripDetailCode: string;
+
+  @ApiPropertyOptional({ example: ['', ''] })
+  @IsArray({ message: 'PROMOTION_LINE_CODES_IS_ARRAY' })
+  @IsString({ each: true, message: 'PROMOTION_LINE_CODES_IS_STRING' })
+  @IsOptional()
+  promotionLineCodes: string[];
 }

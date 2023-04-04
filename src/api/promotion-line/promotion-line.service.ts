@@ -291,8 +291,6 @@ export class PromotionLineService {
       maxUseQuantity,
       maxOfMaxQuantity,
       minOfMaxQuantity,
-      minOfMaxQuantityPerCustomer,
-      maxOfMaxQuantityPerCustomer,
       startDate,
       endDate,
       type,
@@ -374,22 +372,6 @@ export class PromotionLineService {
         maxOfMaxBudget,
       });
     }
-    if (minOfMaxQuantityPerCustomer) {
-      query.andWhere(
-        'q.maxQuantityPerCustomer >= :minOfMaxQuantityPerCustomer',
-        {
-          minOfMaxQuantityPerCustomer,
-        },
-      );
-    }
-    if (maxOfMaxQuantityPerCustomer) {
-      query.andWhere(
-        'q.maxQuantityPerCustomer <= :maxOfMaxQuantityPerCustomer',
-        {
-          maxOfMaxQuantityPerCustomer,
-        },
-      );
-    }
 
     query
       .orderBy('q.title', sort || SortEnum.DESC)
@@ -445,7 +427,6 @@ export class PromotionLineService {
       description,
       maxBudget,
       maxQuantity,
-      maxQuantityPerCustomer,
       startDate,
       endDate,
       note,
@@ -470,7 +451,6 @@ export class PromotionLineService {
         note,
         maxBudget,
         maxQuantity,
-        maxQuantityPerCustomer,
         startDate,
         endDate,
         type,
@@ -496,7 +476,6 @@ export class PromotionLineService {
           note,
           maxBudget,
           maxQuantity,
-          maxQuantityPerCustomer,
           startDate,
           endDate,
           type,
@@ -533,7 +512,6 @@ export class PromotionLineService {
       note,
       maxBudget,
       maxQuantity,
-      maxQuantityPerCustomer,
       startDate,
       endDate,
       type,
@@ -607,16 +585,6 @@ export class PromotionLineService {
         throw new BadRequestException('MAX_QUANTITY_MUST_BE_GREATER_THAN_0');
       }
       promotionLine.maxQuantity = maxQuantity;
-
-      if (!Number.isInteger(maxQuantityPerCustomer)) {
-        throw new BadRequestException('MAX_QUANTITY_MUST_BE_INT');
-      }
-      if (maxQuantityPerCustomer <= 0) {
-        throw new BadRequestException(
-          'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
-        );
-      }
-      promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
 
       switch (type) {
         case PromotionTypeEnum.PRODUCT_DISCOUNT:
@@ -763,7 +731,6 @@ export class PromotionLineService {
       note,
       maxBudget,
       maxQuantity,
-      maxQuantityPerCustomer,
       startDate,
       endDate,
       type,
@@ -851,29 +818,6 @@ export class PromotionLineService {
         );
       }
       promotionLine.maxQuantity = maxQuantity;
-    }
-    if (maxQuantityPerCustomer == 0) {
-      throw new BadRequestException(
-        'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
-      );
-    }
-    if (maxQuantityPerCustomer) {
-      if (!Number.isInteger(maxQuantity)) {
-        throw new BadRequestException(
-          'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_INTEGER',
-        );
-      }
-      if (maxQuantityPerCustomer <= 0) {
-        throw new BadRequestException(
-          'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_0',
-        );
-      }
-      if (maxQuantityPerCustomer < promotionLine.maxQuantityPerCustomer) {
-        throw new BadRequestException(
-          'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_GREATER_THAN_USED_QUANTITY_PER_CUSTOMER',
-        );
-      }
-      promotionLine.maxQuantityPerCustomer = maxQuantityPerCustomer;
     }
     switch (type) {
       case PromotionTypeEnum.PRODUCT_DISCOUNT:

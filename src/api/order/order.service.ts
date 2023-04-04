@@ -142,7 +142,14 @@ export class OrderService {
   }
 
   async createOrder(dto: CreateOrderDto, creatorId: string) {
-    const { note, seatIds, seatCodes, tripDetailCode, customerId } = dto;
+    const {
+      note,
+      seatIds,
+      seatCodes,
+      tripDetailCode,
+      customerId,
+      promotionLineCodes,
+    } = dto;
     // check permission
     const customerCreator = await this.customerService.findOneById(creatorId);
     const admin = await this.adminService.findOneBydId(creatorId);

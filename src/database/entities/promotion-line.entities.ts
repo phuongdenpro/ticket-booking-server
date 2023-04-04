@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { PromotionHistory, PromotionDetail, Promotion } from '.';
 
@@ -58,13 +59,13 @@ export class PromotionLine {
   @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
   maxQuantity: number;
 
-  @Column({
-    name: 'max_quantity_per_customer',
-    type: 'int',
-    nullable: false,
-    default: 1,
-  })
-  maxQuantityPerCustomer: number;
+  // @Column({
+  //   name: 'max_quantity_per_customer',
+  //   type: 'int',
+  //   nullable: false,
+  //   default: 1,
+  // })
+  // maxQuantityPerCustomer: number;
 
   @Column({
     name: 'apply_all',
@@ -101,11 +102,10 @@ export class PromotionLine {
   )
   promotionDetail: PromotionDetail;
 
-  @ManyToOne(
+  @OneToMany(
     () => PromotionHistory,
     (promotionHistory) => promotionHistory.promotionLine,
   )
-  @JoinColumn({ name: 'promotion_history_id', referencedColumnName: 'id' })
   promotionHistory: PromotionHistory;
 
   @ManyToOne(() => Promotion, (promotion) => promotion.promotionLines)

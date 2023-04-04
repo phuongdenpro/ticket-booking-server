@@ -15,6 +15,7 @@ import {
   FilterPriceDetailDto,
   UpdatePriceDetailDto,
   DeletePriceDetailDto,
+  FilterPriceDetailForBookingDto,
 } from './dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
@@ -180,6 +181,14 @@ export class PriceListController {
   @HttpCode(HttpStatus.OK)
   async getPriceDetailSeatType() {
     return await this.priceListService.getPriceDetailSeatType();
+  }
+
+  @Get('price-detail/booking')
+  @HttpCode(HttpStatus.OK)
+  async findPriceDetailForBooking(
+    @Query() dto: FilterPriceDetailForBookingDto,
+  ) {
+    return await this.priceListService.findPriceDetailForBooking(dto);
   }
 
   @Post('price-detail')

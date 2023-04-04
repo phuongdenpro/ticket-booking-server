@@ -13,6 +13,7 @@ import {
   FilterPriceDetailDto,
   UpdatePriceDetailDto,
   DeletePriceDetailDto,
+  FilterPriceDetailForBookingDto,
 } from './dto';
 import { PriceDetail, PriceList, Staff, Trip } from './../../database/entities';
 import {
@@ -540,6 +541,91 @@ export class PriceListService {
     };
   }
 
+  async findPriceDetailForBooking(dto: FilterPriceDetailForBookingDto) {
+    const { applyDate, seatType, tripDetailCode, tripCode } = dto;
+    const priceDetail = await this.findOnePriceDetail({
+      where: {
+        seatType,
+        trip: {
+          code: tripCode,
+          tripDetails: {
+            code: tripDetailCode,
+          },
+        },
+        priceList: {
+          startDate: LessThanOrEqual(applyDate),
+          endDate: MoreThanOrEqual(applyDate),
+          status: ActiveStatusEnum.ACTIVE,
+        },
+      },
+      relations: {
+        priceList: true,
+        trip: { priceDetails: true },
+      },
+    });
+    if (!priceDetail) {
+      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+    }
+    delete priceDetail.priceList;
+    delete priceDetail.trip.priceDetails;
+
+    return { dataResult: priceDetail };
+  }
+
+  async findAllPriceDetail(dto: FilterPriceDetailDto, pagination?: Pagination) {
+    const { maxPrice, minPrice, keywords, priceListCode, sort, seatType } = dto;
+    const query = this.priceDetailRepository.createQueryBuilder('q');
+
+    if (keywords) {
+      const newKeywords = keywords.trim();
+      const subQuery = this.priceDetailRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
+    }
+    if (maxPrice) {
+      query.andWhere('q.price <= :maxPrice', { maxPrice });
+    }
+    if (minPrice) {
+      query.andWhere('q.price >= :minPrice', { minPrice });
+    }
+    if (priceListCode) {
+      query
+        .leftJoinAndSelect('q.priceList', 'p')
+        .andWhere('p.code = :priceListCode', { priceListCode });
+    }
+    switch (seatType) {
+      case VehicleTypeEnum.LIMOUSINE:
+      case VehicleTypeEnum.SLEEPER_BUS:
+      case VehicleTypeEnum.SEAT_BUS:
+        query.andWhere('q.seatType = :seatType', { seatType });
+        break;
+      default:
+        break;
+    }
+    query
+      .orderBy('q.price', sort || SortEnum.ASC)
+      .addOrderBy('q.code', sort || SortEnum.DESC)
+      .addOrderBy('q.note', sort || SortEnum.DESC);
+
+    const dataResult = await query
+      .leftJoinAndSelect('q.trip', 't')
+      .select(this.selectFieldsPriceDetailWithQ)
+      .skip(pagination.skip)
+      .take(pagination.take)
+      .getMany();
+    const total = await query.clone().getCount();
+
+    return { dataResult, pagination, total };
+  }
+
   async createPriceDetail(dto: CreatePriceDetailDto, adminId: string) {
     const {
       code,
@@ -667,57 +753,6 @@ export class PriceListService {
     const savePriceDetail = await this.priceDetailRepository.save(priceDetail);
     delete savePriceDetail.deletedAt;
     return savePriceDetail;
-  }
-
-  async findAllPriceDetail(dto: FilterPriceDetailDto, pagination?: Pagination) {
-    const { price, keywords, priceListCode, sort, seatType } = dto;
-    const query = this.priceDetailRepository.createQueryBuilder('q');
-
-    if (keywords) {
-      const newKeywords = keywords.trim();
-      const subQuery = this.priceDetailRepository
-        .createQueryBuilder('q2')
-        .select('q2.id')
-        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
-        .getQuery();
-
-      query.andWhere(`q.id in (${subQuery})`, {
-        code: `%${newKeywords}%`,
-        note: `%${newKeywords}%`,
-      });
-    }
-    if (price) {
-      query.andWhere('q.price <= :price', { price });
-    }
-    if (priceListCode) {
-      query
-        .leftJoinAndSelect('q.priceList', 'p')
-        .andWhere('p.code = :priceListCode', { priceListCode });
-    }
-    switch (seatType) {
-      case VehicleTypeEnum.LIMOUSINE:
-      case VehicleTypeEnum.SLEEPER_BUS:
-      case VehicleTypeEnum.SEAT_BUS:
-        query.andWhere('q.seatType = :seatType', { seatType });
-        break;
-      default:
-        break;
-    }
-    query
-      .orderBy('q.price', sort || SortEnum.ASC)
-      .addOrderBy('q.code', sort || SortEnum.DESC)
-      .addOrderBy('q.note', sort || SortEnum.DESC);
-
-    const dataResult = await query
-      .leftJoinAndSelect('q.trip', 't')
-      .select(this.selectFieldsPriceDetailWithQ)
-      .skip(pagination.skip)
-      .take(pagination.take)
-      .getMany();
-    const total = await query.clone().getCount();
-
-    return { dataResult, pagination, total };
   }
 
   async updatePriceDetailByIdOrCode(

@@ -88,16 +88,6 @@ export class CreatePromotionLineDto {
   @IsInt({ message: 'MAX_QUANTITY_MUST_BE_INTEGER' })
   maxQuantity: number;
 
-  @ApiProperty({ example: 100 })
-  @IsNotEmpty({ message: 'MAX_QUANTITY_PER_CUSTOMER_IS_REQUIRED' })
-  @IsNumber(
-    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
-  )
-  @Min(1, { message: 'MAX_QUANTITY_PER_CUSTOMER_MIN_1' })
-  @IsInt({ message: 'MAX_QUANTITY_PER_CUSTOMER_MUST_BE_INTEGER' })
-  maxQuantityPerCustomer: number;
-
   @ApiProperty({ example: 1_000_000 })
   @IsNotEmpty({ message: 'MAX_BUDGET_IS_REQUIRED' })
   @IsNumber(

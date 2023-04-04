@@ -24,6 +24,7 @@ import { PromotionLineService } from './promotion-line.service';
 import {
   CreatePromotionLinesDto,
   DeleteMultiPromotionLineDto,
+  FilterAvailablePromotionLineDto,
   FilterPromotionLineDto,
   UpdatePromotionLineDto,
 } from './dto';
@@ -64,6 +65,14 @@ export class PromotionLineController {
       dto,
       pagination,
     );
+  }
+
+  @Get('/order')
+  @HttpCode(HttpStatus.OK)
+  async findPromotionLineUsingOrder(
+    @Query() dto: FilterAvailablePromotionLineDto,
+  ) {
+    return await this.promotionLineService.findPromotionLineUsingOrder(dto);
   }
 
   @Patch('id/:id')

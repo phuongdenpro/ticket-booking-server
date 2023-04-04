@@ -26,10 +26,10 @@ export class Trip {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({ name: 'start_date', type: 'date', nullable: false })
+  @Column({ name: 'start_date', type: 'timestamp', nullable: false })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'date', nullable: true })
+  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date;
 
   @Column({ name: 'status', type: 'varchar', length: 100, default: false })

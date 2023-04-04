@@ -4,5 +4,6 @@ export * from './update-price-list.dto';
 export * from './delete-price-list.dto';
 export * from './create-price-detail.dto';
 export * from './filter-price-detail.dto';
+export * from './filter-price-detail-for-booking.dto';
 export * from './update-price-detail.dto';
 export * from './delete-price-detail.dto';

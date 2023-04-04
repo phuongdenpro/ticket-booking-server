@@ -3,7 +3,6 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -29,6 +28,14 @@ export class PromotionHistory {
   @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
   type: string;
 
+  @Column({
+    name: 'promotion_line_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  promotionLineCode: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -47,7 +54,7 @@ export class PromotionHistory {
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   order: Order;
 
-  @OneToMany(
+  @ManyToOne(
     () => PromotionLine,
     (promotionLine) => promotionLine.promotionHistory,
   )

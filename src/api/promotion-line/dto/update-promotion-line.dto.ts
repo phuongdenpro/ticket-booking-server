@@ -64,14 +64,6 @@ export class UpdatePromotionLineDto {
   @IsOptional()
   maxQuantity: number;
 
-  @ApiPropertyOptional({ example: 100 })
-  @IsNumber(
-    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
-  )
-  @IsOptional()
-  maxQuantityPerCustomer: number;
-
   @ApiPropertyOptional({ example: 1_000_000 })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 3 },

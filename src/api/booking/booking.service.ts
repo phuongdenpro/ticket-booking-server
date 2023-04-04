@@ -8,7 +8,7 @@ export class BookingService {
   constructor(private readonly orderService: OrderService) {}
 
   async booking(dto: CreateBookingDto, userId: string) {
-    const { seatIds, seatCodes, tripDetailCode } = dto;
+    const { seatIds, seatCodes, tripDetailCode, promotionLineCodes } = dto;
     const dtoOrder = new CreateOrderDto();
     if (!seatCodes && !seatIds) {
       throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
@@ -22,6 +22,7 @@ export class BookingService {
     dtoOrder.tripDetailCode = tripDetailCode;
     dtoOrder.note = '';
     dtoOrder.customerId = userId;
+    dtoOrder.promotionLineCodes = promotionLineCodes;
     const order = await this.orderService.createOrder(dtoOrder, userId);
     return order;
   }
