@@ -564,7 +564,7 @@ export class PriceListService {
       },
     });
     if (!priceDetail) {
-      throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
+      return null;
     }
     delete priceDetail.priceList;
     delete priceDetail.trip.priceDetails;
