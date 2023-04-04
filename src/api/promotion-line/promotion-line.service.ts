@@ -208,10 +208,17 @@ export class PromotionLineService {
       where: { ...options?.where },
       select: {
         promotionDetail: {
+          id: true,
+          purchaseAmount: true,
+          reductionAmount: true,
+          percentDiscount: true,
+          maxReductionAmount: true,
+          promotionLineCode: true,
           trip: {
             id: true,
             code: true,
             name: true,
+            status: true,
           },
         },
         deletedAt: false,

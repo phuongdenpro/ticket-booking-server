@@ -4,13 +4,11 @@ import { IsInt, IsOptional, Min } from 'class-validator';
 export class ProductDiscountDto {
   @ApiPropertyOptional({ example: 1 })
   @IsInt({ message: 'QUANTITY_BUY_MUST_BE_INTEGER' })
-  @Min(1, { message: 'QUANTITY_BUY_MUST_BE_GREATER_THAN_0' })
   @IsOptional()
   quantityBuy: number;
 
   @ApiPropertyOptional({ example: 1 })
   @IsInt({ message: 'PURCHASE_AMOUNT_MUST_BE_INT' })
-  @Min(0, { message: 'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0' })
   @IsOptional()
   purchaseAmount: number;
 
@@ -30,13 +28,11 @@ export class ProductDiscountDto {
 export class ProductDiscountPercentDto {
   @ApiPropertyOptional({ example: 1 })
   @IsInt({ message: 'QUANTITY_BUY_MUST_BE_INTEGER' })
-  @Min(1, { message: 'QUANTITY_BUY_MUST_BE_GREATER_THAN_0' })
   @IsOptional()
   quantityBuy: number;
 
   @ApiPropertyOptional({ example: 0 })
   @IsInt({ message: 'PURCHASE_AMOUNT_MUST_BE_INT' })
-  @Min(0, { message: 'PURCHASE_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0' })
   @IsOptional()
   purchaseAmount: number;
 
