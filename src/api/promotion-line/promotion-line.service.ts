@@ -221,10 +221,19 @@ export class PromotionLineService {
             status: true,
           },
         },
+        promotion:{
+          id: true,
+          code: true,
+          name: true,
+          status: true,
+          startDate:true,
+          endDate:true,
+        },
         ...options?.select,
       },
       relations: {
         promotionDetail: { trip: true },
+        promotion:true,
         ...options?.relations,
       },
       order: {
