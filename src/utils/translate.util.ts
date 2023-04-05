@@ -559,4 +559,6 @@ export const mappingTranslate = {
   AMOUNT_IS_NUMBER: 'Số tiền phải là số',
   QUANTITY_IS_REQUIRED: 'Số lượng không được để trống',
   QUANTITY_IS_NUMBER: 'Số lượng phải là số',
+  QUANTITY_MUST_BE_INTEGER: 'Số lượng phải là số nguyên',
+  QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng phải lớn hơn 0',
 };

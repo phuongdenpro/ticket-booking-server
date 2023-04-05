@@ -106,7 +106,7 @@ export class PromotionLine {
     () => PromotionHistory,
     (promotionHistory) => promotionHistory.promotionLine,
   )
-  promotionHistory: PromotionHistory;
+  promotionHistory: PromotionHistory[];
 
   @ManyToOne(() => Promotion, (promotion) => promotion.promotionLines)
   @JoinColumn({ name: 'promotion_id', referencedColumnName: 'id' })

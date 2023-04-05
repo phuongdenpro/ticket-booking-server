@@ -26,16 +26,6 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 export class TicketController {
   constructor(private ticketService: TicketService) {}
 
-  // ticket
-  // @Post()
-  // @HttpCode(HttpStatus.CREATED)
-  // @Roles(RoleEnum.STAFF)
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
-  // async createNewVehicle(@Body() dto: CreateTicketDto, @CurrentUser() user) {
-  //   return await this.ticketService.createTicket(dto, user.id);
-  // }
-
   @Get()
   @HttpCode(HttpStatus.OK)
   async findAllTicket(
@@ -110,10 +100,4 @@ export class TicketController {
   async getTicketDetailByCode(@Param('code') code: string) {
     return await this.ticketService.getTicketDetailByCode(code);
   }
-
-  // @Get('ticket-detail/demo')
-  // @HttpCode(HttpStatus.OK)
-  // async getTicketDetailByCode1(@Param('code') code: string) {
-  //   return await this.ticketService.findOneTicketDetailBy({ code });
-  // }
 }

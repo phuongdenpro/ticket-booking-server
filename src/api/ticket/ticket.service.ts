@@ -43,6 +43,7 @@ export class TicketService {
     'q.note',
     'q.startDate',
     'q.endDate',
+    'q.tripDetailCode',
     'q.createdBy',
     'q.updatedBy',
     'q.createdAt',
@@ -59,6 +60,10 @@ export class TicketService {
     'q.updatedAt',
     't.id',
     't.code',
+    's.id',
+    's.code',
+    's.name',
+    's.floor',
   ];
 
   // other
@@ -140,7 +145,7 @@ export class TicketService {
     ticket.code = code;
     ticket.note = note;
 
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
+    const currentDate = moment().toDate();
     if (!startDate) {
       throw new BadRequestException('TICKET_START_DATE_IS_REQUIRED');
     }
@@ -165,6 +170,7 @@ export class TicketService {
     }
     const seats = tripDetail?.vehicle?.seats;
     ticket.tripDetail = tripDetail;
+    ticket.tripDetailCode = tripDetail.code;
     ticket.createdBy = adminExist.id;
     const saveTicket = await this.ticketRepository.save(ticket);
     delete saveTicket.deletedAt;
@@ -250,9 +256,10 @@ export class TicketService {
       if (!tripDetail) {
         throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
       }
+      ticket.tripDetailCode = tripDetail.code;
       ticket.tripDetail = tripDetail;
     }
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
+    const currentDate = moment().toDate();
     if (startDate) {
       if (startDate <= currentDate) {
         throw new BadRequestException(
@@ -351,7 +358,7 @@ export class TicketService {
     dto: FilterTicketDetailDto,
     pagination?: Pagination,
   ) {
-    const { keywords, status, sort, ticketCode, ticketId } = dto;
+    const { keywords, status, sort, ticketCode, tripDetailCode } = dto;
 
     const query = this.ticketDetailRepository.createQueryBuilder('q');
     if (keywords) {
@@ -373,16 +380,17 @@ export class TicketService {
     }
     query.leftJoinAndSelect('q.ticket', 't');
     if (ticketCode) {
-      query.andWhere('id.code = :ticketCode', { ticketCode });
+      query.andWhere('t.code = :ticketCode', { ticketCode });
     }
-    if (ticketId) {
-      query.andWhere('t.id = :ticketId', { ticketId });
+    if (tripDetailCode) {
+      query.andWhere('t.tripDetailCode = :tripDetailCode', { tripDetailCode });
     }
     query
       .orderBy('q.createdAt', sort || SortEnum.DESC)
       .addOrderBy('q.code', SortEnum.DESC);
 
     const dataResult = await query
+      .leftJoinAndSelect('q.seat', 's')
       .select(this.selectTicketDetailFieldsWithQ)
       .offset(pagination.skip)
       .limit(pagination.take)

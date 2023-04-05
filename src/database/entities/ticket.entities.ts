@@ -29,6 +29,14 @@ export class Ticket {
   @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date;
 
+  @Column({
+    name: 'trip_detail_code',
+    type: 'varchar',
+    nullable: true,
+    length: 100,
+  })
+  tripDetailCode: string;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
 

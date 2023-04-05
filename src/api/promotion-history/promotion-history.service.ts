@@ -106,7 +106,50 @@ export class PromotionHistoryService {
       where: { code: orderCode },
       relations: { orderDetails: true },
     });
+    if (!order) {
+      throw new BadRequestException('ORDER_NOT_FOUND');
+    }
+    promotionHistory.order = order;
 
-    return { message: 'coming soon' };
+    const promotionLine = await this.promotionLineRepository.findOne({
+      where: { code: promotionLineCode },
+      relations: { promotionDetail: true },
+    });
+    if (!promotionLine) {
+      throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
+    }
+    promotionHistory.promotionLine = promotionLine;
+
+    if (!amount) {
+      throw new BadRequestException('AMOUNT_IS_REQUIRED');
+    }
+    promotionHistory.amount = amount;
+
+    if (!quantity) {
+      throw new BadRequestException('QUANTITY_IS_REQUIRED');
+    }
+    if (!Number.isInteger(quantity)) {
+      throw new BadRequestException('QUANTITY_MUST_BE_INTEGER');
+    }
+    if (quantity <= 0) {
+      throw new BadRequestException('QUANTITY_MUST_BE_GREATER_THAN_0');
+    }
+    promotionHistory.quantity = quantity;
+
+    switch (type) {
+      case PromotionHistoryTypeEnum.PRODUCT_DISCOUNT:
+      case PromotionHistoryTypeEnum.PRODUCT_DISCOUNT_PERCENT:
+      case PromotionHistoryTypeEnum.REFUND:
+        promotionHistory.type = type;
+        break;
+      default:
+        break;
+    }
+
+    const savedPromotionHistory = await this.promotionHistoryRepository.save(
+      promotionHistory,
+    );
+    delete savedPromotionHistory.deletedAt;
+    return savedPromotionHistory;
   }
 }
