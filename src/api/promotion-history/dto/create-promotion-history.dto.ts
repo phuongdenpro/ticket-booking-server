@@ -1,5 +1,12 @@
+import { PromotionHistoryTypeEnum } from './../../../enums';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsString, Length } from 'class-validator';
+import {
+  IsEnum,
+  IsNotEmpty,
+  IsNumber,
+  IsString,
+  Length,
+} from 'class-validator';
 
 export class CreatePromotionHistoryDto {
   @ApiProperty({ example: '' })
@@ -18,7 +25,11 @@ export class CreatePromotionHistoryDto {
   )
   quantity: number;
 
-  @ApiProperty({ example: '' })
+  @ApiProperty({ example: PromotionHistoryTypeEnum.PRODUCT_DISCOUNT_PERCENT })
+  @IsNotEmpty({ message: 'PROMOTION_HISTORY_TYPE_IS_REQUIRED' })
+  @IsEnum(PromotionHistoryTypeEnum, {
+    message: 'PROMOTION_HISTORY_TYPE_IS_ENUM',
+  })
   type: string;
 
   @ApiProperty({ example: '' })

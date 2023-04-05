@@ -497,7 +497,7 @@ export class OrderService {
       orderDetail.ticketDetail = ticketDetail;
       // get price detail
       const ticketDetailId = ticketDetail.id;
-      const currentDate = new Date(moment().format('YYYY-MM-DD'));
+      const currentDate = moment().startOf('day').toDate();
 
       const dtoFilterPriceDetail = new FilterPriceDetailForBookingDto();
       dtoFilterPriceDetail.seatType = vehicle.type;

@@ -221,19 +221,10 @@ export class PromotionLineService {
             status: true,
           },
         },
-        promotion:{
-          id: true,
-          code: true,
-          name: true,
-          status: true,
-          startDate:true,
-          endDate:true,
-        },
         ...options?.select,
       },
       relations: {
         promotionDetail: { trip: true },
-        promotion:true,
         ...options?.relations,
       },
       order: {
@@ -336,10 +327,12 @@ export class PromotionLineService {
       query.andWhere('p.code = :promotionCode', { promotionCode });
     }
     if (startDate) {
-      query.andWhere('q.startDate >= :startDate', { startDate });
+      const newStartDate = moment(startDate).startOf('day').toDate();
+      query.andWhere('q.startDate >= :startDate', { startDate: newStartDate });
     }
     if (endDate) {
-      query.andWhere('q.endDate <= :endDate', { endDate });
+      const newEndDate = moment(endDate).endOf('day').toDate();
+      query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
     switch (type) {
       case PromotionTypeEnum.PRODUCT_DISCOUNT:
@@ -402,13 +395,17 @@ export class PromotionLineService {
     const { startDate, endDate, minPurchaseAmount, minQuantityBuy, tripCode } =
       dto;
 
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+    const currentDate = moment().startOf('day').toDate();
+    const newStartDate = moment(startDate).startOf('day').toDate();
+    const newEndDate = moment(endDate).startOf('day').toDate();
     const query = await this.promotionLineRepository
       .createQueryBuilder('pl')
       .where('pl.startDate <= :startDate', {
-        startDate: startDate || currentDate,
+        startDate: startDate ? newStartDate : currentDate,
       })
-      .andWhere('pl.endDate >= :startDate', { endDate: endDate || currentDate })
+      .andWhere('pl.endDate >= :startDate', {
+        endDate: endDate ? newEndDate : currentDate,
+      })
       .leftJoinAndSelect('pl.promotion', 'p')
       .andWhere('p.status = :status', { status: ActiveStatusEnum.ACTIVE })
       .leftJoinAndSelect('pl.promotionDetail', 'pd')
@@ -564,8 +561,7 @@ export class PromotionLineService {
       }
       promotionLine.promotion = promotion;
 
-      const currentDateString = moment().format('YYYY-MM-DD');
-      const currentDate = new Date(currentDateString);
+      const currentDate = moment().startOf('day').toDate();
       if (promotion.endDate < currentDate) {
         throw new BadRequestException('PROMOTION_HAS_EXPIRED');
       }
@@ -603,47 +599,48 @@ export class PromotionLineService {
         default:
           throw new BadRequestException('PROMOTION_LINE_TYPE_IS_ENUM');
       }
-
       // validate startDate
       if (!startDate) {
         promotionLine.startDate = promotion.startDate;
       } else {
-        if (startDate <= currentDate) {
+        const newStartDate = moment(startDate).startOf('day').toDate();
+        if (newStartDate <= currentDate) {
           throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
         }
-        if (startDate < promotion.startDate) {
+        if (newStartDate < promotion.startDate) {
           throw new BadRequestException(
             'START_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE',
           );
         }
-        if (startDate > promotion.endDate) {
+        if (newStartDate > promotion.endDate) {
           throw new BadRequestException(
             'START_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE',
           );
         }
-        promotionLine.startDate = startDate;
+        promotionLine.startDate = newStartDate;
       }
 
       // validate endDate
       if (!endDate) {
         promotionLine.endDate = promotion.endDate;
       } else {
-        if (endDate < currentDate) {
+        const newEndDate = moment(endDate).startOf('day').toDate();
+        if (newEndDate < currentDate) {
           throw new BadRequestException(
             'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
           );
         }
-        if (endDate < startDate) {
+        if (newEndDate < startDate) {
           throw new BadRequestException(
             'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
           );
         }
-        if (endDate > promotion.endDate) {
+        if (newEndDate > promotion.endDate) {
           throw new BadRequestException(
             'END_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE',
           );
         }
-        if (endDate < promotion.startDate) {
+        if (newEndDate < promotion.startDate) {
           throw new BadRequestException(
             'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE',
           );
@@ -781,8 +778,7 @@ export class PromotionLineService {
     }
 
     const promotion: Promotion = promotionLine.promotion;
-    const currentDateString = moment().format('YYYY-MM-DD');
-    const currentDate = new Date(currentDateString);
+    const currentDate = moment().startOf('day').toDate();
     if (promotion.endDate < currentDate) {
       throw new BadRequestException('PROMOTION_HAS_EXPIRED');
     }
@@ -840,20 +836,21 @@ export class PromotionLineService {
     }
     // validate start date
     if (startDate) {
-      if (startDate <= currentDate) {
+      const newStartDate = moment(startDate).startOf('day').toDate();
+      if (newStartDate <= currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
       }
-      if (startDate < promotion.startDate) {
+      if (newStartDate < promotion.startDate) {
         throw new BadRequestException(
           'START_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_PROMOTION_START_DATE',
         );
       }
-      if (startDate > promotion.endDate) {
+      if (newStartDate > promotion.endDate) {
         throw new BadRequestException(
           'START_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE',
         );
       }
-      if (startDate > promotionLine.endDate) {
+      if (newStartDate > promotionLine.endDate) {
         throw new BadRequestException(
           'START_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_LINE_END_DATE',
         );
@@ -872,20 +869,22 @@ export class PromotionLineService {
     }
     // validate end date
     if (endDate) {
-      if (endDate < currentDate) {
+      const newEndDate = moment(endDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').toDate();
+      if (newEndDate < currentDate) {
         throw new BadRequestException(
           'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
         );
       }
       if (
-        (!startDate && endDate < promotionLine.startDate) ||
-        (startDate && endDate < startDate)
+        (!startDate && newEndDate < promotionLine.startDate) ||
+        (startDate && newEndDate < newStartDate)
       ) {
         throw new BadRequestException(
           'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
         );
       }
-      if (endDate > promotion.endDate) {
+      if (newEndDate > promotion.endDate) {
         throw new BadRequestException(
           'END_DATE_MUST_BE_LESS_THAN_OR_EQUAL_TO_PROMOTION_END_DATE',
         );
@@ -893,6 +892,7 @@ export class PromotionLineService {
 
       promotionLine.endDate = endDate;
     }
+
     promotionLine.updatedBy = adminId;
     // transaction
     const queryRunner =
@@ -982,7 +982,7 @@ export class PromotionLineService {
       });
     }
     const promotion: Promotion = promotionLine.promotion;
-    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    const currentDate = moment().startOf('day').toDate();
     if (promotion.endDate < currentDate) {
       throw new BadRequestException('PROMOTION_HAS_EXPIRED');
     }
@@ -1051,7 +1051,7 @@ export class PromotionLineService {
           };
         }
 
-        const currentDate = new Date(moment().format('YYYY-MM-DD'));
+        const currentDate = moment().startOf('day').toDate();
         if (promotionLine.promotion.endDate < currentDate) {
           throw new BadRequestException('PROMOTION_HAS_EXPIRED');
         }

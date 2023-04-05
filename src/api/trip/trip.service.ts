@@ -140,22 +140,24 @@ export class TripService {
     trip.name = name;
     trip.note = note;
     // check start date
-    const currentDate = new Date(moment().format('YYYY-MM-DD'));
-    if (startDate <= currentDate) {
+    const currentDate = moment().startOf('day').toDate();
+    const newStartDate = moment(startDate).startOf('day').toDate();
+    if (newStartDate <= currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
-    trip.startDate = startDate;
+    trip.startDate = newStartDate;
     // check end date
 
-    if (endDate < currentDate) {
+    const newEndDate = moment(endDate).startOf('day').toDate();
+    if (newEndDate < currentDate) {
       throw new BadRequestException('END_DATE_GREATER_THAN_NOW');
     }
-    if (endDate <= startDate) {
+    if (newEndDate <= startDate) {
       throw new BadRequestException(
         'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
       );
     }
-    trip.endDate = endDate;
+    trip.endDate = newEndDate;
     // check from station
     const fromStation = await this.dataSource
       .getRepository(Station)
@@ -236,11 +238,11 @@ export class TripService {
     }
 
     if (startDate) {
-      const newStartDate = new Date(startDate);
+      const newStartDate = moment(startDate).startOf('day').toDate();
       query.andWhere('q.startDate >= :startDate', { startDate: newStartDate });
     }
     if (endDate) {
-      const newEndDate = new Date(endDate);
+      const newEndDate = moment(endDate).startOf('day').toDate();
       query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
     if (fromStationId) {
@@ -342,36 +344,38 @@ export class TripService {
       trip.note = note;
     }
 
-    const currentDate = new Date(moment().format('YYYY-MM-DD'));
+    const currentDate = moment().startOf('day').toDate();
     if (startDate) {
-      if (startDate <= currentDate) {
+      const newStartDate = moment(startDate).startOf('day').toDate();
+      if (newStartDate <= currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
       }
       if (
-        (endDate && startDate > endDate) ||
-        (!endDate && startDate > trip.endDate)
+        (endDate && newStartDate > endDate) ||
+        (!endDate && newStartDate > trip.endDate)
       ) {
         throw new BadRequestException(
           'END_DATE_MUST_BE_GREATER_THAN_START_DATE',
         );
       }
-      trip.startDate = startDate;
+      trip.startDate = newStartDate;
     }
     if (endDate) {
-      if (endDate <= currentDate) {
+      const newEndDate = moment(endDate).startOf('day').toDate();
+      if (newEndDate <= currentDate) {
         throw new BadRequestException(
           'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
         );
       }
       if (
-        (startDate && endDate < startDate) ||
-        (!startDate && endDate < trip.startDate)
+        (startDate && newEndDate < startDate) ||
+        (!startDate && newEndDate < trip.startDate)
       ) {
         throw new BadRequestException(
           'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
         );
       }
-      trip.endDate = endDate;
+      trip.endDate = newEndDate;
     }
 
     if (fromStationId) {

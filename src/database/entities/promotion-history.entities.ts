@@ -16,16 +16,16 @@ export class PromotionHistory {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'amount', type: 'double', nullable: true, default: 0.0 })
+  @Column({ name: 'amount', type: 'double', nullable: false, default: 0.0 })
   amount: number;
 
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({ name: 'quantity', type: 'int', nullable: true, default: 1 })
+  @Column({ name: 'quantity', type: 'int', nullable: false, default: 1 })
   quantity: number;
 
-  @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'type', type: 'varchar', length: 100, nullable: false })
   type: string;
 
   @Column({

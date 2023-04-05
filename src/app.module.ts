@@ -53,10 +53,10 @@ import { PromotionHistoryModule } from './api/promotion-history/promotion-histor
     PriceListModule,
     PromotionModule,
     PromotionLineModule,
+    PromotionHistoryModule,
     BookingModule,
     OrderModule,
     UploadModule,
-    PromotionHistoryModule,
   ],
   providers: [
     {

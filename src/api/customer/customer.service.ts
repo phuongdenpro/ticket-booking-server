@@ -372,7 +372,7 @@ export class CustomerService {
     if (birthday) {
       customer.birthday = birthday;
     } else {
-      customer.birthday = new Date(moment().format('YYYY-MM-DD'));
+      customer.birthday = moment().startOf('day').toDate();
     }
 
     if (email) {

@@ -552,6 +552,9 @@ export const mappingTranslate = {
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',
+  PROMOTION_HISTORY_TYPE_IS_REQUIRED:
+    'Loại lịch sử khuyến mãi không được để trống',
+  PROMOTION_HISTORY_TYPE_IS_ENUM: 'Loại lịch sử khuyến mãi không hợp lệ',
   AMOUNT_IS_REQUIRED: 'Số tiền không được để trống',
   AMOUNT_IS_NUMBER: 'Số tiền phải là số',
   QUANTITY_IS_REQUIRED: 'Số lượng không được để trống',

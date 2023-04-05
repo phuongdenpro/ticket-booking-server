@@ -7,6 +7,7 @@ import {
   PromotionHistory,
   PromotionLine,
 } from './../../database/entities';
+import { PromotionHistoryController } from './promotion-history.controller';
 
 @Module({
   imports: [
@@ -19,5 +20,6 @@ import {
   ],
   providers: [PromotionHistoryService],
   exports: [PromotionHistoryService],
+  controllers: [PromotionHistoryController],
 })
 export class PromotionHistoryModule {}

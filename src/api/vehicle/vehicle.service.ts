@@ -40,8 +40,8 @@ export class VehicleService {
       select: {
         seats: {
           id: true,
+          code: true,
           name: true,
-          status: true,
           floor: true,
         },
         images: {

@@ -4,9 +4,16 @@ import {
   OrderDetail,
   PromotionHistory,
   PromotionLine,
+  Staff,
 } from './../../database/entities';
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { CreatePromotionHistoryDto } from './dto';
+import { PromotionHistoryTypeEnum } from './../../enums';
 
 @Injectable()
 export class PromotionHistoryService {
@@ -19,6 +26,7 @@ export class PromotionHistoryService {
     private readonly promotionLineRepository: Repository<PromotionLine>,
     @InjectRepository(PromotionHistory)
     private readonly promotionHistoryRepository: Repository<PromotionHistory>,
+    private dataSource: DataSource,
   ) {}
 
   async findOnePromotionHistory(options: any) {
@@ -74,7 +82,31 @@ export class PromotionHistoryService {
     return promotionHistory;
   }
 
-  async createPromotionHistory(dto, userId: string) {
-    const {} = dto;
+  async getPromotionHistoryStatusEnum() {
+    return {
+      dataResult: Object.keys(PromotionHistoryTypeEnum).map(
+        (key) => PromotionHistoryTypeEnum[key],
+      ),
+    };
+  }
+
+  async createPromotionHistory(dto: CreatePromotionHistoryDto, userId: string) {
+    const { amount, orderCode, promotionLineCode, quantity, type } = dto;
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!adminExist.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    const promotionHistory = new PromotionHistory();
+    const order = await this.orderRepository.findOne({
+      where: { code: orderCode },
+      relations: { orderDetails: true },
+    });
+
+    return { message: 'coming soon' };
   }
 }
