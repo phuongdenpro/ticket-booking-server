@@ -15,13 +15,13 @@ export class ProductDiscountDto {
   @ApiProperty({ example: 1 })
   @IsInt({ message: 'REDUCTION_AMOUNT_IS_INT' })
   @Min(0, { message: 'REDUCTION_AMOUNT_GREATER_THAN_OR_EQUAL_TO_0' })
-  @IsOptional()
+  // @IsOptional()
   reductionAmount: number;
 
   @ApiProperty({ example: 1 })
   @IsInt({ message: 'MAX_REDUCTION_AMOUNT_MUST_BE_INT' })
   @Min(0, { message: 'MAX_REDUCTION_AMOUNT_GREATER_THAN_OR_EQUAL_TO_0' })
-  @IsOptional()
+  // @IsOptional()
   maxReductionAmount: number;
 }
 

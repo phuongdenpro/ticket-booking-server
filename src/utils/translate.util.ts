@@ -561,4 +561,7 @@ export const mappingTranslate = {
   QUANTITY_IS_NUMBER: 'Số lượng phải là số',
   QUANTITY_MUST_BE_INTEGER: 'Số lượng phải là số nguyên',
   QUANTITY_MUST_BE_GREATER_THAN_0: 'Số lượng phải lớn hơn 0',
+  NUMBER_OF_TICKET_IS_NOT_ENOUGH: 'số lượng vé không đủ để áp dụng khuyến mãi',
+  TOTAL_AMOUNT_IS_NOT_ENOUGH: 'Tổng tiền không đủ để áp dụng khuyến mãi',
+  PROMOTION_HAS_OUT_OF_BUDGET: 'Khuyến mãi đã hết ngân sách',
 };

@@ -19,6 +19,8 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   OrderStatusEnum,
+  PromotionHistoryTypeEnum,
+  PromotionTypeEnum,
   SortEnum,
   TicketStatusEnum,
   UserStatusEnum,
@@ -32,7 +34,8 @@ import { PriceListService } from '../price-list/price-list.service';
 import { UpdateTicketDetailDto } from '../ticket/dto';
 import * as moment from 'moment';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
-import { FilterPriceDetailForBookingDto } from '../price-list/dto';
+import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
+import { CreatePromotionHistoryDto } from '../promotion-history/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -51,6 +54,7 @@ export class OrderService {
     private readonly tripDetailService: TripDetailService,
     private readonly priceListService: PriceListService,
     private readonly promotionLineService: PromotionLineService,
+    private readonly promotionHistoryService: PromotionHistoryService,
   ) {}
 
   private SEAT_TYPE_DTO_ID = 'id';
@@ -82,12 +86,35 @@ export class OrderService {
   async findOneOrder(options: any) {
     return await this.orderRepository.findOne({
       where: { ...options?.where },
-      select: { deletedAt: false, ...options?.select },
+      select: {
+        staff: {
+          id: true,
+          isActive: true,
+          phone: true,
+          email: true,
+          fullName: true,
+          gender: true,
+          birthDay: true,
+        },
+        customer: {
+          id: true,
+          status: true,
+          phone: true,
+          email: true,
+          fullName: true,
+          gender: true,
+          address: true,
+          fullAddress: true,
+          note: true,
+          birthday: true,
+        },
+        deletedAt: false,
+        ...options?.select,
+      },
       relations: {
         orderDetails: true,
         staff: true,
         customer: true,
-        promotionHistories: true,
         ...options?.relations,
       },
       order: {
@@ -226,6 +253,8 @@ export class OrderService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     const createOrder = await this.orderRepository.save(order);
+    let orderDetails: Promise<OrderDetail>[];
+    let saveOrder: Order;
     try {
       if (!seatIds && !seatCodes) {
         throw new BadRequestException('SEAT_IDS_OR_SEAT_CODES_REQUIRED');
@@ -237,7 +266,6 @@ export class OrderService {
         seatType = this.SEAT_TYPE_DTO_CODE;
       }
       // create order detail
-      let orderDetails;
       if (seatType === this.SEAT_TYPE_DTO_ID) {
         orderDetails = seatIds.map(async (seatId) => {
           const dto = new CreateOrderDetailDto();
@@ -268,20 +296,49 @@ export class OrderService {
       );
       createOrder.finalTotal = createOrder.total;
 
-      const saveOrder = await queryRunner.manager.save(createOrder);
+      saveOrder = await queryRunner.manager.save(createOrder);
       delete saveOrder.deletedAt;
       delete saveOrder?.staff;
       delete saveOrder?.customer;
       await queryRunner.commitTransaction();
-      return saveOrder;
     } catch (error) {
-      await this.orderRepository.remove(createOrder);
       await queryRunner.rollbackTransaction();
-      console.log(error.message);
+      if (orderDetails && orderDetails.length > 0) {
+        const orderDetailsArray = await Promise.all(orderDetails);
+        await this.orderDetailRepository.remove(orderDetailsArray);
+      }
+      await this.orderRepository.remove(createOrder);
       throw new BadRequestException(error.message);
     } finally {
       await queryRunner.release();
     }
+
+    // promotion line
+    try {
+      const dataResult = promotionLineCodes.map(async (promotionLineCode) => {
+        const promotionLine =
+          await this.promotionLineService.findOnePromotionLineByCode(
+            promotionLineCode,
+          );
+        if (!promotionLine) {
+          throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
+        }
+        const dto = new CreatePromotionHistoryDto();
+        dto.promotionLineCode = promotionLineCode;
+        dto.orderCode = saveOrder.code;
+        if (promotionLine.type === PromotionTypeEnum.PRODUCT_DISCOUNT) {
+          dto.type = PromotionHistoryTypeEnum.PRODUCT_DISCOUNT;
+        } else {
+          dto.type = PromotionHistoryTypeEnum.PRODUCT_DISCOUNT_PERCENT;
+        }
+        return await this.promotionHistoryService.createPromotionHistory(
+          dto,
+          creatorId,
+        );
+      });
+      const promotionHistories = await Promise.all(dataResult);
+    } catch (error) {}
+    return saveOrder;
   }
 
   async findAllOrder(
@@ -467,6 +524,9 @@ export class OrderService {
       } else if (seatCode) {
         seat = await this.seatService.findOneSeatByCode(seatCode);
       }
+      if (!seat) {
+        throw new NotFoundException('SEAT_NOT_FOUND');
+      }
 
       const ticketDetail = await this.ticketService.findOneTicketDetail({
         where: {
@@ -499,14 +559,13 @@ export class OrderService {
       const ticketDetailId = ticketDetail.id;
       const currentDate = moment().startOf('day').toDate();
 
-      const dtoFilterPriceDetail = new FilterPriceDetailForBookingDto();
-      dtoFilterPriceDetail.seatType = vehicle.type;
-      dtoFilterPriceDetail.tripCode = trip.code;
-      dtoFilterPriceDetail.applyDate = currentDate;
       const { dataResult } =
-        await this.priceListService.findPriceDetailForBooking(
-          dtoFilterPriceDetail,
-        );
+        await this.priceListService.findPriceDetailForBooking({
+          seatType: vehicle.type,
+          tripCode: trip.code,
+          applyDate: currentDate,
+          tripDetailCode: undefined,
+        });
 
       const priceDetail: PriceDetail = dataResult;
       delete priceDetail.trip;
@@ -516,6 +575,7 @@ export class OrderService {
       }
       orderDetail.priceDetail = priceDetail;
       orderDetail.total = priceDetail.price;
+
       const createOrderDetail = await queryRunnerOrderDetail.manager.save(
         orderDetail,
       );

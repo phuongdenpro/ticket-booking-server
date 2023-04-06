@@ -342,8 +342,8 @@ export class TripDetailService {
     if (!vehicle) {
       throw new BadRequestException('VEHICLE_NOT_FOUND');
     }
-    await this.validateTripDetailExistTime(departureTime, vehicleId);
-    await this.validateTripDetailExistTime(expectedTime, vehicleId);
+    await this.validateTripDetailExistTime(departureTime, vehicle.id);
+    await this.validateTripDetailExistTime(expectedTime, vehicle.id);
 
     tripDetail.vehicle = vehicle;
     const adminExist = await this.dataSource

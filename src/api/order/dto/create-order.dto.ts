@@ -13,7 +13,7 @@ export class CreateOrderDto {
   @IsOptional()
   note: string;
 
-  @ApiProperty({ example: '' })
+  @ApiProperty({ example: '09276ef0-df78-4ee1-9b4d-a0a1bd7ccbc6' })
   @IsNotEmpty({ message: 'CUSTOMER_ID_IS_REQUIRED' })
   @IsString({ message: 'CUSTOMER_ID_IS_STRING' })
   @Length(36, 36, { message: 'CUSTOMER_ID_MUST_BE_36_CHARACTERS' })

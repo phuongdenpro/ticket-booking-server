@@ -18,6 +18,7 @@ import {
   PromotionLine,
   Promotion,
   Trip,
+  PromotionHistory,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -25,6 +26,7 @@ import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { TicketService } from '../ticket/ticket.service';
 import { OrderDetailController } from './order-detail.controller';
+import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 
 @Module({
   imports: [
@@ -43,6 +45,7 @@ import { OrderDetailController } from './order-detail.controller';
       Promotion,
       PromotionLine,
       PromotionDetail,
+      PromotionHistory,
     ]),
   ],
   controllers: [OrderController, OrderDetailController],
@@ -54,6 +57,7 @@ import { OrderDetailController } from './order-detail.controller';
     TicketService,
     PriceListService,
     PromotionLineService,
+    PromotionHistoryService,
   ],
   exports: [OrderService],
 })

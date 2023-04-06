@@ -145,15 +145,16 @@ export class TicketService {
     ticket.code = code;
     ticket.note = note;
 
-    const currentDate = moment().toDate();
+    // const currentDate = moment().toDate();
+
     if (!startDate) {
       throw new BadRequestException('TICKET_START_DATE_IS_REQUIRED');
     }
-    if (startDate <= currentDate) {
-      throw new BadRequestException(
-        'TICKET_START_DATE_GREATER_THAN_CURRENT_DATE',
-      );
-    }
+    // if (startDate <= currentDate) {
+    //   throw new BadRequestException(
+    //     'TICKET_START_DATE_GREATER_THAN_CURRENT_DATE',
+    //   );
+    // }
     ticket.startDate = startDate;
     if (!endDate) {
       throw new BadRequestException('TICKET_END_DATE_IS_REQUIRED');
