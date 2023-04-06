@@ -67,12 +67,12 @@ export class PromotionLineController {
     );
   }
 
-  @Get('/order')
+  @Get('/available')
   @HttpCode(HttpStatus.OK)
-  async findPromotionLineUsingOrder(
+  async findAvailablePromotionLine(
     @Query() dto: FilterAvailablePromotionLineDto,
   ) {
-    return await this.promotionLineService.findPromotionLineUsingOrder(dto);
+    return await this.promotionLineService.findAvailablePromotionLine(dto);
   }
 
   @Patch('id/:id')

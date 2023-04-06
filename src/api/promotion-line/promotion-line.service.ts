@@ -391,7 +391,7 @@ export class PromotionLineService {
     return { dataResult, total, pagination };
   }
 
-  async findPromotionLineUsingOrder(dto: FilterAvailablePromotionLineDto) {
+  async findAvailablePromotionLine(dto: FilterAvailablePromotionLineDto) {
     const { startDate, endDate, minPurchaseAmount, minQuantityBuy, tripCode } =
       dto;
 

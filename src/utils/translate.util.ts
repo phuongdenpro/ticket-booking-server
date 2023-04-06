@@ -530,6 +530,8 @@ export const mappingTranslate = {
     'Số lượng được tặng phải lớn hơn hoặc bằng 1',
   QUANTITY_BUY_OR_PURCHASE_AMOUNT_IS_REQUIRED:
     'Số lượng vé mua tối thiểu hoặc số tiền mua tối thiểu không được để trống',
+  MIN_QUANTITY_BUY_IS_NUMBER: 'Số lượng vé mua tối thiểu phải là số',
+  MIN_PURCHASE_AMOUNT_IS_NUMBER: 'Số tiền mua tối thiểu phải là số',
 
   // order
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',
