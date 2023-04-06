@@ -83,6 +83,10 @@ export class TripDetailService {
       where: { ...options?.where },
       relations: {
         vehicle: { images: true },
+        trip: {
+          fromStation: true,
+          toStation: true,
+        },
         ...options?.relations,
       },
       select: {
@@ -99,6 +103,29 @@ export class TripDetailService {
           images: {
             id: true,
             url: true,
+          },
+        },
+        trip: {
+          id: true,
+          code: true,
+          name: true,
+          note: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          fromStation: {
+            id: true,
+            code: true,
+            name: true,
+            address: true,
+            fullAddress: true,
+          },
+          toStation: {
+            id: true,
+            code: true,
+            name: true,
+            address: true,
+            fullAddress: true,
           },
         },
         ...options?.select,
