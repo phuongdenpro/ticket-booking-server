@@ -179,7 +179,9 @@ export class PromotionHistoryService {
             promotionDetail.reductionAmount * promotionHistory.quantity;
         } else {
           promoAmount =
-            orderExist.total * (promotionDetail.percentDiscount / 100);
+            orderExist.total *
+            ((promotionDetail.percentDiscount / 100) *
+              promotionHistory.quantity);
         }
         if (promoAmount >= promotionDetail.maxReductionAmount) {
           if (promotionDetail.maxReductionAmount >= remainingBudget) {
@@ -198,6 +200,7 @@ export class PromotionHistoryService {
             promotionLine.useBudget += promoAmount;
           }
         }
+        promotionLine.useQuantity += promotionHistory.quantity;
         promotionHistory.type = type;
       } else if (type === PromotionHistoryTypeEnum.REFUND) {
         promotionHistory.type = type;
@@ -214,6 +217,8 @@ export class PromotionHistoryService {
       await queryRunnerPL.commitTransaction();
 
       delete savedPromotionHistory.deletedAt;
+      delete savedPromotionHistory.order;
+      delete savedPromotionHistory.promotionLine;
       return savedPromotionHistory;
     } catch (error) {
       await queryRunnerPL.rollbackTransaction();

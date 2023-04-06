@@ -9,7 +9,7 @@ import {
   Seat,
   Vehicle,
 } from './../../database/entities';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { CreateOrderDto, CreateOrderDetailDto, FilterOrderDto } from './dto';
 import {
   BadRequestException,
@@ -298,10 +298,10 @@ export class OrderService {
       createOrder.finalTotal = createOrder.total;
 
       saveOrder = await queryRunnerOrder.manager.save(createOrder);
+      await queryRunnerOrder.commitTransaction();
       delete saveOrder.deletedAt;
       delete saveOrder?.staff;
       delete saveOrder?.customer;
-      await queryRunnerOrder.commitTransaction();
     } catch (error) {
       await queryRunnerOrder.rollbackTransaction();
       if (orderDetails && orderDetails.length > 0) {
@@ -309,14 +309,20 @@ export class OrderService {
         await this.orderDetailRepository.remove(orderDetailsArray);
       }
       await this.orderRepository.remove(createOrder);
-      throw new BadRequestException(error.message);
+      if (error.message) {
+        throw new BadRequestException(error.message);
+      } else {
+        throw new BadRequestException('INTERNAL_SERVER_ERROR');
+      }
     } finally {
       await queryRunnerOrder.release();
     }
 
     // promotion history
-    await queryRunnerOrder.connect();
-    await queryRunnerOrder.startTransaction();
+    const queryRunnerOrder2 =
+      this.orderRepository.manager.connection.createQueryRunner();
+    await queryRunnerOrder2.connect();
+    await queryRunnerOrder2.startTransaction();
     try {
       const dataResult = promotionLineCodes.map(async (promotionLineCode) => {
         const promotionLine =
@@ -352,14 +358,15 @@ export class OrderService {
         saveOrder.finalTotal,
       );
       saveOrder.finalTotal = finalTotal;
-      await queryRunnerOrder.manager.save(saveOrder);
-      await queryRunnerOrder.commitTransaction();
+      await queryRunnerOrder2.manager.save(saveOrder);
+      await queryRunnerOrder2.commitTransaction();
       saveOrder.promotionHistories = promotionHistories;
     } catch (error) {
-      await queryRunnerOrder.rollbackTransaction();
+      await queryRunnerOrder2.rollbackTransaction();
     } finally {
-      await queryRunnerOrder.release();
+      await queryRunnerOrder2.release();
     }
+    delete saveOrder.deletedAt;
     return saveOrder;
   }
 
@@ -496,6 +503,7 @@ export class OrderService {
       this.orderDetailRepository.manager.connection.createQueryRunner();
     await queryRunnerOrderDetail.connect();
     await queryRunnerOrderDetail.startTransaction();
+    let orderExist: Order;
     try {
       // check permission
       const customer = await this.customerService.findOneById(userId);
@@ -512,7 +520,7 @@ export class OrderService {
       }
 
       const { note, orderId, seatId, seatCode, tripDetailCode } = dto;
-      const orderExist = order || (await this.findOneOrderById(orderId));
+      orderExist = order || (await this.findOneOrderById(orderId));
       if (!orderExist) {
         throw new BadRequestException('ORDER_NOT_FOUND');
       }
@@ -629,6 +637,9 @@ export class OrderService {
       return createOrderDetail;
     } catch (error) {
       await queryRunnerOrderDetail.rollbackTransaction();
+      if (orderExist) {
+        await this.orderRepository.remove(orderExist);
+      }
       if (error.message) {
         throw new BadRequestException(error.message);
       } else {
