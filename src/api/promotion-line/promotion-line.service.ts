@@ -406,21 +406,54 @@ export class PromotionLineService {
       .andWhere('pl.endDate >= :startDate', {
         endDate: endDate ? newEndDate : currentDate,
       })
+      .andWhere('pl.useBudget < pl.maxBudget')
+      .andWhere('pl.useQuantity < pl.maxQuantity')
+
       .leftJoinAndSelect('pl.promotion', 'p')
-      .andWhere('p.status = :status', { status: ActiveStatusEnum.ACTIVE })
+      .andWhere('p.status = :status', { status: PromotionStatusEnum.ACTIVE })
+
       .leftJoinAndSelect('pl.promotionDetail', 'pd')
       .andWhere('pd.quantityBuy >= :quantityBuy', {
         quantityBuy: minQuantityBuy || 0,
       })
       .andWhere('pd.purchaseAmount >= :purchaseAmount', {
         purchaseAmount: minPurchaseAmount || 0,
-      })
-      .leftJoinAndSelect('pd.trip', 't')
-      .andWhere('t.code = :tripCode', { tripCode: tripCode })
-      .having('pl.useBudget < pl.maxBudget')
-      .andHaving('pl.useQuantity < pl.maxQuantity');
+      });
 
-    const dataResult = await query.getMany();
+    const subQuery = await this.promotionLineRepository
+      .createQueryBuilder('pl2')
+      .leftJoinAndSelect('pl2.promotionDetail', 'pd2')
+      .leftJoinAndSelect('pd2.trip', 't2')
+      .where('t2.code = :tripCode', { tripCode })
+      .orWhere('pd2.trip is null')
+      .select('pl2.id')
+      .getQuery();
+    query.andWhere(`pl.id in (${subQuery})`, { tripCode });
+
+    const dataResult = await query
+      .select([
+        'pl.id',
+        'pl.code',
+        'pl.couponCode',
+        'pl.title',
+        'pl.description',
+        'pl.note',
+        'pl.startDate',
+        'pl.endDate',
+        'pl.type',
+        'pl.useBudget',
+        'pl.maxBudget',
+        'pl.useQuantity',
+        'pl.maxQuantity',
+        'pl.applyAll',
+        'pd.id',
+        'pd.quantityBuy',
+        'pd.purchaseAmount',
+        'pd.reductionAmount',
+        'pd.maxReductionAmount',
+        'pd.promotionLineCode',
+      ])
+      .getMany();
     const total = await query.clone().getCount();
 
     return { dataResult, total };

@@ -59,14 +59,6 @@ export class PromotionLine {
   @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
   maxQuantity: number;
 
-  // @Column({
-  //   name: 'max_quantity_per_customer',
-  //   type: 'int',
-  //   nullable: false,
-  //   default: 1,
-  // })
-  // maxQuantityPerCustomer: number;
-
   @Column({
     name: 'apply_all',
     type: 'boolean',
