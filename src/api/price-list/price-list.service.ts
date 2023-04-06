@@ -572,7 +572,7 @@ export class PriceListService {
       },
     });
     if (!priceDetail) {
-      return null;
+      return { dataResult: null };
     }
     delete priceDetail.priceList;
     delete priceDetail.trip.priceDetails;

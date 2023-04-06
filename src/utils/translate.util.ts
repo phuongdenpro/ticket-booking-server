@@ -42,6 +42,7 @@ export const mappingTranslate = {
   IMAGE_IS_STRING: 'url ảnh phải là chuỗi ký tự',
   LIST_ITEM_IS_STRING: 'Id/code trong danh sách phải là chuỗi ký tự',
   LIST_IS_ARRAY: 'Danh sách phải là mảng',
+  INTERNAL_SERVER_ERROR: 'Lỗi hệ thống',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',

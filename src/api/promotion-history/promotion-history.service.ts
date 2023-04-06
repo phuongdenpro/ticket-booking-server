@@ -96,11 +96,6 @@ export class PromotionHistoryService {
 
   async createPromotionHistory(dto: CreatePromotionHistoryDto, userId: string) {
     const { orderCode, promotionLineCode, type } = dto;
-    const queryRunnerOrder =
-      this.orderRepository.manager.connection.createQueryRunner();
-    await queryRunnerOrder.connect();
-    await queryRunnerOrder.startTransaction();
-
     const queryRunnerPH =
       this.promotionHistoryRepository.manager.connection.createQueryRunner();
     await queryRunnerPH.connect();
@@ -203,7 +198,6 @@ export class PromotionHistoryService {
             promotionLine.useBudget += promoAmount;
           }
         }
-        orderExist.finalTotal = orderExist.total + promotionHistory.amount;
         promotionHistory.type = type;
       } else if (type === PromotionHistoryTypeEnum.REFUND) {
         promotionHistory.type = type;
@@ -219,15 +213,11 @@ export class PromotionHistoryService {
       await queryRunnerPL.manager.save(promotionLine);
       await queryRunnerPL.commitTransaction();
 
-      await queryRunnerOrder.manager.save(orderExist);
-      await queryRunnerOrder.commitTransaction();
-
       delete savedPromotionHistory.deletedAt;
       return savedPromotionHistory;
     } catch (error) {
       await queryRunnerPL.rollbackTransaction();
       await queryRunnerPH.rollbackTransaction();
-      await queryRunnerOrder.rollbackTransaction();
       throw new BadRequestException(error.message);
     } finally {
     }

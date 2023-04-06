@@ -4,6 +4,7 @@ import {
   Order,
   OrderDetail,
   PriceDetail,
+  PromotionHistory,
   PromotionLine,
   Seat,
   Vehicle,
@@ -248,10 +249,10 @@ export class OrderService {
     order.total = 0;
     order.finalTotal = 0;
 
-    const queryRunner =
+    const queryRunnerOrder =
       this.orderRepository.manager.connection.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    await queryRunnerOrder.connect();
+    await queryRunnerOrder.startTransaction();
     const createOrder = await this.orderRepository.save(order);
     let orderDetails: Promise<OrderDetail>[];
     let saveOrder: Order;
@@ -296,13 +297,13 @@ export class OrderService {
       );
       createOrder.finalTotal = createOrder.total;
 
-      saveOrder = await queryRunner.manager.save(createOrder);
+      saveOrder = await queryRunnerOrder.manager.save(createOrder);
       delete saveOrder.deletedAt;
       delete saveOrder?.staff;
       delete saveOrder?.customer;
-      await queryRunner.commitTransaction();
+      await queryRunnerOrder.commitTransaction();
     } catch (error) {
-      await queryRunner.rollbackTransaction();
+      await queryRunnerOrder.rollbackTransaction();
       if (orderDetails && orderDetails.length > 0) {
         const orderDetailsArray = await Promise.all(orderDetails);
         await this.orderDetailRepository.remove(orderDetailsArray);
@@ -310,10 +311,12 @@ export class OrderService {
       await this.orderRepository.remove(createOrder);
       throw new BadRequestException(error.message);
     } finally {
-      await queryRunner.release();
+      await queryRunnerOrder.release();
     }
 
-    // promotion line
+    // promotion history
+    await queryRunnerOrder.connect();
+    await queryRunnerOrder.startTransaction();
     try {
       const dataResult = promotionLineCodes.map(async (promotionLineCode) => {
         const promotionLine =
@@ -321,7 +324,10 @@ export class OrderService {
             promotionLineCode,
           );
         if (!promotionLine) {
-          throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
+          const promotionHistory = new PromotionHistory();
+          promotionHistory.promotionLineCode = promotionLineCode;
+          promotionHistory['message'] = 'Không tìm thấy khuyến mãi';
+          return promotionHistory;
         }
         const dto = new CreatePromotionHistoryDto();
         dto.promotionLineCode = promotionLineCode;
@@ -337,7 +343,23 @@ export class OrderService {
         );
       });
       const promotionHistories = await Promise.all(dataResult);
-    } catch (error) {}
+      const finalTotal = promotionHistories.reduce(
+        (total, promotionHistory) => {
+          if (promotionHistory.type !== PromotionHistoryTypeEnum.REFUND) {
+            return total + promotionHistory.amount;
+          }
+        },
+        saveOrder.finalTotal,
+      );
+      saveOrder.finalTotal = finalTotal;
+      await queryRunnerOrder.manager.save(saveOrder);
+      await queryRunnerOrder.commitTransaction();
+      saveOrder.promotionHistories = promotionHistories;
+    } catch (error) {
+      await queryRunnerOrder.rollbackTransaction();
+    } finally {
+      await queryRunnerOrder.release();
+    }
     return saveOrder;
   }
 
@@ -566,6 +588,9 @@ export class OrderService {
           applyDate: currentDate,
           tripDetailCode: undefined,
         });
+      if (!dataResult) {
+        throw new NotFoundException('PRICE_DETAIL_NOT_FOUND');
+      }
 
       const priceDetail: PriceDetail = dataResult;
       delete priceDetail.trip;
@@ -604,7 +629,11 @@ export class OrderService {
       return createOrderDetail;
     } catch (error) {
       await queryRunnerOrderDetail.rollbackTransaction();
-      throw new BadRequestException(error.message);
+      if (error.message) {
+        throw new BadRequestException(error.message);
+      } else {
+        throw new BadRequestException('INTERNAL_SERVER_ERROR');
+      }
     } finally {
       await queryRunnerOrderDetail.release();
     }
