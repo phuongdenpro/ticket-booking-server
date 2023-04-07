@@ -563,7 +563,7 @@ export class OrderService {
       relations: {
         ...options?.relations,
       },
-      select: { deletedAt: false, ...options?.select },
+      select: { ...options?.select },
       orderBy: {
         createdAt: SortEnum.DESC,
         ...options?.orderBy,
