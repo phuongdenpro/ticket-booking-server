@@ -1,16 +1,18 @@
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums';
-import { Roles } from './../../decorator';
+import { CurrentUser, Roles } from './../../decorator';
 import {
   Controller,
   Get,
   HttpCode,
   HttpStatus,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { PromotionHistoryService } from './promotion-history.service';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { CalculatePromotionLineDto } from './dto';
 
 @Controller('promotion-history')
 @ApiTags('Promotion History')
@@ -39,5 +41,20 @@ export class PromotionHistoryController {
   @ApiBearerAuth()
   async getPromotionHistoryByCode(@Param('code') code: string) {
     return await this.promotionHistoryService.getPromotionHistoryByCode(code);
+  }
+
+  @Get('calculate-promotion-line')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async calculatePromotionLine(
+    @CurrentUser() user,
+    @Query() dto: CalculatePromotionLineDto,
+  ) {
+    return await this.promotionHistoryService.calculatePromotionLine(
+      dto,
+      user.id,
+    );
   }
 }

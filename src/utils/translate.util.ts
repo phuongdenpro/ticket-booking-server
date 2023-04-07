@@ -462,6 +462,8 @@ export const mappingTranslate = {
     'Số tổi đa của Số lượng tối đa áp dụng cho mỗi khách hàng phải lớn hơn hoặc bằng 0',
 
   // promotion line
+  PROMOTION_LINE_CODES_IS_REQUIRED:
+    'Danh sách mã khuyến mãi không được để trống',
   PROMOTION_LINE_HAS_EXPIRED: 'Khuyến mãi đã hết hạn',
   PROMOTION_LINE_NOT_FOUND: 'Không tìm thấy khuyến mãi',
   PROMOTION_LINE_CODE_IS_REQUIRED: 'Mã khuyến mãi không được để trống',
@@ -567,4 +569,8 @@ export const mappingTranslate = {
   NUMBER_OF_TICKET_IS_NOT_ENOUGH: 'số lượng vé không đủ để áp dụng khuyến mãi',
   TOTAL_AMOUNT_IS_NOT_ENOUGH: 'Tổng tiền không đủ để áp dụng khuyến mãi',
   PROMOTION_HAS_OUT_OF_BUDGET: 'Khuyến mãi đã hết ngân sách',
+  TOTAL_MUST_BE_NUMBER: 'Tổng tiền phải là số',
+  TOTAL_IS_REQUIRED: 'Tổng tiền không được để trống',
+  NUMBER_OF_TICKET_IS_REQUIRED: 'Số lượng vé không được để trống',
+  NUMBER_OF_TICKET_MUST_BE_INTEGER: 'Số lượng vé phải là số nguyên lớn hơn 0',
 };

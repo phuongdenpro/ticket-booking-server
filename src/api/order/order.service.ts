@@ -383,7 +383,15 @@ export class OrderService {
     userId: string,
     pagination?: Pagination,
   ) {
-    const { keywords, status, sort, minFinalTotal, maxFinalTotal } = dto;
+    const {
+      keywords,
+      status,
+      sort,
+      minFinalTotal,
+      maxFinalTotal,
+      startDate,
+      endDate,
+    } = dto;
     const customer = await this.customerService.findOneById(userId);
     const admin = await this.adminService.findOneBydId(userId);
     if (!userId) {
@@ -433,6 +441,15 @@ export class OrderService {
 
     if (customer) {
       query.andWhere('c.id = :customerId', { customerId: userId });
+    }
+
+    if (startDate) {
+      const newStartDate = moment(startDate).startOf('day').toDate();
+      query.andWhere('q.createdAt >= :newStartDate', { newStartDate });
+    }
+    if (endDate) {
+      const newEndDate = moment(endDate).endOf('day').toDate();
+      query.andWhere('q.createdAt <= :newEndDate', { newEndDate });
     }
 
     query

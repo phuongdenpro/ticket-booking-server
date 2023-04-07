@@ -1,6 +1,14 @@
 import { OrderStatusEnum, SortEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsDate,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import * as moment from 'moment';
+moment.locale('vi');
 
 export class FilterOrderDto {
   @ApiPropertyOptional({ example: 'Bảng giá tháng 3/2023' })
@@ -41,6 +49,18 @@ export class FilterOrderDto {
   @IsNumber({}, { message: 'MAX_FINAL_TOTAL_IS_NUMBER' })
   @IsOptional()
   maxFinalTotal: number;
+
+  @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD') })
+  @IsDate({ message: 'START_DATE_IS_DATE' })
+  @IsOptional()
+  startDate: Date;
+
+  @ApiPropertyOptional({
+    example: moment().add(10, 'days').format('YYYY-MM-DD'),
+  })
+  @IsDate({ message: 'END_DATE_IS_DATE' })
+  @IsOptional()
+  endDate: Date;
 
   @ApiPropertyOptional({ example: SortEnum.ASC, enum: SortEnum })
   @IsString({ message: 'SORT_IS_STRING' })

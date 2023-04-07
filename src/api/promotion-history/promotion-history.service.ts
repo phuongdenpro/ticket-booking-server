@@ -14,10 +14,11 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { DataSource, Repository } from 'typeorm';
-import { CreatePromotionHistoryDto } from './dto';
+import { CalculatePromotionLineDto, CreatePromotionHistoryDto } from './dto';
 import {
   PromotionHistoryTypeEnum,
   PromotionLineNoteStatusEnum,
+  PromotionTypeEnum,
   UserStatusEnum,
 } from './../../enums';
 
@@ -94,6 +95,105 @@ export class PromotionHistoryService {
     };
   }
 
+  async calculatePromotionLine(
+    dto: CalculatePromotionLineDto,
+    userId: string,
+    customer?: Customer,
+    admin?: Staff,
+  ) {
+    const customerExist =
+      customer ||
+      (await this.dataSource
+        .getRepository(Customer)
+        .findOne({ where: { id: userId } }));
+    const adminExist =
+      admin ||
+      (await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: userId } }));
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (
+      (customerExist && customerExist.status === UserStatusEnum.INACTIVATE) ||
+      (adminExist && !adminExist.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const { promotionLineCodes, numOfTicket, total } = dto;
+
+    const dataResult = promotionLineCodes.map(async (promotionLineCode) => {
+      const promotionLine = await this.promotionLineRepository.findOne({
+        where: { code: promotionLineCode },
+        relations: { promotionDetail: true },
+      });
+      if (!promotionLine) {
+        return {
+          promotionLineCode,
+          message: 'Không tìm thấy khuyến mãi',
+        };
+      }
+      const promotionDetail: PromotionDetail = promotionLine.promotionDetail;
+      let quantity = 0;
+      if (promotionDetail.quantityBuy > 0) {
+        if (numOfTicket < promotionDetail.quantityBuy) {
+          return {
+            promotionLineCode,
+            message: 'số lượng vé không đủ để áp dụng khuyến mãi',
+          };
+        }
+        quantity = Math.floor(numOfTicket / promotionDetail.quantityBuy);
+      }
+      if (promotionDetail.purchaseAmount > 0) {
+        if (total < promotionDetail.purchaseAmount) {
+          throw new BadRequestException('TOTAL_AMOUNT_IS_NOT_ENOUGH');
+        }
+        quantity = Math.floor(total / promotionDetail.purchaseAmount);
+      }
+      const remainingBudget = promotionLine.maxBudget - promotionLine.useBudget;
+      if (remainingBudget <= 0) {
+        return {
+          promotionLineCode,
+          message: 'Khuyến mãi đã hết ngân sách',
+        };
+      }
+
+      let promoAmount = 0;
+      let amount = 0;
+      if (promotionLine.type === PromotionTypeEnum.PRODUCT_DISCOUNT) {
+        promoAmount = promotionDetail.reductionAmount * quantity;
+      } else {
+        promoAmount =
+          total * ((promotionDetail.percentDiscount / 100) * quantity);
+      }
+      if (promoAmount >= promotionDetail.maxReductionAmount) {
+        if (promotionDetail.maxReductionAmount >= remainingBudget) {
+          amount = remainingBudget * -1;
+          promotionLine.useBudget += remainingBudget;
+        } else {
+          amount = promotionDetail.maxReductionAmount * -1;
+          promotionLine.useBudget += promotionDetail.maxReductionAmount;
+        }
+      } else {
+        if (promoAmount >= remainingBudget) {
+          amount = remainingBudget * -1;
+          promotionLine.useBudget += remainingBudget;
+        } else {
+          amount = promoAmount * -1;
+          promotionLine.useBudget += promoAmount;
+        }
+      }
+      return {
+        promotionLineCode,
+        amount,
+      };
+    });
+
+    const result = await Promise.all(dataResult);
+    return { dataResult: result };
+  }
+
   async createPromotionHistory(dto: CreatePromotionHistoryDto, userId: string) {
     const { orderCode, promotionLineCode, type } = dto;
     const queryRunnerPH =
@@ -106,7 +206,7 @@ export class PromotionHistoryService {
     await queryRunnerPL.connect();
     await queryRunnerPL.startTransaction();
     try {
-      const customerCreator = await this.dataSource
+      const customerExist = await this.dataSource
         .getRepository(Customer)
         .findOne({ where: { id: userId } });
       const admin = await this.dataSource
@@ -116,8 +216,7 @@ export class PromotionHistoryService {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
       if (
-        (customerCreator &&
-          customerCreator.status === UserStatusEnum.INACTIVATE) ||
+        (customerExist && customerExist.status === UserStatusEnum.INACTIVATE) ||
         (admin && !admin.isActive)
       ) {
         throw new BadRequestException('USER_NOT_ACTIVE');
@@ -142,6 +241,7 @@ export class PromotionHistoryService {
         throw new BadRequestException('PROMOTION_LINE_NOT_FOUND');
       }
       promotionHistory.promotionLine = promotionLine;
+      promotionHistory.promotionLineCode = promotionLine.code;
 
       const promotionDetail: PromotionDetail = promotionLine.promotionDetail;
       const orderDetails: OrderDetail[] = orderExist.orderDetails;
