@@ -137,7 +137,9 @@ export class OrderService {
         ...options?.select,
       },
       relations: {
-        orderDetails: true,
+        orderDetails: {
+          ticketDetail: true,
+        },
         staff: true,
         customer: true,
         promotionHistories: true,
