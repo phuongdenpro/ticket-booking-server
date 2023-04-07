@@ -19,6 +19,7 @@ import {
   PromotionHistoryTypeEnum,
   PromotionLineNoteStatusEnum,
   PromotionTypeEnum,
+  SortEnum,
   UserStatusEnum,
 } from './../../enums';
 
@@ -87,6 +88,25 @@ export class PromotionHistoryService {
     return promotionHistory;
   }
 
+  async getPromotionHistoryByOrderCode(orderCode: string, options?: any) {
+    return await this.promotionHistoryRepository.findOne({
+      where: { orderCode, ...options?.where },
+      select: {
+        deletedAt: false,
+        ...options?.select,
+      },
+      relations: {
+        promotionLine: true,
+        ...options?.relations,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options?.other,
+    });
+  }
+
   async getPromotionHistoryStatusEnum() {
     return {
       dataResult: Object.keys(PromotionHistoryTypeEnum).map(
@@ -122,8 +142,13 @@ export class PromotionHistoryService {
     }
 
     const { promotionLineCodes, numOfTicket, total } = dto;
-
-    const dataResult = promotionLineCodes.map(async (promotionLineCode) => {
+    let newPLCodes: string[] = [];
+    if (Array.isArray(promotionLineCodes)) {
+      newPLCodes = [...promotionLineCodes];
+    } else {
+      newPLCodes = [...promotionLineCodes];
+    }
+    const dataResult = newPLCodes.map(async (promotionLineCode) => {
       const promotionLine = await this.promotionLineRepository.findOne({
         where: { code: promotionLineCode },
         relations: { promotionDetail: true },
@@ -242,6 +267,7 @@ export class PromotionHistoryService {
       }
       promotionHistory.promotionLine = promotionLine;
       promotionHistory.promotionLineCode = promotionLine.code;
+      promotionHistory.code = `${promotionLine.code}PH${orderExist.code}`;
 
       const promotionDetail: PromotionDetail = promotionLine.promotionDetail;
       const orderDetails: OrderDetail[] = orderExist.orderDetails;

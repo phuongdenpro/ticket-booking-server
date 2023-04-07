@@ -43,6 +43,17 @@ export class PromotionHistoryController {
     return await this.promotionHistoryService.getPromotionHistoryByCode(code);
   }
 
+  @Get('order-code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getPromotionHistoryByOrderCode(@Param('code') code: string) {
+    return await this.promotionHistoryService.getPromotionHistoryByOrderCode(
+      code,
+    );
+  }
+
   @Get('calculate-promotion-line')
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)

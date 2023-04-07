@@ -1,4 +1,4 @@
-import { CreateOrderDto, FilterOrderDto } from './dto';
+import { CreateOrderDto, FilterOrderDto, UpdateOrderDto } from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums';
 import {
@@ -15,6 +15,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -71,5 +72,41 @@ export class OrderController {
   @ApiBearerAuth()
   async getOrderByCode(@Param('code') code: string) {
     return await this.orderService.getOrderByCode(code);
+  }
+
+  @Patch('customer/id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async cancelOrderById(
+    @Body() dto: UpdateOrderDto,
+    @Param('id') id: string,
+    @CurrentUser() user,
+  ) {
+    return await this.orderService.updateOrderByIdOrCodeFroCustomer(
+      dto,
+      user.id,
+      id,
+      undefined,
+    );
+  }
+
+  @Patch('customer/code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async cancelOrderByCode(
+    @Body() dto: UpdateOrderDto,
+    @Param('code') code: string,
+    @CurrentUser() user,
+  ) {
+    return await this.orderService.updateOrderByIdOrCodeFroCustomer(
+      dto,
+      user.id,
+      undefined,
+      code,
+    );
   }
 }

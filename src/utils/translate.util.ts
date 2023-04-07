@@ -538,6 +538,11 @@ export const mappingTranslate = {
 
   // order
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',
+  ORDER_ALREADY_CANCEL: 'Hoá đơn đã bị hủy',
+  ORDER_ALREADY_PAID: 'Hoá đơn đã thanh toán',
+  ORDER_ALREADY_RETURNED: 'Hoá đơn đã được hoàn trả',
+  ORDER_NOT_PAID: 'Hoá đơn chưa thanh toán',
+  ORDER_NOT_BELONG_TO_USER: 'Hoá đơn không thuộc về người dùng',
   ORDER_CODE_IS_REQUIRED: 'Mã đơn hàng không được để trống',
   ORDER_CODE_IS_STRING: 'Mã đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_STRING: 'Trạng thái của đơn hàng phải là chuỗi ký tự',

@@ -1,11 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import {
-  IsArray,
-  IsInt,
-  IsNotEmpty,
-  IsNumber,
-  IsString,
-} from 'class-validator';
+import { IsInt, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CalculatePromotionLineDto {
   @ApiProperty({ example: 100000 })
@@ -25,7 +19,6 @@ export class CalculatePromotionLineDto {
 
   @ApiProperty({ example: ['sa0', 'g'] })
   @IsNotEmpty({ message: 'PROMOTION_LINE_CODES_IS_REQUIRED' })
-  @IsArray({ message: 'PROMOTION_LINE_CODES_IS_ARRAY' })
   @IsString({ each: true, message: 'PROMOTION_LINE_CODES_IS_STRING' })
   promotionLineCodes: string[];
 }

@@ -10,7 +10,12 @@ import {
   Vehicle,
 } from './../../database/entities';
 import { Repository } from 'typeorm';
-import { CreateOrderDto, CreateOrderDetailDto, FilterOrderDto } from './dto';
+import {
+  CreateOrderDto,
+  CreateOrderDetailDto,
+  FilterOrderDto,
+  UpdateOrderDto as UpdateOrderDtoForCustomer,
+} from './dto';
 import {
   BadRequestException,
   Injectable,
@@ -117,6 +122,16 @@ export class OrderService {
           note: true,
           birthday: true,
         },
+        promotionHistories: {
+          id: true,
+          code: true,
+          amount: true,
+          note: true,
+          quantity: true,
+          type: true,
+          promotionLineCode: true,
+          orderCode: true,
+        },
         deletedAt: false,
         ...options?.select,
       },
@@ -124,6 +139,7 @@ export class OrderService {
         orderDetails: true,
         staff: true,
         customer: true,
+        promotionHistories: true,
         ...options?.relations,
       },
       order: {
@@ -174,6 +190,98 @@ export class OrderService {
         (key) => OrderStatusEnum[key],
       ),
     };
+  }
+
+  async findAllOrder(
+    dto: FilterOrderDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const {
+      keywords,
+      status,
+      sort,
+      minFinalTotal,
+      maxFinalTotal,
+      startDate,
+      endDate,
+    } = dto;
+    const customer = await this.customerService.findOneById(userId);
+    const admin = await this.adminService.findOneBydId(userId);
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const query = this.orderRepository.createQueryBuilder('q');
+
+    if (keywords) {
+      const newKeywords = keywords.trim();
+      const subQuery = this.orderRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .getQuery();
+
+      query.andWhere(`q.id IN (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
+    }
+
+    switch (status) {
+      case OrderStatusEnum.UNPAID:
+      case OrderStatusEnum.CANCEL:
+      case OrderStatusEnum.PAID:
+      case OrderStatusEnum.RETURNED:
+        query.andWhere('q.status = :status', { status });
+        break;
+      default:
+        break;
+    }
+
+    if (minFinalTotal) {
+      query.andWhere('q.finalTotal >= :minFinalTotal', { minFinalTotal });
+    }
+    if (maxFinalTotal) {
+      query.andWhere('q.finalTotal <= :maxFinalTotal', { maxFinalTotal });
+    }
+
+    if (customer) {
+      query.andWhere('c.id = :customerId', { customerId: userId });
+    }
+
+    if (startDate) {
+      const newStartDate = moment(startDate).startOf('day').toDate();
+      query.andWhere('q.createdAt >= :newStartDate', { newStartDate });
+    }
+    if (endDate) {
+      const newEndDate = moment(endDate).endOf('day').toDate();
+      query.andWhere('q.createdAt <= :newEndDate', { newEndDate });
+    }
+
+    query
+      .orderBy('q.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('q.code', SortEnum.ASC)
+      .addOrderBy('q.finalTotal', SortEnum.ASC);
+
+    const dataResult = await query
+      .leftJoinAndSelect('q.customer', 'c')
+      .leftJoinAndSelect('q.staff', 's')
+      .select(this.selectFieldsOrderWithQ)
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10)
+      .getMany();
+
+    const total = await query.getCount();
+
+    return { dataResult, total, pagination };
   }
 
   async createOrder(dto: CreateOrderDto, creatorId: string) {
@@ -378,96 +486,65 @@ export class OrderService {
     return saveOrder;
   }
 
-  async findAllOrder(
-    dto: FilterOrderDto,
+  async updateOrderByIdOrCodeFroCustomer(
+    dto: UpdateOrderDtoForCustomer,
     userId: string,
-    pagination?: Pagination,
+    id?: string,
+    code?: string,
   ) {
-    const {
-      keywords,
-      status,
-      sort,
-      minFinalTotal,
-      maxFinalTotal,
-      startDate,
-      endDate,
-    } = dto;
     const customer = await this.customerService.findOneById(userId);
-    const admin = await this.adminService.findOneBydId(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (
-      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      (admin && !admin.isActive)
-    ) {
+    if (customer && customer.status === UserStatusEnum.INACTIVATE) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-
-    const query = this.orderRepository.createQueryBuilder('q');
-
-    if (keywords) {
-      const newKeywords = keywords.trim();
-      const subQuery = this.orderRepository
-        .createQueryBuilder('q2')
-        .select('q2.id')
-        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
-        .getQuery();
-
-      query.andWhere(`q.id IN (${subQuery})`, {
-        code: `%${newKeywords}%`,
-        note: `%${newKeywords}%`,
-      });
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_REQUIRED');
     }
-
-    switch (status) {
-      case OrderStatusEnum.UNPAID:
+    let order: Order;
+    if (id) {
+      order = await this.findOneOrderById(id);
+    } else {
+      order = await this.findOneOrderByCode(code);
+    }
+    if (!order) {
+      throw new BadRequestException('ORDER_NOT_FOUND');
+    }
+    if (customer) {
+      if (order.customer.id !== customer.id) {
+        throw new BadRequestException('ORDER_NOT_BELONG_TO_USER');
+      }
+    }
+    switch (order.status) {
       case OrderStatusEnum.CANCEL:
-      case OrderStatusEnum.PAID:
+        throw new BadRequestException('ORDER_ALREADY_CANCEL');
+        break;
       case OrderStatusEnum.RETURNED:
-        query.andWhere('q.status = :status', { status });
+        throw new BadRequestException('ORDER_ALREADY_RETURNED');
+        break;
+    }
+    const { note, status } = dto;
+    order.note = note;
+    switch (status) {
+      case OrderStatusEnum.CANCEL:
+        if (order.status === OrderStatusEnum.PAID) {
+          throw new BadRequestException('ORDER_ALREADY_PAID');
+        }
+        order.status = status;
+        break;
+      case OrderStatusEnum.RETURNED:
+        if (order.status === OrderStatusEnum.UNPAID) {
+          throw new BadRequestException('ORDER_NOT_PAID');
+        }
+        order.status = status;
         break;
       default:
         break;
     }
-
-    if (minFinalTotal) {
-      query.andWhere('q.finalTotal >= :minFinalTotal', { minFinalTotal });
-    }
-    if (maxFinalTotal) {
-      query.andWhere('q.finalTotal <= :maxFinalTotal', { maxFinalTotal });
-    }
-
-    if (customer) {
-      query.andWhere('c.id = :customerId', { customerId: userId });
-    }
-
-    if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
-      query.andWhere('q.createdAt >= :newStartDate', { newStartDate });
-    }
-    if (endDate) {
-      const newEndDate = moment(endDate).endOf('day').toDate();
-      query.andWhere('q.createdAt <= :newEndDate', { newEndDate });
-    }
-
-    query
-      .orderBy('q.createdAt', sort || SortEnum.DESC)
-      .addOrderBy('q.code', SortEnum.ASC)
-      .addOrderBy('q.finalTotal', SortEnum.ASC);
-
-    const dataResult = await query
-      .leftJoinAndSelect('q.customer', 'c')
-      .leftJoinAndSelect('q.staff', 's')
-      .select(this.selectFieldsOrderWithQ)
-      .offset(pagination.skip || 0)
-      .limit(pagination.take || 10)
-      .getMany();
-
-    const total = await query.getCount();
-
-    return { dataResult, total, pagination };
+    const saveOrder = await this.orderRepository.save(order);
+    delete saveOrder.deletedAt;
+    return saveOrder;
   }
 
   // order detail
@@ -475,7 +552,6 @@ export class OrderService {
     return await this.orderDetailRepository.findOne({
       where: { ...options?.where },
       relations: {
-        deletedAt: false,
         ...options?.relations,
       },
       select: { deletedAt: false, ...options?.select },
