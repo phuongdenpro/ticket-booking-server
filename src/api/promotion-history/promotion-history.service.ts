@@ -165,14 +165,17 @@ export class PromotionHistoryService {
         if (numOfTicket < promotionDetail.quantityBuy) {
           return {
             promotionLineCode,
-            message: 'số lượng vé không đủ để áp dụng khuyến mãi',
+            amount: 0,
           };
         }
         quantity = Math.floor(numOfTicket / promotionDetail.quantityBuy);
       }
       if (promotionDetail.purchaseAmount > 0) {
         if (total < promotionDetail.purchaseAmount) {
-          throw new BadRequestException('TOTAL_AMOUNT_IS_NOT_ENOUGH');
+          return {
+            promotionLineCode,
+            amount: 0,
+          };
         }
         quantity = Math.floor(total / promotionDetail.purchaseAmount);
       }
@@ -180,6 +183,7 @@ export class PromotionHistoryService {
       if (remainingBudget <= 0) {
         return {
           promotionLineCode,
+          amount: 0,
           message: 'Khuyến mãi đã hết ngân sách',
         };
       }
