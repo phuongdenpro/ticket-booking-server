@@ -43,6 +43,12 @@ export class OrderController {
     return await this.orderService.getOrderStatus();
   }
 
+  @Get('update-status')
+  @HttpCode(HttpStatus.OK)
+  async getOrderUpdateStatus() {
+    return await this.orderService.getOrderUpdateStatus();
+  }
+
   @Get()
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)

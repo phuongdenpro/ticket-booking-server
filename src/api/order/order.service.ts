@@ -25,6 +25,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   OrderStatusEnum,
+  OrderUpdateStatusEnum,
   PromotionHistoryTypeEnum,
   PromotionTypeEnum,
   SortEnum,
@@ -188,6 +189,14 @@ export class OrderService {
     return {
       dataResult: Object.keys(OrderStatusEnum).map(
         (key) => OrderStatusEnum[key],
+      ),
+    };
+  }
+
+  async getOrderUpdateStatus() {
+    return {
+      dataResult: Object.keys(OrderUpdateStatusEnum).map(
+        (key) => OrderUpdateStatusEnum[key],
       ),
     };
   }
@@ -527,17 +536,17 @@ export class OrderService {
     const { note, status } = dto;
     order.note = note;
     switch (status) {
-      case OrderStatusEnum.CANCEL:
+      case OrderUpdateStatusEnum.CANCEL:
         if (order.status === OrderStatusEnum.PAID) {
           throw new BadRequestException('ORDER_ALREADY_PAID');
         }
-        order.status = status;
+        order.status = OrderStatusEnum.CANCEL;
         break;
-      case OrderStatusEnum.RETURNED:
+      case OrderUpdateStatusEnum.RETURNED:
         if (order.status === OrderStatusEnum.UNPAID) {
           throw new BadRequestException('ORDER_NOT_PAID');
         }
-        order.status = status;
+        order.status = OrderStatusEnum.RETURNED;
         break;
       default:
         break;
