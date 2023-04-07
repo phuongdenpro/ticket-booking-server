@@ -102,6 +102,54 @@ export class OrderService {
     return await this.orderRepository.findOne({
       where: { ...options?.where },
       select: {
+        orderDetails: {
+          id: true,
+          total: true,
+          note: true,
+          orderCode: true,
+          ticketDetail: {
+            code: true,
+            status: true,
+            note: true,
+            seat: {
+              code: true,
+              name: true,
+              vehicle: {
+                code: true,
+                name: true,
+                licensePlate: true,
+                totalSeat: true,
+                status: true,
+              },
+            },
+            ticket: {
+              id: true,
+              code: true,
+              startDate: true,
+              endDate: true,
+              tripDetail: {
+                code: true,
+                departureTime: true,
+                expectedTime: true,
+                trip: {
+                  code: true,
+                  name: true,
+                  status: true,
+                  fromStation: {
+                    code: true,
+                    name: true,
+                    fullAddress: true,
+                  },
+                  toStation: {
+                    code: true,
+                    name: true,
+                    fullAddress: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         staff: {
           id: true,
           isActive: true,
@@ -138,7 +186,19 @@ export class OrderService {
       },
       relations: {
         orderDetails: {
-          ticketDetail: true,
+          ticketDetail: {
+            seat: {
+              vehicle: true,
+            },
+            ticket: {
+              tripDetail: {
+                trip: {
+                  fromStation: true,
+                  toStation: true,
+                },
+              },
+            },
+          },
         },
         staff: true,
         customer: true,
