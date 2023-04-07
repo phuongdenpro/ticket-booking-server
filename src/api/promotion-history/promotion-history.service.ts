@@ -132,6 +132,7 @@ export class PromotionHistoryService {
         throw new BadRequestException('ORDER_NOT_FOUND');
       }
       promotionHistory.order = orderExist;
+      promotionHistory.orderCode = orderExist.code;
 
       const promotionLine = await this.promotionLineRepository.findOne({
         where: { code: promotionLineCode },

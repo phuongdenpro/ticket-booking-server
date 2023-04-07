@@ -3,13 +3,12 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   DeleteDateColumn,
   ManyToOne,
 } from 'typeorm';
-import { PromotionLine, OrderDetail, Order } from '.';
+import { PromotionLine, Order } from '.';
 
 @Entity({ name: 'promotion_history' })
 export class PromotionHistory {
@@ -35,6 +34,14 @@ export class PromotionHistory {
     nullable: false,
   })
   promotionLineCode: string;
+
+  @Column({
+    name: 'order_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  orderCode: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

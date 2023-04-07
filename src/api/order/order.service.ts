@@ -9,7 +9,7 @@ import {
   Seat,
   Vehicle,
 } from './../../database/entities';
-import { EntityManager, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateOrderDto, CreateOrderDetailDto, FilterOrderDto } from './dto';
 import {
   BadRequestException,
@@ -81,6 +81,14 @@ export class OrderService {
     'c.fullAddress',
     'c.note',
     'c.birthday',
+    's.id',
+    's.isActive',
+    's.phone',
+    's.email',
+    's.fullName',
+    's.gender',
+    's.birthDay',
+    's.address',
   ];
 
   // order
@@ -434,6 +442,7 @@ export class OrderService {
 
     const dataResult = await query
       .leftJoinAndSelect('q.customer', 'c')
+      .leftJoinAndSelect('q.staff', 's')
       .select(this.selectFieldsOrderWithQ)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10)
@@ -449,6 +458,7 @@ export class OrderService {
     return await this.orderDetailRepository.findOne({
       where: { ...options?.where },
       relations: {
+        deletedAt: false,
         ...options?.relations,
       },
       select: { deletedAt: false, ...options?.select },
@@ -491,6 +501,23 @@ export class OrderService {
     if (!order) {
       throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
     }
+    return order;
+  }
+
+  async getOrderDetailByOrderCode(orderCode: string, options?: any) {
+    const order = await this.orderDetailRepository.find({
+      where: { orderCode, ...options?.where },
+      relations: {
+        deletedAt: false,
+        ...options?.relations,
+      },
+      select: { deletedAt: false, ...options?.select },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.orderBy,
+      },
+      ...options?.other,
+    });
     return order;
   }
 
@@ -538,6 +565,7 @@ export class OrderService {
       const orderDetail = new OrderDetail();
       orderDetail.note = note;
       orderDetail.order = orderExist;
+      orderDetail.orderCode = orderExist.code;
       if (customer) {
         orderDetail.createdBy = customer.id;
       } else if (admin) {

@@ -57,12 +57,18 @@ export class OrderController {
 
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getOrderById(@Param('id') id: string) {
     return await this.orderService.getOrderById(id);
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getOrderByCode(@Param('code') code: string) {
     return await this.orderService.getOrderByCode(code);
   }
