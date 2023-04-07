@@ -20,16 +20,17 @@ export class TicketDetail {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
-  @Column({ name: 'note', type: 'text' })
-  note: string;
-
   @Column({
     name: 'status',
     type: 'varchar',
     length: 100,
+    nullable: false,
     default: TicketStatusEnum.NON_SOLD,
   })
-  status: TicketStatusEnum;
+  status: string;
+
+  @Column({ name: 'note', type: 'text' })
+  note: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;

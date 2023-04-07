@@ -31,5 +31,11 @@ export class CreateBookingDto {
   @IsNotEmpty({ message: 'TRIP_DETAIL_ID_REQUIRED' })
   @IsString({ message: 'TRIP_DETAIL_ID_IS_STRING' })
   @Length(36, 36, { message: 'TRIP_DETAIL_ID_IS_36_CHARACTERS' })
-  tripDetailId: string;
+  tripDetailCode: string;
+
+  @ApiPropertyOptional({ example: ['', ''] })
+  @IsArray({ message: 'PROMOTION_LINE_CODES_IS_ARRAY' })
+  @IsString({ each: true, message: 'PROMOTION_LINE_CODES_IS_STRING' })
+  @IsOptional()
+  promotionLineCodes: string[];
 }

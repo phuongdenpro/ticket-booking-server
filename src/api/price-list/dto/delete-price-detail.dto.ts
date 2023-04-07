@@ -1,14 +1,14 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsString } from 'class-validator';
 
 export class DeletePriceDetailDto {
   @ApiProperty({
-    example: ['1', '2'],
+    example: ['idOrCode1', 'idOrCode2', 'idOrCode3'],
     description: 'list id/code',
     type: [String],
-    minLength: 1,
-    isArray: true,
   })
-  @IsArray()
-  public ids: string[];
+  @IsString({ each: true, message: 'LIST_ITEM_IS_STRING' })
+  @ArrayNotEmpty()
+  @IsArray({ message: 'LIST_IS_ARRAY' })
+  public list: string[];
 }

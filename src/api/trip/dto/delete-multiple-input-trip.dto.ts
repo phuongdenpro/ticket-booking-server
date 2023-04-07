@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray } from 'class-validator';
+import { ArrayNotEmpty, IsArray, IsString } from 'class-validator';
 
 export class TripDeleteMultiInput {
   @ApiProperty({
@@ -7,6 +7,8 @@ export class TripDeleteMultiInput {
     description: 'list id/code',
     type: [String],
   })
-  @IsArray()
+  @IsString({ each: true, message: 'LIST_ITEM_IS_STRING' })
+  @ArrayNotEmpty()
+  @IsArray({ message: 'LIST_IS_ARRAY' })
   public ids: string[];
 }

@@ -1,4 +1,3 @@
-import { ActiveStatusEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDate, IsOptional, IsString, MinDate } from 'class-validator';
 
@@ -7,14 +6,6 @@ export class UpdateTicketDto {
   @IsString({ message: 'NOTE_IS_STRING' })
   @IsOptional()
   note: string;
-
-  @ApiPropertyOptional({
-    example: ActiveStatusEnum.ACTIVE,
-    enum: ActiveStatusEnum,
-  })
-  @IsString({ message: 'TICKET_STATUS_IS_STRING' })
-  @IsOptional()
-  status: ActiveStatusEnum;
 
   @ApiPropertyOptional({ example: '2023-03-01' })
   @IsDate({ message: 'START_DATE_IS_DATE' })

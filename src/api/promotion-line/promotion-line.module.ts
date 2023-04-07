@@ -3,25 +3,17 @@ import { Module } from '@nestjs/common';
 import { PromotionLineService } from './promotion-line.service';
 import { PromotionLineController } from './promotion-line.controller';
 import {
-  ApplicableTicketGroup,
   Promotion,
   PromotionDetail,
   PromotionLine,
-  TicketGroup,
+  Trip,
 } from './../../database/entities';
-import { ApplicableTicketGroupService } from '../applicable-ticket-group/applicable-ticket-group.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([
-      PromotionLine,
-      Promotion,
-      PromotionDetail,
-      ApplicableTicketGroup,
-      TicketGroup,
-    ]),
+    TypeOrmModule.forFeature([Trip, PromotionLine, Promotion, PromotionDetail]),
   ],
-  providers: [PromotionLineService, ApplicableTicketGroupService],
+  providers: [PromotionLineService],
   controllers: [PromotionLineController],
   exports: [PromotionLineService],
 })

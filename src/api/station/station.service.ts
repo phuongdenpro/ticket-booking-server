@@ -211,11 +211,24 @@ export class StationService {
     const query = this.stationRepository.createQueryBuilder('q');
     const { keywords, sort } = dto;
     if (keywords) {
-      query
-        .orWhere('q.code like :query')
-        .orWhere('q.name like :query')
-        .orWhere('q.address like :query')
-        .setParameter('query', `%${keywords}%`);
+      const newKeywords = keywords.trim();
+      const subQuery = this.stationRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .where('q2.address LIKE :address', { address: `%${newKeywords}%` })
+        .where('q2.fullAddress LIKE :fullAddress', {
+          fullAddress: `%${newKeywords}%`,
+        })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        address: `%${newKeywords}%`,
+        fullAddress: `%${newKeywords}%`,
+      });
     }
     if (sort) {
       query.orderBy('q.createdAt', sort);
@@ -546,13 +559,13 @@ export class StationService {
       // create excel
       const workBook = new excel.Workbook();
       const workSheet = workBook.addWorksheet('Thông tin bến xe');
-      const header = workSheet.addRow([
-        'STT',
-        'Mã bến xe',
-        'Tên bến xe',
-        'Địa chỉ bến xe',
-        'Ngày tạo',
-      ]);
+      // const header = workSheet.addRow([
+      //   'STT',
+      //   'Mã bến xe',
+      //   'Tên bến xe',
+      //   'Địa chỉ bến xe',
+      //   'Ngày tạo',
+      // ]);
       dataResult.map((item, index) => {
         workSheet.addRow([
           index + 1,

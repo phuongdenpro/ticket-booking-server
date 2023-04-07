@@ -10,7 +10,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { TicketDetail, OrderRefundDetail, TripDetail, TicketGroup } from '.';
+import { TicketDetail, OrderRefundDetail, TripDetail } from '.';
 
 @Entity({ name: 'ticket' })
 export class Ticket {
@@ -20,9 +20,6 @@ export class Ticket {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
-  @Column({ name: 'status', type: 'tinyint', default: 1 })
-  status: boolean;
-
   @Column({ name: 'note', type: 'text' })
   note: string;
 
@@ -31,6 +28,14 @@ export class Ticket {
 
   @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date;
+
+  @Column({
+    name: 'trip_detail_code',
+    type: 'varchar',
+    nullable: true,
+    length: 100,
+  })
+  tripDetailCode: string;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
@@ -53,10 +58,6 @@ export class Ticket {
   public deletedAt?: Date;
 
   // relationship
-  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.tickets)
-  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
-  ticketGroup: TicketGroup;
-
   @OneToMany(() => TicketDetail, (ticketDetail) => ticketDetail.ticket)
   ticketDetails: TicketDetail[];
 

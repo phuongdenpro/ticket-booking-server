@@ -1,4 +1,4 @@
-import { TicketGroupService } from './../ticket-group/ticket-group.service';
+import { PromotionLineService } from './../promotion-line/promotion-line.service';
 import { PriceListService } from './../price-list/price-list.service';
 import { PriceList } from './../../database/entities/price-list.entities';
 import { SeatService } from './../seat/seat.service';
@@ -12,15 +12,21 @@ import {
   Seat,
   Ticket,
   TicketDetail,
-  TicketGroup,
   TripDetail,
   PriceDetail,
+  PromotionDetail,
+  PromotionLine,
+  Promotion,
+  Trip,
+  PromotionHistory,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { TicketService } from '../ticket/ticket.service';
+import { OrderDetailController } from './order-detail.controller';
+import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 
 @Module({
   imports: [
@@ -31,22 +37,27 @@ import { TicketService } from '../ticket/ticket.service';
       Customer,
       Seat,
       Ticket,
+      Trip,
       TicketDetail,
       TripDetail,
-      TicketGroup,
       PriceList,
       PriceDetail,
+      Promotion,
+      PromotionLine,
+      PromotionDetail,
+      PromotionHistory,
     ]),
   ],
-  controllers: [OrderController],
+  controllers: [OrderController, OrderDetailController],
   providers: [
     OrderService,
     AdminService,
     CustomerService,
     SeatService,
     TicketService,
-    TicketGroupService,
     PriceListService,
+    PromotionLineService,
+    PromotionHistoryService,
   ],
   exports: [OrderService],
 })

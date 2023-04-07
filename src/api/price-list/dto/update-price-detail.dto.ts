@@ -1,5 +1,6 @@
+import { VehicleTypeEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsNumber, Min } from 'class-validator';
+import { IsString, IsOptional, IsNumber, Min, IsEnum } from 'class-validator';
 
 export class UpdatePriceDetailDto {
   @ApiPropertyOptional({ example: 100000 })
@@ -20,13 +21,16 @@ export class UpdatePriceDetailDto {
   @IsOptional()
   note: string;
 
-  @ApiPropertyOptional({ example: 'd0adc2a4-386a-45de-bbf3-46d672b0a493' })
-  @IsString({ message: 'TICKET_GROUP_ID_IS_STRING' })
+  @ApiPropertyOptional({
+    example: VehicleTypeEnum.LIMOUSINE,
+    enum: VehicleTypeEnum,
+  })
+  @IsEnum(VehicleTypeEnum, { message: 'SEAT_TYPE_IS_ENUM' })
   @IsOptional()
-  ticketGroupId: string;
+  seatType: VehicleTypeEnum;
 
-  @ApiPropertyOptional({ example: 'BGT32023' })
-  @IsString({ message: 'TICKET_CODE_IS_STRING' })
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'TRIP_CODE_IS_STRING' })
   @IsOptional()
-  ticketGroupCode: string;
+  tripCode: string;
 }

@@ -133,6 +133,6 @@ export class UploadController {
       images?: Express.Multer.File[];
     },
   ) {
-    return this.uploadService.uploadMutiFile(files);
+    return this.uploadService.uploadMultiFile(files);
   }
 }

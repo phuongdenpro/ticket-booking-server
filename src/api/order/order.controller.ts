@@ -1,7 +1,12 @@
-import { CreateOrderDetailDto, CreateOrderDto } from './dto';
+import { CreateOrderDto, FilterOrderDto, UpdateOrderDto } from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums';
-import { CurrentUser, Roles } from './../../decorator';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
 import { OrderService } from './order.service';
 import {
   Body,
@@ -10,7 +15,9 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Patch,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -23,47 +30,89 @@ export class OrderController {
   // order
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async createOrder(@Body() dto: CreateOrderDto, @CurrentUser() user) {
     return await this.orderService.createOrder(dto, user.id);
   }
 
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getOrderStatus() {
+    return await this.orderService.getOrderStatus();
+  }
+
+  @Get('update-status')
+  @HttpCode(HttpStatus.OK)
+  async getOrderUpdateStatus() {
+    return await this.orderService.getOrderUpdateStatus();
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllPriceList(
+    @Query() dto: FilterOrderDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.orderService.findAllOrder(dto, user.id, pagination);
+  }
+
   @Get('id/:id')
   @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getOrderById(@Param('id') id: string) {
     return await this.orderService.getOrderById(id);
   }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getOrderByCode(@Param('code') code: string) {
     return await this.orderService.getOrderByCode(code);
   }
 
-  // order detail
-  @Post('order-detail')
-  @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @Patch('customer/id/:id')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.CUSTOMER)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async createOrderDetail(
-    @Body() dto: CreateOrderDetailDto,
+  async cancelOrderById(
+    @Body() dto: UpdateOrderDto,
+    @Param('id') id: string,
     @CurrentUser() user,
   ) {
-    return await this.orderService.createOrderDetail(dto, user.id);
+    return await this.orderService.updateOrderByIdOrCodeFroCustomer(
+      dto,
+      user.id,
+      id,
+      undefined,
+    );
   }
 
-  @Get('order-detail/id/:id')
+  @Patch('customer/code/:code')
   @HttpCode(HttpStatus.OK)
-  async getOrderDetailById(@Param('id') id: string) {
-    return await this.orderService.getOrderDetailById(id);
-  }
-
-  @Get('order-detail/code/:code')
-  @HttpCode(HttpStatus.OK)
-  async getOrderDetailByCode(@Param('code') code: string) {
-    return await this.orderService.getOrderDetailByCode(code);
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async cancelOrderByCode(
+    @Body() dto: UpdateOrderDto,
+    @Param('code') code: string,
+    @CurrentUser() user,
+  ) {
+    return await this.orderService.updateOrderByIdOrCodeFroCustomer(
+      dto,
+      user.id,
+      undefined,
+      code,
+    );
   }
 }

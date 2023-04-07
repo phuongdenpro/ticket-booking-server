@@ -9,7 +9,8 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { PriceList, OrderDetail, TicketGroup } from '.';
+import { VehicleTypeEnum } from './../../enums';
+import { PriceList, OrderDetail, Trip } from '.';
 
 @Entity({ name: 'price_detail' })
 export class PriceDetail {
@@ -21,6 +22,9 @@ export class PriceDetail {
 
   @Column({ name: 'price', type: 'double', nullable: false, default: 0.0 })
   price: number;
+
+  @Column({ name: 'seat_type', type: 'varchar', length: 100, nullable: false })
+  seatType: VehicleTypeEnum;
 
   @Column({ name: 'note', type: 'text' })
   note: string;
@@ -50,10 +54,10 @@ export class PriceDetail {
   @JoinColumn({ name: 'price_list_id', referencedColumnName: 'id' })
   priceList: PriceList;
 
-  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.priceDetail)
-  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
-  ticketGroup: TicketGroup;
-
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.priceDetail)
   orderDetails: OrderDetail[];
+
+  @ManyToOne(() => Trip, (trip) => trip.priceDetails)
+  @JoinColumn({ name: 'trip_id', referencedColumnName: 'id' })
+  trip: Trip;
 }

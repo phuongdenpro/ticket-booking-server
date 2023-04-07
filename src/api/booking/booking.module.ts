@@ -9,9 +9,11 @@ import {
   Staff,
   Customer,
   TripDetail,
-  TicketGroup,
   PriceList,
   PriceDetail,
+  PromotionLine,
+  PromotionDetail,
+  PromotionHistory,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -21,8 +23,9 @@ import { OrderService } from '../order/order.service';
 import { CustomerService } from '../customer/customer.service';
 import { AdminService } from '../admin/admin.service';
 import { TicketService } from '../ticket/ticket.service';
-import { TicketGroupService } from '../ticket-group/ticket-group.service';
 import { PriceListService } from '../price-list/price-list.service';
+import { PromotionLineService } from '../promotion-line/promotion-line.service';
+import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 
 @Module({
   imports: [
@@ -36,9 +39,12 @@ import { PriceListService } from '../price-list/price-list.service';
       Staff,
       Customer,
       TripDetail,
-      TicketGroup,
       PriceList,
       PriceDetail,
+      Promotion,
+      PromotionLine,
+      PromotionDetail,
+      PromotionHistory,
     ]),
   ],
   providers: [
@@ -48,8 +54,9 @@ import { PriceListService } from '../price-list/price-list.service';
     AdminService,
     SeatService,
     TicketService,
-    TicketGroupService,
     PriceListService,
+    PromotionLineService,
+    PromotionHistoryService,
   ],
   controllers: [BookingController],
   exports: [BookingService],

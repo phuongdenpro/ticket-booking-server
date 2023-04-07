@@ -7,7 +7,7 @@ import {
   DeleteDateColumn,
   OneToMany,
 } from 'typeorm';
-import { Customer, ApplicableCustomerGroup } from '.';
+import { Customer } from '.';
 
 @Entity({ name: 'customer_group' })
 export class CustomerGroup {
@@ -50,9 +50,9 @@ export class CustomerGroup {
   @OneToMany(() => Customer, (customer) => customer.customerGroup)
   customers?: Customer[];
 
-  @OneToMany(
-    () => ApplicableCustomerGroup,
-    (applicableCustomerGroup) => applicableCustomerGroup.customerGroups,
-  )
-  applicableCustomerGroup?: ApplicableCustomerGroup[];
+  // @OneToMany(
+  //   () => ApplicableCustomerGroup,
+  //   (applicableCustomerGroup) => applicableCustomerGroup.customerGroups,
+  // )
+  // applicableCustomerGroup?: ApplicableCustomerGroup[];
 }

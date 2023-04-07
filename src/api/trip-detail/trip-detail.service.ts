@@ -6,14 +6,23 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Staff, Trip, TripDetail, Vehicle } from './../../database/entities';
-import { DataSource, Repository } from 'typeorm';
+import {
+  DataSource,
+  LessThanOrEqual,
+  MoreThanOrEqual,
+  Repository,
+} from 'typeorm';
 import {
   CreateTripDetailDto,
   TripDetailDeleteMultiInput,
   UpdateTripDetailDto,
   FilterTripDetailDto,
 } from './dto';
-import { SortEnum, TripDetailStatusEnum } from './../../enums';
+import {
+  DeleteDtoTypeEnum,
+  SortEnum,
+  TripDetailStatusEnum,
+} from './../../enums';
 import { Pagination } from './../../decorator';
 import { TicketService } from '../ticket/ticket.service';
 import * as moment from 'moment';
@@ -28,31 +37,96 @@ export class TripDetailService {
     private dataSource: DataSource,
   ) {}
 
+  // validate trip detail
+  private async validateTripDetailExistTime(date: Date, vehicleId: string) {
+    const tripDetailExist = await this.dataSource
+      .getRepository(TripDetail)
+      .findOne({
+        where: {
+          departureTime: LessThanOrEqual(date),
+          expectedTime: MoreThanOrEqual(date),
+          vehicle: {
+            id: vehicleId,
+          },
+        },
+      });
+    if (tripDetailExist) {
+      const tripDetailCodeErr = tripDetailExist.code;
+      throw new BadRequestException(
+        `VEHICLE_HAS_BEEN_USED_IN_OTHER_TRIP_DETAIL`,
+        {
+          description: `Xe này đã được sử dụng trong chuyến khác có mã ${tripDetailCodeErr}`,
+        },
+      );
+    }
+  }
+
   private tripDetailSelect = [
     'q',
     'v.id',
+    'v.code',
     'v.name',
     'v.description',
     'v.type',
     'v.licensePlate',
     'v.floorNumber',
     'v.totalSeat',
+    't',
+    'fs',
+    'ts',
+    'i.id',
+    'i.url',
   ];
 
   async findOneTripDetail(options: any) {
     return await this.tripDetailRepository.findOne({
       where: { ...options?.where },
-      relations: ['vehicle'].concat(options?.relations || []),
+      relations: {
+        vehicle: { images: true },
+        trip: {
+          fromStation: true,
+          toStation: true,
+        },
+        ...options?.relations,
+      },
       select: {
         deletedAt: false,
         vehicle: {
           id: true,
+          code: true,
           name: true,
           description: true,
           type: true,
           licensePlate: true,
           floorNumber: true,
           totalSeat: true,
+          images: {
+            id: true,
+            url: true,
+          },
+        },
+        trip: {
+          id: true,
+          code: true,
+          name: true,
+          note: true,
+          startDate: true,
+          endDate: true,
+          status: true,
+          fromStation: {
+            id: true,
+            code: true,
+            name: true,
+            address: true,
+            fullAddress: true,
+          },
+          toStation: {
+            id: true,
+            code: true,
+            name: true,
+            address: true,
+            fullAddress: true,
+          },
         },
         ...options?.select,
       },
@@ -78,98 +152,235 @@ export class TripDetailService {
     return await this.findOneTripDetail(options);
   }
 
-  async createTripDetail(dto: CreateTripDetailDto, userId: string) {
-    const { code, departureTime, expectedTime, status, tripId, vehicleId } =
-      dto;
+  async getTripDetailById(id: string, options?: any) {
+    const tripDetail = await this.findTripDetailById(id, options);
+    if (!tripDetail) {
+      throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
+    }
+    return tripDetail;
+  }
 
-    // check trip details is exist
-    const tripDetailExist = await this.findTripDetailByCode(code);
-    if (tripDetailExist) {
+  async getTripDetailByCode(code: string, options?: any) {
+    const tripDetail = await this.findTripDetailByCode(code, options);
+    if (!tripDetail) {
+      throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
+    }
+    return tripDetail;
+  }
+
+  async findAllTripDetail(dto: FilterTripDetailDto, pagination?: Pagination) {
+    const {
+      minDepartureTime,
+      departureTime,
+      maxDepartureTime,
+      status,
+      tripId,
+      tripCode,
+      fromProvinceCode,
+      toProvinceCode,
+      sort,
+    } = dto;
+    const query = this.tripDetailRepository.createQueryBuilder('q');
+
+    if (minDepartureTime) {
+      query.andWhere('q.departureTime > :minDepartureTime', {
+        minDepartureTime,
+      });
+    }
+
+    if (departureTime) {
+      const minTime = moment(departureTime).startOf('day').toDate();
+      const maxTime = moment(departureTime).endOf('day').toDate();
+      console.log(minTime);
+      console.log(maxTime);
+      query
+        .andWhere('q.departureTime >= :minTime', { minTime })
+        .andWhere('q.departureTime <= :maxTime', { maxTime });
+    }
+
+    if (maxDepartureTime) {
+      query.andWhere('q.departureTime <= :maxDepartureTime', {
+        maxDepartureTime,
+      });
+    }
+
+    switch (status) {
+      case TripDetailStatusEnum.NOT_SOLD_OUT:
+      case TripDetailStatusEnum.SOLD_OUT:
+        query.andWhere('q.status = :status', { status });
+        break;
+      default:
+        break;
+    }
+    if (tripId) {
+      query.andWhere('t.id = :tripId', { tripId: tripId });
+    } else if (tripCode) {
+      query.andWhere('t.code = :tripCode', { tripCode: tripCode });
+    }
+    if (fromProvinceCode) {
+      query
+        .leftJoinAndSelect('q.fromProvince', 'fp')
+        .andWhere('fp.code = :fromProvinceCode', {
+          fromProvinceCode,
+        });
+    }
+    if (toProvinceCode) {
+      query
+        .leftJoinAndSelect('q.toProvince', 'tp')
+        .andWhere('tp.code = :toProvinceCode', { toProvinceCode });
+    }
+
+    const dataResult = await query
+      .leftJoinAndSelect('q.trip', 't')
+      .leftJoinAndSelect('t.fromStation', 'fs')
+      .leftJoinAndSelect('t.toStation', 'ts')
+      .leftJoinAndSelect('q.vehicle', 'v')
+      .leftJoinAndSelect('v.images', 'i')
+      .select(this.tripDetailSelect)
+      .orderBy('q.createdAt', SortEnum.ASC)
+      .addOrderBy('q.departureTime', sort)
+      .addOrderBy('q.code', SortEnum.ASC)
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10)
+      .getMany();
+    const total = await query.getCount();
+
+    return { dataResult, pagination, total };
+  }
+
+  async createTripDetail(dto: CreateTripDetailDto, userId: string) {
+    const {
+      code,
+      departureTime,
+      expectedTime,
+      status,
+      tripId,
+      tripCode,
+      vehicleId,
+      vehicleCode,
+    } = dto;
+
+    // check trip detail code is exist
+    const tripDetailCodeExist = await this.findTripDetailByCode(code);
+    if (tripDetailCodeExist) {
       throw new BadRequestException('TRIP_DETAIL_CODE_EXIST');
     }
 
     // create new trip details and validate
     const tripDetail = new TripDetail();
     tripDetail.code = code;
-    // check time
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-    if (!departureTime) {
-      throw new BadRequestException('DEPARTURE_DATE_REQUIRED');
+    let trip: Trip;
+    const relations = {
+      fromStation: { ward: { district: { province: true } } },
+      toStation: { ward: { district: { province: true } } },
+    };
+    // check trip is exist and ref from province, to province
+    if (!tripId && !tripCode) {
+      throw new NotFoundException('TRIP_ID_OR_CODE_REQUIRED');
     }
-    if (departureTime <= currentDate) {
-      throw new BadRequestException('DEPARTURE_DATE_GREATER_THAN_CURRENT_DATE');
+    if (tripId) {
+      trip = await this.dataSource.getRepository(Trip).findOne({
+        where: { id: tripId },
+        relations,
+      });
+    } else {
+      trip = await this.dataSource.getRepository(Trip).findOne({
+        where: { code: tripCode },
+        relations,
+      });
+    }
+    if (!trip) {
+      throw new BadRequestException('TRIP_NOT_FOUND');
+    }
+    const fromProvince = trip.fromStation.ward.district.province;
+    const toProvince = trip.toStation.ward.district.province;
+    tripDetail.trip = trip;
+    tripDetail.fromProvince = fromProvince;
+    tripDetail.toProvince = toProvince;
+
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+    if (trip.endDate < currentDate) {
+      throw new BadRequestException('TRIP_HAS_ENDED');
+    }
+
+    // valid departure time
+    if (!departureTime) {
+      throw new BadRequestException('DEPARTURE_TIME_REQUIRED');
+    }
+    const tomorrowDate = new Date(moment().add(1, 'days').format('YYYY-MM-DD'));
+    if (departureTime < tomorrowDate) {
+      throw new BadRequestException(
+        'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TOMORROW',
+      );
+    }
+    if (departureTime < trip.startDate) {
+      throw new BadRequestException(
+        'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE',
+      );
+    }
+    if (departureTime > trip.endDate) {
+      throw new BadRequestException(
+        'DEPARTURE_DATE_LESS_THAN_OR_EQUAL_TO_TRIP_END_DATE',
+      );
     }
     tripDetail.departureTime = departureTime;
+
     if (!expectedTime) {
-      throw new BadRequestException('EXPECTED_DATE_REQUIRED');
+      throw new BadRequestException('EXPECTED_TIME_REQUIRED');
     }
-    if (expectedTime <= departureTime) {
+    const expectedDate = new Date(
+      moment(departureTime).add(2, 'hours').format('YYYY-MM-DD HH:mm'),
+    );
+    if (expectedTime < expectedDate) {
       throw new BadRequestException(
-        'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
+        'EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_DEPARTURE_DATE_PLUS_2_HOURS',
+      );
+    }
+    if (expectedTime < trip.startDate) {
+      throw new BadRequestException(
+        'EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE',
       );
     }
     tripDetail.expectedTime = expectedTime;
+
     // check status
-    if (!status) {
-      throw new BadRequestException('TRIP_DETAIL_STATUS_REQUIRED');
-    }
     switch (status) {
-      case TripDetailStatusEnum.NOT_SOLD_OUT:
-      case TripDetailStatusEnum.ACTIVE:
-        tripDetail.status = status;
-        tripDetail.isActive = true;
-        break;
-      case TripDetailStatusEnum.INACTIVE:
       case TripDetailStatusEnum.SOLD_OUT:
         tripDetail.status = status;
-        tripDetail.isActive = false;
         break;
       default:
-        tripDetail.status = TripDetailStatusEnum.INACTIVE;
-        tripDetail.isActive = false;
+        tripDetail.status = TripDetailStatusEnum.NOT_SOLD_OUT;
         break;
     }
-    // check trip is exist and ref from province, to province
-    if (tripId) {
-      const trip = await this.dataSource.getRepository(Trip).findOne({
-        where: { id: tripId },
-        relations: [
-          'fromStation.ward.parentCode.parentCode',
-          'toStation.ward.parentCode.parentCode',
-        ],
-      });
-      // ref from province and to province
-      if (trip) {
-        const fromProvince = trip.fromStation.ward.district['province'];
-        const toProvince = trip.toStation.ward.district['province'];
-
-        tripDetail.trip = trip;
-        tripDetail.fromProvince = fromProvince;
-        tripDetail.toProvince = toProvince;
-      } else {
-        throw new BadRequestException('TRIP_NOT_FOUND');
-      }
-    } else {
-      throw new NotFoundException('TRIP_ID_REQUIRED');
-    }
     // check vehicle
-    if (!vehicleId) {
-      throw new NotFoundException('VEHICLE_ID_REQUIRED');
+    if (!vehicleId && !vehicleCode) {
+      throw new NotFoundException('ID_OR_CODE_REQUIRED');
     }
-    const vehicle = await this.dataSource
-      .getRepository(Vehicle)
-      .findOne({ where: { id: vehicleId } });
+    let vehicle: Vehicle;
+    if (vehicleId) {
+      vehicle = await this.dataSource
+        .getRepository(Vehicle)
+        .findOne({ where: { id: vehicleId } });
+    } else if (vehicleCode) {
+      vehicle = await this.dataSource
+        .getRepository(Vehicle)
+        .findOne({ where: { code: vehicleCode } });
+    }
     if (!vehicle) {
       throw new BadRequestException('VEHICLE_NOT_FOUND');
     }
-    tripDetail.vehicle = vehicle;
+    await this.validateTripDetailExistTime(departureTime, vehicle.id);
+    await this.validateTripDetailExistTime(expectedTime, vehicle.id);
 
-    // check permissions
+    tripDetail.vehicle = vehicle;
     const adminExist = await this.dataSource
       .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
+      .findOne({ where: { id: userId } });
     if (!adminExist) {
       throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     tripDetail.createdBy = adminExist.id;
 
@@ -186,9 +397,9 @@ export class TripDetailService {
       adminExist.id,
     );
 
-    // return value
     return {
       id: saveTripDetail.id,
+      code: saveTripDetail.code,
       departureTime: saveTripDetail.departureTime,
       expectedTime: saveTripDetail.expectedTime,
       status: saveTripDetail.status,
@@ -196,351 +407,264 @@ export class TripDetailService {
       updatedBy: saveTripDetail.updatedBy,
       createdAt: saveTripDetail.createdAt,
       updatedAt: saveTripDetail.updatedAt,
-      isActive: saveTripDetail.isActive,
-      trip: { id: saveTripDetail.trip.id },
-      vehicle: { id: saveTripDetail.vehicle.id },
+      trip: {
+        id: trip.id,
+        code: trip.code,
+      },
+      vehicle: {
+        id: vehicle.id,
+        code: vehicle.code,
+      },
     };
   }
 
-  async findAll(dto: FilterTripDetailDto, pagination?: Pagination) {
-    const { status, tripId, fromProvinceCode, toProvinceCode } = dto;
-    let { departureTime } = dto;
-    const query = this.tripDetailRepository.createQueryBuilder('q');
-    query.where('q.isActive = :isActive', { isActive: true });
+  async updateTripDetailByIdOrCode(
+    dto: UpdateTripDetailDto,
+    userId: string,
+    id?: string,
+    code?: string,
+  ) {
+    const { status, vehicleId, departureTime, expectedTime, vehicleCode } = dto;
 
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-    if (departureTime) {
-      departureTime = new Date(`${departureTime.toDateString()}`);
-      const departureTime1 = new Date(`${departureTime.toDateString()}`);
-      departureTime1.setDate(departureTime1.getDate() + 1);
-
-      if (departureTime >= currentDate) {
-        query
-          .andWhere('q.departureTime >= :departureTime', { departureTime })
-          .andWhere('q.departureTime <= :departureTime1', { departureTime1 });
-      }
+    let tripDetail: TripDetail;
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_REQUIRED');
     }
-    if (status) {
-      query.andWhere('q.status = :status', { status });
+    if (id) {
+      tripDetail = await this.findTripDetailById(id, {
+        relations: { trip: true },
+      });
     } else {
-      query.andWhere('q.status = :status', {
-        status: TripDetailStatusEnum.NOT_SOLD_OUT,
+      tripDetail = await this.findTripDetailByCode(code, {
+        relations: { trip: true },
       });
     }
-    if (tripId) {
-      const trip = await this.dataSource.getRepository(Trip).findOne({
-        where: { id: tripId },
-      });
-      if (!trip) {
-        throw new BadRequestException('TRIP_NOT_FOUND');
-      }
-      query.andWhere('q.trip_id = :tripId', { tripId: trip.id });
-    }
-    if (fromProvinceCode) {
-      query.leftJoinAndSelect('q.fromProvince', 'fp');
-      query.andWhere('fp.code = :fromProvinceCode', {
-        fromProvinceCode,
-      });
-    }
-    if (toProvinceCode) {
-      query.leftJoinAndSelect('q.toProvince', 'tp');
-      query.andWhere('tp.code = :toProvinceCode', { toProvinceCode });
-    }
-
-    const total = await query.getCount();
-    const dataResult = await query
-      .leftJoinAndSelect('q.vehicle', 'v')
-      .select(this.tripDetailSelect)
-      .orderBy('q.createdAt', SortEnum.ASC)
-      .offset(pagination.skip)
-      .limit(pagination.take)
-      .getMany();
-
-    return { dataResult, pagination, total };
-  }
-
-  async getTripDetailById(id: string, options?: any) {
-    const tripDetail = await this.findTripDetailById(id, options);
     if (!tripDetail) {
       throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
     }
-    return tripDetail;
-  }
 
-  async getTripDetailByCode(code: string) {
-    const tripDetail = await this.findTripDetailByCode(code);
-    if (!tripDetail) {
-      throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
-    }
-    return tripDetail;
-  }
-
-  async updateTripDetailById(
-    dto: UpdateTripDetailDto,
-    id: string,
-    userId: string,
-  ) {
-    const { status, tripId, vehicleId } = dto;
-    let { departureTime, expectedTime } = dto;
-
-    const tripDetail = await this.tripDetailRepository.findOne({
-      where: { id },
-    });
-    if (!tripDetail) {
-      throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
-    }
+    const trip: Trip = tripDetail.trip;
     const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
+    if (trip.endDate < currentDate) {
+      throw new BadRequestException('TRIP_HAS_ENDED_NOT_UPDATE');
+    }
+    if (tripDetail.departureTime < currentDate) {
+      throw new BadRequestException('TRIP_DETAIL_HAS_ENDED_NOT_UPDATE');
+    }
+
+    const currentDatePlus15M = new Date(
+      moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm'),
+    );
     if (departureTime) {
-      departureTime = new Date(departureTime);
-      if (departureTime >= currentDate) {
-        tripDetail.departureTime = departureTime;
-      } else {
+      if (departureTime < currentDatePlus15M) {
         throw new BadRequestException(
-          'DEPARTURE_DATE_GREATER_THAN_CURRENT_DATE',
+          'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_CURRENT_DATE_PLUS_15_MINUTES',
         );
       }
-    }
-    if (expectedTime) {
-      expectedTime = new Date(expectedTime);
+      if (departureTime < trip.startDate) {
+        throw new BadRequestException(
+          'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE',
+        );
+      }
+      if (departureTime > trip.endDate) {
+        throw new BadRequestException(
+          'DEPARTURE_DATE_LESS_THAN_OR_EQUAL_TO_TRIP_END_DATE',
+        );
+      }
       if (
-        (departureTime && expectedTime > departureTime) ||
-        expectedTime > currentDate
+        (expectedTime && departureTime >= expectedTime) ||
+        (!expectedTime && departureTime >= tripDetail.expectedTime)
       ) {
-        tripDetail.expectedTime = expectedTime;
-      } else {
         throw new BadRequestException(
           'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
         );
       }
-    }
-    if (status) {
-      switch (status) {
-        case TripDetailStatusEnum.NOT_SOLD_OUT:
-        case TripDetailStatusEnum.ACTIVE:
-          tripDetail.status = status;
-          break;
-        case TripDetailStatusEnum.INACTIVE:
-        case TripDetailStatusEnum.SOLD_OUT:
-          tripDetail.status = status;
-          tripDetail.isActive = false;
-          break;
-        default:
-          tripDetail.status = TripDetailStatusEnum.NOT_SOLD_OUT;
-          tripDetail.isActive = false;
-          break;
-      }
-    }
-    if (tripId) {
-      const trip = await this.dataSource
-        .getRepository(Trip)
-        .findOne({ where: { id: tripId } });
-      if (trip) {
-        tripDetail.trip = trip;
-      } else {
-        throw new BadRequestException('TRIP_NOT_FOUND');
-      }
-    }
-    if (vehicleId) {
-      const vehicle = await this.dataSource
-        .getRepository(Vehicle)
-        .findOne({ where: { id: vehicleId } });
-      if (vehicle) {
-        tripDetail.vehicle = vehicle;
-      } else {
-        throw new BadRequestException('VEHICLE_NOT_FOUND');
-      }
-    }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
-    if (!adminExist) {
-      throw new UnauthorizedException('USER_NOT_FOUND');
-    }
-    tripDetail.updatedBy = adminExist.id;
-
-    const saveTripDetail = await this.tripDetailRepository.save(tripDetail);
-    return {
-      id: saveTripDetail.id,
-      departureTime: saveTripDetail.departureTime,
-      expectedTime: saveTripDetail.expectedTime,
-      status: saveTripDetail.status,
-      createdBy: saveTripDetail.createdBy,
-      updatedBy: saveTripDetail.updatedBy,
-      createdAt: saveTripDetail.createdAt,
-      updatedAt: saveTripDetail.updatedAt,
-      isActive: saveTripDetail.isActive,
-      trip: { id: saveTripDetail.trip.id },
-      vehicle: { id: saveTripDetail.vehicle.id },
-    };
-  }
-
-  async updateTripDetailByCode(
-    dto: UpdateTripDetailDto,
-    code: string,
-    userId: string,
-  ) {
-    const { status, tripId, vehicleId } = dto;
-    let { departureTime, expectedTime } = dto;
-
-    const tripDetail = await this.tripDetailRepository.findOne({
-      where: { code },
-    });
-    if (!tripDetail) {
-      throw new NotFoundException('TRIP_DETAIL_NOT_FOUND');
-    }
-
-    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
-    if (departureTime) {
-      departureTime = new Date(departureTime);
-      if (departureTime >= currentDate) {
-        tripDetail.departureTime = departureTime;
-      } else {
-        throw new BadRequestException(
-          'DEPARTURE_DATE_GREATER_THAN_CURRENT_DATE',
-        );
-      }
+      tripDetail.departureTime = departureTime;
     }
     if (expectedTime) {
-      expectedTime = new Date(expectedTime);
-      if (
-        (departureTime && expectedTime > departureTime) ||
-        expectedTime > currentDate
-      ) {
-        tripDetail.expectedTime = expectedTime;
-      } else {
-        throw new BadRequestException(
-          'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
-        );
-      }
-    }
-    if (status) {
-      switch (status) {
-        case TripDetailStatusEnum.NOT_SOLD_OUT:
-        case TripDetailStatusEnum.ACTIVE:
-          tripDetail.status = status;
-          break;
-        case TripDetailStatusEnum.INACTIVE:
-        case TripDetailStatusEnum.SOLD_OUT:
-          tripDetail.status = status;
-          tripDetail.isActive = false;
-          break;
-        default:
-          tripDetail.status = TripDetailStatusEnum.NOT_SOLD_OUT;
-          tripDetail.isActive = false;
-          break;
-      }
-    }
-    if (tripId) {
-      const trip = await this.dataSource
-        .getRepository(Trip)
-        .findOne({ where: { id: tripId } });
-      if (trip) {
-        tripDetail.trip = trip;
-      } else {
-        throw new BadRequestException('TRIP_NOT_FOUND');
-      }
-    }
-    if (vehicleId) {
-      const vehicle = await this.dataSource
-        .getRepository(Vehicle)
-        .findOne({ where: { id: vehicleId } });
-      if (vehicle) {
-        tripDetail.vehicle = vehicle;
-      } else {
-        throw new BadRequestException('VEHICLE_NOT_FOUND');
-      }
-    }
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
-    if (!adminExist) {
-      throw new UnauthorizedException('USER_NOT_FOUND');
-    }
-    tripDetail.updatedBy = adminExist.id;
-
-    const saveTripDetail = await this.tripDetailRepository.save(tripDetail);
-    return {
-      id: saveTripDetail.id,
-      departureTime: saveTripDetail.departureTime,
-      expectedTime: saveTripDetail.expectedTime,
-      status: saveTripDetail.status,
-      createdBy: saveTripDetail.createdBy,
-      updatedBy: saveTripDetail.updatedBy,
-      createdAt: saveTripDetail.createdAt,
-      updatedAt: saveTripDetail.updatedAt,
-      isActive: saveTripDetail.isActive,
-      trip: { id: saveTripDetail.trip.id },
-      vehicle: { id: saveTripDetail.vehicle.id },
-    };
-  }
-
-  async deleteTripDetailById(id: string, userId: string) {
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-
-    const tripDetail = await this.tripDetailRepository.findOne({
-      where: { id },
-    });
-    if (!tripDetail) {
-      throw new BadRequestException('TRIP_DETAIL_NOT_FOUND');
-    }
-    tripDetail.deletedAt = new Date();
-    tripDetail.updatedBy = adminExist.id;
-
-    return await { id: (await this.tripDetailRepository.save(tripDetail)).id };
-  }
-
-  async deleteTripDetailByCode(code: string, userId: string) {
-    const adminExist = await this.dataSource
-      .getRepository(Staff)
-      .findOne({ where: { id: userId, isActive: true } });
-    if (!adminExist) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-
-    const tripDetail = await this.tripDetailRepository.findOne({
-      where: { code },
-    });
-    if (!tripDetail) {
-      throw new BadRequestException('TRIP_DETAIL_NOT_FOUND');
-    }
-    tripDetail.deletedAt = new Date();
-    tripDetail.updatedBy = adminExist.id;
-
-    return await { id: (await this.tripDetailRepository.save(tripDetail)).id };
-  }
-
-  async deleteMultipleTripDetailByIds(
-    userId: string,
-    dto: TripDetailDeleteMultiInput,
-  ) {
-    try {
-      const { ids } = dto;
-
-      const list = await Promise.all(
-        ids.map(async (id) => await this.deleteTripDetailById(id, userId)),
+      const departureTime2 = departureTime || tripDetail.departureTime;
+      const expectedDate = new Date(
+        moment(departureTime2).add(2, 'hours').format('YYYY-MM-DD HH:mm'),
       );
-      return list;
-    } catch (err) {
-      throw new BadRequestException(err.message);
+      if (expectedTime < expectedDate) {
+        throw new BadRequestException(
+          'EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_DEPARTURE_DATE_PLUS_2_HOURS',
+        );
+      }
+      if (expectedTime < trip.startDate) {
+        throw new BadRequestException(
+          'EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE',
+        );
+      }
+      tripDetail.expectedTime = expectedTime;
     }
+    switch (status) {
+      case TripDetailStatusEnum.NOT_SOLD_OUT:
+      case TripDetailStatusEnum.SOLD_OUT:
+        tripDetail.status = status;
+        break;
+      default:
+        break;
+    }
+
+    if (vehicleId) {
+      const vehicle = await this.dataSource
+        .getRepository(Vehicle)
+        .findOne({ where: { id: vehicleId } });
+      if (!vehicle) {
+        throw new BadRequestException('VEHICLE_NOT_FOUND');
+      }
+      tripDetail.vehicle = vehicle;
+    } else if (vehicleCode) {
+      const vehicle = await this.dataSource
+        .getRepository(Vehicle)
+        .findOne({ where: { code: vehicleCode } });
+      if (!vehicle) {
+        throw new BadRequestException('VEHICLE_NOT_FOUND');
+      }
+      tripDetail.vehicle = vehicle;
+    }
+    // check permissions
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    }
+    tripDetail.updatedBy = adminExist.id;
+
+    const saveTripDetail = await this.tripDetailRepository.save(tripDetail);
+    const vehicle: Vehicle = tripDetail.vehicle;
+    return {
+      id: saveTripDetail.id,
+      code: saveTripDetail.code,
+      departureTime: saveTripDetail.departureTime,
+      expectedTime: saveTripDetail.expectedTime,
+      status: saveTripDetail.status,
+      createdBy: saveTripDetail.createdBy,
+      updatedBy: saveTripDetail.updatedBy,
+      createdAt: saveTripDetail.createdAt,
+      updatedAt: saveTripDetail.updatedAt,
+      trip: {
+        id: trip.id,
+        code: trip.code,
+      },
+      vehicle: {
+        id: vehicle.id,
+        code: vehicle.code,
+      },
+    };
   }
 
-  async deleteMultipleTripDetailByCodes(
+  async deleteTripDetailByIdOrCode(userId: string, id?: string, code?: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    }
+
+    let tripDetail: TripDetail;
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_REQUIRED');
+    }
+    if (id) {
+      tripDetail = await this.findTripDetailById(id, {
+        relations: { trip: true },
+      });
+    } else {
+      tripDetail = await this.findTripDetailByCode(code, {
+        relations: { trip: true },
+      });
+    }
+    if (!tripDetail) {
+      throw new BadRequestException('TRIP_DETAIL_NOT_FOUND');
+    }
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
+    if (tripDetail.trip.endDate < currentDate) {
+      throw new BadRequestException('TRIP_HAS_ENDED');
+    }
+    if (tripDetail.departureTime < currentDate) {
+      throw new BadRequestException('TRIP_DETAIL_HAS_ENDED_NOT_DELETE');
+    }
+    tripDetail.deletedAt = new Date();
+    tripDetail.updatedBy = adminExist.id;
+    const saveTripDetail = await this.tripDetailRepository.save(tripDetail);
+
+    return await {
+      id: saveTripDetail.id,
+      code: saveTripDetail.code,
+      message: 'Xoá thành công',
+    };
+  }
+
+  async deleteMultipleTripDetailByIdsOrCodes(
     userId: string,
     dto: TripDetailDeleteMultiInput,
+    type: DeleteDtoTypeEnum,
   ) {
     try {
       const { ids } = dto;
+      const adminExist = await this.dataSource
+        .getRepository(Staff)
+        .findOne({ where: { id: userId } });
+      if (!adminExist) {
+        throw new UnauthorizedException('USER_NOT_FOUND');
+      }
+      if (!adminExist.isActive) {
+        throw new UnauthorizedException('USER_NOT_ACTIVE');
+      }
 
       const list = await Promise.all(
-        ids.map(
-          async (code) => await this.deleteTripDetailByCode(code, userId),
-        ),
+        ids.map(async (data) => {
+          if (!data) {
+            return {
+              id: type === DeleteDtoTypeEnum.ID ? data : undefined,
+              code: type === DeleteDtoTypeEnum.CODE ? data : undefined,
+              message: `${type} không được để trống`,
+            };
+          }
+          let tripDetail: TripDetail;
+          if (type === DeleteDtoTypeEnum.ID) {
+            tripDetail = await this.findTripDetailById(data, {
+              relations: { trip: true },
+            });
+          } else if (type === DeleteDtoTypeEnum.CODE) {
+            tripDetail = await this.findTripDetailByCode(data, {
+              relations: { trip: true },
+            });
+          }
+          if (!tripDetail) {
+            return {
+              id: type === DeleteDtoTypeEnum.ID ? data : undefined,
+              code: type === DeleteDtoTypeEnum.CODE ? data : undefined,
+              message: 'TRIP_DETAIL_NOT_FOUND',
+            };
+          }
+          const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm:ss'));
+          if (tripDetail.trip.endDate < currentDate) {
+            throw new BadRequestException('TRIP_HAS_ENDED');
+          }
+          if (tripDetail.departureTime < currentDate) {
+            throw new BadRequestException('TRIP_DETAIL_HAS_ENDED_NOT_DELETE');
+          }
+          tripDetail.deletedAt = new Date();
+          tripDetail.updatedBy = adminExist.id;
+          const saveTripDetail = await this.tripDetailRepository.save(
+            tripDetail,
+          );
+          return {
+            id: saveTripDetail.id,
+            code: saveTripDetail.code,
+            message: 'Xoá thành công',
+          };
+        }),
       );
       return list;
     } catch (err) {

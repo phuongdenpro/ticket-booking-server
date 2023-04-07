@@ -10,7 +10,7 @@ import {
   DeleteDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Customer, OrderDetail, OrderRefund, Staff } from '.';
+import { Customer, OrderDetail, OrderRefund, PromotionHistory, Staff } from '.';
 
 @Entity({ name: 'order' })
 export class Order {
@@ -66,4 +66,10 @@ export class Order {
 
   @OneToOne(() => OrderRefund, (orderRefund) => orderRefund.order)
   orderRefund: OrderRefund;
+
+  @OneToMany(
+    () => PromotionHistory,
+    (promotionHistory) => promotionHistory.order,
+  )
+  promotionHistories: PromotionHistory[];
 }

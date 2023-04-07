@@ -23,12 +23,12 @@ export class FilterTicketDetailDto {
   sort?: SortEnum;
 
   @ApiPropertyOptional({ example: '' })
-  @IsString({ message: 'TICKET_ID_IS_STRING' })
-  @IsOptional()
-  ticketId: string;
-
-  @ApiPropertyOptional({ example: '' })
   @IsString({ message: 'TICKET_CODE_IS_STRING' })
   @IsOptional()
-  ticketCode: string;
+  ticketCode?: string;
+
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'TRIP_DETAIL_CODE_IS_STRING' })
+  @IsOptional()
+  tripDetailCode?: string;
 }

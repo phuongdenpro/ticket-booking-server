@@ -16,12 +16,7 @@ import {
 } from './dto';
 import { ImageResourceService } from '../image-resource/image-resource.service';
 import { Pagination } from './../../decorator';
-import {
-  VehicleTypeEnum,
-  VehicleSeatsEnum,
-  SeatTypeEnum,
-  SortEnum,
-} from './../../enums';
+import { VehicleTypeEnum, VehicleSeatsEnum, SortEnum } from './../../enums';
 import { SeatService } from '../seat/seat.service';
 
 @Injectable()
@@ -45,8 +40,8 @@ export class VehicleService {
       select: {
         seats: {
           id: true,
+          code: true,
           name: true,
-          type: true,
           floor: true,
         },
         images: {
@@ -116,10 +111,9 @@ export class VehicleService {
     vehicle.description = description;
 
     if (!type) {
-      vehicle.type = VehicleTypeEnum.OTHER;
-    } else {
-      vehicle.type = type;
+      throw new BadRequestException('VEHICLE_TYPE_REQUIRED');
     }
+    vehicle.type = type;
     if (licensePlate.match(LICENSE_PLATE_REGEX)) {
       vehicle.licensePlate = licensePlate;
     } else {
@@ -187,7 +181,6 @@ export class VehicleService {
           dto.floor = 2;
         }
       }
-      dto.type = SeatTypeEnum.NON_SOLD;
       dto.vehicleId = newVehicle.id;
       await this.seatService.createSeat(dto, userId);
     }
@@ -216,19 +209,35 @@ export class VehicleService {
     const query = this.vehicleService.createQueryBuilder('q');
 
     if (keywords) {
-      query
-        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.licensePlate like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.name like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.description like :keywords', { keywords: `%${keywords}%` });
+      const newKeywords = keywords.trim();
+      const subQuery = this.vehicleService
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.licensePlate LIKE :licensePlate', {
+          licensePlate: `%${newKeywords}%`,
+        })
+        .where('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .where('q2.description LIKE :description', {
+          description: `%${newKeywords}%`,
+        })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        licensePlate: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        description: `%${newKeywords}%`,
+      });
     }
-    if (
-      type == VehicleTypeEnum.LIMOUSINE ||
-      type == VehicleTypeEnum.SLEEPER_BUS ||
-      type == VehicleTypeEnum.SEAT_BUS ||
-      type == VehicleTypeEnum.OTHER
-    ) {
-      query.andWhere('q.type = :type', { type });
+    switch (type) {
+      case VehicleTypeEnum.LIMOUSINE:
+      case VehicleTypeEnum.SLEEPER_BUS:
+      case VehicleTypeEnum.SEAT_BUS:
+        query.andWhere('q.type = :type', { type });
+        break;
+      default:
+        break;
     }
     if (floorNumber == 1 || floorNumber == 2) {
       query.andWhere('q.floorNumber = :floorNumber', { floorNumber });

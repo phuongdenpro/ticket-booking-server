@@ -19,7 +19,7 @@ import {
   Pagination,
   Roles,
 } from './../../decorator';
-import { RoleEnum } from './../../enums';
+import { DeleteDtoTypeEnum, RoleEnum } from './../../enums';
 import { TripDetailService } from './trip-detail.service';
 import {
   FilterTripDetailDto,
@@ -51,7 +51,7 @@ export class TripDetailController {
     @Query() dto: FilterTripDetailDto,
     @GetPagination() pagination?: Pagination,
   ) {
-    return await this.tripDetailService.findAll(dto, pagination);
+    return await this.tripDetailService.findAllTripDetail(dto, pagination);
   }
 
   @Get('id/:id')
@@ -76,7 +76,11 @@ export class TripDetailController {
     @Param('id') id: string,
     @Body() dto: UpdateTripDetailDto,
   ) {
-    return await this.tripDetailService.updateTripDetailById(dto, id, user.id);
+    return await this.tripDetailService.updateTripDetailByIdOrCode(
+      dto,
+      user.id,
+      id,
+    );
   }
 
   @Patch('code/:code')
@@ -89,10 +93,11 @@ export class TripDetailController {
     @Param('code') code: string,
     @Body() dto: UpdateTripDetailDto,
   ) {
-    return await this.tripDetailService.updateTripDetailById(
+    return await this.tripDetailService.updateTripDetailByIdOrCode(
       dto,
-      code,
       user.id,
+      undefined,
+      code,
     );
   }
 
@@ -102,7 +107,7 @@ export class TripDetailController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteTripDetailById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.tripDetailService.deleteTripDetailById(id, user.id);
+    return await this.tripDetailService.deleteTripDetailByIdOrCode(user.id, id);
   }
 
   @Delete('code/:code')
@@ -114,7 +119,11 @@ export class TripDetailController {
     @CurrentUser() user,
     @Param('code') code: string,
   ) {
-    return await this.tripDetailService.deleteTripDetailByCode(code, user.id);
+    return await this.tripDetailService.deleteTripDetailByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('multiple')
@@ -126,9 +135,10 @@ export class TripDetailController {
     @CurrentUser() user,
     @Body() dto: TripDetailDeleteMultiInput,
   ) {
-    return await this.tripDetailService.deleteMultipleTripDetailByIds(
+    return await this.tripDetailService.deleteMultipleTripDetailByIdsOrCodes(
       user.id,
       dto,
+      DeleteDtoTypeEnum.ID,
     );
   }
 
@@ -141,9 +151,10 @@ export class TripDetailController {
     @CurrentUser() user,
     @Body() dto: TripDetailDeleteMultiInput,
   ) {
-    return await this.tripDetailService.deleteMultipleTripDetailByCodes(
+    return await this.tripDetailService.deleteMultipleTripDetailByIdsOrCodes(
       user.id,
       dto,
+      DeleteDtoTypeEnum.CODE,
     );
   }
 }

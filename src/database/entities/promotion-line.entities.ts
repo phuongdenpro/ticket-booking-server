@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
   JoinColumn,
+  OneToMany,
 } from 'typeorm';
 import { PromotionHistory, PromotionDetail, Promotion } from '.';
 
@@ -46,22 +47,25 @@ export class PromotionLine {
   @Column({ name: 'type', type: 'varchar', length: 200, nullable: false })
   type: PromotionTypeEnum;
 
-  @Column({ name: 'budget', type: 'double', nullable: false, default: 0 })
-  budget: number;
+  @Column({ name: 'use_budget', type: 'double', nullable: false, default: 0 })
+  useBudget: number;
 
-  @Column({ name: 'budget', type: 'double', nullable: false, default: 0 })
+  @Column({ name: 'max_budget', type: 'double', nullable: false, default: 1 })
   maxBudget: number;
+
+  @Column({ name: 'use_quantity', type: 'double', nullable: false, default: 0 })
+  useQuantity: number;
 
   @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
   maxQuantity: number;
 
   @Column({
-    name: 'max_quantity_per_customer',
-    type: 'int',
+    name: 'apply_all',
+    type: 'boolean',
     nullable: false,
-    default: 1,
+    default: false,
   })
-  maxQuantityPerCustomer: number;
+  applyAll: boolean;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
@@ -90,12 +94,11 @@ export class PromotionLine {
   )
   promotionDetail: PromotionDetail;
 
-  @ManyToOne(
+  @OneToMany(
     () => PromotionHistory,
     (promotionHistory) => promotionHistory.promotionLine,
   )
-  @JoinColumn({ name: 'promotion_history_id', referencedColumnName: 'id' })
-  promotionHistory: PromotionHistory;
+  promotionHistory: PromotionHistory[];
 
   @ManyToOne(() => Promotion, (promotion) => promotion.promotionLines)
   @JoinColumn({ name: 'promotion_id', referencedColumnName: 'id' })

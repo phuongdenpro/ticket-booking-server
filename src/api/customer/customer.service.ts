@@ -13,11 +13,11 @@ import {
   CreateCustomerForAdminDto,
   FilterCustomerDto,
   UpdateCustomerForAdminDto,
+  OrderCustomerSearch,
 } from './dto';
 import { UpdateCustomerDto, UserUpdatePasswordDto } from '../user/dto';
 import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
-import { AuthService } from '../../auth/auth.service';
 import * as moment from 'moment';
 
 @Injectable()
@@ -25,7 +25,6 @@ export class CustomerService {
   constructor(
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
-    private readonly authService: AuthService,
     private readonly dataSource: DataSource,
   ) {}
 
@@ -81,11 +80,7 @@ export class CustomerService {
       },
     },
     relations: {
-      ward: {
-        district: {
-          province: true,
-        },
-      },
+      ward: { district: { province: true } },
     },
   };
 
@@ -96,6 +91,7 @@ export class CustomerService {
   async findOneCustomer(options: any) {
     return await this.customerRepository.findOne({
       where: { ...options?.where },
+
       select: {
         id: true,
         lastLogin: true,
@@ -162,18 +158,31 @@ export class CustomerService {
   }
 
   async findAll(dto: FilterCustomerDto, pagination: Pagination) {
-    const { keywords, status } = dto;
+    const { keywords, status, sort } = dto;
 
     const query = this.customerRepository.createQueryBuilder('u');
     if (keywords) {
-      query
-        .orWhere('u.fullName like :query')
-        .orWhere('u.email like :query')
-        .orWhere('u.phone like :query')
-        .orWhere('u.address like :query')
-        .orWhere('u.fullAddress like :query')
-        .orWhere('u.note like :query')
-        .setParameter('query', `%${keywords}%`);
+      const newKeywords = keywords.trim();
+      const subQuery = this.customerRepository
+        .createQueryBuilder('q2')
+        .select('q2.id')
+        .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
+        .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
+        .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
+        .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
+        .orWhere('q2.fullAddress LIKE :fullAddress', {
+          fullAddress: `%${newKeywords}%`,
+        })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .getQuery();
+
+      query.andWhere(`q.id in (${subQuery})`, {
+        fullName: `%${newKeywords}%`,
+        email: `%${newKeywords}%`,
+        phone: `%${newKeywords}%`,
+        address: `%${newKeywords}%`,
+        fullAddress: `%${newKeywords}%`,
+      });
     }
 
     if (status) {
@@ -185,7 +194,9 @@ export class CustomerService {
       .leftJoinAndSelect('u.customerGroup', 'cg')
       .offset(pagination.skip)
       .limit(pagination.take)
-      .orderBy('u.createdAt', SortEnum.DESC)
+      .orderBy('u.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('u.fullName', SortEnum.ASC)
+      .addOrderBy('u.email', SortEnum.ASC)
       .select(this.selectFieldsWithQ)
       .getMany();
 
@@ -350,13 +361,9 @@ export class CustomerService {
     customer.note = note;
     switch (gender) {
       case GenderEnum.FEMALE:
-        customer.gender = GenderEnum.FEMALE;
-        break;
       case GenderEnum.MALE:
-        customer.gender = GenderEnum.MALE;
-        break;
       case GenderEnum.OTHER:
-        customer.gender = GenderEnum.OTHER;
+        customer.gender = gender;
         break;
       default:
         customer.gender = GenderEnum.OTHER;
@@ -365,7 +372,7 @@ export class CustomerService {
     if (birthday) {
       customer.birthday = birthday;
     } else {
-      customer.birthday = new Date(moment().format('YYYY-MM-DD'));
+      customer.birthday = moment().startOf('day').toDate();
     }
 
     if (email) {
@@ -388,7 +395,7 @@ export class CustomerService {
       select: {
         ...this.selectFieldsAddress.select.ward,
       },
-      relations: ['district', 'district.province'],
+      relations: { district: { province: true } },
     });
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
@@ -475,26 +482,22 @@ export class CustomerService {
     if (gender) {
       switch (gender) {
         case GenderEnum.FEMALE:
-          customer.gender = GenderEnum.FEMALE;
-          break;
         case GenderEnum.MALE:
-          customer.gender = GenderEnum.MALE;
-          break;
         case GenderEnum.OTHER:
-          customer.gender = GenderEnum.OTHER;
+          customer.gender = gender;
+          break;
+        default:
           break;
       }
     }
     if (status) {
       switch (status) {
         case UserStatusEnum.ACTIVE:
-          customer.status = UserStatusEnum.ACTIVE;
-          break;
         case UserStatusEnum.INACTIVATE:
-          customer.status = UserStatusEnum.INACTIVATE;
-          break;
         case UserStatusEnum.SUSPENSION:
-          customer.status = UserStatusEnum.SUSPENSION;
+          customer.status = status;
+          break;
+        default:
           break;
       }
     }
@@ -534,7 +537,7 @@ export class CustomerService {
         where: {
           code: wardCode,
         },
-        relations: ['district', 'district.province'],
+        relations: { district: { province: true } },
       });
       if (!ward) {
         throw new NotFoundException('WARD_NOT_FOUND');
@@ -689,5 +692,42 @@ export class CustomerService {
       id: customer.id,
       message: 'Xoá khách hàng thành công',
     };
+  }
+
+  async searchCustomerForOrder(dto: OrderCustomerSearch) {
+    const { key: keywords } = dto;
+
+    const query = this.customerRepository.createQueryBuilder('u');
+
+    query
+      .orWhere('u.phone like :query')
+      .orWhere('u.email like :query')
+      .setParameter('query', `%${keywords}%`)
+      .leftJoinAndSelect('u.ward', 'w')
+      .leftJoinAndSelect('w.district', 'd')
+      .leftJoinAndSelect('d.province', 'p')
+      .select([
+        'u.id',
+        'u.lastLogin',
+        'u.status',
+        'u.phone',
+        'u.email',
+        'u.fullName',
+        'u.gender',
+        'u.address',
+        'u.fullAddress',
+        'u.note',
+        'u.birthday',
+        'u.createdAt',
+        'u.updatedAt',
+        'u.updatedBy',
+        'w',
+        'd',
+        'p',
+      ]);
+
+    const dataResult = await query.getMany();
+
+    return { dataResult };
   }
 }

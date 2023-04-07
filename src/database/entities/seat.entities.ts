@@ -1,4 +1,3 @@
-import { SeatTypeEnum } from './../../enums';
 import { TicketDetail, Vehicle } from '.';
 import {
   Entity,
@@ -22,9 +21,6 @@ export class Seat {
 
   @Column({ name: 'name', type: 'varchar', length: 255, nullable: true })
   name: string;
-
-  @Column({ name: 'type', type: 'varchar', length: 255, nullable: true })
-  type: SeatTypeEnum;
 
   @Column({ name: 'floor', type: 'int', nullable: true, default: 1 })
   floor: number;

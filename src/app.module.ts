@@ -20,7 +20,6 @@ import { UploadModule } from './api/upload/upload.module';
 import { TripModule } from './api/trip/trip.module';
 import { TripDetailModule } from './api/trip-detail/trip-detail.module';
 import { CustomerGroupModule } from './api/customer-group/customer-group.module';
-import { TicketGroupModule } from './api/ticket-group/ticket-group.module';
 import { PriceListModule } from './api/price-list/price-list.module';
 import { AdminModule } from './api/admin/admin.module';
 import { UserModule } from './api/user/user.module';
@@ -29,7 +28,7 @@ import { BookingModule } from './api/booking/booking.module';
 import { TicketModule } from './api/ticket/ticket.module';
 import { OrderModule } from './api/order/order.module';
 import { PromotionLineModule } from './api/promotion-line/promotion-line.module';
-import { ApplicableTicketGroupModule } from './api/applicable-ticket-group/applicable-ticket-group.module';
+import { PromotionHistoryModule } from './api/promotion-history/promotion-history.module';
 
 @Module({
   imports: [
@@ -49,16 +48,15 @@ import { ApplicableTicketGroupModule } from './api/applicable-ticket-group/appli
     TripDetailModule,
     VehicleModule,
     SeatModule,
-    TicketGroupModule,
+    TicketModule,
     ImageResourceModule,
     PriceListModule,
-    UploadModule,
     PromotionModule,
-    BookingModule,
-    TicketModule,
-    OrderModule,
     PromotionLineModule,
-    ApplicableTicketGroupModule,
+    PromotionHistoryModule,
+    BookingModule,
+    OrderModule,
+    UploadModule,
   ],
   providers: [
     {

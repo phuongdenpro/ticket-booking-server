@@ -1,9 +1,8 @@
 import { PromotionStatusEnum } from './../../enums';
-import { ApplicableCustomerGroup, PromotionLine } from '.';
+import { PromotionLine } from '.';
 import {
   Column,
   Entity,
-  ManyToMany,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
@@ -28,10 +27,10 @@ export class Promotion {
   @Column({ name: 'note', type: 'text', nullable: true })
   note: string;
 
-  @Column({ name: 'start_date', type: 'date', nullable: false })
+  @Column({ name: 'start_date', type: 'timestamp', nullable: false })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'date', nullable: false })
+  @Column({ name: 'end_date', type: 'timestamp', nullable: false })
   endDate: Date;
 
   @Column({
@@ -40,7 +39,7 @@ export class Promotion {
     nullable: false,
     default: PromotionStatusEnum.INACTIVE,
   })
-  status: string;
+  status: PromotionStatusEnum;
 
   @Column({ name: 'image', type: 'text', nullable: true })
   image: string;
@@ -66,12 +65,11 @@ export class Promotion {
   public deletedAt?: Date;
 
   // relationships
-  @ManyToMany(
-    () => ApplicableCustomerGroup,
-    (applicableCustomerGroup) =>
-      applicableCustomerGroup.applicableCustomerGroups,
-  )
-  applicableCustomerGroups: ApplicableCustomerGroup[];
+  //   () => ApplicableCustomerGroup,
+  //   (applicableCustomerGroup) =>
+  //     applicableCustomerGroup.applicableCustomerGroups,
+  // )
+  // applicableCustomerGroups: ApplicableCustomerGroup[];
 
   @OneToMany(() => PromotionLine, (promotionLine) => promotionLine.promotion)
   promotionLines: PromotionLine[];

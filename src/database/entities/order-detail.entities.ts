@@ -9,13 +9,7 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import {
-  Order,
-  PriceDetail,
-  TicketDetail,
-  OrderRefundDetail,
-  PromotionHistory,
-} from '.';
+import { Order, PriceDetail, TicketDetail, OrderRefundDetail } from '.';
 
 @Entity({ name: 'order_detail' })
 export class OrderDetail {
@@ -27,6 +21,14 @@ export class OrderDetail {
 
   @Column({ name: 'note', type: 'text' })
   note: string;
+
+  @Column({
+    name: 'order_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  orderCode: string;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
@@ -62,16 +64,4 @@ export class OrderDetail {
 
   @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.orderRefundDetail)
   orderRefundDetail: OrderRefundDetail;
-
-  @OneToOne(
-    () => PromotionHistory,
-    (promotionHistory) => promotionHistory.buyOrderDetail,
-  )
-  buyPromotionHistory: PromotionHistory;
-
-  @OneToOne(
-    () => PromotionHistory,
-    (promotionHistory) => promotionHistory.receiveOrderDetail,
-  )
-  receivePromotionHistory: PromotionHistory;
 }

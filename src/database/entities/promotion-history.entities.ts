@@ -3,62 +3,53 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
-  OneToMany,
-  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  ManyToOne,
 } from 'typeorm';
-import { Order, PromotionLine, OrderDetail } from '.';
+import { PromotionLine, Order } from '.';
 
 @Entity({ name: 'promotion_history' })
 export class PromotionHistory {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'amount', type: 'double', nullable: true, default: 0.0 })
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
+
+  @Column({ name: 'amount', type: 'double', nullable: false, default: 0.0 })
   amount: number;
 
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({ name: 'quantity', type: 'int', nullable: true, default: 1 })
+  @Column({ name: 'quantity', type: 'int', nullable: false, default: 1 })
   quantity: number;
 
-  @Column({ name: 'type', type: 'varchar', length: 100, nullable: true })
+  @Column({ name: 'type', type: 'varchar', length: 100, nullable: false })
   type: string;
 
-  // @OneToMany(() => Order, (order) => order.promotionHistory)
-  // @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
-  // order: Order[];
+  @Column({
+    name: 'promotion_line_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  promotionLineCode: string;
 
-  @OneToMany(
-    () => PromotionLine,
-    (promotionLine) => promotionLine.promotionHistory,
-  )
-  @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
-  promotionLine: PromotionLine[];
-
-  @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.buyPromotionHistory)
-  @JoinColumn({ name: 'buy_order_detail_id', referencedColumnName: 'id' })
-  buyOrderDetail: OrderDetail;
-
-  @OneToOne(
-    () => OrderDetail,
-    (orderDetail) => orderDetail.receivePromotionHistory,
-  )
-  @JoinColumn({ name: 'receive_order_detail_id', referencedColumnName: 'id' })
-  receiveOrderDetail: OrderDetail;
+  @Column({
+    name: 'order_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  orderCode: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
   @DeleteDateColumn({
@@ -68,4 +59,19 @@ export class PromotionHistory {
     select: false,
   })
   public deletedAt?: Date;
+
+  @ManyToOne(() => Order, (order) => order.promotionHistories)
+  @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
+  order: Order;
+
+  @ManyToOne(
+    () => PromotionLine,
+    (promotionLine) => promotionLine.promotionHistory,
+  )
+  @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
+  promotionLine: PromotionLine;
+
+  // @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.buyPromotionHistory)
+  // @JoinColumn({ name: 'buy_order_detail_id', referencedColumnName: 'id' })
+  // buyOrderDetail: OrderDetail;
 }

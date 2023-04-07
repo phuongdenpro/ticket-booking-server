@@ -1,4 +1,4 @@
-import { TripStatusEnum } from './../../enums';
+import { ActiveStatusEnum } from './../../enums';
 import {
   Column,
   Entity,
@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
   DeleteDateColumn,
 } from 'typeorm';
-import { Station, TicketGroup, TripDetail } from '.';
+import { Station, TripDetail, PromotionDetail, PriceDetail } from '.';
 
 @Entity({ name: 'trip' })
 export class Trip {
@@ -26,20 +26,20 @@ export class Trip {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({ name: 'start_date', type: 'date', nullable: false })
+  @Column({ name: 'start_date', type: 'timestamp', nullable: false })
   startDate: Date;
 
-  @Column({ name: 'end_date', type: 'date', nullable: true })
+  @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date;
+
+  @Column({ name: 'status', type: 'varchar', length: 100, default: false })
+  status: ActiveStatusEnum;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
-
-  @Column({ name: 'status', type: 'varchar', length: 100, default: false })
-  status: TripStatusEnum;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
@@ -64,10 +64,12 @@ export class Trip {
   @JoinColumn({ name: 'to_station_id', referencedColumnName: 'id' })
   toStation: Station;
 
-  @ManyToOne(() => TicketGroup, (ticketGroup) => ticketGroup.trips)
-  @JoinColumn({ name: 'ticket_group_id', referencedColumnName: 'id' })
-  ticketGroup: TicketGroup;
-
   @OneToMany(() => TripDetail, (tripDetail) => tripDetail.trip)
   tripDetails: TripDetail[];
+
+  @OneToMany(() => PromotionDetail, (promotionDetail) => promotionDetail.trip)
+  promotionDetails: PromotionDetail[];
+
+  @OneToMany(() => PriceDetail, (priceDetail) => priceDetail.trip)
+  priceDetails: PriceDetail[];
 }

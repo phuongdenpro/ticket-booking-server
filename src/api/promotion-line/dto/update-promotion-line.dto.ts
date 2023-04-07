@@ -8,17 +8,11 @@ import {
   IsDate,
   MinDate,
   IsNumber,
-  IsNotEmpty,
-  Length,
   ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import * as moment from 'moment';
-import {
-  ProductDiscountDto,
-  ProductDiscountPercentDto,
-  ProductGiveawayDto,
-} from '.';
+import { ProductDiscountDto, ProductDiscountPercentDto } from '.';
 moment.locale('vi');
 
 export class UpdatePromotionLineDto {
@@ -37,12 +31,14 @@ export class UpdatePromotionLineDto {
   @IsOptional()
   note: string;
 
-  @ApiPropertyOptional({ example: '' })
-  @IsString({ message: 'COUPON_CODE_IS_STRING' })
+  @ApiProperty({ example: '' })
+  @IsString({ message: 'TRIP_CODE_IS_STRING' })
   @IsOptional()
-  couponCode: string;
+  tripCode: string;
 
-  @ApiPropertyOptional({ example: moment().format('YYYY-MM-DD') })
+  @ApiPropertyOptional({
+    example: moment().add(1, 'days').format('YYYY-MM-DD'),
+  })
   @IsDate({ message: 'START_DATE_IS_DATE' })
   @MinDate(new Date(moment().format('YYYY-MM-DD')), {
     message: 'START_DATE_GREATER_THAN_NOW',
@@ -63,18 +59,10 @@ export class UpdatePromotionLineDto {
   @ApiPropertyOptional({ example: 100 })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'MAX_QUANTITY_IS_NUMBER' },
+    { message: 'MAX_QUANTITY_MUST_BE_INTEGER' },
   )
   @IsOptional()
   maxQuantity: number;
-
-  @ApiPropertyOptional({ example: 100 })
-  @IsNumber(
-    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'MAX_QUANTITY_PER_CUSTOMER_IS_NUMBER' },
-  )
-  @IsOptional()
-  maxQuantityPerCustomer: number;
 
   @ApiPropertyOptional({ example: 1_000_000 })
   @IsNumber(
@@ -94,12 +82,6 @@ export class UpdatePromotionLineDto {
   type: PromotionTypeEnum;
 
   // promotion detail
-  @ApiProperty({ example: '' })
-  @IsNotEmpty({ message: 'TICKET_GROUP_CODE_IS_REQUIRED' })
-  @IsString({ message: 'TICKET_GROUP_CODE_MUST_BE_STRING' })
-  @Length(1, 100, { message: 'TICKET_GROUP_CODE_MUST_BE_BETWEEN_1_AND_100' })
-  ticketGroupCode: string;
-
   @ApiProperty({ type: ProductDiscountDto })
   @ValidateIf(
     (dto: UpdatePromotionLineDto) =>
@@ -117,13 +99,4 @@ export class UpdatePromotionLineDto {
   @ValidateNested()
   @Type(() => ProductDiscountPercentDto)
   productDiscountPercent?: ProductDiscountPercentDto;
-
-  @ApiProperty({ type: ProductGiveawayDto })
-  @ValidateIf(
-    (dto: UpdatePromotionLineDto) =>
-      dto.type === PromotionTypeEnum.PRODUCT_GIVEAWAYS,
-  )
-  @ValidateNested()
-  @Type(() => ProductGiveawayDto)
-  productGiveaway?: ProductGiveawayDto;
 }

@@ -1,29 +1,29 @@
-import { CustomerGroup, Promotion } from '.';
+// import { CustomerGroup, Promotion } from '.';
 import {
-  Entity,
+  // Entity,
+  // ManyToOne,
+  // JoinColumn,
   PrimaryGeneratedColumn,
-  ManyToOne,
-  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'applicable_customer_group' })
+// @Entity({ name: 'applicable_customer_group' })
 export class ApplicableCustomerGroup {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => Promotion, (promotion) => promotion.applicableCustomerGroups)
-  @JoinColumn([{ name: 'promotion_id', referencedColumnName: 'id' }])
-  applicableCustomerGroups: Promotion;
+  // @ManyToOne(() => Promotion, (promotion) => promotion.applicableCustomerGroups)
+  // @JoinColumn([{ name: 'promotion_id', referencedColumnName: 'id' }])
+  // applicableCustomerGroups: Promotion;
 
-  @ManyToOne(
-    () => CustomerGroup,
-    (customerGroup) => customerGroup.applicableCustomerGroup,
-  )
-  @JoinColumn([{ name: 'customer_group_id', referencedColumnName: 'id' }])
-  customerGroups: CustomerGroup;
+  // @ManyToOne(
+  //   () => CustomerGroup,
+  //   (customerGroup) => customerGroup.applicableCustomerGroup,
+  // )
+  // @JoinColumn([{ name: 'customer_group_id', referencedColumnName: 'id' }])
+  // customerGroups: CustomerGroup;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;

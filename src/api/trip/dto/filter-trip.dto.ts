@@ -1,4 +1,4 @@
-import { TripStatusEnum } from './../../../enums';
+import { SortEnum, ActiveStatusEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsString, IsOptional, IsDate, IsEnum } from 'class-validator';
 
@@ -21,13 +21,19 @@ export class FilterTripDto {
   endDate: Date;
 
   @ApiPropertyOptional({
-    example: TripStatusEnum.ACTIVE,
-    enum: ['', TripStatusEnum.ACTIVE, TripStatusEnum.INACTIVE],
+    example: ActiveStatusEnum.ACTIVE,
+    enum: ['', ActiveStatusEnum.ACTIVE, ActiveStatusEnum.INACTIVE],
   })
   @IsString({ message: 'TRIP_STATUS_IS_STRING' })
-  @IsEnum(TripStatusEnum, { message: 'TRIP_STATUS_IS_ENUM' })
+  @IsEnum(ActiveStatusEnum, { message: 'TRIP_STATUS_IS_ENUM' })
   @IsOptional()
-  status: TripStatusEnum;
+  status: ActiveStatusEnum;
+
+  @ApiPropertyOptional({ example: SortEnum.ASC, enum: SortEnum })
+  @IsString({ message: 'SORT_IS_STRING' })
+  @IsEnum(SortEnum, { message: 'SORT_IS_ENUM' })
+  @IsOptional()
+  sort: SortEnum;
 
   @ApiPropertyOptional({ example: 'd7d44845-b906-4a3c-be7b-232cc555f019' })
   @IsString({ message: 'FROM_STATION_ID_IS_STRING' })
@@ -38,4 +44,14 @@ export class FilterTripDto {
   @IsString({ message: 'TO_STATION_ID_IS_STRING' })
   @IsOptional()
   toStationId: string;
+
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'FROM_STATION_CODE_IS_STRING' })
+  @IsOptional()
+  fromStationCode: string;
+
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'TO_STATION_CODE_IS_STRING' })
+  @IsOptional()
+  toStationCode: string;
 }

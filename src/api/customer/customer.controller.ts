@@ -29,6 +29,7 @@ import {
 } from './dto';
 import { CustomerService } from './customer.service';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
+import { OrderCustomerSearch } from './dto/search-customer.dto';
 
 @Controller('customer')
 @ApiTags('Customer')
@@ -120,5 +121,14 @@ export class CustomerController {
       dto,
       user.id,
     );
+  }
+
+  @Get('order/search')
+  @HttpCode(HttpStatus.OK)
+  @Role(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getCustomer(@Query() dto: OrderCustomerSearch) {
+    return await this.customerService.searchCustomerForOrder(dto);
   }
 }

@@ -28,9 +28,6 @@ export class TripDetail {
   @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })
   status: string;
 
-  @Column({ name: 'is_active', type: 'tinyint', default: false })
-  isActive: boolean;
-
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 

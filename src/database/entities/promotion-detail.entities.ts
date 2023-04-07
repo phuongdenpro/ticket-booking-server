@@ -6,33 +6,33 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   JoinColumn,
-  OneToMany,
   OneToOne,
+  ManyToOne,
 } from 'typeorm';
-import { ApplicableTicketGroup, PromotionLine } from '.';
+import { PromotionLine, Trip } from '.';
 
 @Entity({ name: 'promotion_detail' })
 export class PromotionDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'quantity_buy', type: 'int', default: 1 })
+  @Column({ name: 'quantity_buy', type: 'int', nullable: false })
   quantityBuy: number;
 
-  @Column({ name: 'quantity_receive', type: 'int', default: 1 })
-  quantityReceive: number;
-
-  @Column({ name: 'purchase_amount', type: 'double', default: 0 })
+  @Column({ name: 'purchase_amount', type: 'double', nullable: true })
   purchaseAmount: number;
 
-  @Column({ name: 'reduction_amount', type: 'double', default: 0 })
+  @Column({ name: 'reduction_amount', type: 'double', nullable: true })
   reductionAmount: number;
 
-  @Column({ name: 'percent_discount', type: 'double', default: 0 })
+  @Column({ name: 'percent_discount', type: 'double', nullable: true })
   percentDiscount: number;
 
-  @Column({ name: 'maximum_reduction_amount', type: 'double', default: 0 })
+  @Column({ name: 'maximum_reduction_amount', type: 'double', nullable: true })
   maxReductionAmount: number;
+
+  @Column({ name: 'promotion_line_code', type: 'varchar', nullable: false })
+  promotionLineCode: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: false })
   public createdAt?: Date;
@@ -56,9 +56,7 @@ export class PromotionDetail {
   @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
   promotionLine: PromotionLine;
 
-  @OneToMany(
-    () => ApplicableTicketGroup,
-    (applicableTicketGroup) => applicableTicketGroup.promotionDetail,
-  )
-  applicableTicketGroup: ApplicableTicketGroup[];
+  @ManyToOne(() => Trip, (trip) => trip.promotionDetails)
+  @JoinColumn({ name: 'trip_id', referencedColumnName: 'id' })
+  trip: Trip;
 }

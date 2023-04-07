@@ -21,6 +21,10 @@ export class UserService {
     private authService: AuthService,
   ) {}
 
+  async getCustomerStatus() {
+    return this.customerService.getCustomerStatus();
+  }
+
   async profile(id: string) {
     const userExist = this.customerService.getCustomerById(id);
     if (!userExist) {

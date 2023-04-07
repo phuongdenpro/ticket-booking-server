@@ -19,7 +19,7 @@ import {
   Pagination,
   Roles,
 } from './../../decorator';
-import { RoleEnum } from './../../enums';
+import { DeleteDtoTypeEnum, RoleEnum } from './../../enums';
 import { JwtAuthGuard } from './../../auth/guards';
 import {
   FilterTripDto,
@@ -32,6 +32,12 @@ import {
 @ApiTags('Trip')
 export class TripController {
   constructor(private tripService: TripService) {}
+
+  @Get('status')
+  @HttpCode(HttpStatus.OK)
+  async getPromotionStatusEnum() {
+    return await this.tripService.getTripStatus();
+  }
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -73,7 +79,7 @@ export class TripController {
     @Param('id') id: string,
     @Body() dto: UpdateTripDto,
   ) {
-    return await this.tripService.updateTripById(id, dto, user.id);
+    return await this.tripService.updateTripByIdOrCode(dto, user.id, id);
   }
 
   @Patch('code/:code')
@@ -86,7 +92,12 @@ export class TripController {
     @Param('code') code: string,
     @Body() dto: UpdateTripDto,
   ) {
-    return await this.tripService.updateTripByCode(code, dto, user.id);
+    return await this.tripService.updateTripByIdOrCode(
+      dto,
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('id/:id')
@@ -95,7 +106,7 @@ export class TripController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteTripById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.tripService.deleteTripById(id, user.id);
+    return await this.tripService.deleteTripByIdOrCode(user.id, id);
   }
 
   @Delete('code/:code')
@@ -104,7 +115,11 @@ export class TripController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteTripByCode(@CurrentUser() user, @Param('code') code: string) {
-    return await this.tripService.deleteTripById(code, user.id);
+    return await this.tripService.deleteTripByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('multiple')
@@ -113,7 +128,11 @@ export class TripController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteMultiple(@CurrentUser() user, @Body() dto: TripDeleteMultiInput) {
-    return await this.tripService.deleteMultipleTrip(user.id, dto);
+    return await this.tripService.deleteMultipleTripByIdsOrCodes(
+      user.id,
+      dto,
+      DeleteDtoTypeEnum.ID,
+    );
   }
 
   @Delete('multiple/code')
@@ -125,6 +144,10 @@ export class TripController {
     @CurrentUser() user,
     @Body() dto: TripDeleteMultiInput,
   ) {
-    return await this.tripService.deleteMultipleTripByCodes(user.id, dto);
+    return await this.tripService.deleteMultipleTripByIdsOrCodes(
+      user.id,
+      dto,
+      DeleteDtoTypeEnum.CODE,
+    );
   }
 }

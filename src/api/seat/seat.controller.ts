@@ -1,4 +1,4 @@
-import { RoleEnum } from './../../enums/roles.enum';
+import { RoleEnum } from './../../enums';
 import {
   Body,
   Controller,
@@ -96,7 +96,7 @@ export class SeatController {
     @Param('id') id: string,
     @Body() dto: UpdateSeatDto,
   ) {
-    return await this.seatService.updateSeatById(id, dto, user.id);
+    return await this.seatService.updateSeatByIdOrCode(dto, user.id, id);
   }
 
   @Patch('code/:code')
@@ -109,7 +109,12 @@ export class SeatController {
     @Param('code') code: string,
     @Body() dto: UpdateSeatDto,
   ) {
-    return await this.seatService.updateSeatByCode(code, dto, user.id);
+    return await this.seatService.updateSeatByIdOrCode(
+      dto,
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('id/:id')
@@ -118,7 +123,7 @@ export class SeatController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteStationById(@CurrentUser() user, @Param('id') id: string) {
-    return await this.seatService.deleteSeatById(id, user.id);
+    return await this.seatService.deleteSeatByIdOrCode(user.id, id);
   }
 
   @Delete('code/:code')
@@ -127,7 +132,11 @@ export class SeatController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async deleteStationByCode(@CurrentUser() user, @Param('code') code: string) {
-    return await this.seatService.deleteSeatByCode(code, user.id);
+    return await this.seatService.deleteSeatByIdOrCode(
+      user.id,
+      undefined,
+      code,
+    );
   }
 
   @Delete('multiple/ids')

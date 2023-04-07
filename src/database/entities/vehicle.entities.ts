@@ -53,11 +53,7 @@ export class Vehicle {
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   createdAt?: Date;
 
-  @UpdateDateColumn({
-    name: 'updated_at',
-    type: 'timestamp',
-    nullable: true,
-  })
+  @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   updatedAt?: Date;
 
   @DeleteDateColumn({
