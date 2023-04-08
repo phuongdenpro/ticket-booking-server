@@ -271,7 +271,6 @@ export class PromotionHistoryService {
       }
       promotionHistory.promotionLine = promotionLine;
       promotionHistory.promotionLineCode = promotionLine.code;
-      promotionHistory.code = `${promotionLine.code}PH${orderExist.code}`;
 
       const promotionDetail: PromotionDetail = promotionLine.promotionDetail;
       const orderDetails: OrderDetail[] = orderExist.orderDetails;
@@ -279,6 +278,7 @@ export class PromotionHistoryService {
         type === PromotionHistoryTypeEnum.PRODUCT_DISCOUNT ||
         type === PromotionHistoryTypeEnum.PRODUCT_DISCOUNT_PERCENT
       ) {
+        promotionHistory.code = `${promotionLine.code}-${orderExist.code}-APPLY`;
         if (promotionDetail.quantityBuy > 0) {
           const numOfTicket = orderDetails.length;
           if (numOfTicket < promotionDetail.quantityBuy) {
@@ -333,8 +333,27 @@ export class PromotionHistoryService {
         }
         promotionLine.useQuantity += promotionHistory.quantity;
         promotionHistory.type = type;
-      } else if (type === PromotionHistoryTypeEnum.REFUND) {
+      } else if (
+        type === PromotionHistoryTypeEnum.CANCEL ||
+        type === PromotionHistoryTypeEnum.REFUND
+      ) {
+        promotionHistory.code = `${promotionLine.code}-${orderExist.code}-CANCEL`;
+        const promotionHistoryExist = await this.findOnePromotionHistory({
+          where: {
+            orderCode,
+            promotionLineCode,
+          },
+        });
+        if (!promotionHistoryExist) {
+          throw new BadRequestException('PROMOTION_HISTORY_NOT_FOUND');
+        }
+        promotionHistory.amount = promotionHistoryExist.amount;
+        promotionHistory.quantity = promotionHistoryExist.quantity;
+        promotionHistoryExist.note = PromotionHistoryTypeEnum.CANCEL;
         promotionHistory.type = type;
+        promotionLine.useQuantity -= promotionHistory.quantity;
+        promotionLine.useBudget -= promotionHistory.amount;
+        await queryRunnerPH.manager.save(promotionHistoryExist);
       } else {
         throw new BadRequestException('PROMOTION_HISTORY_TYPE_IS_REQUIRED');
       }

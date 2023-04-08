@@ -1,4 +1,4 @@
-import { PromotionHistoryTypeEnum } from './../../../enums';
+import { PromotionHistoryTypeEnum } from '../../../enums';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEnum, IsNotEmpty, IsString, Length } from 'class-validator';
 

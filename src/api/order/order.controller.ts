@@ -90,7 +90,7 @@ export class OrderController {
     @Param('id') id: string,
     @CurrentUser() user,
   ) {
-    return await this.orderService.updateOrderByIdOrCodeFroCustomer(
+    return await this.orderService.updateOrderByIdOrCodeForCustomer(
       dto,
       user.id,
       id,
@@ -108,7 +108,7 @@ export class OrderController {
     @Param('code') code: string,
     @CurrentUser() user,
   ) {
-    return await this.orderService.updateOrderByIdOrCodeFroCustomer(
+    return await this.orderService.updateOrderByIdOrCodeForCustomer(
       dto,
       user.id,
       undefined,

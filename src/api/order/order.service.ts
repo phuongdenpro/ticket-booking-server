@@ -557,7 +557,7 @@ export class OrderService {
     return saveOrder;
   }
 
-  async updateOrderByIdOrCodeFroCustomer(
+  async updateOrderByIdOrCodeForCustomer(
     dto: UpdateOrderDtoForCustomer,
     userId: string,
     id?: string,
@@ -597,18 +597,49 @@ export class OrderService {
     }
     const { note, status } = dto;
     order.note = note;
+    const promotionHistories: PromotionHistory[] = order.promotionHistories;
     switch (status) {
       case OrderUpdateStatusEnum.CANCEL:
         if (order.status === OrderStatusEnum.PAID) {
           throw new BadRequestException('ORDER_ALREADY_PAID');
         }
         order.status = OrderStatusEnum.CANCEL;
+        if (promotionHistories && promotionHistories.length > 0) {
+          const destroyPromotionHistories = promotionHistories.map(
+            async (promotionHistory) => {
+              const dto = new CreatePromotionHistoryDto();
+              dto.promotionLineCode = promotionHistory.promotionLineCode;
+              dto.orderCode = promotionHistory.orderCode;
+              dto.type = PromotionHistoryTypeEnum.CANCEL;
+              return await this.promotionHistoryService.createPromotionHistory(
+                dto,
+                userId,
+              );
+            },
+          );
+          await Promise.all(destroyPromotionHistories);
+        }
         break;
       case OrderUpdateStatusEnum.RETURNED:
         if (order.status === OrderStatusEnum.UNPAID) {
           throw new BadRequestException('ORDER_NOT_PAID');
         }
         order.status = OrderStatusEnum.RETURNED;
+        if (promotionHistories && promotionHistories.length > 0) {
+          const destroyPromotionHistories = promotionHistories.map(
+            async (promotionHistory) => {
+              const dto = new CreatePromotionHistoryDto();
+              dto.promotionLineCode = promotionHistory.promotionLineCode;
+              dto.orderCode = promotionHistory.orderCode;
+              dto.type = PromotionHistoryTypeEnum.REFUND;
+              return await this.promotionHistoryService.createPromotionHistory(
+                dto,
+                userId,
+              );
+            },
+          );
+          await Promise.all(destroyPromotionHistories);
+        }
         break;
       default:
         break;
