@@ -27,5 +27,14 @@ export class BookingService {
     return order;
   }
 
-  async payment(dto: PaymentDto, userId: string) {}
+  async payment(dto: PaymentDto, userId: string) {
+    const { orderCode, paymentMethod } = dto;
+    const order = await this.orderService.payment(
+      orderCode,
+      paymentMethod,
+      // paymentAmount,
+      userId,
+    );
+    return order;
+  }
 }

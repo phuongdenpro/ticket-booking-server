@@ -32,6 +32,14 @@ export class Order {
   @Column({ name: 'final_total', type: 'double', nullable: true, default: 0.0 })
   finalTotal: number;
 
+  @Column({
+    name: 'payment_method',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  paymentMethod: string;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 

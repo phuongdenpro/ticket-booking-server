@@ -14,7 +14,8 @@ import {
   CreateOrderDto,
   CreateOrderDetailDto,
   FilterOrderDto,
-  UpdateOrderDto as UpdateOrderDtoForCustomer,
+  UpdateOrderForCustomerDto,
+  UpdateOrderForAdminDto,
 } from './dto';
 import {
   BadRequestException,
@@ -25,7 +26,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   OrderStatusEnum,
-  OrderUpdateStatusEnum,
+  OrderUpdateStatusAdminEnum,
+  OrderUpdateStatusCustomerEnum,
+  PaymentMethod,
   PromotionHistoryTypeEnum,
   PromotionTypeEnum,
   SortEnum,
@@ -257,8 +260,8 @@ export class OrderService {
 
   async getOrderUpdateStatus() {
     return {
-      dataResult: Object.keys(OrderUpdateStatusEnum).map(
-        (key) => OrderUpdateStatusEnum[key],
+      dataResult: Object.keys(OrderUpdateStatusCustomerEnum).map(
+        (key) => OrderUpdateStatusCustomerEnum[key],
       ),
     };
   }
@@ -558,7 +561,7 @@ export class OrderService {
   }
 
   async updateOrderByIdOrCodeForCustomer(
-    dto: UpdateOrderDtoForCustomer,
+    dto: UpdateOrderForCustomerDto,
     userId: string,
     id?: string,
     code?: string,
@@ -594,12 +597,14 @@ export class OrderService {
       case OrderStatusEnum.RETURNED:
         throw new BadRequestException('ORDER_ALREADY_RETURNED');
         break;
+      default:
+        break;
     }
     const { note, status } = dto;
     order.note = note;
     const promotionHistories: PromotionHistory[] = order.promotionHistories;
     switch (status) {
-      case OrderUpdateStatusEnum.CANCEL:
+      case OrderUpdateStatusCustomerEnum.CANCEL:
         if (order.status === OrderStatusEnum.PAID) {
           throw new BadRequestException('ORDER_ALREADY_PAID');
         }
@@ -620,7 +625,7 @@ export class OrderService {
           await Promise.all(destroyPromotionHistories);
         }
         break;
-      case OrderUpdateStatusEnum.RETURNED:
+      case OrderUpdateStatusCustomerEnum.RETURNED:
         if (order.status === OrderStatusEnum.UNPAID) {
           throw new BadRequestException('ORDER_NOT_PAID');
         }
@@ -642,6 +647,82 @@ export class OrderService {
         }
         break;
       default:
+        break;
+    }
+    const saveOrder = await this.orderRepository.save(order);
+    delete saveOrder.deletedAt;
+    return saveOrder;
+  }
+
+  async updateOrderByIdOrCodeForAdmin(
+    dto: UpdateOrderForAdminDto,
+    userId,
+    code?: string,
+    id?: string,
+  ) {
+    const admin = await this.adminService.findOneBydId(userId);
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (!admin.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    if (!id && !code) {
+      throw new BadRequestException('ID_OR_CODE_REQUIRED');
+    }
+    let order: Order;
+    if (id) {
+      order = await this.findOneOrderById(id);
+    } else {
+      order = await this.findOneOrderByCode(code);
+    }
+    if (!order) {
+      throw new BadRequestException('ORDER_NOT_FOUND');
+    }
+    const { note, status } = dto;
+
+    order.note = note;
+    switch (status) {
+      case OrderUpdateStatusAdminEnum.UNPAID:
+      case OrderUpdateStatusAdminEnum.CANCEL:
+      case OrderUpdateStatusAdminEnum.PAID:
+      case OrderUpdateStatusAdminEnum.RETURNED:
+        break;
+    }
+  }
+
+  async payment(orderCode: string, paymentMethod: string, userId: string) {
+    const customer = await this.customerService.findOneById(userId);
+    if (!customer) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (customer && customer.status === UserStatusEnum.INACTIVATE) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const order = await this.findOneOrderByCode(orderCode);
+    if (!order) {
+      throw new BadRequestException('ORDER_NOT_FOUND');
+    }
+    if (order.status === OrderStatusEnum.PAID) {
+      throw new BadRequestException('ORDER_ALREADY_PAID');
+    }
+    if (order.status === OrderStatusEnum.CANCEL) {
+      throw new BadRequestException('ORDER_ALREADY_CANCEL');
+    }
+    if (order.status === OrderStatusEnum.RETURNED) {
+      throw new BadRequestException('ORDER_ALREADY_RETURNED');
+    }
+    order.status = OrderStatusEnum.PAID;
+    switch (paymentMethod) {
+      case PaymentMethod.CASH:
+      case PaymentMethod.BANK_TRANSFER:
+      case PaymentMethod.MOMO:
+      case PaymentMethod.ZALO_PAY:
+        order.paymentMethod = paymentMethod;
+        break;
+      default:
+        throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
         break;
     }
     const saveOrder = await this.orderRepository.save(order);

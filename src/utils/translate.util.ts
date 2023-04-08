@@ -578,4 +578,6 @@ export const mappingTranslate = {
   TOTAL_IS_REQUIRED: 'Tổng tiền không được để trống',
   NUMBER_OF_TICKET_IS_REQUIRED: 'Số lượng vé không được để trống',
   NUMBER_OF_TICKET_MUST_BE_INTEGER: 'Số lượng vé phải là số nguyên lớn hơn 0',
+  ORDER_STATUS_NOT_REQUIRED: 'Trạng thái hoá đơn không được để trống',
+  PAYMENT_METHOD_NOT_FOUND: 'Không tìm thấy phương thức thanh toán',
 };

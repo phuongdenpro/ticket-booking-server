@@ -13,5 +13,7 @@ export * from './promotion-type.enum';
 export * from './promotion-history-type.enum';
 export * from './promotion-status.enum';
 export * from './order-status.enum';
-export * from './order-update-status.enum';
+export * from './order-update-status-customer.enum';
+export * from './order-update-status-admin.enum';
 export * from './delete-dto-type.enum';
+export * from './payment-method.enum';

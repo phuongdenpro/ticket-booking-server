@@ -1,4 +1,8 @@
-import { CreateOrderDto, FilterOrderDto, UpdateOrderDto } from './dto';
+import {
+  CreateOrderDto,
+  FilterOrderDto,
+  UpdateOrderForCustomerDto,
+} from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums';
 import {
@@ -86,7 +90,7 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async cancelOrderById(
-    @Body() dto: UpdateOrderDto,
+    @Body() dto: UpdateOrderForCustomerDto,
     @Param('id') id: string,
     @CurrentUser() user,
   ) {
@@ -104,7 +108,7 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async cancelOrderByCode(
-    @Body() dto: UpdateOrderDto,
+    @Body() dto: UpdateOrderForCustomerDto,
     @Param('code') code: string,
     @CurrentUser() user,
   ) {
