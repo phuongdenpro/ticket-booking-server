@@ -7,6 +7,7 @@ import {
   PromotionHistory,
   PromotionLine,
   Seat,
+  TripDetail,
   Vehicle,
 } from './../../database/entities';
 import { Repository } from 'typeorm';
@@ -719,6 +720,16 @@ export class OrderService {
           throw new BadRequestException('ORDER_NOT_PAID');
         }
         order.status = OrderStatusEnum.RETURNED;
+
+        const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+        const tripDetail: TripDetail =
+          order.orderDetails[0].ticketDetail.ticket.tripDetail;
+        const departureTime = tripDetail.departureTime;
+        const timeDiff = moment(departureTime).diff(currentDate, 'hours');
+        if (timeDiff < 12) {
+          throw new BadRequestException('ORDER_CANNOT_CANCEL_12H_BEFORE');
+        }
+
         if (promotionHistories && promotionHistories.length > 0) {
           const destroyPromotionHistories = promotionHistories.map(
             async (promotionHistory) => {

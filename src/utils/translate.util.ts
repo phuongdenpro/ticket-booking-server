@@ -260,7 +260,7 @@ export const mappingTranslate = {
   TRIP_DETAIL_ID_IS_36_CHARACTERS: 'Id của chuyến xe phải có 36 ký tự',
   TRIP_DETAIL_HAS_PASSED: 'Chuyến xe đã khởi hành không thể đặt vé',
   TRIP_DETAIL_HAS_PASSED_2_HOURS:
-    'Chuyến xe còn 2 giờ nữa sẽ khởi hành không thể đặt vé, vui lòng liên hệ với nhân viên để được hỗ trợ đặt vé',
+    'Chuyến xe còn 2 giờ nữa sẽ khởi hành không thể đặt vé, vui lòng hãy đến phòng vé để được hỗ trợ đặt vé',
   TRIP_DETAIL_NOT_ACTIVE: 'Chuyến xe không còn hoạt động',
   TRIP_DETAIL_HAS_ENDED_NOT_UPDATE: 'Chuyến xe đã khởi hành không thể cập nhật',
   TRIP_HAS_ENDED_NOT_UPDATE: 'Tuyến xe đã kết thúc không thể cập nhật',
@@ -559,6 +559,8 @@ export const mappingTranslate = {
   MIN_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối thiểu phải là số',
   MAX_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối đa phải là số',
   ORDER_CODE_BETWEEN_1_100_CHARACTERS: 'Mã đơn hàng phải có từ 1-100 ký tự',
+  ORDER_CANNOT_CANCEL_12H_BEFORE:
+    'Không thể huỷ vé trước 12 tiếng so với giờ khởi hàng, hãy đến trực tiếp phòng vé để huỷ',
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',

@@ -42,7 +42,7 @@ export class PriceListController {
   @Get('status')
   @HttpCode(HttpStatus.OK)
   async getPriceListStatus() {
-    return await this.priceListService.getTripStatus();
+    return await this.priceListService.getPriceListStatus();
   }
 
   @Post()
