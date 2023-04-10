@@ -98,9 +98,9 @@ export class OrderController {
     return await this.orderService.getOrderByCode(code);
   }
 
-  @Patch('customer/id/:id')
+  @Patch('id/:id')
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.CUSTOMER, RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async cancelOrderById(
@@ -116,9 +116,9 @@ export class OrderController {
     );
   }
 
-  @Patch('customer/code/:code')
+  @Patch('code/:code')
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.CUSTOMER, RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async cancelOrderByCode(

@@ -15,7 +15,6 @@ import {
   CreateOrderDetailDto,
   FilterOrderDto,
   UpdateOrderForCustomerDto,
-  UpdateOrderForAdminDto,
   FilterAllDto,
 } from './dto';
 import {
@@ -646,11 +645,15 @@ export class OrderService {
     id?: string,
     code?: string,
   ) {
+    const admin = await this.adminService.findOneBydId(userId);
     const customer = await this.customerService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (customer && customer.status === UserStatusEnum.INACTIVATE) {
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
     if (!id && !code) {
@@ -732,43 +735,6 @@ export class OrderService {
     const saveOrder = await this.orderRepository.save(order);
     delete saveOrder.deletedAt;
     return saveOrder;
-  }
-
-  async updateOrderByIdOrCodeForAdmin(
-    dto: UpdateOrderForAdminDto,
-    userId,
-    code?: string,
-    id?: string,
-  ) {
-    const admin = await this.adminService.findOneBydId(userId);
-    if (!userId) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (!admin.isActive) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-    if (!id && !code) {
-      throw new BadRequestException('ID_OR_CODE_REQUIRED');
-    }
-    let order: Order;
-    if (id) {
-      order = await this.findOneOrderById(id);
-    } else {
-      order = await this.findOneOrderByCode(code);
-    }
-    if (!order) {
-      throw new BadRequestException('ORDER_NOT_FOUND');
-    }
-    const { note, status } = dto;
-
-    order.note = note;
-    switch (status) {
-      case OrderUpdateStatusAdminEnum.UNPAID:
-      case OrderUpdateStatusAdminEnum.CANCEL:
-      case OrderUpdateStatusAdminEnum.PAID:
-      case OrderUpdateStatusAdminEnum.RETURNED:
-        break;
-    }
   }
 
   async payment(orderCode: string, paymentMethod: string, userId: string) {
