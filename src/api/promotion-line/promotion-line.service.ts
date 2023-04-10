@@ -13,7 +13,6 @@ import {
   DeleteDtoTypeEnum,
   PromotionTypeEnum,
   SortEnum,
-  ActiveStatusEnum,
   PromotionStatusEnum,
 } from './../../enums';
 import {

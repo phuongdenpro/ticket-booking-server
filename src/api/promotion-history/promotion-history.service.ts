@@ -301,6 +301,7 @@ export class PromotionHistoryService {
         if (remainingBudget <= 0) {
           promotionLine.note = PromotionLineNoteStatusEnum.OUT_OF_BUDGET;
           await queryRunnerPL.manager.save(promotionLine);
+          await queryRunnerPL.commitTransaction();
           throw new BadRequestException('PROMOTION_HAS_OUT_OF_BUDGET');
         }
 

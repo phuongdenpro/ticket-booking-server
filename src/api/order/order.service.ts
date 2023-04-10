@@ -16,6 +16,7 @@ import {
   FilterOrderDto,
   UpdateOrderForCustomerDto,
   UpdateOrderForAdminDto,
+  FilterAllDto,
 } from './dto';
 import {
   BadRequestException,
@@ -266,19 +267,19 @@ export class OrderService {
     };
   }
 
-  async findAllOrder(
-    dto: FilterOrderDto,
+  private async findAll(
+    dto: FilterAllDto,
     userId: string,
     pagination?: Pagination,
   ) {
     const {
       keywords,
       status,
-      sort,
       minFinalTotal,
       maxFinalTotal,
       startDate,
       endDate,
+      sort,
     } = dto;
     const customer = await this.customerService.findOneById(userId);
     const admin = await this.adminService.findOneBydId(userId);
@@ -309,15 +310,30 @@ export class OrderService {
       });
     }
 
-    switch (status) {
-      case OrderStatusEnum.UNPAID:
-      case OrderStatusEnum.CANCEL:
-      case OrderStatusEnum.PAID:
-      case OrderStatusEnum.RETURNED:
-        query.andWhere('q.status = :status', { status });
-        break;
-      default:
-        break;
+    if (status && status.length > 0) {
+      if (status.length === 1) {
+        switch (status[0]) {
+          case OrderStatusEnum.UNPAID:
+          case OrderStatusEnum.CANCEL:
+          case OrderStatusEnum.PAID:
+          case OrderStatusEnum.RETURNED:
+            query.andWhere('q.status = :status', { status: status[0] });
+            break;
+          default:
+            break;
+        }
+      } else if (status.length === 2) {
+        switch (status[0]) {
+          case OrderStatusEnum.UNPAID:
+          case OrderStatusEnum.CANCEL:
+          case OrderStatusEnum.PAID:
+          case OrderStatusEnum.RETURNED:
+            query.andWhere('q.status IN (:...status)', { status });
+            break;
+          default:
+            break;
+        }
+      }
     }
 
     if (minFinalTotal) {
@@ -356,6 +372,70 @@ export class OrderService {
     const total = await query.getCount();
 
     return { dataResult, total, pagination };
+  }
+
+  async findAllOrder(
+    dto: FilterOrderDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const {
+      keywords,
+      status,
+      sort,
+      minFinalTotal,
+      maxFinalTotal,
+      startDate,
+      endDate,
+    } = dto;
+    const filterDto = new FilterAllDto();
+    filterDto.keywords = keywords;
+    if (
+      status === OrderStatusEnum.UNPAID ||
+      status === OrderStatusEnum.CANCEL
+    ) {
+      filterDto.status = [status];
+    } else {
+      filterDto.status = [OrderStatusEnum.UNPAID, OrderStatusEnum.CANCEL];
+    }
+    filterDto.sort = sort;
+    filterDto.minFinalTotal = minFinalTotal;
+    filterDto.maxFinalTotal = maxFinalTotal;
+    filterDto.startDate = startDate;
+    filterDto.endDate = endDate;
+    return await this.findAll(filterDto, userId, pagination);
+  }
+
+  async findAllBill(
+    dto: FilterOrderDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const {
+      keywords,
+      status,
+      sort,
+      minFinalTotal,
+      maxFinalTotal,
+      startDate,
+      endDate,
+    } = dto;
+    const filterDto = new FilterAllDto();
+    filterDto.keywords = keywords;
+    if (
+      status === OrderStatusEnum.PAID ||
+      status === OrderStatusEnum.RETURNED
+    ) {
+      filterDto.status = [status];
+    } else {
+      filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
+    }
+    filterDto.sort = sort;
+    filterDto.minFinalTotal = minFinalTotal;
+    filterDto.maxFinalTotal = maxFinalTotal;
+    filterDto.startDate = startDate;
+    filterDto.endDate = endDate;
+    return await this.findAll(filterDto, userId, pagination);
   }
 
   async createOrder(dto: CreateOrderDto, creatorId: string) {
@@ -397,16 +477,16 @@ export class OrderService {
       },
     );
     const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
-    const currentDatePlus15Minutes = new Date(
-      moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm'),
+    const currentDatePlus2Hours = new Date(
+      moment().add(2, 'hours').format('YYYY-MM-DD HH:mm'),
     );
     if (currentDate >= tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
     } else if (
       customerCreator &&
-      currentDatePlus15Minutes >= tripDetail.departureTime
+      currentDatePlus2Hours >= tripDetail.departureTime
     ) {
-      throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_15_MINUTES');
+      throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_2_HOURS');
     }
     // check trip
     const trip = tripDetail.trip;

@@ -1,4 +1,4 @@
-import { OrderStatusEnum, SortEnum } from './../../../enums';
+import { OrderStatusEnum, SortEnum } from '../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsDate,
@@ -10,22 +10,37 @@ import {
 import * as moment from 'moment';
 moment.locale('vi');
 
-export class FilterOrderDto {
+export class FilterAllDto {
   @ApiPropertyOptional({ example: 'Bảng giá tháng 3/2023' })
   @IsString({ message: 'KEYWORDS_IS_STRING' })
   @IsOptional()
   keywords: string;
 
   @ApiPropertyOptional({
-    example: OrderStatusEnum.UNPAID,
-    enum: ['', OrderStatusEnum.UNPAID, OrderStatusEnum.CANCEL],
+    example: [OrderStatusEnum.UNPAID, OrderStatusEnum.CANCEL],
+    enum: [
+      '',
+      OrderStatusEnum.UNPAID,
+      OrderStatusEnum.CANCEL,
+      OrderStatusEnum.PAID,
+      OrderStatusEnum.RETURNED,
+    ],
   })
   @IsString({ message: 'ORDER_STATUS_IS_STRING' })
-  @IsEnum(['', OrderStatusEnum.UNPAID, OrderStatusEnum.CANCEL], {
-    message: 'ORDER_STATUS_IS_ENUM',
-  })
+  @IsEnum(
+    [
+      '',
+      OrderStatusEnum.UNPAID,
+      OrderStatusEnum.CANCEL,
+      OrderStatusEnum.PAID,
+      OrderStatusEnum.RETURNED,
+    ],
+    {
+      message: 'ORDER_STATUS_IS_ENUM',
+    },
+  )
   @IsOptional()
-  status: OrderStatusEnum;
+  status: OrderStatusEnum[];
 
   @ApiPropertyOptional({ example: 0 })
   @IsNumber({}, { message: 'MIN_FINAL_TOTAL_IS_NUMBER' })

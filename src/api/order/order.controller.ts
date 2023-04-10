@@ -1,5 +1,6 @@
 import {
   CreateOrderDto,
+  FilterBillDto,
   FilterOrderDto,
   UpdateOrderForCustomerDto,
 } from './dto';
@@ -58,12 +59,25 @@ export class OrderController {
   @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async findAllPriceList(
+  async findAllOrder(
     @Query() dto: FilterOrderDto,
     @CurrentUser() user,
     @GetPagination() pagination?: Pagination,
   ) {
     return await this.orderService.findAllOrder(dto, user.id, pagination);
+  }
+
+  @Get('bill')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllBill(
+    @Query() dto: FilterBillDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.orderService.findAllBill(dto, user.id, pagination);
   }
 
   @Get('id/:id')
