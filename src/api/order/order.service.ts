@@ -26,7 +26,6 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   OrderStatusEnum,
-  OrderUpdateStatusAdminEnum,
   OrderUpdateStatusCustomerEnum,
   PaymentMethod,
   PromotionHistoryTypeEnum,
@@ -46,6 +45,7 @@ import * as moment from 'moment';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 import { CreatePromotionHistoryDto } from '../promotion-history/dto';
+import { PaymentDto } from '../booking/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -263,6 +263,12 @@ export class OrderService {
       dataResult: Object.keys(OrderUpdateStatusCustomerEnum).map(
         (key) => OrderUpdateStatusCustomerEnum[key],
       ),
+    };
+  }
+
+  async getPaymentMethod() {
+    return {
+      dataResult: Object.keys(PaymentMethod).map((key) => PaymentMethod[key]),
     };
   }
 
@@ -639,7 +645,7 @@ export class OrderService {
     return saveOrder;
   }
 
-  async updateOrderByIdOrCodeForCustomer(
+  async updateOrderByIdOrCode(
     dto: UpdateOrderForCustomerDto,
     userId: string,
     id?: string,
@@ -737,13 +743,21 @@ export class OrderService {
     return saveOrder;
   }
 
-  async payment(orderCode: string, paymentMethod: string, userId: string) {
+  async payment(dto: PaymentDto, userId: string) {
+    const admin = await this.adminService.findOneBydId(userId);
     const customer = await this.customerService.findOneById(userId);
-    if (!customer) {
+    if (!customer && !admin) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (customer && customer.status === UserStatusEnum.INACTIVATE) {
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    const { orderCode, paymentMethod } = dto;
+    if (!orderCode) {
+      throw new BadRequestException('ORDER_CODE_REQUIRED');
     }
 
     const order = await this.findOneOrderByCode(orderCode);

@@ -26,6 +26,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { PaymentDto } from '../booking/dto';
 
 @Controller('order')
 @ApiTags('Order')
@@ -52,6 +53,21 @@ export class OrderController {
   @HttpCode(HttpStatus.OK)
   async getOrderUpdateStatus() {
     return await this.orderService.getOrderUpdateStatus();
+  }
+
+  @Get('payment-method')
+  @HttpCode(HttpStatus.OK)
+  async getPaymentMethod() {
+    return await this.orderService.getPaymentMethod();
+  }
+
+  @Post('payment')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
+    return this.orderService.payment(dto, user.id);
   }
 
   @Get()
@@ -108,7 +124,7 @@ export class OrderController {
     @Param('id') id: string,
     @CurrentUser() user,
   ) {
-    return await this.orderService.updateOrderByIdOrCodeForCustomer(
+    return await this.orderService.updateOrderByIdOrCode(
       dto,
       user.id,
       id,
@@ -126,7 +142,7 @@ export class OrderController {
     @Param('code') code: string,
     @CurrentUser() user,
   ) {
-    return await this.orderService.updateOrderByIdOrCodeForCustomer(
+    return await this.orderService.updateOrderByIdOrCode(
       dto,
       user.id,
       undefined,

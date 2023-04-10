@@ -544,7 +544,7 @@ export const mappingTranslate = {
   ORDER_NOT_PAID: 'Hoá đơn chưa thanh toán',
   ORDER_NOT_BELONG_TO_USER: 'Hoá đơn không thuộc về người dùng',
   ORDER_CODE_IS_REQUIRED: 'Mã đơn hàng không được để trống',
-  ORDER_CODE_IS_STRING: 'Mã đơn hàng phải là chuỗi ký tự',
+  ORDER_CODE_MUST_BE_STRING: 'Mã đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_STRING: 'Trạng thái của đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_ENUM: 'Trạng thái của đơn hàng không hợp lệ',
   ORDER_ID_IS_36_CHARACTERS: 'Id của đơn hàng phải là 36 ký tự',
@@ -580,4 +580,6 @@ export const mappingTranslate = {
   NUMBER_OF_TICKET_MUST_BE_INTEGER: 'Số lượng vé phải là số nguyên lớn hơn 0',
   ORDER_STATUS_NOT_REQUIRED: 'Trạng thái hoá đơn không được để trống',
   PAYMENT_METHOD_NOT_FOUND: 'Không tìm thấy phương thức thanh toán',
+  PAYMENT_METHOD_IS_REQUIRED: 'Phương thức thanh toán không được để trống',
+  PAYMENT_METHOD_IS_ENUM: 'Phương thức thanh toán không hợp lệ',
 };

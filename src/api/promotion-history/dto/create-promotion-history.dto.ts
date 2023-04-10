@@ -18,7 +18,7 @@ export class CreatePromotionHistoryDto {
 
   @ApiProperty({ example: '' })
   @IsNotEmpty({ message: 'ORDER_CODE_IS_REQUIRED' })
-  @IsString({ message: 'ORDER_CODE_IS_STRING' })
+  @IsString({ message: 'ORDER_CODE_MUST_BE_STRING' })
   @Length(1, 100, { message: 'ORDER_CODE_BETWEEN_1_100_CHARACTERS' })
   orderCode: string;
 }
