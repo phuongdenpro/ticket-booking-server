@@ -3,14 +3,13 @@ import {
   DeleteDateColumn,
   Entity,
   JoinColumn,
-  ManyToOne,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { TicketDetail, OrderRefundDetail, TripDetail } from '.';
+import { TicketDetail, TripDetail } from '.';
 
 @Entity({ name: 'ticket' })
 export class Ticket {
@@ -60,13 +59,6 @@ export class Ticket {
   // relationship
   @OneToMany(() => TicketDetail, (ticketDetail) => ticketDetail.ticket)
   ticketDetails: TicketDetail[];
-
-  @ManyToOne(
-    () => OrderRefundDetail,
-    (orderRefundDetail) => orderRefundDetail.ticket,
-  )
-  @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
-  orderRefundDetail: OrderRefundDetail;
 
   @OneToOne(() => TripDetail, (tripDetail) => tripDetail.tickets)
   @JoinColumn({ name: 'trip_detail_id', referencedColumnName: 'id' })

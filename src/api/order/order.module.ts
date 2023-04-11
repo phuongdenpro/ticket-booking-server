@@ -19,13 +19,13 @@ import {
   Promotion,
   Trip,
   PromotionHistory,
+  OrderRefund,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { TicketService } from '../ticket/ticket.service';
-import { OrderDetailController } from './order-detail.controller';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 
 @Module({
@@ -33,6 +33,7 @@ import { PromotionHistoryService } from '../promotion-history/promotion-history.
     TypeOrmModule.forFeature([
       Order,
       OrderDetail,
+      OrderRefund,
       Staff,
       Customer,
       Seat,
@@ -48,7 +49,7 @@ import { PromotionHistoryService } from '../promotion-history/promotion-history.
       PromotionHistory,
     ]),
   ],
-  controllers: [OrderController, OrderDetailController],
+  controllers: [OrderController],
   providers: [
     OrderService,
     AdminService,

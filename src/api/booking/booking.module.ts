@@ -14,6 +14,7 @@ import {
   PromotionLine,
   PromotionDetail,
   PromotionHistory,
+  OrderRefund,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -36,6 +37,7 @@ import { PromotionHistoryService } from '../promotion-history/promotion-history.
       Promotion,
       Order,
       OrderDetail,
+      OrderRefund,
       Staff,
       Customer,
       TripDetail,

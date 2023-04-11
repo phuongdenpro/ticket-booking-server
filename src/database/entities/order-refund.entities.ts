@@ -25,6 +25,15 @@ export class OrderRefund {
   @Column({ name: 'total', type: 'double', nullable: true, default: 0.0 })
   total: number;
 
+  @Column({ name: 'order_code', type: 'varchar', length: 100, nullable: false })
+  orderCode: string;
+
+  @Column({ name: 'created_by', type: 'varchar', nullable: false })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
