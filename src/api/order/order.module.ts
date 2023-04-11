@@ -20,6 +20,7 @@ import {
   Trip,
   PromotionHistory,
   OrderRefund,
+  OrderRefundDetail,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -34,6 +35,7 @@ import { PromotionHistoryService } from '../promotion-history/promotion-history.
       Order,
       OrderDetail,
       OrderRefund,
+      OrderRefundDetail,
       Staff,
       Customer,
       Seat,

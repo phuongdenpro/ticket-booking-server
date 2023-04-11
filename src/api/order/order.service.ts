@@ -4,6 +4,7 @@ import {
   Order,
   OrderDetail,
   OrderRefund,
+  OrderRefundDetail,
   PriceDetail,
   PromotionHistory,
   PromotionLine,
@@ -44,11 +45,11 @@ import { SeatService } from '../seat/seat.service';
 import { TicketService } from '../ticket/ticket.service';
 import { PriceListService } from '../price-list/price-list.service';
 import { UpdateTicketDetailDto } from '../ticket/dto';
-import * as moment from 'moment';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 import { CreatePromotionHistoryDto } from '../promotion-history/dto';
 import { PaymentDto } from '../booking/dto';
+import * as moment from 'moment';
 moment.locale('vi');
 
 @Injectable()
@@ -60,6 +61,8 @@ export class OrderService {
     private readonly orderDetailRepository: Repository<OrderDetail>,
     @InjectRepository(OrderRefund)
     private readonly orderRefundRepository: Repository<OrderRefund>,
+    @InjectRepository(OrderRefundDetail)
+    private readonly orderRDRepository: Repository<OrderRefundDetail>,
     private readonly customerService: CustomerService,
     private readonly adminService: AdminService,
     private readonly seatService: SeatService,
@@ -1041,5 +1044,21 @@ export class OrderService {
       orderRefund.createdBy = admin.id;
     }
     orderRefund.status = OrderRefundStatusEnum.PENDING;
+    const createOrderRefund = await this.orderRefundRepository.save(
+      orderRefund,
+    );
+
+    const orderDetails: OrderDetail[] = orderExist.orderDetails;
+    const orderRefundDetail = orderDetails.map(async (orderDetail) => {
+      const orderRefundDetail = new OrderRefundDetail();
+      orderRefundDetail.total = orderDetail.total;
+      orderRefundDetail.orderRefundCode = createOrderRefund.code;
+      orderRefundDetail.orderRefund = createOrderRefund;
+      orderRefundDetail.ticketDetail = orderDetail.ticketDetail;
+      orderRefundDetail.orderDetail = orderDetail;
+      return await this.orderRDRepository.save(orderRefundDetail);
+    });
+
+    const createOrderRDs = await Promise.all(orderRefundDetail);
   }
 }
