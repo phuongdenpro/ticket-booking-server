@@ -7,16 +7,16 @@ import {
   OrderRefundDetail,
   PriceDetail,
   PromotionHistory,
-  PromotionLine,
   Seat,
+  TicketDetail,
   TripDetail,
   Vehicle,
 } from './../../database/entities';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   CreateOrderDto,
   FilterOrderDto,
-  UpdateOrderForCustomerDto,
+  UpdateOrderDto,
   FilterAllDto,
   CreateOrderDetailDto,
 } from './dto';
@@ -71,6 +71,7 @@ export class OrderService {
     private readonly priceListService: PriceListService,
     private readonly promotionLineService: PromotionLineService,
     private readonly promotionHistoryService: PromotionHistoryService,
+    private dataSource: DataSource,
   ) {}
 
   private SEAT_TYPE_DTO_ID = 'id';
@@ -652,7 +653,7 @@ export class OrderService {
   }
 
   async updateOrderByIdOrCode(
-    dto: UpdateOrderForCustomerDto,
+    dto: UpdateOrderDto,
     userId: string,
     id?: string,
     code?: string,
@@ -685,6 +686,9 @@ export class OrderService {
       if (order.customer.id !== customer.id) {
         throw new BadRequestException('ORDER_NOT_BELONG_TO_USER');
       }
+      order.updatedBy = customer.id;
+    } else {
+      order.updatedBy = admin.id;
     }
     switch (order.status) {
       case OrderStatusEnum.CANCEL:
@@ -700,10 +704,6 @@ export class OrderService {
     order.note = note;
     const promotionHistories: PromotionHistory[] = order.promotionHistories;
 
-    // const queryRunnerOrder =
-    //   this.orderRepository.manager.connection.createQueryRunner();
-    // await queryRunnerOrder.connect();
-    // await queryRunnerOrder.startTransaction();
     try {
       switch (status) {
         case OrderUpdateStatusCustomerEnum.CANCEL:
@@ -738,10 +738,14 @@ export class OrderService {
             order.orderDetails[0].ticketDetail.ticket.tripDetail;
           const departureTime = tripDetail.departureTime;
           const timeDiff = moment(departureTime).diff(currentDate, 'hours');
-          if (timeDiff < 12) {
+          if (timeDiff < 12 && timeDiff > 0) {
             throw new BadRequestException('ORDER_CANNOT_CANCEL_12H_BEFORE');
+          } else if (timeDiff <= 0) {
+            throw new BadRequestException(
+              'ORDER_CANNOT_CANCEL_AFTER_DEPARTURE',
+            );
           }
-
+          await this.createOrderRefund(order.code, userId);
           if (promotionHistories && promotionHistories.length > 0) {
             const destroyPromotionHistories = promotionHistories.map(
               async (promotionHistory) => {
@@ -761,6 +765,7 @@ export class OrderService {
         default:
           break;
       }
+
       const saveOrder = await this.orderRepository.save(order);
       delete saveOrder.deletedAt;
       return saveOrder;
@@ -811,9 +816,23 @@ export class OrderService {
         throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
         break;
     }
-    const saveOrder = await this.orderRepository.save(order);
-    delete saveOrder.deletedAt;
-    return saveOrder;
+    order.updatedBy = userId;
+    await this.orderRepository.save(order);
+
+    const orderDetails: OrderDetail[] = order.orderDetails;
+    const ticketDetails = orderDetails.map(async (orderDetail) => {
+      let ticketDetail: TicketDetail = orderDetail.ticketDetail;
+      ticketDetail.status = TicketStatusEnum.SOLD;
+      ticketDetail = await this.dataSource
+        .getRepository(TicketDetail)
+        .save(ticketDetail);
+      delete ticketDetail.deletedAt;
+      return ticketDetail;
+    });
+    await Promise.all(ticketDetails);
+    const newOrder = await this.findOneOrderByCode(orderCode);
+    delete newOrder.deletedAt;
+    return newOrder;
   }
 
   // order detail
@@ -1027,38 +1046,77 @@ export class OrderService {
       case OrderStatusEnum.UNPAID:
         throw new BadRequestException('ORDER_IS_UNPAID');
         break;
-      case OrderStatusEnum.RETURNED:
-        throw new BadRequestException('ORDER_IS_RETURNED');
-        break;
       default:
         break;
+    }
+    const orderRefundExist = await this.findOneOrderRefundByCode(orderCode);
+    if (orderRefundExist) {
+      throw new BadRequestException('ORDER_IS_RETURNED', {
+        description: `Đơn hàng đã được trả lại có mã là ${orderRefundExist.code}`,
+      });
     }
 
     const orderRefund = new OrderRefund();
     orderRefund.order = orderExist;
     orderRefund.orderCode = orderExist.code;
-    orderRefund.total = orderExist.total;
+    orderRefund.code = orderExist.code;
+    orderRefund.total = orderExist.finalTotal;
     if (customer) {
       orderRefund.createdBy = customer.id;
     } else {
       orderRefund.createdBy = admin.id;
     }
     orderRefund.status = OrderRefundStatusEnum.PENDING;
+
     const createOrderRefund = await this.orderRefundRepository.save(
       orderRefund,
     );
+    if (!createOrderRefund) {
+      throw new BadRequestException('CREATE_ORDER_REFUND_FAILED');
+    }
+    const orderDetails = orderExist.orderDetails;
 
-    const orderDetails: OrderDetail[] = orderExist.orderDetails;
-    const orderRefundDetail = orderDetails.map(async (orderDetail) => {
-      const orderRefundDetail = new OrderRefundDetail();
-      orderRefundDetail.total = orderDetail.total;
-      orderRefundDetail.orderRefundCode = createOrderRefund.code;
-      orderRefundDetail.orderRefund = createOrderRefund;
-      orderRefundDetail.ticketDetail = orderDetail.ticketDetail;
-      orderRefundDetail.orderDetail = orderDetail;
-      return await this.orderRDRepository.save(orderRefundDetail);
-    });
+    const queryOrderRD =
+      this.orderRDRepository.manager.connection.createQueryRunner();
+    await queryOrderRD.connect();
+    await queryOrderRD.startTransaction();
+    try {
+      const orderRefundDetail = orderDetails.map(async (orderDetail) => {
+        delete createOrderRefund.order;
+        delete orderDetail.ticketDetail.seat.vehicle;
+        delete orderDetail.ticketDetail.ticket;
+        const orderRefundDetail = new OrderRefundDetail();
+        orderRefundDetail.total = orderDetail.total;
+        orderRefundDetail.orderRefundCode = createOrderRefund.code;
+        orderRefundDetail.orderRefund = createOrderRefund;
+        orderRefundDetail.ticketDetail = orderDetail.ticketDetail;
+        orderRefundDetail.orderDetail = orderDetail;
+        const createOrderRD = await queryOrderRD.manager.save(
+          orderRefundDetail,
+        );
+        if (!createOrderRD) {
+          throw new BadRequestException('CREATE_ORDER_REFUND_DETAIL_FAILED');
+        }
+        return createOrderRD;
+      });
 
-    const createOrderRDs = await Promise.all(orderRefundDetail);
+      const createOrderRDs = await Promise.all(orderRefundDetail);
+      await queryOrderRD.commitTransaction();
+
+      orderRefund.orderRefundDetails = createOrderRDs;
+    } catch (error) {
+      await queryOrderRD.rollbackTransaction();
+      if (createOrderRefund) {
+        await this.orderRefundRepository.remove(createOrderRefund);
+      }
+      if (error?.message) {
+        throw new BadRequestException(error?.message);
+      } else {
+        throw new BadRequestException('INTERNAL_SERVER_ERROR');
+      }
+    } finally {
+      await queryOrderRD.release();
+    }
+    return createOrderRefund;
   }
 }

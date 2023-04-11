@@ -3,12 +3,12 @@ import {
   Column,
   Entity,
   JoinColumn,
-  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
+  ManyToOne,
 } from 'typeorm';
 
 @Entity({ name: 'order_refund_detail' })
@@ -56,7 +56,7 @@ export class OrderRefundDetail {
   public deletedAt?: Date;
 
   // relationships
-  @OneToMany(() => OrderRefund, (orderRefund) => orderRefund.orderRefundDetails)
+  @ManyToOne(() => OrderRefund, (orderRefund) => orderRefund.orderRefundDetails)
   @JoinColumn({ name: 'order_refund_id', referencedColumnName: 'id' })
   orderRefund: OrderRefund;
 

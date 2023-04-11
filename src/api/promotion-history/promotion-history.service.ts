@@ -7,6 +7,7 @@ import {
   PromotionLine,
   Staff,
   Customer,
+  OrderRefund,
 } from './../../database/entities';
 import {
   BadRequestException,
@@ -32,6 +33,8 @@ export class PromotionHistoryService {
     private readonly promotionLineRepository: Repository<PromotionLine>,
     @InjectRepository(PromotionHistory)
     private readonly promotionHistoryRepository: Repository<PromotionHistory>,
+    @InjectRepository(OrderRefund)
+    private readonly orderRefundRepository: Repository<OrderRefund>,
     private dataSource: DataSource,
   ) {}
 
@@ -177,7 +180,7 @@ export class PromotionHistoryService {
             amount: 0,
           };
         }
-        quantity = Math.floor(total / promotionDetail.purchaseAmount);
+        quantity = 1;
       }
       const remainingBudget = promotionLine.maxBudget - promotionLine.useBudget;
       if (remainingBudget <= 0) {
@@ -223,7 +226,11 @@ export class PromotionHistoryService {
     return { dataResult: result };
   }
 
-  async createPromotionHistory(dto: CreatePromotionHistoryDto, userId: string) {
+  async createPromotionHistory(
+    dto: CreatePromotionHistoryDto,
+    userId: string,
+    orderRefund?: OrderRefund,
+  ) {
     const { orderCode, promotionLineCode, type } = dto;
     const queryRunnerPH =
       this.promotionHistoryRepository.manager.connection.createQueryRunner();
@@ -259,6 +266,11 @@ export class PromotionHistoryService {
       if (!orderExist) {
         throw new BadRequestException('ORDER_NOT_FOUND');
       }
+      const orderRefundExist =
+        orderRefund ||
+        (await this.orderRefundRepository.findOne({
+          where: { code: orderCode },
+        }));
       promotionHistory.order = orderExist;
       promotionHistory.orderCode = orderExist.code;
 
@@ -292,9 +304,7 @@ export class PromotionHistoryService {
           if (orderExist.total < promotionDetail.purchaseAmount) {
             throw new BadRequestException('TOTAL_AMOUNT_IS_NOT_ENOUGH');
           }
-          promotionHistory.quantity = Math.floor(
-            orderExist.total / promotionDetail.purchaseAmount,
-          );
+          promotionHistory.quantity = 1;
         }
         const remainingBudget =
           promotionLine.maxBudget - promotionLine.useBudget;
@@ -358,7 +368,7 @@ export class PromotionHistoryService {
       } else {
         throw new BadRequestException('PROMOTION_HISTORY_TYPE_IS_REQUIRED');
       }
-
+      promotionHistory.orderRefund = orderRefundExist;
       const savedPromotionHistory = await queryRunnerPH.manager.save(
         promotionHistory,
       );

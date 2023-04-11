@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { OrderUpdateStatusCustomerEnum } from '../../../enums';
 import { IsString, IsOptional, IsEnum } from 'class-validator';
 
-export class UpdateOrderForCustomerDto {
+export class UpdateOrderDto {
   @ApiPropertyOptional({ example: '' })
   @IsString({ message: 'NOTE_IS_STRING' })
   @IsOptional()

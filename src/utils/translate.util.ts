@@ -555,12 +555,14 @@ export const mappingTranslate = {
   ORDER_IS_CANCELLED: 'Đơn hàng đã bị hủy',
   ORDER_IS_PAID: 'Đơn hàng đã thanh toán',
   ORDER_IS_PENDING: 'Đơn hàng đang chờ xử lý',
+  ORDER_IS_RETURNED: 'Đơn hàng đã được hoàn trả',
   CREATE_ORDER_FAILED: 'Tạo hoá đơn thất bại',
   MIN_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối thiểu phải là số',
   MAX_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối đa phải là số',
   ORDER_CODE_BETWEEN_1_100_CHARACTERS: 'Mã đơn hàng phải có từ 1-100 ký tự',
   ORDER_CANNOT_CANCEL_12H_BEFORE:
     'Không thể huỷ vé trước 12 tiếng so với giờ khởi hàng, hãy đến trực tiếp phòng vé để huỷ',
+  ORDER_CANNOT_CANCEL_AFTER_DEPARTURE: 'Không thể huỷ vé sau khi khởi hành',
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',
@@ -584,4 +586,8 @@ export const mappingTranslate = {
   PAYMENT_METHOD_NOT_FOUND: 'Không tìm thấy phương thức thanh toán',
   PAYMENT_METHOD_IS_REQUIRED: 'Phương thức thanh toán không được để trống',
   PAYMENT_METHOD_IS_ENUM: 'Phương thức thanh toán không hợp lệ',
+
+  // order refund
+  CREATE_ORDER_REFUND_DETAIL_FAILED: 'Tạo hoá đơn hoàn trả thất bại',
+  CREATE_ORDER_REFUND_FAILED: 'Tạo hoá đơn hoàn trả thất bại',
 };
