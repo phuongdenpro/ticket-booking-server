@@ -382,6 +382,7 @@ export class PromotionLineService {
 
     const dataResult = await query
       .leftJoinAndSelect('q.promotionDetail', 'pd')
+      .leftJoinAndSelect('qd.trip', 't')
       .offset(pagination.skip ?? 0)
       .limit(pagination.take ?? 10)
       .getMany();

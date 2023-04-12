@@ -48,7 +48,12 @@ export class TicketService {
     'q.updatedBy',
     'q.createdAt',
     'q.updatedAt',
-    't',
+    't.id',
+    't.code',
+    's.id',
+    's.code',
+    's.name',
+    's.floor',
   ];
 
   private selectTicketDetailFieldsWithQ = [
@@ -92,7 +97,7 @@ export class TicketService {
   async findOneTicket(options: any) {
     return await this.ticketRepository.findOne({
       where: { ...options?.where },
-      relations: { ticketDetails: true, ...options?.relations },
+      relations: { ticketDetails: { seat: true }, ...options?.relations },
       select: {
         deletedAt: false,
         ...options?.select,
@@ -208,9 +213,16 @@ export class TicketService {
 
     const query = this.ticketRepository.createQueryBuilder('q');
     if (keywords) {
-      query
-        .orWhere('q.code like :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.note like :keywords', { keywords: `%${keywords}%` });
+      const newKeywords = keywords.trim();
+      const subQuery = this.ticketRepository
+        .createQueryBuilder('q2')
+        .where('q2.code like :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note like :note', { note: `%${newKeywords}%` })
+        .select('q2.id');
+      query.andWhere('q.id IN (' + subQuery.getQuery() + ')', {
+        code: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
     }
     if (startDate) {
       startDate = new Date(startDate);
@@ -225,6 +237,7 @@ export class TicketService {
     const total = await query.getCount();
     const dataResult = await query
       .leftJoinAndSelect('q.ticketDetails', 't')
+      .leftJoinAndSelect('t.seat', 's')
       .select(this.selectTicketFieldsWithQ)
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -366,9 +379,9 @@ export class TicketService {
       const newKeywords = keywords.trim();
       const subQuery = this.ticketDetailRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

@@ -64,6 +64,8 @@ export class OrderService {
     private readonly orderRefundRepository: Repository<OrderRefund>,
     @InjectRepository(OrderRefundDetail)
     private readonly orderRDRepository: Repository<OrderRefundDetail>,
+    @InjectRepository(PromotionHistory)
+    private readonly promotionHistoryRepository: Repository<PromotionHistory>,
     private readonly customerService: CustomerService,
     private readonly adminService: AdminService,
     private readonly seatService: SeatService,
@@ -381,31 +383,23 @@ export class OrderService {
       .addOrderBy('q.finalTotal', SortEnum.ASC)
       .addOrderBy('q.code', SortEnum.ASC);
 
-    if (isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED) {
-      const currentDate = moment().toDate();
+    const currentDate = moment().toDate();
+    if (
+      isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED ||
+      isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED
+    ) {
       const subQuery = this.orderRepository.createQueryBuilder('q2');
       subQuery
         .leftJoinAndSelect('q2.orderDetails', 'c')
-        .leftJoinAndSelect('td.ticketDetail', 'td')
+        .leftJoinAndSelect('c.ticketDetail', 'td')
         .leftJoinAndSelect('td.ticket', 't')
         .leftJoinAndSelect('t.tripDetail', 'trd');
-      subQuery
-        .select('q2.id')
-        .where('trd.departureTime <= :currentDate', { currentDate });
-
-      query.andWhere(`q.id IN (${subQuery.getQuery()})`, { currentDate });
-    } else if (isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED) {
-      const currentDate = moment().toDate();
-      const subQuery = this.orderRepository.createQueryBuilder('q2');
-      subQuery
-        .leftJoinAndSelect('q2.orderDetails', 'c')
-        .leftJoinAndSelect('td.ticketDetail', 'td')
-        .leftJoinAndSelect('td.ticket', 't')
-        .leftJoinAndSelect('t.tripDetail', 'trd');
-      subQuery
-        .select('q2.id')
-        .where('trd.departureTime > :currentDate', { currentDate });
-
+      if (isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED) {
+        subQuery.where('trd.departureTime <= :currentDate', { currentDate });
+      } else if (isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED) {
+        subQuery.where('trd.departureTime > :currentDate', { currentDate });
+      }
+      subQuery.select('q2.id');
       query.andWhere(`q.id IN (${subQuery.getQuery()})`, { currentDate });
     }
 
@@ -494,13 +488,12 @@ export class OrderService {
     const { keywords, status, sort, startDate, endDate } = dto;
     const filterDto = new FilterAllDto();
     filterDto.keywords = keywords;
-    let isDeparted = '';
+    const isDeparted = this.BILL_HISTORY_TYPE_HAS_DEPARTED;
     if (
       status === OrderStatusEnum.PAID ||
       status === OrderStatusEnum.RETURNED
     ) {
       filterDto.status = [status];
-      isDeparted = this.BILL_HISTORY_TYPE_HAS_DEPARTED;
     } else {
       filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
     }
@@ -518,13 +511,12 @@ export class OrderService {
     const { keywords, status, sort, startDate, endDate } = dto;
     const filterDto = new FilterAllDto();
     filterDto.keywords = keywords;
-    let isDeparted = '';
+    const isDeparted = this.BILL_HISTORY_TYPE_NOT_DEPARTED;
     if (
       status === OrderStatusEnum.PAID ||
       status === OrderStatusEnum.RETURNED
     ) {
       filterDto.status = [status];
-      isDeparted = this.BILL_HISTORY_TYPE_NOT_DEPARTED;
     } else {
       filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
     }
@@ -1152,8 +1144,8 @@ export class OrderService {
       orderRefund.createdBy = admin.id;
     }
     orderRefund.status = OrderRefundStatusEnum.PENDING;
-    console.log(orderExist.promotionHistories);
-    throw new BadRequestException('TEST');
+    const promotionHistories = orderExist.promotionHistories;
+
     const createOrderRefund = await this.orderRefundRepository.save(
       orderRefund,
     );
@@ -1166,6 +1158,11 @@ export class OrderService {
       this.orderRDRepository.manager.connection.createQueryRunner();
     await queryOrderRD.connect();
     await queryOrderRD.startTransaction();
+
+    const queryPromotionH =
+      this.promotionHistoryRepository.manager.connection.createQueryRunner();
+    await queryPromotionH.connect();
+    await queryPromotionH.startTransaction();
     try {
       const orderRefundDetail = orderDetails.map(async (orderDetail) => {
         delete createOrderRefund.order;
@@ -1187,10 +1184,19 @@ export class OrderService {
       });
 
       const createOrderRDs = await Promise.all(orderRefundDetail);
+      const savePromotionHistories = promotionHistories.map(
+        async (promotionHistory) => {
+          promotionHistory.orderRefund = createOrderRefund;
+          await queryPromotionH.manager.save(promotionHistory);
+        },
+      );
+      await Promise.all(savePromotionHistories);
+      await queryPromotionH.commitTransaction();
       await queryOrderRD.commitTransaction();
 
       orderRefund.orderRefundDetails = createOrderRDs;
     } catch (error) {
+      await queryPromotionH.rollbackTransaction();
       await queryOrderRD.rollbackTransaction();
       if (createOrderRefund) {
         await this.orderRefundRepository.remove(createOrderRefund);
