@@ -113,6 +113,21 @@ export class OrderService {
     's.gender',
     's.birthDay',
     's.address',
+    'od.id',
+    'od.total',
+    'od.note',
+    'od.orderCode',
+    'od.createdBy',
+    'od.createdAt',
+    'td.id',
+    'td.code',
+    'td.status',
+    'td.note',
+    'td.createdAt',
+    'se.id',
+    'se.code',
+    'se.name',
+    'se.floor',
   ];
 
   // order
@@ -383,9 +398,6 @@ export class OrderService {
       const newEndDate = moment(endDate).endOf('day').toDate();
       query.andWhere('q.createdAt <= :newEndDate', { newEndDate });
     }
-    if (customer) {
-      query.andWhere('c.id = :customerId', { customerId: userId });
-    }
 
     query
       .orderBy('q.createdAt', sort || SortEnum.DESC)
@@ -399,24 +411,35 @@ export class OrderService {
     ) {
       const subQuery = this.orderRepository.createQueryBuilder('q2');
       subQuery
-        .leftJoinAndSelect('q2.orderDetails', 'c2')
-        .leftJoinAndSelect('c2.ticketDetail', 'td2')
+        .leftJoinAndSelect('q2.customer', 'c2')
+        .leftJoinAndSelect('q2.orderDetails', 'od2')
+        .leftJoinAndSelect('od2.ticketDetail', 'td2')
         .leftJoinAndSelect('td2.ticket', 't2')
-        .leftJoinAndSelect('t2.tripDetail', 'trd2');
+        .leftJoinAndSelect('t2.tripDetail', 'trd2')
+        .where('c2.id = :customerId', { customerId: userId });
+      console.log(currentDate);
+      console.log(isDeparted);
       if (isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED) {
-        subQuery.where('trd2.departureTime <= :currentDate', { currentDate });
+        subQuery.andWhere('trd2.departureTime <= :currentDate', {
+          currentDate,
+        });
       } else if (isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED) {
-        subQuery.where('trd2.departureTime > :currentDate', { currentDate });
+        subQuery.andWhere('trd2.departureTime > :currentDate', { currentDate });
       }
       subQuery.select('q2.id');
-      console.log(subQuery.getQuery());
 
-      query.andWhere(`q.id IN (${subQuery.getQuery()})`, { currentDate });
+      query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
+        currentDate,
+        customerId: userId,
+      });
     }
 
     const dataResult = await query
       .leftJoinAndSelect('q.customer', 'c')
       .leftJoinAndSelect('q.staff', 's')
+      .leftJoinAndSelect('q.orderDetails', 'od')
+      .leftJoinAndSelect('od.ticketDetail', 'td')
+      .leftJoinAndSelect('td.seat', 'se')
       .select(this.selectFieldsOrderWithQ)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10)

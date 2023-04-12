@@ -124,7 +124,7 @@ export class OrderController {
     @CurrentUser() user,
     @GetPagination() pagination?: Pagination,
   ) {
-    return await this.orderService.findAllBillHistoryForCustomer(
+    return await this.orderService.findAllBillAvailableForCustomer(
       dto,
       user.id,
       pagination,
