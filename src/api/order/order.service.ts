@@ -19,6 +19,7 @@ import {
   UpdateOrderDto,
   FilterAllDto,
   CreateOrderDetailDto,
+  FilterBillHistoryDto,
 } from './dto';
 import {
   BadRequestException,
@@ -283,6 +284,7 @@ export class OrderService {
     dto: FilterAllDto,
     userId: string,
     pagination?: Pagination,
+    isDeparted?: boolean,
   ) {
     const {
       keywords,
@@ -367,11 +369,28 @@ export class OrderService {
       const newEndDate = moment(endDate).endOf('day').toDate();
       query.andWhere('q.createdAt <= :newEndDate', { newEndDate });
     }
+    if (customer) {
+      query.andWhere('c.id = :customerId', { customerId: userId });
+    }
 
     query
       .orderBy('q.createdAt', sort || SortEnum.DESC)
-      .addOrderBy('q.code', SortEnum.ASC)
-      .addOrderBy('q.finalTotal', SortEnum.ASC);
+      .addOrderBy('q.finalTotal', SortEnum.ASC)
+      .addOrderBy('q.code', SortEnum.ASC);
+    if (isDeparted) {
+      const currentDate = moment().toDate();
+      const subQuery = this.orderRepository.createQueryBuilder('q2');
+      subQuery
+        .leftJoinAndSelect('q2.orderDetails', 'c')
+        .leftJoinAndSelect('td.ticketDetail', 'td')
+        .leftJoinAndSelect('td.ticket', 't')
+        .leftJoinAndSelect('t.tripDetail', 'trd');
+      subQuery
+        .select('q2.id')
+        .where('trd.departureTime <= :currentDate', { currentDate });
+
+      query.andWhere(`q.id IN (${subQuery.getQuery()})`, { currentDate });
+    }
 
     const dataResult = await query
       .leftJoinAndSelect('q.customer', 'c')
@@ -448,6 +467,30 @@ export class OrderService {
     filterDto.startDate = startDate;
     filterDto.endDate = endDate;
     return await this.findAll(filterDto, userId, pagination);
+  }
+
+  async findAllBillHistoryForCustomer(
+    dto: FilterBillHistoryDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const { keywords, status, sort, startDate, endDate } = dto;
+    const filterDto = new FilterAllDto();
+    filterDto.keywords = keywords;
+    let isDeparted = false;
+    if (
+      status === OrderStatusEnum.PAID ||
+      status === OrderStatusEnum.RETURNED
+    ) {
+      filterDto.status = [status];
+      isDeparted = true;
+    } else {
+      filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
+    }
+    filterDto.sort = sort;
+    filterDto.startDate = startDate;
+    filterDto.endDate = endDate;
+    return await this.findAll(filterDto, userId, pagination, isDeparted);
   }
 
   async createOrder(dto: CreateOrderDto, creatorId: string) {

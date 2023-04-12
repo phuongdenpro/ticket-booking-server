@@ -3,4 +3,5 @@ export * from './update-order-for-customer.dto';
 export * from './filter-all.dto';
 export * from './filter-order.dto';
 export * from './filter-bill.dto';
+export * from './filter-bill-history.dto';
 export * from './create-order-detail.dto';

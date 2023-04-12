@@ -1,6 +1,7 @@
 import {
   CreateOrderDto,
   FilterBillDto,
+  FilterBillHistoryDto,
   FilterOrderDto,
   UpdateOrderDto,
 } from './dto';
@@ -33,7 +34,6 @@ import { PaymentDto } from '../booking/dto';
 export class OrderController {
   constructor(private orderService: OrderService) {}
 
-  // order
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
@@ -72,7 +72,7 @@ export class OrderController {
 
   @Get()
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findAllOrder(
@@ -85,7 +85,7 @@ export class OrderController {
 
   @Get('bill')
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findAllBill(
@@ -94,6 +94,24 @@ export class OrderController {
     @GetPagination() pagination?: Pagination,
   ) {
     return await this.orderService.findAllBill(dto, user.id, pagination);
+  }
+
+  // danh sách vé đã đi
+  @Get('/customer/bill/history')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllBillForCustomer(
+    @Query() dto: FilterBillHistoryDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.orderService.findAllBillHistoryForCustomer(
+      dto,
+      user.id,
+      pagination,
+    );
   }
 
   @Get('id/:id')
