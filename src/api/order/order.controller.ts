@@ -102,7 +102,24 @@ export class OrderController {
   @Roles(RoleEnum.CUSTOMER)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async findAllBillForCustomer(
+  async findAllBillHistoryForCustomer(
+    @Query() dto: FilterBillHistoryDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.orderService.findAllBillHistoryForCustomer(
+      dto,
+      user.id,
+      pagination,
+    );
+  }
+
+  @Get('/customer/bill/available')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllBillAvailableForCustomer(
     @Query() dto: FilterBillHistoryDto,
     @CurrentUser() user,
     @GetPagination() pagination?: Pagination,

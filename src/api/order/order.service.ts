@@ -78,6 +78,9 @@ export class OrderService {
   private SEAT_TYPE_DTO_ID = 'id';
   private SEAT_TYPE_DTO_CODE = 'code';
 
+  private BILL_HISTORY_TYPE_HAS_DEPARTED = 'hasDeparted';
+  private BILL_HISTORY_TYPE_NOT_DEPARTED = 'notDeparted';
+
   private selectFieldsOrderWithQ = [
     'q.id',
     'q.code',
@@ -284,7 +287,7 @@ export class OrderService {
     dto: FilterAllDto,
     userId: string,
     pagination?: Pagination,
-    isDeparted?: boolean,
+    isDeparted?: string,
   ) {
     const {
       keywords,
@@ -377,7 +380,8 @@ export class OrderService {
       .orderBy('q.createdAt', sort || SortEnum.DESC)
       .addOrderBy('q.finalTotal', SortEnum.ASC)
       .addOrderBy('q.code', SortEnum.ASC);
-    if (isDeparted) {
+
+    if (isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED) {
       const currentDate = moment().toDate();
       const subQuery = this.orderRepository.createQueryBuilder('q2');
       subQuery
@@ -388,6 +392,19 @@ export class OrderService {
       subQuery
         .select('q2.id')
         .where('trd.departureTime <= :currentDate', { currentDate });
+
+      query.andWhere(`q.id IN (${subQuery.getQuery()})`, { currentDate });
+    } else if (isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED) {
+      const currentDate = moment().toDate();
+      const subQuery = this.orderRepository.createQueryBuilder('q2');
+      subQuery
+        .leftJoinAndSelect('q2.orderDetails', 'c')
+        .leftJoinAndSelect('td.ticketDetail', 'td')
+        .leftJoinAndSelect('td.ticket', 't')
+        .leftJoinAndSelect('t.tripDetail', 'trd');
+      subQuery
+        .select('q2.id')
+        .where('trd.departureTime > :currentDate', { currentDate });
 
       query.andWhere(`q.id IN (${subQuery.getQuery()})`, { currentDate });
     }
@@ -477,13 +494,37 @@ export class OrderService {
     const { keywords, status, sort, startDate, endDate } = dto;
     const filterDto = new FilterAllDto();
     filterDto.keywords = keywords;
-    let isDeparted = false;
+    let isDeparted = '';
     if (
       status === OrderStatusEnum.PAID ||
       status === OrderStatusEnum.RETURNED
     ) {
       filterDto.status = [status];
-      isDeparted = true;
+      isDeparted = this.BILL_HISTORY_TYPE_HAS_DEPARTED;
+    } else {
+      filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
+    }
+    filterDto.sort = sort;
+    filterDto.startDate = startDate;
+    filterDto.endDate = endDate;
+    return await this.findAll(filterDto, userId, pagination, isDeparted);
+  }
+
+  async findAllBillAvailableForCustomer(
+    dto: FilterBillHistoryDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const { keywords, status, sort, startDate, endDate } = dto;
+    const filterDto = new FilterAllDto();
+    filterDto.keywords = keywords;
+    let isDeparted = '';
+    if (
+      status === OrderStatusEnum.PAID ||
+      status === OrderStatusEnum.RETURNED
+    ) {
+      filterDto.status = [status];
+      isDeparted = this.BILL_HISTORY_TYPE_NOT_DEPARTED;
     } else {
       filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
     }
