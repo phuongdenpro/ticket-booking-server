@@ -99,7 +99,7 @@ export class AuthCustomerService {
   }
 
   async login(dto: CustomerLoginDto) {
-    const { email, password } = dto;
+    const { email, phone, password } = dto;
     const userExist = await this.customerService.findOneByEmail(email, {
       select: {
         id: true,

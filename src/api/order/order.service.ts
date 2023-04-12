@@ -66,6 +66,8 @@ export class OrderService {
     private readonly orderRDRepository: Repository<OrderRefundDetail>,
     @InjectRepository(PromotionHistory)
     private readonly promotionHistoryRepository: Repository<PromotionHistory>,
+    @InjectRepository(TicketDetail)
+    private readonly ticketDetailRepository: Repository<TicketDetail>,
     private readonly customerService: CustomerService,
     private readonly adminService: AdminService,
     private readonly seatService: SeatService,
@@ -124,13 +126,16 @@ export class OrderService {
           note: true,
           orderCode: true,
           ticketDetail: {
+            id: true,
             code: true,
             status: true,
             note: true,
             seat: {
+              id: true,
               code: true,
               name: true,
               vehicle: {
+                id: true,
                 code: true,
                 name: true,
                 licensePlate: true,
@@ -144,19 +149,23 @@ export class OrderService {
               startDate: true,
               endDate: true,
               tripDetail: {
+                id: true,
                 code: true,
                 departureTime: true,
                 expectedTime: true,
                 trip: {
+                  id: true,
                   code: true,
                   name: true,
                   status: true,
                   fromStation: {
+                    id: true,
                     code: true,
                     name: true,
                     fullAddress: true,
                   },
                   toStation: {
+                    id: true,
                     code: true,
                     name: true,
                     fullAddress: true,
@@ -390,16 +399,18 @@ export class OrderService {
     ) {
       const subQuery = this.orderRepository.createQueryBuilder('q2');
       subQuery
-        .leftJoinAndSelect('q2.orderDetails', 'c')
-        .leftJoinAndSelect('c.ticketDetail', 'td')
-        .leftJoinAndSelect('td.ticket', 't')
-        .leftJoinAndSelect('t.tripDetail', 'trd');
+        .leftJoinAndSelect('q2.orderDetails', 'c2')
+        .leftJoinAndSelect('c2.ticketDetail', 'td2')
+        .leftJoinAndSelect('td2.ticket', 't2')
+        .leftJoinAndSelect('t2.tripDetail', 'trd2');
       if (isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED) {
-        subQuery.where('trd.departureTime <= :currentDate', { currentDate });
+        subQuery.where('trd2.departureTime <= :currentDate', { currentDate });
       } else if (isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED) {
-        subQuery.where('trd.departureTime > :currentDate', { currentDate });
+        subQuery.where('trd2.departureTime > :currentDate', { currentDate });
       }
       subQuery.select('q2.id');
+      console.log(subQuery.getQuery());
+
       query.andWhere(`q.id IN (${subQuery.getQuery()})`, { currentDate });
     }
 
@@ -779,7 +790,14 @@ export class OrderService {
     const { note, status } = dto;
     order.note = note;
     const promotionHistories: PromotionHistory[] = order.promotionHistories;
-
+    const ticketDetails: TicketDetail[] = order.orderDetails.map(
+      (orderDetail) => orderDetail.ticketDetail,
+    );
+    let saveTicketDetails;
+    const queryTickerDetail =
+      this.ticketDetailRepository.manager.connection.createQueryRunner();
+    await queryTickerDetail.connect();
+    await queryTickerDetail.startTransaction();
     try {
       switch (status) {
         case OrderUpdateStatusCustomerEnum.CANCEL:
@@ -802,6 +820,10 @@ export class OrderService {
             );
             await Promise.all(destroyPromotionHistories);
           }
+          saveTicketDetails = ticketDetails.map((ticketDetail) => {
+            ticketDetail.status = TicketStatusEnum.NON_SOLD;
+            return ticketDetail;
+          });
           break;
         case OrderUpdateStatusCustomerEnum.RETURNED:
           if (order.status === OrderStatusEnum.UNPAID) {
@@ -814,7 +836,7 @@ export class OrderService {
             order.orderDetails[0].ticketDetail.ticket.tripDetail;
           const departureTime = tripDetail.departureTime;
           const timeDiff = moment(departureTime).diff(currentDate, 'hours');
-          if (timeDiff < 12 && timeDiff > 0) {
+          if (customer && timeDiff < 12 && timeDiff > 0) {
             throw new BadRequestException('ORDER_CANNOT_CANCEL_12H_BEFORE');
           } else if (timeDiff <= 0) {
             throw new BadRequestException(
@@ -837,15 +859,22 @@ export class OrderService {
             );
             await Promise.all(destroyPromotionHistories);
           }
+          saveTicketDetails = ticketDetails.map((ticketDetail) => {
+            ticketDetail.status = TicketStatusEnum.NON_SOLD;
+            return ticketDetail;
+          });
           break;
         default:
           break;
       }
+      await queryTickerDetail.manager.save(saveTicketDetails);
+      await queryTickerDetail.commitTransaction();
 
       const saveOrder = await this.orderRepository.save(order);
       delete saveOrder.deletedAt;
       return saveOrder;
     } catch (error) {
+      await queryTickerDetail.rollbackTransaction();
       throw new BadRequestException(error.message);
     }
   }
@@ -1180,21 +1209,24 @@ export class OrderService {
         if (!createOrderRD) {
           throw new BadRequestException('CREATE_ORDER_REFUND_DETAIL_FAILED');
         }
+        delete createOrderRD.orderRefund;
         return createOrderRD;
       });
-
       const createOrderRDs = await Promise.all(orderRefundDetail);
+      orderRefund.orderRefundDetails = createOrderRDs;
+
       const savePromotionHistories = promotionHistories.map(
         async (promotionHistory) => {
           promotionHistory.orderRefund = createOrderRefund;
-          await queryPromotionH.manager.save(promotionHistory);
+          const savePH = await queryPromotionH.manager.save(promotionHistory);
+          delete savePH.orderRefund;
+          return savePH;
         },
       );
-      await Promise.all(savePromotionHistories);
+      const createPHs = await Promise.all(savePromotionHistories);
+      orderRefund.promotionHistories = createPHs;
       await queryPromotionH.commitTransaction();
       await queryOrderRD.commitTransaction();
-
-      orderRefund.orderRefundDetails = createOrderRDs;
     } catch (error) {
       await queryPromotionH.rollbackTransaction();
       await queryOrderRD.rollbackTransaction();
