@@ -1,3 +1,4 @@
+import { UserStatusEnum } from './../../enums';
 import { Customer } from './../../database/entities';
 import { AuthService } from './../../auth/auth.service';
 import {
@@ -34,26 +35,46 @@ export class UserService {
   }
 
   async updatePassword(id: string, dto: UserUpdatePasswordDto) {
-    const userExist = await this.customerService.getCustomerById(id);
+    const userExist = await this.customerService.getCustomerById(id, {
+      select: { password: true },
+    });
     if (!userExist) {
       throw new BadRequestException('USER_NOT_FOUND');
     }
-
+    if (userExist?.status === UserStatusEnum.INACTIVATE) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    if (!dto?.oldPassword) {
+      throw new BadRequestException('OLD_PASSWORD_REQUIRED');
+    }
+    if (!dto?.newPassword) {
+      throw new BadRequestException('NEW_PASSWORD_REQUIRED');
+    }
+    if (!dto?.confirmNewPassword) {
+      throw new BadRequestException('CONFIRM_NEW_PASSWORD_REQUIRED');
+    }
     const isPasswordMatches = await this.authService.comparePassword(
       dto?.oldPassword,
       userExist?.password,
     );
     if (!isPasswordMatches)
-      throw new BadRequestException('OLD_PASSWORD_MISMATCH');
-    // if (!isPasswordMatches) throw new BadRequestException('OLD_PASSWORD_MISMATCH');
+      throw new BadRequestException('PASSWORD_OLD_NOT_MATCH');
     if (dto?.newPassword !== dto?.confirmNewPassword)
       throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
+    if (dto?.oldPassword === dto?.newPassword) {
+      throw new BadRequestException('PASSWORD_NEW_SAME_OLD');
+    }
 
     const passwordHash = await this.authService.hashData(dto.newPassword);
-    return await this.customerRepository.update(
-      { id: userExist.id },
-      { password: passwordHash, updatedBy: userExist.id },
-    );
+    userExist.password = passwordHash;
+    userExist.updatedBy = userExist.id;
+    const saveCustomer = await this.customerRepository.save(userExist);
+    delete saveCustomer.password;
+    delete saveCustomer.updatedBy;
+    delete saveCustomer.refreshToken;
+    delete saveCustomer.accessToken;
+
+    return saveCustomer;
   }
 
   async updateCustomer(id: string, dto: UpdateCustomerDto, userId: string) {

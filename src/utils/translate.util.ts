@@ -54,6 +54,17 @@ export const mappingTranslate = {
   PASSWORD_NEW_NOT_MATCH: 'Mật khẩu xác nhận không đúng.',
 
   // User 21-30
+  OLD_PASSWORD_REQUIRED: 'Mật khẩu cũ không được để trống',
+  NEW_PASSWORD_REQUIRED: 'Mật khẩu mới không được để trống',
+  CONFIRM_NEW_PASSWORD_REQUIRED: 'Mật khẩu xác nhận không được để trống',
+  OLD_PASSWORD_MUST_BE_STRING: 'Mật khẩu cũ phải là chuỗi ký tự',
+  NEW_PASSWORD_MUST_BE_STRING: 'Mật khẩu mới phải là chuỗi ký tự',
+  NEW_PASSWORD_MIN_6_CHARACTERS: 'Mật khẩu mới phải có ít nhất 6 ký tự',
+  CONFIRM_NEW_PASSWORD_MUST_BE_STRING: 'Mật khẩu xác nhận phải là chuỗi ký tự',
+  CONFIRM_NEW_PASSWORD_MIN_6_CHARACTERS:
+    'Mật khẩu xác nhận phải có ít nhất 6 ký tự',
+  PASSWORD_OLD_NOT_MATCH: 'Mật khẩu cũ không đúng.',
+  PASSWORD_NEW_SAME_OLD: 'Mật khẩu mới không được trùng với mật khẩu cũ.',
   UNAUTHORIZED: 'Không có quyền truy cập',
   Unauthorized: 'Không có quyền truy cập',
   INVALID_USERNAME_OR_PASSWORD: 'Tên đăng nhập hoặc mật khẩu không đúng.',

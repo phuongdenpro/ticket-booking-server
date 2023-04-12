@@ -1035,10 +1035,11 @@ export class OrderService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const orderExist = order || (await this.findOneOrderById(orderCode));
+    const orderExist = order || (await this.findOneOrderByCode(orderCode));
     if (!orderExist) {
       throw new BadRequestException('ORDER_NOT_FOUND');
     }
+
     switch (orderExist.status) {
       case OrderStatusEnum.CANCEL:
         throw new BadRequestException('ORDER_IS_CANCELLED');
@@ -1067,7 +1068,8 @@ export class OrderService {
       orderRefund.createdBy = admin.id;
     }
     orderRefund.status = OrderRefundStatusEnum.PENDING;
-
+    console.log(orderExist.promotionHistories);
+    throw new BadRequestException('TEST');
     const createOrderRefund = await this.orderRefundRepository.save(
       orderRefund,
     );
