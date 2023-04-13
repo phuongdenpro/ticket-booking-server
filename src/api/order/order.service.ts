@@ -20,6 +20,7 @@ import {
   FilterAllDto,
   CreateOrderDetailDto,
   FilterBillHistoryDto,
+  FilterBillAvailableDto,
 } from './dto';
 import {
   BadRequestException,
@@ -423,34 +424,36 @@ export class OrderService {
       .addOrderBy('q.finalTotal', SortEnum.ASC)
       .addOrderBy('q.code', SortEnum.ASC);
 
-    const currentDate = moment().toDate();
-    if (
-      isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED ||
-      isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED
-    ) {
-      const subQuery = this.orderRepository.createQueryBuilder('q2');
-      subQuery
-        .leftJoinAndSelect('q2.customer', 'c2')
-        .leftJoinAndSelect('q2.orderDetails', 'od2')
-        .leftJoinAndSelect('od2.ticketDetail', 'td2')
-        .leftJoinAndSelect('td2.ticket', 't2')
-        .leftJoinAndSelect('t2.tripDetail', 'trd2')
-        .where('c2.id = :customerId', { customerId: userId });
-      console.log(currentDate);
-      console.log(isDeparted);
-      if (isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED) {
-        subQuery.andWhere('trd2.departureTime <= :currentDate', {
-          currentDate,
-        });
-      } else if (isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED) {
-        subQuery.andWhere('trd2.departureTime > :currentDate', { currentDate });
-      }
-      subQuery.select('q2.id');
+    if (status[0] === OrderStatusEnum.PAID && status.length === 1) {
+      const currentDate = moment().toDate();
+      if (
+        isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED ||
+        isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED
+      ) {
+        const subQuery = this.orderRepository.createQueryBuilder('q2');
+        subQuery
+          .leftJoinAndSelect('q2.customer', 'c2')
+          .leftJoinAndSelect('q2.orderDetails', 'od2')
+          .leftJoinAndSelect('od2.ticketDetail', 'td2')
+          .leftJoinAndSelect('td2.ticket', 't2')
+          .leftJoinAndSelect('t2.tripDetail', 'trd2')
+          .where('c2.id = :customerId', { customerId: userId });
+        if (isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED) {
+          subQuery.andWhere('trd2.departureTime <= :currentDate', {
+            currentDate,
+          });
+        } else if (isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED) {
+          subQuery.andWhere('trd2.departureTime > :currentDate', {
+            currentDate,
+          });
+        }
+        subQuery.select('q2.id');
 
-      query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
-        currentDate,
-        customerId: userId,
-      });
+        query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
+          currentDate,
+          customerId: userId,
+        });
+      }
     }
 
     const dataResult = await query
@@ -461,7 +464,7 @@ export class OrderService {
       .leftJoinAndSelect('td.seat', 'se')
       .leftJoinAndSelect('se.vehicle', 'vh')
       .leftJoinAndSelect('td.ticket', 't2')
-      .leftJoinAndSelect('t2.tripDetail', 'trd2') 
+      .leftJoinAndSelect('t2.tripDetail', 'trd2')
       .leftJoinAndSelect('trd2.trip', 'trip')
       .leftJoinAndSelect('trip.fromStation', 'from')
       .leftJoinAndSelect('trip.toStation', 'to')
@@ -563,22 +566,15 @@ export class OrderService {
   }
 
   async findAllBillAvailableForCustomer(
-    dto: FilterBillHistoryDto,
+    dto: FilterBillAvailableDto,
     userId: string,
     pagination?: Pagination,
   ) {
-    const { keywords, status, sort, startDate, endDate } = dto;
+    const { keywords, sort, startDate, endDate } = dto;
     const filterDto = new FilterAllDto();
     filterDto.keywords = keywords;
     const isDeparted = this.BILL_HISTORY_TYPE_NOT_DEPARTED;
-    if (
-      status === OrderStatusEnum.PAID ||
-      status === OrderStatusEnum.RETURNED
-    ) {
-      filterDto.status = [status];
-    } else {
-      filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
-    }
+    filterDto.status = [OrderStatusEnum.PAID];
     filterDto.sort = sort;
     filterDto.startDate = startDate;
     filterDto.endDate = endDate;

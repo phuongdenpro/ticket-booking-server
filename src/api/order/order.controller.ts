@@ -1,5 +1,6 @@
 import {
   CreateOrderDto,
+  FilterBillAvailableDto,
   FilterBillDto,
   FilterBillHistoryDto,
   FilterOrderDto,
@@ -120,7 +121,7 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async findAllBillAvailableForCustomer(
-    @Query() dto: FilterBillHistoryDto,
+    @Query() dto: FilterBillAvailableDto,
     @CurrentUser() user,
     @GetPagination() pagination?: Pagination,
   ) {

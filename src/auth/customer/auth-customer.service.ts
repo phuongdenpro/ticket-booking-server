@@ -45,7 +45,7 @@ export class AuthCustomerService {
       const passwordHashed = await this.authService.hashData(dto.password);
       const ward = await this.dataSource.getRepository(Ward).findOne({
         where: { code: wardCode ? wardCode : 0 },
-        relations: ['district', 'district.province'],
+        relations: { district: { province: true } },
       });
       if (!ward) {
         throw new BadRequestException('WARD_NOT_FOUND');
@@ -100,22 +100,33 @@ export class AuthCustomerService {
 
   async login(dto: CustomerLoginDto) {
     const { email, phone, password } = dto;
-    const userExist = await this.customerService.findOneByEmail(email, {
+    const userEmailExist = await this.customerService.findOneByEmail(email, {
       select: {
         id: true,
         password: true,
       },
     });
-    if (!userExist) {
+    const userPhoneExist = await this.customerService.findOneByPhone(phone, {
+      select: {
+        id: true,
+        password: true,
+      },
+    });
+    if (userEmailExist) {
+      if (!userEmailExist?.password) {
+        throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+      }
+    } else if (userPhoneExist) {
+      if (!userPhoneExist?.password) {
+        throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+      }
+    } else {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
-    if (!userExist?.password) {
-      throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
-    }
-
+    const user = userEmailExist || userPhoneExist;
     const isPasswordMatches = await this.authService.comparePassword(
       password,
-      userExist?.password,
+      user?.password,
     );
     if (!isPasswordMatches) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
@@ -126,11 +137,11 @@ export class AuthCustomerService {
       await queryRunner.startTransaction();
 
       const tokens = await this.authService.createTokens(
-        userExist,
+        user,
         RoleEnum.CUSTOMER,
       );
 
-      await this.updateUserCredentialByUserId(userExist.id, {
+      await this.updateUserCredentialByUserId(user.id, {
         refreshToken: tokens.refresh_token,
         accessToken: tokens.access_token,
         lastLogin: new Date(),
