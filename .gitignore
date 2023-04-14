@@ -1,4 +1,4 @@
-.env
+**/.env
 docker-compose.yaml
 
 # compiled output
@@ -36,9 +36,8 @@ lerna-debug.log*
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-.env.local
+**/.env.local
 
 .vercel
 yarn.lock
 package-lock.json
-.env.*
