@@ -6,3 +6,5 @@ export * from './message.util';
 export * from './regex.util';
 export * from './translate.util';
 export * from './generation-code.util';
+export * from './mailer.util';
+export * from './templateHtml.util';

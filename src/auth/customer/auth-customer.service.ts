@@ -9,10 +9,14 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { GenderEnum, RoleEnum, UserStatusEnum } from '../../enums';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
-import { CustomerLoginDto, CustomerRegisterDto } from './dto';
+import { CustomerLoginDto, CustomerRegisterDto, SendOtpDto } from './dto';
+import * as moment from 'moment';
+import { ConfigService } from '@nestjs/config';
+moment.locale('vi');
 
 @Injectable()
 export class AuthCustomerService {
+  private configService = new ConfigService();
   constructor(
     @InjectRepository(Customer) private userRepository: Repository<Customer>,
     private authService: AuthService,
@@ -25,20 +29,35 @@ export class AuthCustomerService {
   }
 
   async register(dto: CustomerRegisterDto) {
-    const { email, fullName, gender, birthday, phone, wardCode, address } = dto;
+    const {
+      email,
+      fullName,
+      gender,
+      birthday,
+      phone,
+      wardCode,
+      address,
+      isOtp,
+    } = dto;
     if (email) {
       const userEmailExist = await this.customerService.findOneByEmail(email);
       if (userEmailExist) {
         throw new BadRequestException('EMAIL_ALREADY_EXIST');
       }
-    }
-
-    const userPhoneExist = await this.customerService.findOneByPhone(phone);
-    if (userPhoneExist) {
-      throw new BadRequestException('PHONE_ALREADY_EXIST');
+    } else if (phone) {
+      const userPhoneExist = await this.customerService.findOneByPhone(phone);
+      if (userPhoneExist) {
+        throw new BadRequestException('PHONE_ALREADY_EXIST');
+      }
+    } else {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
     }
 
     const queryRunner = await this.dataSource.createQueryRunner();
+    let saveUser: Customer;
+    const otpCode = Math.floor(100000 + Math.random() * 900000) + '';
+    const otpExpiredTime = this.configService.get('OTP_EXPIRE_MINUTE');
+    const otpExpired = moment().add(otpExpiredTime, 'minutes').toDate();
     try {
       await queryRunner.connect();
       await queryRunner.startTransaction();
@@ -78,9 +97,12 @@ export class AuthCustomerService {
         user.birthday = new Date('01-01-1970');
       }
       user.status = UserStatusEnum.INACTIVATE;
+      user.otpCode = otpCode;
+      user.otpExpired = otpExpired;
+
       await queryRunner.commitTransaction();
       // save and select return fields
-      const saveUser = await this.userRepository.save(user);
+      saveUser = await this.userRepository.save(user);
       delete saveUser.createdAt;
       delete saveUser.updatedAt;
       delete saveUser.deletedAt;
@@ -88,14 +110,21 @@ export class AuthCustomerService {
       delete saveUser.password;
       delete saveUser.refreshToken;
       delete saveUser.accessToken;
-
-      return saveUser;
     } catch (err) {
       await queryRunner.rollbackTransaction();
       return err;
     } finally {
       await queryRunner.release();
     }
+    if (isOtp) {
+      if (email) {
+        await this.authService.sendEmailCodeOtp(email, otpCode, otpExpiredTime);
+      } else {
+        await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      }
+    }
+
+    return saveUser;
   }
 
   async login(dto: CustomerLoginDto) {
@@ -182,5 +211,44 @@ export class AuthCustomerService {
     });
 
     return tokens;
+  }
+
+  async sendOtp(dto: SendOtpDto) {
+    const { email, phone } = dto;
+    let customer: Customer;
+    if (email) {
+      customer = await this.customerService.findOneByEmail(email);
+    } else if (phone) {
+      customer = await this.customerService.findOneByPhone(phone);
+    } else {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
+    if (!customer) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    const otpCode = Math.floor(100000 + Math.random() * 900000) + '';
+    const otpExpiredTime = this.configService.get('OTP_EXPIRE_MINUTE');
+    const otpExpired = moment().add(otpExpiredTime, 'minutes').toDate();
+
+    const saveCustomer = await this.customerService.updateOtpCustomer(
+      customer.id,
+      otpCode,
+      otpExpired,
+    );
+    if (!saveCustomer) {
+      throw new BadRequestException('SEND_OTP_FAILED');
+    }
+    if (email) {
+      await this.authService.sendEmailCodeOtp(email, otpCode, otpExpiredTime);
+    } else {
+      await this.authService.sendPhoneCodeOtp(phone, otpCode);
+    }
+
+    return {
+      customer: {
+        id: customer.id,
+      },
+      message: 'Gửi mã OTP thành công',
+    };
   }
 }

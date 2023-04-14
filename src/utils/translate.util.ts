@@ -8,6 +8,11 @@ export const mappingTranslate = {
   TEST: 'Test',
 
   // base
+  USER_ALREADY_ACTIVED: 'Tài khoản đã được kích hoạt',
+  OTP_EXPIRED: 'Mã OTP đã hết hạn',
+  OTP_INVALID: 'Mã OTP không hợp lệ',
+  USERNAME_REQUIRED: 'Tên đăng nhập không được để trống',
+  OTP_REQUIRED: 'Mã OTP không được để trống',
   ID_OR_CODE_IS_REQUIRED: 'Id hoặc mã không được để trống',
   IDS_REQUIRE: 'Danh sách id không được để trống',
   CODES_IS_REQUIRED: 'Danh sách code không được để trống',
@@ -92,6 +97,9 @@ export const mappingTranslate = {
   GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
   GENDER_IS_ENUM:
     'Giới tính chỉ nhận 1 trong 3 giá trị sau: MALE, FEMALE, OTHER',
+  OTP_IS_STRING: 'Mã OTP phải là chuỗi ký tự',
+  OTP_IS_REQUIRED: 'Mã OTP không được để trống',
+  SEND_OTP_FAILED: 'Gửi mã OTP thất bại',
 
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',

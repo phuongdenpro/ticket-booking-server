@@ -1,12 +1,14 @@
-import { RoleEnum } from './../enums/roles.enum';
+import { RoleEnum } from './../enums';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 import { JwtPayload } from './interfaces';
-import { Customer } from '../database/entities/customer.entities';
-import { Staff } from '../database/entities/staff.entities';
+import { Customer, Staff } from '../database/entities';
+import { Twilio } from 'twilio';
+import nodemailer from 'nodemailer';
+import { templateHtml } from './../utils';
 
 @Injectable()
 export class AuthService {
@@ -110,5 +112,35 @@ export class AuthService {
       access_token: at,
       refresh_token: rt,
     };
+  }
+
+  async sendPhoneCodeOtp(phoneNumber: string, code: string) {
+    const accountSid = this.configService.get('TWILIO_ACCOUNT_SID');
+    const authToken = this.configService.get('TWILIO_AUTH_TOKEN');
+    const phoneNumberFrom = this.configService.get('TWILIO_PHONE_NUMBER');
+    const client = new Twilio(accountSid, authToken);
+
+    const message = `Mã OTP của bạn là: ${code}`;
+    const data = {
+      body: message,
+      from: phoneNumberFrom,
+      to: phoneNumber,
+    };
+    await client.messages.create(data).then((message) => message);
+  }
+
+  async sendEmailCodeOtp(email: string, code: string, otpExpireMinute) {
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: this.configService.get('EMAIL_USER'),
+        pass: this.configService.get('EMAIL_PASSWORD'),
+      },
+    });
+    await transporter.sendMail(
+      email,
+      'PD Bus - OTP xác nhận tài khoản',
+      templateHtml(code, otpExpireMinute),
+    );
   }
 }

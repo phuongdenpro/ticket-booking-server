@@ -52,6 +52,12 @@ export class Customer {
   @Column({ name: 'birthday', type: 'date', nullable: true })
   birthday?: Date;
 
+  @Column({ name: 'otp_code', type: 'varchar', length: 10, nullable: true })
+  otpCode: string;
+
+  @Column({ name: 'otp_expired', type: 'timestamp', nullable: true })
+  otpExpired: Date;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
 

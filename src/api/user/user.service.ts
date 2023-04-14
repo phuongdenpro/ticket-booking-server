@@ -9,7 +9,12 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { CustomerService } from '../customer/customer.service';
 import { Repository } from 'typeorm';
-import { UpdateCustomerDto, UserUpdatePasswordDto } from './dto';
+import {
+  CustomerConfirmAccountDto,
+  UpdateCustomerDto,
+  UserResetPasswordDto,
+  UserUpdatePasswordDto,
+} from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -79,5 +84,103 @@ export class UserService {
 
   async updateCustomer(id: string, dto: UpdateCustomerDto, userId: string) {
     return await this.customerService.updateCustomer(id, dto, userId);
+  }
+
+  async resetPassword(dto: UserResetPasswordDto) {
+    const { phone, email, otp, newPassword, confirmNewPassword } = dto;
+    if (!phone && !email) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
+    if (!otp) {
+      throw new BadRequestException('OTP_REQUIRED');
+    }
+    if (!newPassword) {
+      throw new BadRequestException('NEW_PASSWORD_REQUIRED');
+    }
+    if (!confirmNewPassword) {
+      throw new BadRequestException('CONFIRM_NEW_PASSWORD_REQUIRED');
+    }
+    let customer: Customer;
+    if (phone) {
+      customer = await this.customerService.findOneByPhone(phone);
+    } else if (email) {
+      customer = await this.customerService.findOneByEmail(email);
+    }
+    if (!customer) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    if (customer.status === UserStatusEnum.INACTIVATE) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    this.checkOTP(otp, customer.otpCode, customer.otpExpired);
+    if (newPassword !== confirmNewPassword)
+      throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
+    const passwordHash = await this.authService.hashData(newPassword);
+    customer.password = passwordHash;
+    customer.updatedBy = customer.id;
+    customer.otpCode = null;
+    customer.otpExpired = null;
+    customer.refreshToken = null;
+    customer.accessToken = null;
+    const saveCustomer = await this.customerRepository.save(customer);
+    delete saveCustomer.password;
+    delete saveCustomer.updatedBy;
+    delete saveCustomer.refreshToken;
+    delete saveCustomer.accessToken;
+
+    return saveCustomer;
+  }
+
+  async confirmAccount(dto: CustomerConfirmAccountDto) {
+    const { phone, email, otp } = dto;
+    if (!phone && !email) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
+    if (!otp) {
+      throw new BadRequestException('OTP_REQUIRED');
+    }
+    let customer: Customer;
+    if (phone) {
+      customer = await this.customerService.findOneByPhone(phone, {
+        where: { status: UserStatusEnum.INACTIVATE },
+      });
+    } else if (email) {
+      customer = await this.customerService.findOneByEmail(email, {
+        where: { status: UserStatusEnum.INACTIVATE },
+      });
+    }
+    if (!customer) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    if (customer.status === UserStatusEnum.ACTIVE) {
+      throw new BadRequestException('USER_ALREADY_ACTIVED');
+    }
+    this.checkOTP(otp, customer.otpCode, customer.otpExpired);
+    const saveCustomer = await this.customerService.updateActiveCustomer(
+      customer.id,
+    );
+
+    return {
+      customer: {
+        id: saveCustomer.id,
+      },
+      message: 'Kích hoạt tài khoản thành công',
+    };
+  }
+
+  private checkOTP(sendOTP, dbOTP, otpTime) {
+    if (!dbOTP) {
+      throw new BadRequestException('OTP_INVALID');
+    }
+
+    // check hết hạn otp
+    if (new Date() > otpTime) {
+      throw new BadRequestException('OTP_EXPIRED');
+    }
+
+    // nếu otp sai
+    if (sendOTP !== dbOTP) {
+      throw new BadRequestException('OTP_INVALID');
+    }
   }
 }

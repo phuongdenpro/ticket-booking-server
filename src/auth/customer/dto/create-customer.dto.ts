@@ -11,7 +11,6 @@ import {
   IsEmail,
   IsPhoneNumber,
   IsNumber,
-  Length,
 } from 'class-validator';
 
 export class CustomerRegisterDto {
@@ -70,4 +69,8 @@ export class CustomerRegisterDto {
   )
   @IsOptional()
   wardCode?: number;
+
+  @ApiPropertyOptional({ example: false })
+  @IsOptional()
+  isOtp: boolean;
 }

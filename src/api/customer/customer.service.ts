@@ -333,6 +333,29 @@ export class CustomerService {
     return saveCustomer;
   }
 
+  async updateOtpCustomer(id: string, otpCode: string, otpExpired: Date) {
+    const customer = await this.getCustomerById(id);
+    if (customer.status === UserStatusEnum.ACTIVE) {
+      throw new BadRequestException('USER_ALREADY_ACTIVE');
+    }
+    customer.otpCode = otpCode;
+    customer.otpExpired = otpExpired;
+    const saveCustomer = await this.customerRepository.save(customer);
+    return saveCustomer;
+  }
+
+  async updateActiveCustomer(id: string) {
+    const customer = await this.getCustomerById(id);
+    if (customer.status === UserStatusEnum.ACTIVE) {
+      throw new BadRequestException('USER_ALREADY_ACTIVE');
+    }
+    customer.status = UserStatusEnum.ACTIVE;
+    customer.otpCode = null;
+    customer.otpExpired = null;
+    const saveCustomer = await this.customerRepository.save(customer);
+    return saveCustomer;
+  }
+
   async createCustomerForAdmin(userId: string, dto: CreateCustomerForAdminDto) {
     const {
       email,

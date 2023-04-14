@@ -43,4 +43,10 @@ export class AuthCustomerController {
   async refreshTokens(@Body() dto: CustomerRefreshTokenDto) {
     return this.authCustomerService.refreshTokens(dto.refreshToken);
   }
+
+  @Post('send-otp')
+  @HttpCode(HttpStatus.OK)
+  async sendOtp(@Body() dto) {
+    return this.authCustomerService.refreshTokens(dto.refreshToken);
+  }
 }
