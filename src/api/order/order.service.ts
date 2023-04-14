@@ -95,35 +95,7 @@ export class OrderService {
     'q.finalTotal',
     'q.createdAt',
     'c.fullName',
-    
     's.fullName',
-    // 'od.id',
-    // 'od.total',
-
-    // 'td.code',
-    // 'td.status',
-
-    // 'se.code',
-    // 'se.name',
-    // 'se.floor',
-
-    // 'vh.name',
-    // 'vh.licensePlate',
-    // 't2.id',
-    // 't2.code',
-    // 't2.startDate',
-    // 't2.endDate',
-    // 'trd2.id',
-    // 'trd2.code',
-    // 'trd2.departureTime',
-    // 'trd2.expectedTime',
-    // 'trip.id',
-    // 'trip.code',
-    // 'trip.name',
-    // 'from.name',
-    // 'from.fullAddress',
-    // 'to.name',
-    // 'to.fullAddress',
   ];
 
   // order
@@ -435,15 +407,6 @@ export class OrderService {
     const dataResult = await query
       .leftJoinAndSelect('q.customer', 'c')
       .leftJoinAndSelect('q.staff', 's')
-      // .leftJoinAndSelect('q.orderDetails', 'od')
-      // .leftJoinAndSelect('od.ticketDetail', 'td')
-      // .leftJoinAndSelect('td.seat', 'se')
-      // .leftJoinAndSelect('se.vehicle', 'vh')
-      // .leftJoinAndSelect('td.ticket', 't2')
-      // .leftJoinAndSelect('t2.tripDetail', 'trd2')
-      // .leftJoinAndSelect('trd2.trip', 'trip')
-      // .leftJoinAndSelect('trip.fromStation', 'from')
-      // .leftJoinAndSelect('trip.toStation', 'to')
       .select(this.selectFieldsOrderWithQ)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10)
