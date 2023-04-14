@@ -94,60 +94,36 @@ export class OrderService {
     'q.total',
     'q.finalTotal',
     'q.createdAt',
-    'q.updatedAt',
-    'c.id',
-    'c.lastLogin',
-    'c.status',
-    'c.phone',
-    'c.email',
     'c.fullName',
-    'c.gender',
-    'c.address',
-    'c.fullAddress',
-    'c.note',
-    'c.birthday',
-    's.id',
-    's.isActive',
-    's.phone',
-    's.email',
+    
     's.fullName',
-    's.gender',
-    's.birthDay',
-    's.address',
-    'od.id',
-    'od.total',
-    'od.note',
-    'od.orderCode',
-    'od.createdBy',
-    'od.createdAt',
-    'td.id',
-    'td.code',
-    'td.status',
-    'td.note',
-    'td.createdAt',
-    'se.id',
-    'se.code',
-    'se.name',
-    'se.floor',
-    'vh.id',
-    'vh.code',
-    'vh.name',
-    'vh.licensePlate',
-    't2.id',
-    't2.code',
-    't2.startDate',
-    't2.endDate',
-    'trd2.id',
-    'trd2.code',
-    'trd2.departureTime',
-    'trd2.expectedTime',
-    'trip.id',
-    'trip.code',
-    'trip.name',
-    'from.name',
-    'from.fullAddress',
-    'to.name',
-    'to.fullAddress',
+    // 'od.id',
+    // 'od.total',
+
+    // 'td.code',
+    // 'td.status',
+
+    // 'se.code',
+    // 'se.name',
+    // 'se.floor',
+
+    // 'vh.name',
+    // 'vh.licensePlate',
+    // 't2.id',
+    // 't2.code',
+    // 't2.startDate',
+    // 't2.endDate',
+    // 'trd2.id',
+    // 'trd2.code',
+    // 'trd2.departureTime',
+    // 'trd2.expectedTime',
+    // 'trip.id',
+    // 'trip.code',
+    // 'trip.name',
+    // 'from.name',
+    // 'from.fullAddress',
+    // 'to.name',
+    // 'to.fullAddress',
   ];
 
   // order
@@ -459,15 +435,15 @@ export class OrderService {
     const dataResult = await query
       .leftJoinAndSelect('q.customer', 'c')
       .leftJoinAndSelect('q.staff', 's')
-      .leftJoinAndSelect('q.orderDetails', 'od')
-      .leftJoinAndSelect('od.ticketDetail', 'td')
-      .leftJoinAndSelect('td.seat', 'se')
-      .leftJoinAndSelect('se.vehicle', 'vh')
-      .leftJoinAndSelect('td.ticket', 't2')
-      .leftJoinAndSelect('t2.tripDetail', 'trd2')
-      .leftJoinAndSelect('trd2.trip', 'trip')
-      .leftJoinAndSelect('trip.fromStation', 'from')
-      .leftJoinAndSelect('trip.toStation', 'to')
+      // .leftJoinAndSelect('q.orderDetails', 'od')
+      // .leftJoinAndSelect('od.ticketDetail', 'td')
+      // .leftJoinAndSelect('td.seat', 'se')
+      // .leftJoinAndSelect('se.vehicle', 'vh')
+      // .leftJoinAndSelect('td.ticket', 't2')
+      // .leftJoinAndSelect('t2.tripDetail', 'trd2')
+      // .leftJoinAndSelect('trd2.trip', 'trip')
+      // .leftJoinAndSelect('trip.fromStation', 'from')
+      // .leftJoinAndSelect('trip.toStation', 'to')
       .select(this.selectFieldsOrderWithQ)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10)
@@ -791,6 +767,8 @@ export class OrderService {
   ) {
     const admin = await this.adminService.findOneBydId(userId);
     const customer = await this.customerService.findOneById(userId);
+    console.log('vào');
+
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
