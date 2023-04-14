@@ -52,6 +52,10 @@ import { PromotionHistoryService } from '../promotion-history/promotion-history.
 import { CreatePromotionHistoryDto } from '../promotion-history/dto';
 import { PaymentDto } from '../booking/dto';
 import * as moment from 'moment';
+import {
+  FilterOrderRefundDto,
+  UpdateOrderRefundDto,
+} from '../order-refund/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -96,6 +100,21 @@ export class OrderService {
     'q.createdAt',
     'c.fullName',
     's.fullName',
+  ];
+
+  private selectFieldsOrderRefundWithQ = [
+    'q.id',
+    'q.code',
+    'q.note',
+    'q.status',
+    'q.total',
+    'q.orderCode',
+    'q.createdAt',
+    'ord.id',
+    'ord.total',
+    'ord.note',
+    'ord.orderRefundCode',
+    'ord.createdAt',
   ];
 
   // order
@@ -259,6 +278,14 @@ export class OrderService {
     return {
       dataResult: Object.keys(OrderStatusEnum).map(
         (key) => OrderStatusEnum[key],
+      ),
+    };
+  }
+
+  async getOrderRefundStatus() {
+    return {
+      dataResult: Object.keys(OrderRefundStatusEnum).map(
+        (key) => OrderRefundStatusEnum[key],
       ),
     };
   }
@@ -1112,6 +1139,84 @@ export class OrderService {
     return await this.findOneOrderRefund(options);
   }
 
+  async getOrderRefundByCode(code: string, options?: any) {
+    const orderRefund = await this.findOneOrderRefundByCode(code, options);
+    if (!orderRefund) {
+      throw new NotFoundException('ORDER_REFUND_NOT_FOUND');
+    }
+    return orderRefund;
+  }
+
+  async findAllOrderRefund(
+    dto: FilterOrderRefundDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const { keywords, status, startDate, endDate, minTotal, maxTotal, sort } =
+      dto;
+    const admin = await this.adminService.findOneBydId(userId);
+    const customer = await this.customerService.findOneById(userId);
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const query = this.orderRefundRepository.createQueryBuilder('q');
+
+    if (keywords) {
+      const subQuery = this.orderRefundRepository.createQueryBuilder('q1');
+      subQuery
+        .where('q1.code ILIKE :code', { code: `%${keywords}%` })
+        .orWhere('q1.note ILIKE :note', { note: `%${keywords}%` })
+        .orWhere('q1.orderCode ILIKE :orderCode', {
+          orderCode: `%${keywords}%`,
+        })
+        .select('q1.id');
+      query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
+        code: `%${keywords}%`,
+        note: `%${keywords}%`,
+        orderCode: `%${keywords}%`,
+      });
+    }
+    if (status) {
+      query.andWhere('q.status = :status', { status });
+    }
+    if (startDate) {
+      query.andWhere('q.createdAt >= :startDate', { startDate });
+    }
+    if (endDate) {
+      query.andWhere('q.createdAt <= :endDate', { endDate });
+    }
+    if (minTotal) {
+      query.andWhere('q.total >= :minTotal', { minTotal });
+    }
+    if (maxTotal) {
+      query.andWhere('q.total <= :maxTotal', { maxTotal });
+    }
+    if (customer) {
+      query.andWhere('q.createdBy = :customerId', { customerId: userId });
+    }
+    query
+      .orderBy('q.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('q.code', SortEnum.ASC);
+
+    const dataResult = await query
+      .leftJoinAndSelect('q.orderRefundDetails', 'ord')
+      .select(this.selectFieldsOrderRefundWithQ)
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10)
+      .getMany();
+
+    const total = await query.getCount();
+
+    return { dataResult, total, pagination };
+  }
+
   async createOrderRefund(orderCode: string, userId: string, order?: Order) {
     const admin = await this.adminService.findOneBydId(userId);
     const customer = await this.customerService.findOneById(userId);
@@ -1227,5 +1332,45 @@ export class OrderService {
       await queryOrderRD.release();
     }
     return createOrderRefund;
+  }
+
+  async updateOrderRefundByIdOrCode(
+    dto: UpdateOrderRefundDto,
+    userId: string,
+    code?: string,
+    id?: string,
+  ) {
+    const { note, status } = dto;
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    const admin = await this.adminService.findOneBydId(userId);
+    if (!admin.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    let orderRefund: OrderRefund;
+    if (code) {
+      orderRefund = await this.findOneOrderRefundByCode(code);
+    } else if (id) {
+      orderRefund = await this.findOneOrderRefundById(id);
+    }
+    if (!orderRefund) {
+      throw new BadRequestException('ORDER_REFUND_NOT_FOUND');
+    }
+    if (note) {
+      orderRefund.note = note;
+    }
+    if (status) {
+      orderRefund.status = status;
+    }
+    orderRefund.updatedBy = admin.id;
+    const updateOrderRefund = await this.orderRefundRepository.save(
+      orderRefund,
+    );
+    if (!updateOrderRefund) {
+      throw new BadRequestException('UPDATE_ORDER_REFUND_FAILED');
+    }
+    return updateOrderRefund;
   }
 }
