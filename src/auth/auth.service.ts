@@ -129,7 +129,7 @@ export class AuthService {
     await client.messages.create(data).then((message) => message);
   }
 
-  async sendEmailCodeOtp(email: string, code: string, otpExpireMinute) {
+  async sendEmailCodeOtp(email: string, otp: string, otpExpireMinute) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -140,7 +140,7 @@ export class AuthService {
     await transporter.sendMail(
       email,
       'PD Bus - OTP xác nhận tài khoản',
-      templateHtml(code, otpExpireMinute),
+      templateHtml(otp, otpExpireMinute),
     );
   }
 }

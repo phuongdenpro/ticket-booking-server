@@ -85,7 +85,7 @@ export const mappingTranslate = {
   PASSWORD_IS_MIN_LENGTH_6: 'Mật khẩu phải có ít nhất 6 ký tự',
   PASSWORD_IS_MAX_LENGTH_255: 'Mật khẩu có tối đa 255 ký tự',
   FULL_NAME_IS_REQUIRED: 'Họ và tên không được để trống',
-  FULL_NAME_IS_STRING: 'Họ và tên phải là chuỗi ký tự',
+  FULL_NAME_MUST_BE_STRING: 'Họ và tên phải là chuỗi ký tự',
   FULL_NAME_IS_MIN_LENGTH_1: 'Họ và tên phải có ít nhất 1 ký tự',
   FULL_NAME_IS_MAX_LENGTH_255: 'Họ và tên có tối đa 255 ký tự',
   BIRTHDAY_IS_REQUIRED: 'Ngày sinh không được để trống',
@@ -164,7 +164,7 @@ export const mappingTranslate = {
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
   WARD_ID_IS_REQUIRED: 'Id phường/xã không được để trống',
   WARD_ID_IS_NUMBER: 'Id phường/xã phải là số',
-  WARD_CODE_IS_NUMBER: 'Mã phường/xã phải là số',
+  WARD_CODE_MUST_BE_NUMBER: 'Mã phường/xã phải là số',
   WARD_TYPE_IS_STRING: 'Loại phường/xã phải là chuỗi ký tự',
   WARD_TYPE_BETWEEN_1_50_CHARACTERS: 'loại phường/xã phải từ 1 đến 50 ký tự',
   WARD_TYPE_IS_REQUIRED: 'loại phường/xã không được để trống',
@@ -178,7 +178,7 @@ export const mappingTranslate = {
   TO_STATION_NOT_FOUND: 'Không tìm thấy bến xe đến',
   STATION_NOT_FOUND: 'Không tìm thấy bến xe',
   ADDRESS_IS_REQUIRED: 'Địa chỉ không được để trống',
-  ADDRESS_IS_STRING: 'Địa chỉ phải là chuỗi ký tự',
+  ADDRESS_MUST_BE_STRING: 'Địa chỉ phải là chuỗi ký tự',
   ADDRESS_BETWEEN_1_255_CHARACTERS: 'Địa chỉ phải từ 1 đến 255 ký tự',
 
   // seat

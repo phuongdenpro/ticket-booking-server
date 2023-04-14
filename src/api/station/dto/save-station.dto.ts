@@ -21,7 +21,7 @@ export class SaveStationDto {
     example: 'Demo',
   })
   @IsNotEmpty({ message: 'ADDRESS_IS_REQUIRED' })
-  @IsString({ message: 'ADDRESS_IS_STRING' })
+  @IsString({ message: 'ADDRESS_MUST_BE_STRING' })
   @Length(1, 255, { message: 'ADDRESS_BETWEEN_1_255_CHARACTERS' })
   address: string;
 
@@ -37,7 +37,7 @@ export class SaveStationDto {
   @IsNotEmpty({ message: 'WARD_ID_IS_REQUIRED' })
   @IsNumber(
     { allowInfinity: false, allowNaN: false },
-    { message: 'WARD_CODE_IS_NUMBER' },
+    { message: 'WARD_CODE_MUST_BE_NUMBER' },
   )
   wardCode: number;
 

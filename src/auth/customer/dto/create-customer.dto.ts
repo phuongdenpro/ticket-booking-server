@@ -37,7 +37,7 @@ export class CustomerRegisterDto {
 
   @ApiProperty({ example: 'superman' })
   @IsNotEmpty({ message: 'FULL_NAME_IS_REQUIRED' })
-  @IsString({ message: 'FULL_NAME_IS_STRING' })
+  @IsString({ message: 'FULL_NAME_MUST_BE_STRING' })
   @MinLength(1, { message: 'FULL_NAME_IS_MIN_LENGTH_1' })
   @MaxLength(255, { message: 'FULL_NAME_IS_MAX_LENGTH_255' })
   fullName: string;
@@ -58,14 +58,14 @@ export class CustomerRegisterDto {
   @ApiPropertyOptional({
     example: 'Demo',
   })
-  @IsString({ message: 'ADDRESS_IS_STRING' })
+  @IsString({ message: 'ADDRESS_MUST_BE_STRING' })
   @IsOptional()
   address: string;
 
   @ApiPropertyOptional({ example: 26914 })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'WARD_CODE_IS_NUMBER' },
+    { message: 'WARD_CODE_MUST_BE_NUMBER' },
   )
   @IsOptional()
   wardCode?: number;

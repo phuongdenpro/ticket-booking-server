@@ -2,6 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { GenderEnum } from '../../../enums';
 import {
   IsDate,
+  IsEmail,
   IsEnum,
   IsNumber,
   IsOptional,
@@ -10,7 +11,7 @@ import {
 
 export class UpdateCustomerDto {
   @ApiPropertyOptional({ example: 'superman' })
-  @IsString({ message: 'FULL_NAME_IS_STRING' })
+  @IsString({ message: 'FULL_NAME_MUST_BE_STRING' })
   @IsOptional()
   fullName?: string;
 
@@ -20,11 +21,11 @@ export class UpdateCustomerDto {
   // @IsOptional()
   // phone?: string;
 
-  // @ApiPropertyOptional({ example: 'superman@gmail.com' })
-  // @IsString({ message: 'EMAIL_IS_STRING' })
-  // @IsEmail({}, { message: 'EMAIL_INVALID' })
-  // @IsOptional()
-  // email?: string;
+  @ApiPropertyOptional({ example: 'superman@gmail.com' })
+  @IsString({ message: 'EMAIL_IS_STRING' })
+  @IsEmail({}, { message: 'EMAIL_INVALID' })
+  @IsOptional()
+  email?: string;
 
   @ApiPropertyOptional({
     example: '',
@@ -38,7 +39,7 @@ export class UpdateCustomerDto {
   gender?: GenderEnum;
 
   @ApiPropertyOptional({ example: 'quang trung' })
-  @IsString({ message: 'ADDRESS_IS_STRING' })
+  @IsString({ message: 'ADDRESS_MUST_BE_STRING' })
   @IsOptional()
   address?: string;
 
@@ -58,8 +59,13 @@ export class UpdateCustomerDto {
   @ApiPropertyOptional({ example: 27007 })
   @IsNumber(
     { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 0 },
-    { message: 'WARD_CODE_IS_NUMBER' },
+    { message: 'WARD_CODE_MUST_BE_NUMBER' },
   )
   @IsOptional()
   wardCode?: number;
+
+  @ApiPropertyOptional({ example: '123456' })
+  @IsString({ message: 'OTP_IS_STRING' })
+  @IsOptional()
+  otp: string;
 }
