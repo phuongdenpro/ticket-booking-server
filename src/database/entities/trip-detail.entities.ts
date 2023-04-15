@@ -1,4 +1,4 @@
-import { Vehicle, Trip, Province, Ticket } from '.';
+import { Vehicle, Trip, Province, Ticket, OrderRefundDetail } from '.';
 import {
   Column,
   Entity,
@@ -67,4 +67,11 @@ export class TripDetail {
 
   @OneToMany(() => Ticket, (ticket) => ticket.tripDetail)
   tickets: Ticket[];
+
+  @ManyToOne(
+    () => OrderRefundDetail,
+    (orderRefundDetail) => orderRefundDetail.ticketDetail,
+  )
+  @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
+  orderRefundDetail: OrderRefundDetail;
 }

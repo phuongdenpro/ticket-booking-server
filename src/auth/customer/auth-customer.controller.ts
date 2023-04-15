@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards';
-import { CustomerLoginDto, CustomerRefreshTokenDto } from './dto';
+import { CustomerLoginDto, CustomerRefreshTokenDto, SendOtpDto } from './dto';
 import { AuthCustomerService } from './auth-customer.service';
 
 @Controller('auth/user')
@@ -42,5 +42,11 @@ export class AuthCustomerController {
   @HttpCode(HttpStatus.OK)
   async refreshTokens(@Body() dto: CustomerRefreshTokenDto) {
     return this.authCustomerService.refreshTokens(dto.refreshToken);
+  }
+
+  @Post('send-otp')
+  @HttpCode(HttpStatus.OK)
+  async sendOtp(@Body() dto: SendOtpDto) {
+    return this.authCustomerService.sendOtp(dto);
   }
 }

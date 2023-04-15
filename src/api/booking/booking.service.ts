@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateBookingDto } from './dto';
+import { CreateBookingDto, PaymentDto } from './dto';
 import { CreateOrderDto } from '../order/dto';
 import { OrderService } from '../order/order.service';
 
@@ -27,5 +27,7 @@ export class BookingService {
     return order;
   }
 
-  // async payment() {}
+  async payment(dto: PaymentDto, userId: string) {
+    return await this.orderService.payment(dto, userId);
+  }
 }

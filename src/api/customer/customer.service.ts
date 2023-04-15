@@ -84,6 +84,22 @@ export class CustomerService {
     },
   };
 
+  private checkOTP(sendOTP, dbOTP, otpTime) {
+    if (!dbOTP) {
+      throw new BadRequestException('OTP_INVALID');
+    }
+
+    // check hết hạn otp
+    if (new Date() > otpTime) {
+      throw new BadRequestException('OTP_EXPIRED');
+    }
+
+    // nếu otp sai
+    if (sendOTP !== dbOTP) {
+      throw new BadRequestException('OTP_INVALID');
+    }
+  }
+
   async getCustomerStatus() {
     return Object.keys(UserStatusEnum).map((key) => UserStatusEnum[key]);
   }
@@ -91,7 +107,6 @@ export class CustomerService {
   async findOneCustomer(options: any) {
     return await this.customerRepository.findOne({
       where: { ...options?.where },
-
       select: {
         id: true,
         lastLogin: true,
@@ -106,6 +121,29 @@ export class CustomerService {
         birthday: true,
         createdAt: true,
         updatedBy: true,
+        ward: {
+          id: true,
+          name: true,
+          type: true,
+          codename: true,
+          code: true,
+          districtCode: true,
+          district: {
+            id: true,
+            name: true,
+            type: true,
+            codename: true,
+            code: true,
+            provinceCode: true,
+            province: {
+              id: true,
+              name: true,
+              type: true,
+              codename: true,
+              code: true,
+            },
+          },
+        },
         ...options?.select,
       },
       order: {
@@ -114,6 +152,7 @@ export class CustomerService {
       },
       relations: {
         customerGroup: true,
+        ward: { district: { province: true } },
         ...options?.relations,
       },
       ...options?.other,
@@ -251,13 +290,30 @@ export class CustomerService {
     userId?: string,
     adminId?: string,
   ) {
-    const { fullName, address, gender, birthDate, wardId, wardCode } = dto;
+    const {
+      fullName,
+      email,
+      address,
+      gender,
+      birthDate,
+      wardId,
+      wardCode,
+      otp,
+    } = dto;
+    if (!userId && !adminId) {
+      throw new NotFoundException('USER_NOT_FOUND');
+    }
     const admin = await this.dataSource.getRepository(Staff).findOne({
       where: {
-        id: adminId || '',
+        id: adminId,
       },
     });
-    const customer = await this.findOneById(userId || '');
+    const customer = await this.findOneById(userId, {
+      select: {
+        otpCode: true,
+        otpExpired: true,
+      },
+    });
     if (!customer && !admin) {
       throw new NotFoundException('USER_NOT_FOUND');
     }
@@ -269,12 +325,7 @@ export class CustomerService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const oldCustomer = await this.findOneById(id, {
-      select: {
-        ...this.selectFieldsAddress.select,
-      },
-      relations: this.selectFieldsAddress.relations,
-    });
+    const oldCustomer = await this.findOneById(id);
     if (fullName) {
       oldCustomer.fullName = fullName;
     }
@@ -324,12 +375,48 @@ export class CustomerService {
     const district = oldCustomer.ward.district;
     const province = district.province;
     oldCustomer.fullAddress = `${oldCustomer.address}, ${oldCustomer.ward.name}, ${district.name}, ${province.name}`;
+    if (email) {
+      if (oldCustomer.email !== email) {
+        const userExist = await this.findOneByEmail(email);
+        if (userExist) {
+          throw new BadRequestException('EMAIL_ALREADY_EXIST');
+        }
+        this.checkOTP(otp, customer.otpCode, customer.otpExpired);
+        oldCustomer.email = email;
+      }
+    }
+
+    if (customer) {
+      customer.updatedBy = userId;
+    } else if (admin) {
+      oldCustomer.updatedBy = adminId;
+    }
 
     const saveCustomer = await this.customerRepository.save(oldCustomer);
     delete oldCustomer.ward.district;
     delete district.province;
     saveCustomer['district'] = district;
     saveCustomer['province'] = province;
+    return saveCustomer;
+  }
+
+  async updateOtpCustomer(id: string, otpCode: string, otpExpired: Date) {
+    const customer = await this.getCustomerById(id);
+    customer.otpCode = otpCode;
+    customer.otpExpired = otpExpired;
+    const saveCustomer = await this.customerRepository.save(customer);
+    return saveCustomer;
+  }
+
+  async updateActiveCustomer(id: string) {
+    const customer = await this.getCustomerById(id);
+    if (customer.status === UserStatusEnum.ACTIVE) {
+      throw new BadRequestException('USER_ALREADY_ACTIVE');
+    }
+    customer.status = UserStatusEnum.ACTIVE;
+    customer.otpCode = null;
+    customer.otpExpired = null;
+    const saveCustomer = await this.customerRepository.save(customer);
     return saveCustomer;
   }
 

@@ -29,6 +29,14 @@ export class PriceDetail {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
+  @Column({
+    name: 'price_list_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  priceListCode: string;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 

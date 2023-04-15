@@ -48,6 +48,7 @@ export class PriceListService {
     'q.price',
     'q.seatType',
     'q.note',
+    'q.priceListCode',
     'q.createdBy',
     'q.updatedBy',
     'q.createdAt',
@@ -91,6 +92,36 @@ export class PriceListService {
           description: `Bảng giá có mã ${code} đã tồn tại trong khoảng thời gian này`,
         },
       );
+    }
+  }
+
+  private async validOverlappingPriceDetail(
+    date: Date,
+    seatType: string,
+    tripCode: string,
+  ) {
+    const priceDetail = await this.findOnePriceDetail({
+      where: {
+        seatType,
+        priceList: {
+          startDate: LessThanOrEqual(date),
+          endDate: MoreThanOrEqual(date),
+          status: ActiveStatusEnum.ACTIVE,
+        },
+        trip: {
+          code: tripCode,
+        },
+      },
+      relations: {
+        priceList: true,
+        trip: true,
+      },
+    });
+    if (priceDetail) {
+      const priceList: PriceList = priceDetail.priceList;
+      throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
+        description: `Loại ghế ${seatType} của tuyến có mã ${tripCode} đã tồn tại trong bảng giá đang hoạt động khác có mã ${priceList?.code}`,
+      });
     }
   }
 
@@ -145,7 +176,7 @@ export class PriceListService {
     return priceList;
   }
 
-  async getTripStatus() {
+  async getPriceListStatus() {
     return {
       dataResult: Object.keys(ActiveStatusEnum).map(
         (key) => ActiveStatusEnum[key],
@@ -215,8 +246,8 @@ export class PriceListService {
     }
     priceList.endDate = newEndDate;
 
-    await this.validOverlappingPriceList(newStartDate);
-    await this.validOverlappingPriceList(newEndDate);
+    // await this.validOverlappingPriceDetail(newStartDate);
+    // await this.validOverlappingPriceDetail(newEndDate);
 
     const savePriceList = await this.priceListRepository.save(priceList);
     delete savePriceList.deletedAt;
@@ -349,8 +380,26 @@ export class PriceListService {
     switch (status) {
       case ActiveStatusEnum.ACTIVE:
         priceList.status = status;
-        await this.validOverlappingPriceList(startDate);
-        await this.validOverlappingPriceList(endDate);
+        const priceDetails = await this.priceDetailRepository.find({
+          where: {
+            priceListCode: priceList.code,
+          },
+          relations: { trip: true },
+        });
+        if (priceDetails && priceDetails.length > 0) {
+          const priceDetailsExist = await priceDetails.map(
+            async (priceDetail) => {
+              return await this.validOverlappingPriceDetail(
+                priceList.startDate,
+                priceDetail.seatType,
+                priceDetail.trip.code,
+              );
+            },
+          );
+          await Promise.all(priceDetailsExist);
+        }
+        // await this.validOverlappingPriceList(startDate);
+        // await this.validOverlappingPriceList(endDate);
         break;
       case ActiveStatusEnum.INACTIVE:
         priceList.status = status;
@@ -607,7 +656,7 @@ export class PriceListService {
     if (priceListCode) {
       query
         .leftJoinAndSelect('q.priceList', 'p')
-        .andWhere('p.code = :priceListCode', { priceListCode });
+        .andWhere('q.priceListCode = :priceListCode', { priceListCode });
     }
     switch (seatType) {
       case VehicleTypeEnum.LIMOUSINE:
@@ -679,6 +728,7 @@ export class PriceListService {
 
     const priceDetail = new PriceDetail();
     priceDetail.priceList = priceList;
+    priceDetail.priceListCode = priceList.code;
 
     const trip = await this.dataSource.getRepository(Trip).findOne({
       where: { code: tripCode },
@@ -697,53 +747,16 @@ export class PriceListService {
       default:
         throw new BadRequestException('SEAT_TYPE_NOT_FOUND');
     }
-
-    const priceDetailStartDateExist = await this.findOnePriceDetail({
-      where: {
-        seatType,
-        priceList: {
-          startDate: LessThanOrEqual(priceList.startDate),
-          endDate: MoreThanOrEqual(priceList.startDate),
-          status: ActiveStatusEnum.ACTIVE,
-        },
-        trip: {
-          code: tripCode,
-        },
-      },
-      relations: {
-        priceList: true,
-        trip: true,
-      },
-    });
-    if (priceDetailStartDateExist) {
-      const priceList: PriceList = priceDetailStartDateExist.priceList;
-      throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
-        description: `Loại ghế của tuyến "${trip?.name}" đã tồn tại trong bảng giá đang học động khác có mã ${priceList?.code}`,
-      });
-    }
-    const priceDetailEndDateExist = await this.findOnePriceDetail({
-      where: {
-        seatType,
-        priceList: {
-          startDate: LessThanOrEqual(priceList.endDate),
-          endDate: MoreThanOrEqual(priceList.endDate),
-          status: ActiveStatusEnum.ACTIVE,
-        },
-        trip: {
-          code: tripCode,
-        },
-      },
-      relations: {
-        priceList: true,
-        trip: true,
-      },
-    });
-    if (priceDetailEndDateExist) {
-      const priceList: PriceList = priceDetailEndDateExist.priceList;
-      throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
-        description: `Loại ghế của tuyến "${trip?.name}" đã tồn tại trong bảng giá đang học động khác có mã ${priceList?.code}`,
-      });
-    }
+    await this.validOverlappingPriceDetail(
+      priceList.startDate,
+      seatType,
+      tripCode,
+    );
+    await this.validOverlappingPriceDetail(
+      priceList.endDate,
+      seatType,
+      tripCode,
+    );
 
     const priceDetailExist = await this.findOnePriceDetailByCode(code);
     if (priceDetailExist) {
@@ -835,52 +848,16 @@ export class PriceListService {
       priceDetail.trip = trip;
     }
 
-    const priceDetailStartDateExist = await this.findOnePriceDetail({
-      where: {
-        seatType,
-        priceList: {
-          startDate: LessThanOrEqual(priceList.startDate),
-          endDate: MoreThanOrEqual(priceList.startDate),
-          status: ActiveStatusEnum.ACTIVE,
-        },
-        trip: {
-          code: tripCode,
-        },
-      },
-      relations: {
-        priceList: true,
-        trip: true,
-      },
-    });
-    if (priceDetailStartDateExist) {
-      const priceList: PriceList = priceDetailStartDateExist.priceList;
-      throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
-        description: `Loại ghế của tuyến "${priceDetail.trip?.name}" đã tồn tại trong bảng giá đang kích hoạt có mã ${priceList?.code}`,
-      });
-    }
-    const priceDetailEndDateExist = await this.findOnePriceDetail({
-      where: {
-        seatType,
-        priceList: {
-          startDate: LessThanOrEqual(priceList.endDate),
-          endDate: MoreThanOrEqual(priceList.endDate),
-          status: ActiveStatusEnum.ACTIVE,
-        },
-        trip: {
-          code: tripCode,
-        },
-      },
-      relations: {
-        priceList: true,
-        trip: true,
-      },
-    });
-    if (priceDetailEndDateExist) {
-      const priceList: PriceList = priceDetailEndDateExist.priceList;
-      throw new BadRequestException('TRIP_EXISTED_IN_PRICE_LIST', {
-        description: `Loại ghế của tuyến "${priceDetail.trip?.name}" đã tồn tại trong bảng giá đang kích hoạt có mã ${priceList?.code}`,
-      });
-    }
+    await this.validOverlappingPriceDetail(
+      priceList.startDate,
+      seatType,
+      tripCode,
+    );
+    await this.validOverlappingPriceDetail(
+      priceList.endDate,
+      seatType,
+      tripCode,
+    );
 
     if (price) {
       if (price < 0 || isNaN(price)) {

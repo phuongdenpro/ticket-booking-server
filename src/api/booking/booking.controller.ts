@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
-import { CreateBookingDto } from './dto';
+import { CreateBookingDto, PaymentDto } from './dto';
 
 @Controller('booking')
 @ApiTags('Booking')
@@ -25,5 +25,14 @@ export class BookingController {
   @ApiBearerAuth()
   async booking(@Body() dto: CreateBookingDto, @CurrentUser() user) {
     return this.bookingService.booking(dto, user.id);
+  }
+
+  @Post('payment')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
+    return this.bookingService.payment(dto, user.id);
   }
 }

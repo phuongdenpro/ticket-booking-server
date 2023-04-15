@@ -1,4 +1,11 @@
-import { CreateOrderDto, FilterOrderDto, UpdateOrderDto } from './dto';
+import {
+  CreateOrderDto,
+  FilterBillAvailableDto,
+  FilterBillDto,
+  FilterBillHistoryDto,
+  FilterOrderDto,
+  UpdateOrderDto,
+} from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums';
 import {
@@ -21,13 +28,13 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { PaymentDto } from '../booking/dto';
 
 @Controller('order')
 @ApiTags('Order')
 export class OrderController {
   constructor(private orderService: OrderService) {}
 
-  // order
   @Post()
   @HttpCode(HttpStatus.CREATED)
   @Roles(RoleEnum.STAFF)
@@ -49,17 +56,80 @@ export class OrderController {
     return await this.orderService.getOrderUpdateStatus();
   }
 
-  @Get()
+  @Get('payment-method')
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  async getPaymentMethod() {
+    return await this.orderService.getPaymentMethod();
+  }
+
+  @Post('payment')
+  @HttpCode(HttpStatus.CREATED)
+  @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async findAllPriceList(
+  async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
+    return this.orderService.payment(dto, user.id);
+  }
+
+  @Get()
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllOrder(
     @Query() dto: FilterOrderDto,
     @CurrentUser() user,
     @GetPagination() pagination?: Pagination,
   ) {
     return await this.orderService.findAllOrder(dto, user.id, pagination);
+  }
+
+  @Get('bill')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllBill(
+    @Query() dto: FilterBillDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.orderService.findAllBill(dto, user.id, pagination);
+  }
+
+  // danh sách vé đã đi
+  @Get('/customer/bill/history')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllBillHistoryForCustomer(
+    @Query() dto: FilterBillHistoryDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.orderService.findAllBillHistoryForCustomer(
+      dto,
+      user.id,
+      pagination,
+    );
+  }
+
+  @Get('/customer/bill/available')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllBillAvailableForCustomer(
+    @Query() dto: FilterBillAvailableDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.orderService.findAllBillAvailableForCustomer(
+      dto,
+      user.id,
+      pagination,
+    );
   }
 
   @Get('id/:id')
@@ -80,9 +150,9 @@ export class OrderController {
     return await this.orderService.getOrderByCode(code);
   }
 
-  @Patch('customer/id/:id')
+  @Patch('id/:id')
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.CUSTOMER, RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async cancelOrderById(
@@ -90,7 +160,7 @@ export class OrderController {
     @Param('id') id: string,
     @CurrentUser() user,
   ) {
-    return await this.orderService.updateOrderByIdOrCodeFroCustomer(
+    return await this.orderService.updateOrderByIdOrCode(
       dto,
       user.id,
       id,
@@ -98,9 +168,9 @@ export class OrderController {
     );
   }
 
-  @Patch('customer/code/:code')
+  @Patch('code/:code')
   @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.CUSTOMER)
+  @Roles(RoleEnum.CUSTOMER, RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async cancelOrderByCode(
@@ -108,7 +178,7 @@ export class OrderController {
     @Param('code') code: string,
     @CurrentUser() user,
   ) {
-    return await this.orderService.updateOrderByIdOrCodeFroCustomer(
+    return await this.orderService.updateOrderByIdOrCode(
       dto,
       user.id,
       undefined,

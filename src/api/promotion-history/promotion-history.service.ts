@@ -7,6 +7,7 @@ import {
   PromotionLine,
   Staff,
   Customer,
+  OrderRefund,
 } from './../../database/entities';
 import {
   BadRequestException,
@@ -32,6 +33,8 @@ export class PromotionHistoryService {
     private readonly promotionLineRepository: Repository<PromotionLine>,
     @InjectRepository(PromotionHistory)
     private readonly promotionHistoryRepository: Repository<PromotionHistory>,
+    @InjectRepository(OrderRefund)
+    private readonly orderRefundRepository: Repository<OrderRefund>,
     private dataSource: DataSource,
   ) {}
 
@@ -165,21 +168,25 @@ export class PromotionHistoryService {
         if (numOfTicket < promotionDetail.quantityBuy) {
           return {
             promotionLineCode,
-            message: 'số lượng vé không đủ để áp dụng khuyến mãi',
+            amount: 0,
           };
         }
         quantity = Math.floor(numOfTicket / promotionDetail.quantityBuy);
       }
       if (promotionDetail.purchaseAmount > 0) {
         if (total < promotionDetail.purchaseAmount) {
-          throw new BadRequestException('TOTAL_AMOUNT_IS_NOT_ENOUGH');
+          return {
+            promotionLineCode,
+            amount: 0,
+          };
         }
-        quantity = Math.floor(total / promotionDetail.purchaseAmount);
+        quantity = 1;
       }
       const remainingBudget = promotionLine.maxBudget - promotionLine.useBudget;
       if (remainingBudget <= 0) {
         return {
           promotionLineCode,
+          amount: 0,
           message: 'Khuyến mãi đã hết ngân sách',
         };
       }
@@ -219,7 +226,11 @@ export class PromotionHistoryService {
     return { dataResult: result };
   }
 
-  async createPromotionHistory(dto: CreatePromotionHistoryDto, userId: string) {
+  async createPromotionHistory(
+    dto: CreatePromotionHistoryDto,
+    userId: string,
+    orderRefund?: OrderRefund,
+  ) {
     const { orderCode, promotionLineCode, type } = dto;
     const queryRunnerPH =
       this.promotionHistoryRepository.manager.connection.createQueryRunner();
@@ -255,6 +266,11 @@ export class PromotionHistoryService {
       if (!orderExist) {
         throw new BadRequestException('ORDER_NOT_FOUND');
       }
+      const orderRefundExist =
+        orderRefund ||
+        (await this.orderRefundRepository.findOne({
+          where: { code: orderCode },
+        }));
       promotionHistory.order = orderExist;
       promotionHistory.orderCode = orderExist.code;
 
@@ -267,7 +283,6 @@ export class PromotionHistoryService {
       }
       promotionHistory.promotionLine = promotionLine;
       promotionHistory.promotionLineCode = promotionLine.code;
-      promotionHistory.code = `${promotionLine.code}PH${orderExist.code}`;
 
       const promotionDetail: PromotionDetail = promotionLine.promotionDetail;
       const orderDetails: OrderDetail[] = orderExist.orderDetails;
@@ -275,6 +290,7 @@ export class PromotionHistoryService {
         type === PromotionHistoryTypeEnum.PRODUCT_DISCOUNT ||
         type === PromotionHistoryTypeEnum.PRODUCT_DISCOUNT_PERCENT
       ) {
+        promotionHistory.code = `${promotionLine.code}-${orderExist.code}-APPLY`;
         if (promotionDetail.quantityBuy > 0) {
           const numOfTicket = orderDetails.length;
           if (numOfTicket < promotionDetail.quantityBuy) {
@@ -288,15 +304,14 @@ export class PromotionHistoryService {
           if (orderExist.total < promotionDetail.purchaseAmount) {
             throw new BadRequestException('TOTAL_AMOUNT_IS_NOT_ENOUGH');
           }
-          promotionHistory.quantity = Math.floor(
-            orderExist.total / promotionDetail.purchaseAmount,
-          );
+          promotionHistory.quantity = 1;
         }
         const remainingBudget =
           promotionLine.maxBudget - promotionLine.useBudget;
         if (remainingBudget <= 0) {
           promotionLine.note = PromotionLineNoteStatusEnum.OUT_OF_BUDGET;
           await queryRunnerPL.manager.save(promotionLine);
+          await queryRunnerPL.commitTransaction();
           throw new BadRequestException('PROMOTION_HAS_OUT_OF_BUDGET');
         }
 
@@ -329,12 +344,31 @@ export class PromotionHistoryService {
         }
         promotionLine.useQuantity += promotionHistory.quantity;
         promotionHistory.type = type;
-      } else if (type === PromotionHistoryTypeEnum.REFUND) {
+      } else if (
+        type === PromotionHistoryTypeEnum.CANCEL ||
+        type === PromotionHistoryTypeEnum.REFUND
+      ) {
+        promotionHistory.code = `${promotionLine.code}-${orderExist.code}-CANCEL`;
+        const promotionHistoryExist = await this.findOnePromotionHistory({
+          where: {
+            orderCode,
+            promotionLineCode,
+          },
+        });
+        if (!promotionHistoryExist) {
+          throw new BadRequestException('PROMOTION_HISTORY_NOT_FOUND');
+        }
+        promotionHistory.amount = promotionHistoryExist.amount;
+        promotionHistory.quantity = promotionHistoryExist.quantity;
+        promotionHistoryExist.note = PromotionHistoryTypeEnum.CANCEL;
         promotionHistory.type = type;
+        promotionLine.useQuantity -= promotionHistory.quantity;
+        promotionLine.useBudget -= promotionHistory.amount;
+        await queryRunnerPH.manager.save(promotionHistoryExist);
       } else {
         throw new BadRequestException('PROMOTION_HISTORY_TYPE_IS_REQUIRED');
       }
-
+      promotionHistory.orderRefund = orderRefundExist;
       const savedPromotionHistory = await queryRunnerPH.manager.save(
         promotionHistory,
       );

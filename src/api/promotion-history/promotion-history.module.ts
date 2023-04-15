@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import {
   Order,
   OrderDetail,
+  OrderRefund,
   PromotionHistory,
   PromotionLine,
 } from './../../database/entities';
@@ -14,6 +15,7 @@ import { PromotionHistoryController } from './promotion-history.controller';
     TypeOrmModule.forFeature([
       Order,
       OrderDetail,
+      OrderRefund,
       PromotionLine,
       PromotionHistory,
     ]),

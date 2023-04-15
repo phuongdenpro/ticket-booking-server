@@ -8,7 +8,7 @@ import {
   DeleteDateColumn,
   ManyToOne,
 } from 'typeorm';
-import { PromotionLine, Order } from '.';
+import { PromotionLine, Order, OrderRefund } from '.';
 
 @Entity({ name: 'promotion_history' })
 export class PromotionHistory {
@@ -64,14 +64,14 @@ export class PromotionHistory {
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   order: Order;
 
+  @ManyToOne(() => OrderRefund, (orderRefund) => orderRefund.promotionHistories)
+  @JoinColumn({ name: 'order_refund_id', referencedColumnName: 'id' })
+  orderRefund: OrderRefund;
+
   @ManyToOne(
     () => PromotionLine,
     (promotionLine) => promotionLine.promotionHistory,
   )
   @JoinColumn({ name: 'promotion_line_id', referencedColumnName: 'id' })
   promotionLine: PromotionLine;
-
-  // @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.buyPromotionHistory)
-  // @JoinColumn({ name: 'buy_order_detail_id', referencedColumnName: 'id' })
-  // buyOrderDetail: OrderDetail;
 }

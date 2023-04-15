@@ -16,10 +16,8 @@ export class CustomerLoginDto {
   @IsOptional()
   phone: string;
 
-  @ApiPropertyOptional({ example: 'dangdan28075@gmail.com' })
+  @ApiPropertyOptional({ example: 'superman@gmail.com' })
   @IsString({ message: 'EMAIL_IS_STRING' })
-  @MinLength(6, { message: 'EMAIL_LENGTH' })
-  @MaxLength(100, { message: 'EMAIL_LENGTH' })
   @IsEmail({}, { message: 'EMAIL_INVALID' })
   @IsOptional()
   email: string;

@@ -17,26 +17,13 @@ export class FilterOrderDto {
   keywords: string;
 
   @ApiPropertyOptional({
-    example: OrderStatusEnum.PAID,
-    enum: [
-      '',
-      OrderStatusEnum.PAID,
-      OrderStatusEnum.UNPAID,
-      OrderStatusEnum.CANCEL,
-      OrderStatusEnum.RETURNED,
-    ],
+    example: OrderStatusEnum.UNPAID,
+    enum: ['', OrderStatusEnum.UNPAID, OrderStatusEnum.CANCEL],
   })
   @IsString({ message: 'ORDER_STATUS_IS_STRING' })
-  @IsEnum(
-    [
-      '',
-      OrderStatusEnum.PAID,
-      OrderStatusEnum.UNPAID,
-      OrderStatusEnum.CANCEL,
-      OrderStatusEnum.RETURNED,
-    ],
-    { message: 'ORDER_STATUS_IS_ENUM' },
-  )
+  @IsEnum(['', OrderStatusEnum.UNPAID, OrderStatusEnum.CANCEL], {
+    message: 'ORDER_STATUS_IS_ENUM',
+  })
   @IsOptional()
   status: OrderStatusEnum;
 

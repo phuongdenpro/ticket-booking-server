@@ -8,6 +8,11 @@ export const mappingTranslate = {
   TEST: 'Test',
 
   // base
+  USER_ALREADY_ACTIVED: 'Tài khoản đã được kích hoạt',
+  OTP_EXPIRED: 'Mã OTP đã hết hạn',
+  OTP_INVALID: 'Mã OTP không hợp lệ',
+  USERNAME_REQUIRED: 'Tên đăng nhập không được để trống',
+  OTP_REQUIRED: 'Mã OTP không được để trống',
   ID_OR_CODE_IS_REQUIRED: 'Id hoặc mã không được để trống',
   IDS_REQUIRE: 'Danh sách id không được để trống',
   CODES_IS_REQUIRED: 'Danh sách code không được để trống',
@@ -54,6 +59,17 @@ export const mappingTranslate = {
   PASSWORD_NEW_NOT_MATCH: 'Mật khẩu xác nhận không đúng.',
 
   // User 21-30
+  OLD_PASSWORD_REQUIRED: 'Mật khẩu cũ không được để trống',
+  NEW_PASSWORD_REQUIRED: 'Mật khẩu mới không được để trống',
+  CONFIRM_NEW_PASSWORD_REQUIRED: 'Mật khẩu xác nhận không được để trống',
+  OLD_PASSWORD_MUST_BE_STRING: 'Mật khẩu cũ phải là chuỗi ký tự',
+  NEW_PASSWORD_MUST_BE_STRING: 'Mật khẩu mới phải là chuỗi ký tự',
+  NEW_PASSWORD_MIN_6_CHARACTERS: 'Mật khẩu mới phải có ít nhất 6 ký tự',
+  CONFIRM_NEW_PASSWORD_MUST_BE_STRING: 'Mật khẩu xác nhận phải là chuỗi ký tự',
+  CONFIRM_NEW_PASSWORD_MIN_6_CHARACTERS:
+    'Mật khẩu xác nhận phải có ít nhất 6 ký tự',
+  PASSWORD_OLD_NOT_MATCH: 'Mật khẩu cũ không đúng.',
+  PASSWORD_NEW_SAME_OLD: 'Mật khẩu mới không được trùng với mật khẩu cũ.',
   UNAUTHORIZED: 'Không có quyền truy cập',
   Unauthorized: 'Không có quyền truy cập',
   INVALID_USERNAME_OR_PASSWORD: 'Tên đăng nhập hoặc mật khẩu không đúng.',
@@ -69,7 +85,7 @@ export const mappingTranslate = {
   PASSWORD_IS_MIN_LENGTH_6: 'Mật khẩu phải có ít nhất 6 ký tự',
   PASSWORD_IS_MAX_LENGTH_255: 'Mật khẩu có tối đa 255 ký tự',
   FULL_NAME_IS_REQUIRED: 'Họ và tên không được để trống',
-  FULL_NAME_IS_STRING: 'Họ và tên phải là chuỗi ký tự',
+  FULL_NAME_MUST_BE_STRING: 'Họ và tên phải là chuỗi ký tự',
   FULL_NAME_IS_MIN_LENGTH_1: 'Họ và tên phải có ít nhất 1 ký tự',
   FULL_NAME_IS_MAX_LENGTH_255: 'Họ và tên có tối đa 255 ký tự',
   BIRTHDAY_IS_REQUIRED: 'Ngày sinh không được để trống',
@@ -81,6 +97,9 @@ export const mappingTranslate = {
   GENDER_IS_STRING: 'Giới tính phảỉ là chuỗi ký tự',
   GENDER_IS_ENUM:
     'Giới tính chỉ nhận 1 trong 3 giá trị sau: MALE, FEMALE, OTHER',
+  OTP_IS_STRING: 'Mã OTP phải là chuỗi ký tự',
+  OTP_IS_REQUIRED: 'Mã OTP không được để trống',
+  SEND_OTP_FAILED: 'Gửi mã OTP thất bại',
 
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',
@@ -145,7 +164,7 @@ export const mappingTranslate = {
   WARD_NOT_FOUND: 'Không tìm thấy phường/xã',
   WARD_ID_IS_REQUIRED: 'Id phường/xã không được để trống',
   WARD_ID_IS_NUMBER: 'Id phường/xã phải là số',
-  WARD_CODE_IS_NUMBER: 'Mã phường/xã phải là số',
+  WARD_CODE_MUST_BE_NUMBER: 'Mã phường/xã phải là số',
   WARD_TYPE_IS_STRING: 'Loại phường/xã phải là chuỗi ký tự',
   WARD_TYPE_BETWEEN_1_50_CHARACTERS: 'loại phường/xã phải từ 1 đến 50 ký tự',
   WARD_TYPE_IS_REQUIRED: 'loại phường/xã không được để trống',
@@ -159,7 +178,7 @@ export const mappingTranslate = {
   TO_STATION_NOT_FOUND: 'Không tìm thấy bến xe đến',
   STATION_NOT_FOUND: 'Không tìm thấy bến xe',
   ADDRESS_IS_REQUIRED: 'Địa chỉ không được để trống',
-  ADDRESS_IS_STRING: 'Địa chỉ phải là chuỗi ký tự',
+  ADDRESS_MUST_BE_STRING: 'Địa chỉ phải là chuỗi ký tự',
   ADDRESS_BETWEEN_1_255_CHARACTERS: 'Địa chỉ phải từ 1 đến 255 ký tự',
 
   // seat
@@ -259,8 +278,8 @@ export const mappingTranslate = {
   TRIP_DETAIL_ID_IS_STRING: 'Id của chuyến xe phải là chuỗi ký tự',
   TRIP_DETAIL_ID_IS_36_CHARACTERS: 'Id của chuyến xe phải có 36 ký tự',
   TRIP_DETAIL_HAS_PASSED: 'Chuyến xe đã khởi hành không thể đặt vé',
-  TRIP_DETAIL_HAS_PASSED_15_MINUTES:
-    'Chuyến xe còn 15 phút nữa sẽ khởi hành không thể đặt vé, vui lòng liên hệ với nhân viên để được hỗ trợ đặt vé',
+  TRIP_DETAIL_HAS_PASSED_2_HOURS:
+    'Chuyến xe còn 2 giờ nữa sẽ khởi hành không thể đặt vé, vui lòng hãy đến phòng vé để được hỗ trợ đặt vé',
   TRIP_DETAIL_NOT_ACTIVE: 'Chuyến xe không còn hoạt động',
   TRIP_DETAIL_HAS_ENDED_NOT_UPDATE: 'Chuyến xe đã khởi hành không thể cập nhật',
   TRIP_HAS_ENDED_NOT_UPDATE: 'Tuyến xe đã kết thúc không thể cập nhật',
@@ -544,7 +563,7 @@ export const mappingTranslate = {
   ORDER_NOT_PAID: 'Hoá đơn chưa thanh toán',
   ORDER_NOT_BELONG_TO_USER: 'Hoá đơn không thuộc về người dùng',
   ORDER_CODE_IS_REQUIRED: 'Mã đơn hàng không được để trống',
-  ORDER_CODE_IS_STRING: 'Mã đơn hàng phải là chuỗi ký tự',
+  ORDER_CODE_MUST_BE_STRING: 'Mã đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_STRING: 'Trạng thái của đơn hàng phải là chuỗi ký tự',
   ORDER_STATUS_IS_ENUM: 'Trạng thái của đơn hàng không hợp lệ',
   ORDER_ID_IS_36_CHARACTERS: 'Id của đơn hàng phải là 36 ký tự',
@@ -555,10 +574,14 @@ export const mappingTranslate = {
   ORDER_IS_CANCELLED: 'Đơn hàng đã bị hủy',
   ORDER_IS_PAID: 'Đơn hàng đã thanh toán',
   ORDER_IS_PENDING: 'Đơn hàng đang chờ xử lý',
+  ORDER_IS_RETURNED: 'Đơn hàng đã được hoàn trả',
   CREATE_ORDER_FAILED: 'Tạo hoá đơn thất bại',
   MIN_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối thiểu phải là số',
   MAX_FINAL_TOTAL_IS_NUMBER: 'Tổng tiền tối đa phải là số',
   ORDER_CODE_BETWEEN_1_100_CHARACTERS: 'Mã đơn hàng phải có từ 1-100 ký tự',
+  ORDER_CANNOT_CANCEL_12H_BEFORE:
+    'Không thể huỷ vé trước 12 tiếng so với giờ khởi hàng, hãy đến trực tiếp phòng vé để huỷ',
+  ORDER_CANNOT_CANCEL_AFTER_DEPARTURE: 'Không thể huỷ vé sau khi khởi hành',
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',
@@ -578,4 +601,17 @@ export const mappingTranslate = {
   TOTAL_IS_REQUIRED: 'Tổng tiền không được để trống',
   NUMBER_OF_TICKET_IS_REQUIRED: 'Số lượng vé không được để trống',
   NUMBER_OF_TICKET_MUST_BE_INTEGER: 'Số lượng vé phải là số nguyên lớn hơn 0',
+  ORDER_STATUS_NOT_REQUIRED: 'Trạng thái hoá đơn không được để trống',
+  PAYMENT_METHOD_NOT_FOUND: 'Không tìm thấy phương thức thanh toán',
+  PAYMENT_METHOD_IS_REQUIRED: 'Phương thức thanh toán không được để trống',
+  PAYMENT_METHOD_IS_ENUM: 'Phương thức thanh toán không hợp lệ',
+
+  // order refund
+  CREATE_ORDER_REFUND_DETAIL_FAILED: 'Tạo hoá đơn hoàn trả thất bại',
+  CREATE_ORDER_REFUND_FAILED: 'Tạo hoá đơn hoàn trả thất bại',
+  ORDER_REFUND_NOT_FOUND: 'Không tìm thấy hoá đơn hoàn trả',
+  ORDER_REFUND_STATUS_IS_ENUM: 'Trạng thái hoá đơn hoàn trả không hợp lệ',
+
+  // otp
+  SEND_SMS_FAILED: 'Gửi mã otp thất bại',
 };

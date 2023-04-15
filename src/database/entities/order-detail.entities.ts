@@ -50,6 +50,7 @@ export class OrderDetail {
   })
   public deletedAt?: Date;
 
+  // relationships
   @ManyToOne(() => Order, (order) => order.orderDetails)
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   order: Order;

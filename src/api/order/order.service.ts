@@ -3,18 +3,24 @@ import { TripDetailService } from './../trip-detail/trip-detail.service';
 import {
   Order,
   OrderDetail,
+  OrderRefund,
+  OrderRefundDetail,
   PriceDetail,
   PromotionHistory,
-  PromotionLine,
   Seat,
+  TicketDetail,
+  TripDetail,
   Vehicle,
 } from './../../database/entities';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import {
   CreateOrderDto,
-  CreateOrderDetailDto,
   FilterOrderDto,
-  UpdateOrderDto as UpdateOrderDtoForCustomer,
+  UpdateOrderDto,
+  FilterAllDto,
+  CreateOrderDetailDto,
+  FilterBillHistoryDto,
+  FilterBillAvailableDto,
 } from './dto';
 import {
   BadRequestException,
@@ -25,7 +31,9 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import {
   OrderStatusEnum,
-  OrderUpdateStatusEnum,
+  OrderUpdateStatusCustomerEnum,
+  OrderRefundStatusEnum,
+  PaymentMethod,
   PromotionHistoryTypeEnum,
   PromotionTypeEnum,
   SortEnum,
@@ -39,10 +47,15 @@ import { SeatService } from '../seat/seat.service';
 import { TicketService } from '../ticket/ticket.service';
 import { PriceListService } from '../price-list/price-list.service';
 import { UpdateTicketDetailDto } from '../ticket/dto';
-import * as moment from 'moment';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 import { CreatePromotionHistoryDto } from '../promotion-history/dto';
+import { PaymentDto } from '../booking/dto';
+import * as moment from 'moment';
+import {
+  FilterOrderRefundDto,
+  UpdateOrderRefundDto,
+} from '../order-refund/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -52,8 +65,14 @@ export class OrderService {
     private readonly orderRepository: Repository<Order>,
     @InjectRepository(OrderDetail)
     private readonly orderDetailRepository: Repository<OrderDetail>,
-    @InjectRepository(PromotionLine)
-    private readonly promotionLineRepository: Repository<PromotionLine>,
+    @InjectRepository(OrderRefund)
+    private readonly orderRefundRepository: Repository<OrderRefund>,
+    @InjectRepository(OrderRefundDetail)
+    private readonly orderRDRepository: Repository<OrderRefundDetail>,
+    @InjectRepository(PromotionHistory)
+    private readonly promotionHistoryRepository: Repository<PromotionHistory>,
+    @InjectRepository(TicketDetail)
+    private readonly ticketDetailRepository: Repository<TicketDetail>,
     private readonly customerService: CustomerService,
     private readonly adminService: AdminService,
     private readonly seatService: SeatService,
@@ -62,10 +81,14 @@ export class OrderService {
     private readonly priceListService: PriceListService,
     private readonly promotionLineService: PromotionLineService,
     private readonly promotionHistoryService: PromotionHistoryService,
+    private dataSource: DataSource,
   ) {}
 
   private SEAT_TYPE_DTO_ID = 'id';
   private SEAT_TYPE_DTO_CODE = 'code';
+
+  private BILL_HISTORY_TYPE_HAS_DEPARTED = 'hasDeparted';
+  private BILL_HISTORY_TYPE_NOT_DEPARTED = 'notDeparted';
 
   private selectFieldsOrderWithQ = [
     'q.id',
@@ -75,26 +98,23 @@ export class OrderService {
     'q.total',
     'q.finalTotal',
     'q.createdAt',
-    'q.updatedAt',
-    'c.id',
-    'c.lastLogin',
-    'c.status',
-    'c.phone',
-    'c.email',
     'c.fullName',
-    'c.gender',
-    'c.address',
-    'c.fullAddress',
-    'c.note',
-    'c.birthday',
-    's.id',
-    's.isActive',
-    's.phone',
-    's.email',
     's.fullName',
-    's.gender',
-    's.birthDay',
-    's.address',
+  ];
+
+  private selectFieldsOrderRefundWithQ = [
+    'q.id',
+    'q.code',
+    'q.note',
+    'q.status',
+    'q.total',
+    'q.orderCode',
+    'q.createdAt',
+    'ord.id',
+    'ord.total',
+    'ord.note',
+    'ord.orderRefundCode',
+    'ord.createdAt',
   ];
 
   // order
@@ -102,6 +122,61 @@ export class OrderService {
     return await this.orderRepository.findOne({
       where: { ...options?.where },
       select: {
+        orderDetails: {
+          id: true,
+          total: true,
+          note: true,
+          orderCode: true,
+          ticketDetail: {
+            id: true,
+            code: true,
+            status: true,
+            note: true,
+            seat: {
+              id: true,
+              code: true,
+              name: true,
+              vehicle: {
+                id: true,
+                code: true,
+                name: true,
+                licensePlate: true,
+                totalSeat: true,
+                status: true,
+              },
+            },
+            ticket: {
+              id: true,
+              code: true,
+              startDate: true,
+              endDate: true,
+              tripDetail: {
+                id: true,
+                code: true,
+                departureTime: true,
+                expectedTime: true,
+                trip: {
+                  id: true,
+                  code: true,
+                  name: true,
+                  status: true,
+                  fromStation: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    fullAddress: true,
+                  },
+                  toStation: {
+                    id: true,
+                    code: true,
+                    name: true,
+                    fullAddress: true,
+                  },
+                },
+              },
+            },
+          },
+        },
         staff: {
           id: true,
           isActive: true,
@@ -137,7 +212,21 @@ export class OrderService {
         ...options?.select,
       },
       relations: {
-        orderDetails: true,
+        orderDetails: {
+          ticketDetail: {
+            seat: {
+              vehicle: true,
+            },
+            ticket: {
+              tripDetail: {
+                trip: {
+                  fromStation: true,
+                  toStation: true,
+                },
+              },
+            },
+          },
+        },
         staff: true,
         customer: true,
         promotionHistories: true,
@@ -193,27 +282,42 @@ export class OrderService {
     };
   }
 
-  async getOrderUpdateStatus() {
+  async getOrderRefundStatus() {
     return {
-      dataResult: Object.keys(OrderUpdateStatusEnum).map(
-        (key) => OrderUpdateStatusEnum[key],
+      dataResult: Object.keys(OrderRefundStatusEnum).map(
+        (key) => OrderRefundStatusEnum[key],
       ),
     };
   }
 
-  async findAllOrder(
-    dto: FilterOrderDto,
+  async getOrderUpdateStatus() {
+    return {
+      dataResult: Object.keys(OrderUpdateStatusCustomerEnum).map(
+        (key) => OrderUpdateStatusCustomerEnum[key],
+      ),
+    };
+  }
+
+  async getPaymentMethod() {
+    return {
+      dataResult: Object.keys(PaymentMethod).map((key) => PaymentMethod[key]),
+    };
+  }
+
+  private async findAll(
+    dto: FilterAllDto,
     userId: string,
     pagination?: Pagination,
+    isDeparted?: string,
   ) {
     const {
       keywords,
       status,
-      sort,
       minFinalTotal,
       maxFinalTotal,
       startDate,
       endDate,
+      sort,
     } = dto;
     const customer = await this.customerService.findOneById(userId);
     const admin = await this.adminService.findOneBydId(userId);
@@ -244,15 +348,30 @@ export class OrderService {
       });
     }
 
-    switch (status) {
-      case OrderStatusEnum.UNPAID:
-      case OrderStatusEnum.CANCEL:
-      case OrderStatusEnum.PAID:
-      case OrderStatusEnum.RETURNED:
-        query.andWhere('q.status = :status', { status });
-        break;
-      default:
-        break;
+    if (status && status.length > 0) {
+      if (status.length === 1) {
+        switch (status[0]) {
+          case OrderStatusEnum.UNPAID:
+          case OrderStatusEnum.CANCEL:
+          case OrderStatusEnum.PAID:
+          case OrderStatusEnum.RETURNED:
+            query.andWhere('q.status = :status', { status: status[0] });
+            break;
+          default:
+            break;
+        }
+      } else if (status.length === 2) {
+        switch (status[0]) {
+          case OrderStatusEnum.UNPAID:
+          case OrderStatusEnum.CANCEL:
+          case OrderStatusEnum.PAID:
+          case OrderStatusEnum.RETURNED:
+            query.andWhere('q.status IN (:...status)', { status });
+            break;
+          default:
+            break;
+        }
+      }
     }
 
     if (minFinalTotal) {
@@ -277,8 +396,40 @@ export class OrderService {
 
     query
       .orderBy('q.createdAt', sort || SortEnum.DESC)
-      .addOrderBy('q.code', SortEnum.ASC)
-      .addOrderBy('q.finalTotal', SortEnum.ASC);
+      .addOrderBy('q.finalTotal', SortEnum.ASC)
+      .addOrderBy('q.code', SortEnum.ASC);
+
+    if (status[0] === OrderStatusEnum.PAID && status.length === 1) {
+      const currentDate = moment().toDate();
+      if (
+        isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED ||
+        isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED
+      ) {
+        const subQuery = this.orderRepository.createQueryBuilder('q2');
+        subQuery
+          .leftJoinAndSelect('q2.customer', 'c2')
+          .leftJoinAndSelect('q2.orderDetails', 'od2')
+          .leftJoinAndSelect('od2.ticketDetail', 'td2')
+          .leftJoinAndSelect('td2.ticket', 't2')
+          .leftJoinAndSelect('t2.tripDetail', 'trd2')
+          .where('c2.id = :customerId', { customerId: userId });
+        if (isDeparted === this.BILL_HISTORY_TYPE_HAS_DEPARTED) {
+          subQuery.andWhere('trd2.departureTime <= :currentDate', {
+            currentDate,
+          });
+        } else if (isDeparted === this.BILL_HISTORY_TYPE_NOT_DEPARTED) {
+          subQuery.andWhere('trd2.departureTime > :currentDate', {
+            currentDate,
+          });
+        }
+        subQuery.select('q2.id');
+
+        query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
+          currentDate,
+          customerId: userId,
+        });
+      }
+    }
 
     const dataResult = await query
       .leftJoinAndSelect('q.customer', 'c')
@@ -291,6 +442,109 @@ export class OrderService {
     const total = await query.getCount();
 
     return { dataResult, total, pagination };
+  }
+
+  async findAllOrder(
+    dto: FilterOrderDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const {
+      keywords,
+      status,
+      sort,
+      minFinalTotal,
+      maxFinalTotal,
+      startDate,
+      endDate,
+    } = dto;
+    const filterDto = new FilterAllDto();
+    filterDto.keywords = keywords;
+    if (
+      status === OrderStatusEnum.UNPAID ||
+      status === OrderStatusEnum.CANCEL
+    ) {
+      filterDto.status = [status];
+    } else {
+      filterDto.status = [OrderStatusEnum.UNPAID, OrderStatusEnum.CANCEL];
+    }
+    filterDto.sort = sort;
+    filterDto.minFinalTotal = minFinalTotal;
+    filterDto.maxFinalTotal = maxFinalTotal;
+    filterDto.startDate = startDate;
+    filterDto.endDate = endDate;
+    return await this.findAll(filterDto, userId, pagination);
+  }
+
+  async findAllBill(
+    dto: FilterOrderDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const {
+      keywords,
+      status,
+      sort,
+      minFinalTotal,
+      maxFinalTotal,
+      startDate,
+      endDate,
+    } = dto;
+    const filterDto = new FilterAllDto();
+    filterDto.keywords = keywords;
+    if (
+      status === OrderStatusEnum.PAID ||
+      status === OrderStatusEnum.RETURNED
+    ) {
+      filterDto.status = [status];
+    } else {
+      filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
+    }
+    filterDto.sort = sort;
+    filterDto.minFinalTotal = minFinalTotal;
+    filterDto.maxFinalTotal = maxFinalTotal;
+    filterDto.startDate = startDate;
+    filterDto.endDate = endDate;
+    return await this.findAll(filterDto, userId, pagination);
+  }
+
+  async findAllBillHistoryForCustomer(
+    dto: FilterBillHistoryDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const { keywords, status, sort, startDate, endDate } = dto;
+    const filterDto = new FilterAllDto();
+    filterDto.keywords = keywords;
+    const isDeparted = this.BILL_HISTORY_TYPE_HAS_DEPARTED;
+    if (
+      status === OrderStatusEnum.PAID ||
+      status === OrderStatusEnum.RETURNED
+    ) {
+      filterDto.status = [status];
+    } else {
+      filterDto.status = [OrderStatusEnum.PAID, OrderStatusEnum.RETURNED];
+    }
+    filterDto.sort = sort;
+    filterDto.startDate = startDate;
+    filterDto.endDate = endDate;
+    return await this.findAll(filterDto, userId, pagination, isDeparted);
+  }
+
+  async findAllBillAvailableForCustomer(
+    dto: FilterBillAvailableDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const { keywords, sort, startDate, endDate } = dto;
+    const filterDto = new FilterAllDto();
+    filterDto.keywords = keywords;
+    const isDeparted = this.BILL_HISTORY_TYPE_NOT_DEPARTED;
+    filterDto.status = [OrderStatusEnum.PAID];
+    filterDto.sort = sort;
+    filterDto.startDate = startDate;
+    filterDto.endDate = endDate;
+    return await this.findAll(filterDto, userId, pagination, isDeparted);
   }
 
   async createOrder(dto: CreateOrderDto, creatorId: string) {
@@ -332,16 +586,16 @@ export class OrderService {
       },
     );
     const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
-    const currentDatePlus15Minutes = new Date(
-      moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm'),
+    const currentDatePlus2Hours = new Date(
+      moment().add(2, 'hours').format('YYYY-MM-DD HH:mm'),
     );
     if (currentDate >= tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
     } else if (
       customerCreator &&
-      currentDatePlus15Minutes >= tripDetail.departureTime
+      currentDatePlus2Hours >= tripDetail.departureTime
     ) {
-      throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_15_MINUTES');
+      throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_2_HOURS');
     }
     // check trip
     const trip = tripDetail.trip;
@@ -495,19 +749,26 @@ export class OrderService {
     return saveOrder;
   }
 
-  async updateOrderByIdOrCodeFroCustomer(
-    dto: UpdateOrderDtoForCustomer,
+  async updateOrderByIdOrCode(
+    dto: UpdateOrderDto,
     userId: string,
     id?: string,
     code?: string,
   ) {
+    const admin = await this.adminService.findOneBydId(userId);
     const customer = await this.customerService.findOneById(userId);
+    console.log('vào');
+
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (customer && customer.status === UserStatusEnum.INACTIVATE) {
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
+
     if (!id && !code) {
       throw new BadRequestException('ID_OR_CODE_REQUIRED');
     }
@@ -524,6 +785,9 @@ export class OrderService {
       if (order.customer.id !== customer.id) {
         throw new BadRequestException('ORDER_NOT_BELONG_TO_USER');
       }
+      order.updatedBy = customer.id;
+    } else {
+      order.updatedBy = admin.id;
     }
     switch (order.status) {
       case OrderStatusEnum.CANCEL:
@@ -532,97 +796,163 @@ export class OrderService {
       case OrderStatusEnum.RETURNED:
         throw new BadRequestException('ORDER_ALREADY_RETURNED');
         break;
-    }
-    const { note, status } = dto;
-    order.note = note;
-    switch (status) {
-      case OrderUpdateStatusEnum.CANCEL:
-        if (order.status === OrderStatusEnum.PAID) {
-          throw new BadRequestException('ORDER_ALREADY_PAID');
-        }
-        order.status = OrderStatusEnum.CANCEL;
-        break;
-      case OrderUpdateStatusEnum.RETURNED:
-        if (order.status === OrderStatusEnum.UNPAID) {
-          throw new BadRequestException('ORDER_NOT_PAID');
-        }
-        order.status = OrderStatusEnum.RETURNED;
-        break;
       default:
         break;
     }
-    const saveOrder = await this.orderRepository.save(order);
-    delete saveOrder.deletedAt;
-    return saveOrder;
+    const { note, status } = dto;
+    order.note = note;
+    const promotionHistories: PromotionHistory[] = order.promotionHistories;
+    const ticketDetails: TicketDetail[] = order.orderDetails.map(
+      (orderDetail) => orderDetail.ticketDetail,
+    );
+    let saveTicketDetails;
+    const queryTickerDetail =
+      this.ticketDetailRepository.manager.connection.createQueryRunner();
+    await queryTickerDetail.connect();
+    await queryTickerDetail.startTransaction();
+    try {
+      switch (status) {
+        case OrderUpdateStatusCustomerEnum.CANCEL:
+          if (order.status === OrderStatusEnum.PAID) {
+            throw new BadRequestException('ORDER_ALREADY_PAID');
+          }
+          order.status = OrderStatusEnum.CANCEL;
+          if (promotionHistories && promotionHistories.length > 0) {
+            const destroyPromotionHistories = promotionHistories.map(
+              async (promotionHistory) => {
+                const dto = new CreatePromotionHistoryDto();
+                dto.promotionLineCode = promotionHistory.promotionLineCode;
+                dto.orderCode = promotionHistory.orderCode;
+                dto.type = PromotionHistoryTypeEnum.CANCEL;
+                return await this.promotionHistoryService.createPromotionHistory(
+                  dto,
+                  userId,
+                );
+              },
+            );
+            await Promise.all(destroyPromotionHistories);
+          }
+          saveTicketDetails = ticketDetails.map((ticketDetail) => {
+            ticketDetail.status = TicketStatusEnum.NON_SOLD;
+            return ticketDetail;
+          });
+          break;
+        case OrderUpdateStatusCustomerEnum.RETURNED:
+          if (order.status === OrderStatusEnum.UNPAID) {
+            throw new BadRequestException('ORDER_NOT_PAID');
+          }
+          order.status = OrderStatusEnum.RETURNED;
+
+          const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+          const tripDetail: TripDetail =
+            order.orderDetails[0].ticketDetail.ticket.tripDetail;
+          const departureTime = tripDetail.departureTime;
+          const timeDiff = moment(departureTime).diff(currentDate, 'hours');
+          if (customer && timeDiff < 12 && timeDiff > 0) {
+            throw new BadRequestException('ORDER_CANNOT_CANCEL_12H_BEFORE');
+          } else if (timeDiff <= 0) {
+            throw new BadRequestException(
+              'ORDER_CANNOT_CANCEL_AFTER_DEPARTURE',
+            );
+          }
+          await this.createOrderRefund(order.code, userId);
+          if (promotionHistories && promotionHistories.length > 0) {
+            const destroyPromotionHistories = promotionHistories.map(
+              async (promotionHistory) => {
+                const dto = new CreatePromotionHistoryDto();
+                dto.promotionLineCode = promotionHistory.promotionLineCode;
+                dto.orderCode = promotionHistory.orderCode;
+                dto.type = PromotionHistoryTypeEnum.REFUND;
+                return await this.promotionHistoryService.createPromotionHistory(
+                  dto,
+                  userId,
+                );
+              },
+            );
+            await Promise.all(destroyPromotionHistories);
+          }
+          saveTicketDetails = ticketDetails.map((ticketDetail) => {
+            ticketDetail.status = TicketStatusEnum.NON_SOLD;
+            return ticketDetail;
+          });
+          break;
+        default:
+          break;
+      }
+      await queryTickerDetail.manager.save(saveTicketDetails);
+      await queryTickerDetail.commitTransaction();
+
+      const saveOrder = await this.orderRepository.save(order);
+      delete saveOrder.deletedAt;
+      return saveOrder;
+    } catch (error) {
+      await queryTickerDetail.rollbackTransaction();
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async payment(dto: PaymentDto, userId: string) {
+    const admin = await this.adminService.findOneBydId(userId);
+    const customer = await this.customerService.findOneById(userId);
+    if (!customer && !admin) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    const { orderCode, paymentMethod } = dto;
+    if (!orderCode) {
+      throw new BadRequestException('ORDER_CODE_REQUIRED');
+    }
+
+    const order = await this.findOneOrderByCode(orderCode);
+    if (!order) {
+      throw new BadRequestException('ORDER_NOT_FOUND');
+    }
+    if (order.status === OrderStatusEnum.PAID) {
+      throw new BadRequestException('ORDER_ALREADY_PAID');
+    }
+    if (order.status === OrderStatusEnum.CANCEL) {
+      throw new BadRequestException('ORDER_ALREADY_CANCEL');
+    }
+    if (order.status === OrderStatusEnum.RETURNED) {
+      throw new BadRequestException('ORDER_ALREADY_RETURNED');
+    }
+    order.status = OrderStatusEnum.PAID;
+    switch (paymentMethod) {
+      case PaymentMethod.CASH:
+      case PaymentMethod.BANK_TRANSFER:
+      case PaymentMethod.MOMO:
+      case PaymentMethod.ZALO_PAY:
+        order.paymentMethod = paymentMethod;
+        break;
+      default:
+        throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
+        break;
+    }
+    order.updatedBy = userId;
+    await this.orderRepository.save(order);
+
+    const orderDetails: OrderDetail[] = order.orderDetails;
+    const ticketDetails = orderDetails.map(async (orderDetail) => {
+      let ticketDetail: TicketDetail = orderDetail.ticketDetail;
+      ticketDetail.status = TicketStatusEnum.SOLD;
+      ticketDetail = await this.dataSource
+        .getRepository(TicketDetail)
+        .save(ticketDetail);
+      delete ticketDetail.deletedAt;
+      return ticketDetail;
+    });
+    await Promise.all(ticketDetails);
+    const newOrder = await this.findOneOrderByCode(orderCode);
+    delete newOrder.deletedAt;
+    return newOrder;
   }
 
   // order detail
-  async findOrderDetail(options?: any) {
-    return await this.orderDetailRepository.findOne({
-      where: { ...options?.where },
-      relations: {
-        ...options?.relations,
-      },
-      select: { deletedAt: false, ...options?.select },
-      orderBy: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
-  }
-
-  async findOrderDetailById(id: string, options?: any) {
-    if (options) {
-      options.where = { id, ...options?.where };
-    } else {
-      options = { where: { id } };
-    }
-    return await this.findOneOrder(options);
-  }
-
-  async findOrderDetailByCode(code: string, options?: any) {
-    if (options) {
-      options.where = { code, ...options?.where };
-    } else {
-      options = { where: { code } };
-    }
-    return await this.findOneOrder(options);
-  }
-
-  async getOrderDetailById(id: string, options?: any) {
-    const order = await this.findOrderDetailById(id, options);
-    if (!order) {
-      throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
-    }
-    return order;
-  }
-
-  async getOrderDetailByCode(code: string, options?: any) {
-    const order = await this.findOrderDetailByCode(code, options);
-    if (!order) {
-      throw new UnauthorizedException('ORDER_DETAIL_NOT_FOUND');
-    }
-    return order;
-  }
-
-  async getOrderDetailByOrderCode(orderCode: string, options?: any) {
-    const order = await this.orderDetailRepository.find({
-      where: { orderCode, ...options?.where },
-      relations: {
-        deletedAt: false,
-        ...options?.relations,
-      },
-      select: { deletedAt: false, ...options?.select },
-      order: {
-        createdAt: SortEnum.DESC,
-        ...options?.orderBy,
-      },
-      ...options?.other,
-    });
-    return order;
-  }
-
   async createOrderDetail(
     dto: CreateOrderDetailDto,
     userId: string,
@@ -778,5 +1108,269 @@ export class OrderService {
     } finally {
       await queryRunnerOrderDetail.release();
     }
+  }
+
+  // order refund
+  async findOneOrderRefund(options?: any) {
+    return await this.orderRefundRepository.findOne({
+      where: { ...options?.where },
+      relations: { order: true, ...options?.relations },
+      select: { ...options?.select },
+      order: { ...options?.order },
+      ...options?.other,
+    });
+  }
+
+  async findOneOrderRefundById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneOrderRefund(options);
+  }
+
+  async findOneOrderRefundByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
+    }
+    return await this.findOneOrderRefund(options);
+  }
+
+  async getOrderRefundByCode(code: string, options?: any) {
+    const orderRefund = await this.findOneOrderRefundByCode(code, options);
+    if (!orderRefund) {
+      throw new NotFoundException('ORDER_REFUND_NOT_FOUND');
+    }
+    return orderRefund;
+  }
+
+  async findAllOrderRefund(
+    dto: FilterOrderRefundDto,
+    userId: string,
+    pagination?: Pagination,
+  ) {
+    const { keywords, status, startDate, endDate, minTotal, maxTotal, sort } =
+      dto;
+    const admin = await this.adminService.findOneBydId(userId);
+    const customer = await this.customerService.findOneById(userId);
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const query = this.orderRefundRepository.createQueryBuilder('q');
+
+    if (keywords) {
+      const subQuery = this.orderRefundRepository.createQueryBuilder('q1');
+      subQuery
+        .where('q1.code ILIKE :code', { code: `%${keywords}%` })
+        .orWhere('q1.note ILIKE :note', { note: `%${keywords}%` })
+        .orWhere('q1.orderCode ILIKE :orderCode', {
+          orderCode: `%${keywords}%`,
+        })
+        .select('q1.id');
+      query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
+        code: `%${keywords}%`,
+        note: `%${keywords}%`,
+        orderCode: `%${keywords}%`,
+      });
+    }
+    if (status) {
+      query.andWhere('q.status = :status', { status });
+    }
+    if (startDate) {
+      query.andWhere('q.createdAt >= :startDate', { startDate });
+    }
+    if (endDate) {
+      query.andWhere('q.createdAt <= :endDate', { endDate });
+    }
+    if (minTotal) {
+      query.andWhere('q.total >= :minTotal', { minTotal });
+    }
+    if (maxTotal) {
+      query.andWhere('q.total <= :maxTotal', { maxTotal });
+    }
+    if (customer) {
+      query.andWhere('q.createdBy = :customerId', { customerId: userId });
+    }
+    query
+      .orderBy('q.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('q.code', SortEnum.ASC);
+
+    const dataResult = await query
+      .leftJoinAndSelect('q.orderRefundDetails', 'ord')
+      .select(this.selectFieldsOrderRefundWithQ)
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10)
+      .getMany();
+
+    const total = await query.getCount();
+
+    return { dataResult, total, pagination };
+  }
+
+  async createOrderRefund(orderCode: string, userId: string, order?: Order) {
+    const admin = await this.adminService.findOneBydId(userId);
+    const customer = await this.customerService.findOneById(userId);
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    const orderExist = order || (await this.findOneOrderByCode(orderCode));
+    if (!orderExist) {
+      throw new BadRequestException('ORDER_NOT_FOUND');
+    }
+
+    switch (orderExist.status) {
+      case OrderStatusEnum.CANCEL:
+        throw new BadRequestException('ORDER_IS_CANCELLED');
+        break;
+      case OrderStatusEnum.UNPAID:
+        throw new BadRequestException('ORDER_IS_UNPAID');
+        break;
+      default:
+        break;
+    }
+    const orderRefundExist = await this.findOneOrderRefundByCode(orderCode);
+    if (orderRefundExist) {
+      throw new BadRequestException('ORDER_IS_RETURNED', {
+        description: `Đơn hàng đã được trả lại có mã là ${orderRefundExist.code}`,
+      });
+    }
+
+    const orderRefund = new OrderRefund();
+    orderRefund.order = orderExist;
+    orderRefund.orderCode = orderExist.code;
+    orderRefund.code = orderExist.code;
+    orderRefund.total = orderExist.finalTotal;
+    if (customer) {
+      orderRefund.createdBy = customer.id;
+    } else {
+      orderRefund.createdBy = admin.id;
+    }
+    orderRefund.status = OrderRefundStatusEnum.PENDING;
+    const promotionHistories = orderExist.promotionHistories;
+
+    const createOrderRefund = await this.orderRefundRepository.save(
+      orderRefund,
+    );
+    if (!createOrderRefund) {
+      throw new BadRequestException('CREATE_ORDER_REFUND_FAILED');
+    }
+    const orderDetails = orderExist.orderDetails;
+
+    const queryOrderRD =
+      this.orderRDRepository.manager.connection.createQueryRunner();
+    await queryOrderRD.connect();
+    await queryOrderRD.startTransaction();
+
+    const queryPromotionH =
+      this.promotionHistoryRepository.manager.connection.createQueryRunner();
+    await queryPromotionH.connect();
+    await queryPromotionH.startTransaction();
+    try {
+      const orderRefundDetail = orderDetails.map(async (orderDetail) => {
+        delete createOrderRefund.order;
+        delete orderDetail.ticketDetail.seat.vehicle;
+        delete orderDetail.ticketDetail.ticket;
+        const orderRefundDetail = new OrderRefundDetail();
+        orderRefundDetail.total = orderDetail.total;
+        orderRefundDetail.orderRefundCode = createOrderRefund.code;
+        orderRefundDetail.orderRefund = createOrderRefund;
+        orderRefundDetail.ticketDetail = orderDetail.ticketDetail;
+        orderRefundDetail.orderDetail = orderDetail;
+        const createOrderRD = await queryOrderRD.manager.save(
+          orderRefundDetail,
+        );
+        if (!createOrderRD) {
+          throw new BadRequestException('CREATE_ORDER_REFUND_DETAIL_FAILED');
+        }
+        delete createOrderRD.orderRefund;
+        return createOrderRD;
+      });
+      const createOrderRDs = await Promise.all(orderRefundDetail);
+      orderRefund.orderRefundDetails = createOrderRDs;
+
+      const savePromotionHistories = promotionHistories.map(
+        async (promotionHistory) => {
+          promotionHistory.orderRefund = createOrderRefund;
+          const savePH = await queryPromotionH.manager.save(promotionHistory);
+          delete savePH.orderRefund;
+          return savePH;
+        },
+      );
+      const createPHs = await Promise.all(savePromotionHistories);
+      orderRefund.promotionHistories = createPHs;
+      await queryPromotionH.commitTransaction();
+      await queryOrderRD.commitTransaction();
+    } catch (error) {
+      await queryPromotionH.rollbackTransaction();
+      await queryOrderRD.rollbackTransaction();
+      if (createOrderRefund) {
+        await this.orderRefundRepository.remove(createOrderRefund);
+      }
+      if (error?.message) {
+        throw new BadRequestException(error?.message);
+      } else {
+        throw new BadRequestException('INTERNAL_SERVER_ERROR');
+      }
+    } finally {
+      await queryOrderRD.release();
+    }
+    return createOrderRefund;
+  }
+
+  async updateOrderRefundByIdOrCode(
+    dto: UpdateOrderRefundDto,
+    userId: string,
+    code?: string,
+    id?: string,
+  ) {
+    const { note, status } = dto;
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    const admin = await this.adminService.findOneBydId(userId);
+    if (!admin.isActive) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    let orderRefund: OrderRefund;
+    if (code) {
+      orderRefund = await this.findOneOrderRefundByCode(code);
+    } else if (id) {
+      orderRefund = await this.findOneOrderRefundById(id);
+    }
+    if (!orderRefund) {
+      throw new BadRequestException('ORDER_REFUND_NOT_FOUND');
+    }
+    if (note) {
+      orderRefund.note = note;
+    }
+    if (status) {
+      orderRefund.status = status;
+    }
+    orderRefund.updatedBy = admin.id;
+    const updateOrderRefund = await this.orderRefundRepository.save(
+      orderRefund,
+    );
+    if (!updateOrderRefund) {
+      throw new BadRequestException('UPDATE_ORDER_REFUND_FAILED');
+    }
+    return updateOrderRefund;
   }
 }

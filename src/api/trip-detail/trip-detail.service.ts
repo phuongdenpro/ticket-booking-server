@@ -63,19 +63,19 @@ export class TripDetailService {
 
   private tripDetailSelect = [
     'q',
-    'v.id',
-    'v.code',
-    'v.name',
-    'v.description',
-    'v.type',
-    'v.licensePlate',
-    'v.floorNumber',
-    'v.totalSeat',
-    't',
-    'fs',
-    'ts',
-    'i.id',
-    'i.url',
+    // 'v.id',
+    // 'v.code',
+    // 'v.name',
+    // 'v.description',
+    // 'v.type',
+    // 'v.licensePlate',
+    // 'v.floorNumber',
+    // 'v.totalSeat',
+    // 't.id',
+    // 'fs',
+    // 'ts',
+    // 'i.id',
+    // 'i.url',
   ];
 
   async findOneTripDetail(options: any) {
@@ -232,10 +232,10 @@ export class TripDetailService {
 
     const dataResult = await query
       .leftJoinAndSelect('q.trip', 't')
-      .leftJoinAndSelect('t.fromStation', 'fs')
-      .leftJoinAndSelect('t.toStation', 'ts')
-      .leftJoinAndSelect('q.vehicle', 'v')
-      .leftJoinAndSelect('v.images', 'i')
+      // .leftJoinAndSelect('t.fromStation', 'fs')
+      // .leftJoinAndSelect('t.toStation', 'ts')
+      // .leftJoinAndSelect('q.vehicle', 'v')
+      // .leftJoinAndSelect('v.images', 'i')
       .select(this.tripDetailSelect)
       .orderBy('q.createdAt', SortEnum.ASC)
       .addOrderBy('q.departureTime', sort)

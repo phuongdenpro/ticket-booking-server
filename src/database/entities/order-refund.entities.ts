@@ -1,4 +1,4 @@
-import { OrderRefundDetail, Order } from '.';
+import { OrderRefundDetail, Order, PromotionHistory } from '.';
 import {
   CreateDateColumn,
   UpdateDateColumn,
@@ -6,15 +6,18 @@ import {
   Column,
   Entity,
   JoinColumn,
-  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity({ name: 'order_refund' })
 export class OrderRefund {
   @PrimaryGeneratedColumn('uuid')
   id: string;
+
+  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  code: string;
 
   @Column({ name: 'note', type: 'text' })
   note: string;
@@ -24,6 +27,15 @@ export class OrderRefund {
 
   @Column({ name: 'total', type: 'double', nullable: true, default: 0.0 })
   total: number;
+
+  @Column({ name: 'order_code', type: 'varchar', length: 100, nullable: false })
+  orderCode: string;
+
+  @Column({ name: 'created_by', type: 'varchar', nullable: false })
+  createdBy: string;
+
+  @Column({ name: 'updated_by', type: 'varchar', nullable: true })
+  updatedBy: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
@@ -49,10 +61,15 @@ export class OrderRefund {
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   order: Order;
 
-  @ManyToOne(
+  @OneToMany(
     () => OrderRefundDetail,
     (orderRefundDetail) => orderRefundDetail.orderRefund,
   )
-  @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
-  orderRefundDetails: OrderRefundDetail;
+  orderRefundDetails: OrderRefundDetail[];
+
+  @OneToMany(
+    () => PromotionHistory,
+    (promotionHistory) => promotionHistory.orderRefund,
+  )
+  promotionHistories: PromotionHistory[];
 }

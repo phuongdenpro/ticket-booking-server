@@ -1,18 +1,32 @@
-import { RoleEnum } from './../enums/roles.enum';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { RoleEnum } from './../enums';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 import { JwtPayload } from './interfaces';
-import { Customer } from '../database/entities/customer.entities';
-import { Staff } from '../database/entities/staff.entities';
+import { Customer, Staff } from '../database/entities';
+import { Twilio } from 'twilio';
+import * as nodemailer from 'nodemailer';
+import { templateHtml } from './../utils';
 
 @Injectable()
 export class AuthService {
   private jwtService = new JwtService();
-  private configService = new ConfigService();
-  constructor(private dataSource: DataSource) {}
+  private twilioClient: Twilio;
+  constructor(
+    private readonly configService: ConfigService,
+    private dataSource: DataSource,
+  ) {
+    this.twilioClient = new Twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN,
+    );
+  }
 
   // validate User
   async validateUser(email: string, password: string) {
@@ -110,5 +124,42 @@ export class AuthService {
       access_token: at,
       refresh_token: rt,
     };
+  }
+
+  async sendPhoneCodeOtp(phoneNumber: string, code: string) {
+    try {
+      const message = `Mã OTP của bạn là: ${code}`;
+      const response = await this.twilioClient.messages.create({
+        body: message,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: `+84${phoneNumber.slice(1)}`,
+      });
+
+      return response;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException('SEND_SMS_FAILED');
+    }
+  }
+
+  async sendEmailCodeOtp(email: string, otp: string, otpExpireMinute) {
+    const fromEmail = this.configService.get('EMAIL');
+    const transporter = nodemailer.createTransport({
+      host: this.configService.get('SMTP_HOST'),
+      port: this.configService.get('SMTP_PORT'),
+      secure: false,
+      auth: {
+        user: fromEmail,
+        pass: this.configService.get('EMAIL_PASSWORD'),
+      },
+    });
+
+    const options = {
+      from: fromEmail,
+      to: email,
+      subject: 'PD Bus - Mã OTP xác nhận',
+      html: templateHtml(otp, otpExpireMinute),
+    };
+    await transporter.sendMail(options);
   }
 }

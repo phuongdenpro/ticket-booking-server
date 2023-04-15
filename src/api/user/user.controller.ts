@@ -9,10 +9,16 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UpdateCustomerDto, UserUpdatePasswordDto } from './dto';
+import {
+  CustomerConfirmAccountDto,
+  UpdateCustomerDto,
+  UserResetPasswordDto,
+  UserUpdatePasswordDto,
+} from './dto';
 
 @Controller('user')
 @ApiTags('User')
@@ -32,6 +38,18 @@ export class UserController {
   @ApiBearerAuth()
   async profile(@CurrentUser() user) {
     return this.userService.profile(user?.id);
+  }
+
+  @Post('active')
+  @HttpCode(HttpStatus.OK)
+  async confirmAccount(@Body() dto: CustomerConfirmAccountDto) {
+    return this.userService.confirmAccount(dto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  async resetPassword(@Body() dto: UserResetPasswordDto) {
+    return this.userService.resetPassword(dto);
   }
 
   @Patch('update-info')
