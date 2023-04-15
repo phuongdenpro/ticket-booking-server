@@ -156,10 +156,18 @@ export class UserService {
     if (phone) {
       customer = await this.customerService.findOneByPhone(phone, {
         where: { status: UserStatusEnum.INACTIVATE },
+        select: {
+          otpCode: true,
+          otpExpired: true,
+        },
       });
     } else if (email) {
       customer = await this.customerService.findOneByEmail(email, {
         where: { status: UserStatusEnum.INACTIVATE },
+        select: {
+          otpCode: true,
+          otpExpired: true,
+        },
       });
     }
     if (!customer) {
@@ -168,6 +176,8 @@ export class UserService {
     if (customer.status === UserStatusEnum.ACTIVE) {
       throw new BadRequestException('USER_ALREADY_ACTIVED');
     }
+    console.log(otp, customer.otpCode, customer.otpExpired);
+
     this.checkOTP(otp, customer.otpCode, customer.otpExpired);
     const saveCustomer = await this.customerService.updateActiveCustomer(
       customer.id,

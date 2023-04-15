@@ -117,9 +117,19 @@ export class AdminService {
     }
     let admin: Staff;
     if (phone) {
-      admin = await this.findOneByPhone(phone);
+      admin = await this.findOneByPhone(phone, {
+        select: {
+          otpCode: true,
+          otpExpired: true,
+        },
+      });
     } else if (email) {
-      admin = await this.findOneByEmail(email);
+      admin = await this.findOneByEmail(email, {
+        select: {
+          otpCode: true,
+          otpExpired: true,
+        },
+      });
     }
     if (!admin) {
       throw new BadRequestException('USER_NOT_FOUND');
