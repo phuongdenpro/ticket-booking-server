@@ -216,5 +216,6 @@ export const templateHtml = (otp, optTime) => {
   return html
     .replace('{OTP}', otp + '')
     .replace('{OTP_TIME}', optTime)
+    .replace('{appName}', appName)
     .replace('{appName}', appName);
 };

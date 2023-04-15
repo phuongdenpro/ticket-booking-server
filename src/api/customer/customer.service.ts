@@ -107,7 +107,6 @@ export class CustomerService {
   async findOneCustomer(options: any) {
     return await this.customerRepository.findOne({
       where: { ...options?.where },
-
       select: {
         id: true,
         lastLogin: true,
@@ -391,9 +390,6 @@ export class CustomerService {
 
   async updateOtpCustomer(id: string, otpCode: string, otpExpired: Date) {
     const customer = await this.getCustomerById(id);
-    if (customer.status === UserStatusEnum.ACTIVE) {
-      throw new BadRequestException('USER_ALREADY_ACTIVE');
-    }
     customer.otpCode = otpCode;
     customer.otpExpired = otpExpired;
     const saveCustomer = await this.customerRepository.save(customer);

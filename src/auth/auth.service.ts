@@ -7,14 +7,22 @@ import { DataSource } from 'typeorm';
 import { JwtPayload } from './interfaces';
 import { Customer, Staff } from '../database/entities';
 import { Twilio } from 'twilio';
-import nodemailer from 'nodemailer';
+import * as nodemailer from 'nodemailer';
 import { templateHtml } from './../utils';
 
 @Injectable()
 export class AuthService {
   private jwtService = new JwtService();
-  private configService = new ConfigService();
-  constructor(private dataSource: DataSource) {}
+  private twilioClient: Twilio;
+  constructor(
+    private readonly configService: ConfigService,
+    private dataSource: DataSource,
+  ) {
+    this.twilioClient = new Twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN,
+    );
+  }
 
   // validate User
   async validateUser(email: string, password: string) {
@@ -118,29 +126,34 @@ export class AuthService {
     const accountSid = this.configService.get('TWILIO_ACCOUNT_SID');
     const authToken = this.configService.get('TWILIO_AUTH_TOKEN');
     const phoneNumberFrom = this.configService.get('TWILIO_PHONE_NUMBER');
-    const client = new Twilio(accountSid, authToken);
 
     const message = `Mã OTP của bạn là: ${code}`;
     const data = {
       body: message,
       from: phoneNumberFrom,
-      to: phoneNumber,
+      to: `+84${phoneNumber.slice(1)}`,
     };
-    await client.messages.create(data).then((message) => message);
+    await this.twilioClient.messages.create(data);
   }
 
   async sendEmailCodeOtp(email: string, otp: string, otpExpireMinute) {
+    const fromEmail = this.configService.get('EMAIL');
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: this.configService.get('SMTP_HOST'),
+      port: this.configService.get('SMTP_PORT'),
+      secure: false,
       auth: {
-        user: this.configService.get('EMAIL_USER'),
+        user: fromEmail,
         pass: this.configService.get('EMAIL_PASSWORD'),
       },
     });
-    await transporter.sendMail(
-      email,
-      'PD Bus - OTP xác nhận tài khoản',
-      templateHtml(otp, otpExpireMinute),
-    );
+
+    const options = {
+      from: fromEmail,
+      to: email,
+      subject: 'PD Bus - Mã OTP xác nhận',
+      html: templateHtml(otp, otpExpireMinute),
+    };
+    await transporter.sendMail(options);
   }
 }
