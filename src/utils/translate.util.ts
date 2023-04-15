@@ -611,4 +611,7 @@ export const mappingTranslate = {
   CREATE_ORDER_REFUND_FAILED: 'Tạo hoá đơn hoàn trả thất bại',
   ORDER_REFUND_NOT_FOUND: 'Không tìm thấy hoá đơn hoàn trả',
   ORDER_REFUND_STATUS_IS_ENUM: 'Trạng thái hoá đơn hoàn trả không hợp lệ',
+
+  // otp
+  SEND_SMS_FAILED: 'Gửi mã otp thất bại',
 };

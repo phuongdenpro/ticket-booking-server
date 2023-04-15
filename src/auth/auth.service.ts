@@ -1,5 +1,9 @@
 import { RoleEnum } from './../enums';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -123,17 +127,19 @@ export class AuthService {
   }
 
   async sendPhoneCodeOtp(phoneNumber: string, code: string) {
-    const accountSid = this.configService.get('TWILIO_ACCOUNT_SID');
-    const authToken = this.configService.get('TWILIO_AUTH_TOKEN');
-    const phoneNumberFrom = this.configService.get('TWILIO_PHONE_NUMBER');
+    try {
+      const message = `Mã OTP của bạn là: ${code}`;
+      const response = await this.twilioClient.messages.create({
+        body: message,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: `+84${phoneNumber.slice(1)}`,
+      });
 
-    const message = `Mã OTP của bạn là: ${code}`;
-    const data = {
-      body: message,
-      from: phoneNumberFrom,
-      to: `+84${phoneNumber.slice(1)}`,
-    };
-    await this.twilioClient.messages.create(data);
+      return response;
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException('SEND_SMS_FAILED');
+    }
   }
 
   async sendEmailCodeOtp(email: string, otp: string, otpExpireMinute) {
