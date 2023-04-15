@@ -129,33 +129,32 @@ export class AuthCustomerService {
 
   async login(dto: CustomerLoginDto) {
     const { email, phone, password } = dto;
-    const userEmailExist = await this.customerService.findOneByEmail(email, {
-      select: {
-        id: true,
-        password: true,
-      },
-    });
-    const userPhoneExist = await this.customerService.findOneByPhone(phone, {
-      select: {
-        id: true,
-        password: true,
-      },
-    });
-    if (userEmailExist) {
-      if (!userEmailExist?.password) {
-        throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
-      }
-    } else if (userPhoneExist) {
-      if (!userPhoneExist?.password) {
-        throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
-      }
-    } else {
+    let customer: Customer;
+    if (!email && !phone) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
+    if (email) {
+      customer = await this.customerService.findOneByEmail(email, {
+        select: {
+          id: true,
+          password: true,
+        },
+      });
+    } else if (phone) {
+      customer = await this.customerService.findOneByPhone(phone, {
+        select: {
+          id: true,
+          password: true,
+        },
+      });
+    }
+    if (!customer || !customer?.password) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
-    const user = userEmailExist || userPhoneExist;
+
     const isPasswordMatches = await this.authService.comparePassword(
       password,
-      user?.password,
+      customer?.password,
     );
     if (!isPasswordMatches) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
@@ -166,11 +165,11 @@ export class AuthCustomerService {
       await queryRunner.startTransaction();
 
       const tokens = await this.authService.createTokens(
-        user,
+        customer,
         RoleEnum.CUSTOMER,
       );
 
-      await this.updateUserCredentialByUserId(user.id, {
+      await this.updateUserCredentialByUserId(customer.id, {
         refreshToken: tokens.refresh_token,
         accessToken: tokens.access_token,
         lastLogin: new Date(),

@@ -123,16 +123,24 @@ export class CustomerService {
         updatedBy: true,
         ward: {
           id: true,
-          code: true,
           name: true,
+          type: true,
+          codename: true,
+          code: true,
+          districtCode: true,
           district: {
             id: true,
-            code: true,
             name: true,
+            type: true,
+            codename: true,
+            code: true,
+            provinceCode: true,
             province: {
               id: true,
-              code: true,
               name: true,
+              type: true,
+              codename: true,
+              code: true,
             },
           },
         },
@@ -292,12 +300,15 @@ export class CustomerService {
       wardCode,
       otp,
     } = dto;
+    if (!userId && !adminId) {
+      throw new NotFoundException('USER_NOT_FOUND');
+    }
     const admin = await this.dataSource.getRepository(Staff).findOne({
       where: {
-        id: adminId || '',
+        id: adminId,
       },
     });
-    const customer = await this.findOneById(userId || '', {
+    const customer = await this.findOneById(userId, {
       select: {
         otpCode: true,
         otpExpired: true,
@@ -314,12 +325,7 @@ export class CustomerService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const oldCustomer = await this.findOneById(id, {
-      select: {
-        ...this.selectFieldsAddress.select,
-      },
-      relations: this.selectFieldsAddress.relations,
-    });
+    const oldCustomer = await this.findOneById(id);
     if (fullName) {
       oldCustomer.fullName = fullName;
     }
@@ -378,6 +384,12 @@ export class CustomerService {
         this.checkOTP(otp, customer.otpCode, customer.otpExpired);
         oldCustomer.email = email;
       }
+    }
+
+    if (customer) {
+      customer.updatedBy = userId;
+    } else if (admin) {
+      oldCustomer.updatedBy = adminId;
     }
 
     const saveCustomer = await this.customerRepository.save(oldCustomer);

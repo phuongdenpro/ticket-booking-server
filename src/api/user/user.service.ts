@@ -102,9 +102,19 @@ export class UserService {
     }
     let customer: Customer;
     if (phone) {
-      customer = await this.customerService.findOneByPhone(phone);
+      customer = await this.customerService.findOneByPhone(phone, {
+        select: {
+          otpCode: true,
+          otpExpired: true,
+        },
+      });
     } else if (email) {
-      customer = await this.customerService.findOneByEmail(email);
+      customer = await this.customerService.findOneByEmail(email, {
+        select: {
+          otpCode: true,
+          otpExpired: true,
+        },
+      });
     }
     if (!customer) {
       throw new BadRequestException('USER_NOT_FOUND');
@@ -112,6 +122,7 @@ export class UserService {
     if (customer.status === UserStatusEnum.INACTIVATE) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
+    console.log(otp, customer.otpCode, customer.otpExpired);
     this.checkOTP(otp, customer.otpCode, customer.otpExpired);
     if (newPassword !== confirmNewPassword)
       throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
@@ -127,6 +138,8 @@ export class UserService {
     delete saveCustomer.updatedBy;
     delete saveCustomer.refreshToken;
     delete saveCustomer.accessToken;
+    delete saveCustomer.otpCode;
+    delete saveCustomer.otpExpired;
 
     return saveCustomer;
   }

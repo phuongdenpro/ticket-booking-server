@@ -152,7 +152,7 @@ export class AuthAdminService {
     if (!email && !phone) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
     }
-    let staffExist;
+    let staffExist: Staff;
     if (email) {
       staffExist = await this.findOneByEmail(email, {
         select: {
@@ -166,7 +166,7 @@ export class AuthAdminService {
         },
       });
     }
-    if (!staffExist) {
+    if (!staffExist || !staffExist?.password) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
 
