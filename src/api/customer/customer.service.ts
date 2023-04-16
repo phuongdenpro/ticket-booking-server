@@ -1,4 +1,9 @@
-import { GenderEnum, SortEnum, UserStatusEnum } from './../../enums';
+import {
+  GenderEnum,
+  SortEnum,
+  UserStatusEnum,
+  ActiveOtpTypeEnum,
+} from './../../enums';
 import { Pagination } from '../../decorator';
 import { Customer, CustomerGroup, Staff, Ward } from '../../database/entities';
 import {
@@ -400,10 +405,18 @@ export class CustomerService {
     return saveCustomer;
   }
 
-  async updateOtpCustomer(id: string, otpCode: string, otpExpired: Date) {
+  async updateOtpCustomer(
+    id: string,
+    otpCode: string,
+    otpExpired: Date,
+    otpType?: ActiveOtpTypeEnum,
+  ) {
     const customer = await this.getCustomerById(id);
     customer.otpCode = otpCode;
     customer.otpExpired = otpExpired;
+    if (otpType && otpType === ActiveOtpTypeEnum.RESET_PASSWORD) {
+      customer.noteStatus = ActiveOtpTypeEnum.RESET_PASSWORD;
+    }
     const saveCustomer = await this.customerRepository.save(customer);
     return saveCustomer;
   }

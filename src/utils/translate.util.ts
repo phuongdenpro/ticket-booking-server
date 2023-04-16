@@ -13,6 +13,7 @@ export const mappingTranslate = {
   OTP_INVALID: 'Mã OTP không hợp lệ',
   INVALID_OTP_TYPE: 'Loại mã OTP không hợp lệ',
   OTP_TYPE_IS_REQUIRED: 'Loại mã OTP không được để trống',
+  USER_NOT_RESET_PASSWORD: 'Tài khoản chưa yêu cầu đổi mật khẩu',
   USERNAME_REQUIRED: 'Tên đăng nhập không được để trống',
   OTP_REQUIRED: 'Mã OTP không được để trống',
   ID_OR_CODE_IS_REQUIRED: 'Id hoặc mã không được để trống',

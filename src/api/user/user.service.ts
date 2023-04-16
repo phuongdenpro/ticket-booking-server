@@ -87,12 +87,9 @@ export class UserService {
   }
 
   async resetPassword(dto: UserResetPasswordDto) {
-    const { phone, email, otp, newPassword, confirmNewPassword } = dto;
+    const { phone, email, newPassword, confirmNewPassword } = dto;
     if (!phone && !email) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
-    }
-    if (!otp) {
-      throw new BadRequestException('OTP_REQUIRED');
     }
     if (!newPassword) {
       throw new BadRequestException('NEW_PASSWORD_REQUIRED');
@@ -103,17 +100,11 @@ export class UserService {
     let customer: Customer;
     if (phone) {
       customer = await this.customerService.findOneByPhone(phone, {
-        select: {
-          otpCode: true,
-          otpExpired: true,
-        },
+        select: { noteStatus: true },
       });
     } else if (email) {
       customer = await this.customerService.findOneByEmail(email, {
-        select: {
-          otpCode: true,
-          otpExpired: true,
-        },
+        select: { noteStatus: true },
       });
     }
     if (!customer) {
@@ -122,15 +113,14 @@ export class UserService {
     if (customer.status === UserStatusEnum.INACTIVATE) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-    console.log(otp, customer.otpCode, customer.otpExpired);
-    this.checkOTP(otp, customer.otpCode, customer.otpExpired);
+    if (customer.noteStatus !== ActiveOtpTypeEnum.RESET_PASSWORD) {
+      throw new BadRequestException('USER_NOT_RESET_PASSWORD');
+    }
     if (newPassword !== confirmNewPassword)
       throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
     const passwordHash = await this.authService.hashData(newPassword);
     customer.password = passwordHash;
     customer.updatedBy = customer.id;
-    customer.otpCode = null;
-    customer.otpExpired = null;
     customer.refreshToken = null;
     customer.accessToken = null;
     const saveCustomer = await this.customerRepository.save(customer);
@@ -138,8 +128,6 @@ export class UserService {
     delete saveCustomer.updatedBy;
     delete saveCustomer.refreshToken;
     delete saveCustomer.accessToken;
-    delete saveCustomer.otpCode;
-    delete saveCustomer.otpExpired;
 
     return saveCustomer;
   }
@@ -176,6 +164,9 @@ export class UserService {
     if (customer.status === UserStatusEnum.ACTIVE) {
       throw new BadRequestException('USER_ALREADY_ACTIVED');
     }
+    if (type) {
+      throw new BadRequestException('OTP_TYPE_IS_REQUIRED');
+    }
     this.checkOTP(otp, customer.otpCode, customer.otpExpired);
     let saveCustomer: Customer;
     if (type === ActiveOtpTypeEnum.ACTIVE) {
@@ -187,6 +178,7 @@ export class UserService {
         customer.id,
         null,
         null,
+        ActiveOtpTypeEnum.RESET_PASSWORD,
       );
     }
 
