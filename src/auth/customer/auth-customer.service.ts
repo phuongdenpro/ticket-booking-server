@@ -229,7 +229,7 @@ export class AuthCustomerService {
     const otpExpiredTime = this.configService.get('OTP_EXPIRE_MINUTE');
     const otpExpired = moment().add(otpExpiredTime, 'minutes').toDate();
 
-    const saveCustomer = await this.customerService.updateOtpCustomer(
+    const saveCustomer = await this.customerService.updateOtp(
       customer.id,
       otpCode,
       otpExpired,

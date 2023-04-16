@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import {
-  CustomerConfirmAccountDto,
+  ConfirmAccountDto,
   UpdateCustomerDto,
   UserResetPasswordDto,
   UserUpdatePasswordDto,
@@ -42,7 +42,7 @@ export class UserController {
 
   @Post('active')
   @HttpCode(HttpStatus.OK)
-  async confirmAccount(@Body() dto: CustomerConfirmAccountDto) {
+  async confirmAccount(@Body() dto: ConfirmAccountDto) {
     return this.userService.confirmAccount(dto);
   }
 

@@ -96,6 +96,9 @@ export class Staff {
   @Column({ name: 'otp_expired', type: 'timestamp', nullable: true })
   otpExpired: Date;
 
+  @Column({ name: 'note_status', type: 'text', nullable: true })
+  noteStatus: string;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: true })
   createdBy: string;
 

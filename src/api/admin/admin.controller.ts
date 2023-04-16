@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Post,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
@@ -13,6 +14,7 @@ import { AdminService } from './admin.service';
 import { CurrentUser, Roles } from './../../decorator';
 import { JwtAuthGuard } from './../../auth/guards';
 import { AdminResetPasswordDto, AdminUpdatePasswordDto } from './dto';
+import { ConfirmAccountDto } from '../user/dto';
 
 @Controller('admin')
 @ApiTags('Admin')
@@ -52,12 +54,9 @@ export class AdminController {
     return this.adminService.resetPassword(dto);
   }
 
-  // @Patch('')
-  // @Roles(RoleEnum.STAFF)
-  // @HttpCode(HttpStatus.OK)
-  // @UseGuards(JwtAuthGuard)
-  // @ApiBearerAuth()
-  // async updateAdmin(@CurrentUser() user, @Body() dto: AdminUpdateDto) {
-  // return this.adminService.updatePassword(user?.id, dto);
-  // }
+  @Post('active')
+  @HttpCode(HttpStatus.OK)
+  async confirmAccount(@Body() dto: ConfirmAccountDto) {
+    return this.adminService.confirmAccount(dto);
+  }
 }

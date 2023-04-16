@@ -405,7 +405,7 @@ export class CustomerService {
     return saveCustomer;
   }
 
-  async updateOtpCustomer(
+  async updateOtp(
     id: string,
     otpCode: string,
     otpExpired: Date,
@@ -421,7 +421,7 @@ export class CustomerService {
     return saveCustomer;
   }
 
-  async updateActiveCustomer(id: string) {
+  async updateActive(id: string) {
     const customer = await this.getCustomerById(id);
     if (customer.status === UserStatusEnum.ACTIVE) {
       throw new BadRequestException('USER_ALREADY_ACTIVE');

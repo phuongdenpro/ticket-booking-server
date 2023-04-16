@@ -9,7 +9,7 @@ import {
   IsString,
 } from 'class-validator';
 
-export class CustomerConfirmAccountDto {
+export class ConfirmAccountDto {
   @ApiPropertyOptional({ example: '09xxxxxxxx' })
   @IsPhoneNumber('VN', { message: 'INVALID_PHONE_NUMBER' })
   @IsString({ message: 'PHONE_IS_STRING' })

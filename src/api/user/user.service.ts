@@ -10,7 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { CustomerService } from '../customer/customer.service';
 import { Repository } from 'typeorm';
 import {
-  CustomerConfirmAccountDto,
+  ConfirmAccountDto,
   UpdateCustomerDto,
   UserResetPasswordDto,
   UserUpdatePasswordDto,
@@ -132,7 +132,7 @@ export class UserService {
     return saveCustomer;
   }
 
-  async confirmAccount(dto: CustomerConfirmAccountDto) {
+  async confirmAccount(dto: ConfirmAccountDto) {
     const { phone, email, otp, type } = dto;
     if (!phone && !email) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
@@ -170,11 +170,9 @@ export class UserService {
     this.checkOTP(otp, customer.otpCode, customer.otpExpired);
     let saveCustomer: Customer;
     if (type === ActiveOtpTypeEnum.ACTIVE) {
-      saveCustomer = await this.customerService.updateActiveCustomer(
-        customer.id,
-      );
+      saveCustomer = await this.customerService.updateActive(customer.id);
     } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
-      saveCustomer = await this.customerService.updateOtpCustomer(
+      saveCustomer = await this.customerService.updateOtp(
         customer.id,
         null,
         null,

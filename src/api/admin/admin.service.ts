@@ -1,17 +1,17 @@
+import { ActiveOtpTypeEnum } from './../../enums';
 import { AuthService } from './../../auth/auth.service';
-import { AuthAdminService } from '../../auth/admin/auth-admin.service';
-import { Staff } from './../../database/entities/staff.entities';
+import { Staff } from './../../database/entities';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AdminResetPasswordDto, AdminUpdatePasswordDto } from './dto';
+import { ConfirmAccountDto } from '../user/dto';
 
 @Injectable()
 export class AdminService {
   constructor(
     @InjectRepository(Staff)
     private readonly adminRepository: Repository<Staff>,
-    private authAdminService: AuthAdminService,
     private authService: AuthService,
   ) {}
 
@@ -31,18 +31,36 @@ export class AdminService {
     }
   }
 
-  async findOneAdmin(options: any) {
-    return this.adminRepository.findOne({
+  async findOneAdmin(options?: any) {
+    return await this.adminRepository.findOne({
       where: { ...options?.where },
+      relations: [].concat(options?.relations || []),
       select: {
-        deleteAt: false,
-
+        id: true,
+        lastLogin: true,
+        isActive: true,
+        phone: true,
+        email: true,
+        fullName: true,
+        gender: true,
+        address: true,
+        note: true,
+        birthDay: true,
+        code: true,
+        createdAt: true,
         ...options?.select,
       },
-      relations: { ...options?.relations },
-      order: { ...options?.order },
       ...options?.other,
     });
+  }
+
+  async findOneById(id: string, options?: any) {
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOneAdmin(options);
   }
 
   async findOneByPhone(phone: string, options?: any) {
@@ -65,13 +83,44 @@ export class AdminService {
     return await this.findOneAdmin(options);
   }
 
+  async findOneByRefreshToken(refreshToken: string, options?: any) {
+    if (options) {
+      options.where = {
+        refreshToken,
+        ...options?.where,
+        select: {
+          refreshToken: true,
+          accessToken: true,
+          ...options?.select,
+        },
+      };
+    } else {
+      options = {
+        where: { refreshToken },
+        select: {
+          refreshToken: true,
+          accessToken: true,
+        },
+      };
+    }
+    return await this.findOneAdmin(options);
+  }
+
+  async getAdminById(id: string, options?: any) {
+    const staffExist = await this.findOneById(id, options);
+    if (!staffExist) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    return staffExist;
+  }
+
   async profile(adminId: string) {
-    const staffExist = this.authAdminService.findOneById(adminId);
+    const staffExist = this.findOneById(adminId);
     return staffExist;
   }
 
   async updatePassword(id: string, dto: AdminUpdatePasswordDto) {
-    const userExist = await this.authAdminService.findOneById(id);
+    const userExist = await this.findOneById(id);
     if (!userExist) {
       throw new BadRequestException('USER_NOT_FOUND');
     }
@@ -97,8 +146,88 @@ export class AdminService {
     );
   }
 
-  async findOneBydId(id: string, options?: any) {
-    return await this.authAdminService.findOneById(id, options);
+  async updateOtp(
+    id: string,
+    otpCode: string,
+    otpExpired: Date,
+    otpType?: ActiveOtpTypeEnum,
+  ) {
+    const admin = await this.getAdminById(id);
+    admin.otpCode = otpCode;
+    admin.otpExpired = otpExpired;
+    if (otpType && otpType === ActiveOtpTypeEnum.RESET_PASSWORD) {
+      admin.noteStatus = ActiveOtpTypeEnum.RESET_PASSWORD;
+    }
+    const saveCustomer = await this.adminRepository.save(admin);
+    return saveCustomer;
+  }
+
+  async updateActive(id: string) {
+    const admin = await this.getAdminById(id);
+    if (admin.isActive) {
+      throw new BadRequestException('USER_ALREADY_ACTIVE');
+    }
+    admin.isActive = true;
+    admin.otpCode = null;
+    admin.otpExpired = null;
+    const saveCustomer = await this.adminRepository.save(admin);
+    return saveCustomer;
+  }
+
+  async confirmAccount(dto: ConfirmAccountDto) {
+    const { phone, email, otp, type } = dto;
+    if (!phone && !email) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
+    if (!otp) {
+      throw new BadRequestException('OTP_REQUIRED');
+    }
+    let staff: Staff;
+    if (phone) {
+      staff = await this.findOneByPhone(phone, {
+        where: { isActive: true },
+        select: {
+          otpCode: true,
+          otpExpired: true,
+        },
+      });
+    } else if (email) {
+      staff = await this.findOneByEmail(email, {
+        where: { isActive: true },
+        select: {
+          otpCode: true,
+          otpExpired: true,
+        },
+      });
+    }
+    if (!staff) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    if (!staff.isActive) {
+      throw new BadRequestException('USER_ALREADY_ACTIVED');
+    }
+    if (type) {
+      throw new BadRequestException('OTP_TYPE_IS_REQUIRED');
+    }
+    this.checkOTP(otp, staff.otpCode, staff.otpExpired);
+    let saveStaff: Staff;
+    if (type === ActiveOtpTypeEnum.ACTIVE) {
+      saveStaff = await this.updateActive(staff.id);
+    } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
+      saveStaff = await this.updateOtp(
+        staff.id,
+        null,
+        null,
+        ActiveOtpTypeEnum.RESET_PASSWORD,
+      );
+    }
+
+    return {
+      customer: {
+        id: saveStaff.id,
+      },
+      message: 'Kích hoạt tài khoản thành công',
+    };
   }
 
   async resetPassword(dto: AdminResetPasswordDto) {
