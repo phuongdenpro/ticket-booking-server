@@ -15,7 +15,7 @@ export class AdminService {
     private authService: AuthService,
   ) {}
 
-  private checkOTP(sendOTP, dbOTP, otpTime) {
+  private checkOTP(sendOTP: string, dbOTP: string, otpTime: Date) {
     if (!dbOTP) {
       throw new BadRequestException('OTP_INVALID');
     }

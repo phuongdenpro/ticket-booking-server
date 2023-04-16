@@ -84,7 +84,7 @@ export class CustomerService {
     },
   };
 
-  private checkOTP(sendOTP, dbOTP, otpTime) {
+  private checkOTP(sendOTP: string, dbOTP: string, otpTime: Date) {
     if (!dbOTP) {
       throw new BadRequestException('OTP_INVALID');
     }

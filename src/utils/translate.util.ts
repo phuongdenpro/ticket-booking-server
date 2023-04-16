@@ -11,6 +11,8 @@ export const mappingTranslate = {
   USER_ALREADY_ACTIVED: 'Tài khoản đã được kích hoạt',
   OTP_EXPIRED: 'Mã OTP đã hết hạn',
   OTP_INVALID: 'Mã OTP không hợp lệ',
+  INVALID_OTP_TYPE: 'Loại mã OTP không hợp lệ',
+  OTP_TYPE_IS_REQUIRED: 'Loại mã OTP không được để trống',
   USERNAME_REQUIRED: 'Tên đăng nhập không được để trống',
   OTP_REQUIRED: 'Mã OTP không được để trống',
   ID_OR_CODE_IS_REQUIRED: 'Id hoặc mã không được để trống',

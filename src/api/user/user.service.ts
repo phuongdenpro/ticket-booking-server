@@ -1,4 +1,4 @@
-import { UserStatusEnum } from './../../enums';
+import { ActiveOtpTypeEnum, UserStatusEnum } from './../../enums';
 import { Customer } from './../../database/entities';
 import { AuthService } from './../../auth/auth.service';
 import {
@@ -145,7 +145,7 @@ export class UserService {
   }
 
   async confirmAccount(dto: CustomerConfirmAccountDto) {
-    const { phone, email, otp } = dto;
+    const { phone, email, otp, type } = dto;
     if (!phone && !email) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
     }
@@ -176,12 +176,19 @@ export class UserService {
     if (customer.status === UserStatusEnum.ACTIVE) {
       throw new BadRequestException('USER_ALREADY_ACTIVED');
     }
-    console.log(otp, customer.otpCode, customer.otpExpired);
-
     this.checkOTP(otp, customer.otpCode, customer.otpExpired);
-    const saveCustomer = await this.customerService.updateActiveCustomer(
-      customer.id,
-    );
+    let saveCustomer: Customer;
+    if (type === ActiveOtpTypeEnum.ACTIVE) {
+      saveCustomer = await this.customerService.updateActiveCustomer(
+        customer.id,
+      );
+    } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
+      saveCustomer = await this.customerService.updateOtpCustomer(
+        customer.id,
+        null,
+        null,
+      );
+    }
 
     return {
       customer: {
@@ -191,7 +198,7 @@ export class UserService {
     };
   }
 
-  private checkOTP(sendOTP, dbOTP, otpTime) {
+  private checkOTP(sendOTP: string, dbOTP: string, otpTime: Date) {
     if (!dbOTP) {
       throw new BadRequestException('OTP_INVALID');
     }
