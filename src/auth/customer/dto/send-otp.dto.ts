@@ -9,8 +9,14 @@ export class SendOtpDto {
   phone: string;
 
   @ApiPropertyOptional({ example: 'superman@gmail.com' })
-  @IsString({ message: 'EMAIL_IS_STRING' })
-  @IsEmail({}, { message: 'EMAIL_INVALID' })
+  @IsString({ message: 'OLD_EMAIL_IS_STRING' })
+  @IsEmail({}, { message: 'OLD_EMAIL_INVALID' })
   @IsOptional()
-  email: string;
+  oldEmail: string;
+
+  @ApiPropertyOptional({ example: 'superman@gmail.com' })
+  @IsString({ message: 'OLD_EMAIL_IS_STRING' })
+  @IsEmail({}, { message: 'NEW_EMAIL_INVALID' })
+  @IsOptional()
+  newEmail: string;
 }

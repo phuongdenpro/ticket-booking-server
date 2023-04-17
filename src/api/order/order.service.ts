@@ -56,6 +56,7 @@ import {
   FilterOrderRefundDto,
   UpdateOrderRefundDto,
 } from '../order-refund/dto';
+import { ConfigService } from '@nestjs/config';
 moment.locale('vi');
 
 @Injectable()
@@ -82,6 +83,7 @@ export class OrderService {
     private readonly promotionLineService: PromotionLineService,
     private readonly promotionHistoryService: PromotionHistoryService,
     private dataSource: DataSource,
+    private configService: ConfigService,
   ) {}
 
   private SEAT_TYPE_DTO_ID = 'id';
@@ -912,20 +914,22 @@ export class OrderService {
     if (!order) {
       throw new BadRequestException('ORDER_NOT_FOUND');
     }
-    if (order.status === OrderStatusEnum.PAID) {
-      throw new BadRequestException('ORDER_ALREADY_PAID');
-    }
-    if (order.status === OrderStatusEnum.CANCEL) {
-      throw new BadRequestException('ORDER_ALREADY_CANCEL');
-    }
-    if (order.status === OrderStatusEnum.RETURNED) {
-      throw new BadRequestException('ORDER_ALREADY_RETURNED');
+    switch (order.status) {
+      case OrderStatusEnum.PAID:
+        throw new BadRequestException('ORDER_ALREADY_PAID');
+        break;
+      case OrderStatusEnum.PAID:
+        throw new BadRequestException('ORDER_ALREADY_CANCEL');
+        break;
+      case OrderStatusEnum.PAID:
+        throw new BadRequestException('ORDER_ALREADY_RETURNED');
+        break;
+      default:
+        break;
     }
     order.status = OrderStatusEnum.PAID;
     switch (paymentMethod) {
       case PaymentMethod.CASH:
-      case PaymentMethod.BANK_TRANSFER:
-      case PaymentMethod.MOMO:
       case PaymentMethod.ZALO_PAY:
         order.paymentMethod = paymentMethod;
         break;

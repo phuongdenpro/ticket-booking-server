@@ -213,10 +213,10 @@ export class AuthCustomerService {
   }
 
   async sendOtp(dto: SendOtpDto) {
-    const { email, phone } = dto;
+    const { oldEmail, newEmail, phone } = dto;
     let customer: Customer;
-    if (email) {
-      customer = await this.customerService.findOneByEmail(email);
+    if (oldEmail) {
+      customer = await this.customerService.findOneByEmail(oldEmail);
     } else if (phone) {
       customer = await this.customerService.findOneByPhone(phone);
     } else {
@@ -237,8 +237,12 @@ export class AuthCustomerService {
     if (!saveCustomer) {
       throw new BadRequestException('SEND_OTP_FAILED');
     }
-    if (email) {
-      await this.authService.sendEmailCodeOtp(email, otpCode, otpExpiredTime);
+    if (oldEmail || newEmail) {
+      await this.authService.sendEmailCodeOtp(
+        newEmail || oldEmail,
+        otpCode,
+        otpExpiredTime,
+      );
     } else {
       await this.authService.sendPhoneCodeOtp(phone, otpCode);
     }

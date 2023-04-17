@@ -165,7 +165,7 @@ export class AuthAdminService {
   }
 
   async sendOtp(dto: SendOtpDto) {
-    const { email, phone } = dto;
+    const { oldEmail: email, phone: phone } = dto;
     let staff: Staff;
     if (email) {
       staff = await this.adminService.findOneByEmail(email);

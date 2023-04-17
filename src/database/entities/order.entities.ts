@@ -40,6 +40,14 @@ export class Order {
   })
   paymentMethod: string;
 
+  @Column({
+    name: 'trans_Id',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  transId: string;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 
