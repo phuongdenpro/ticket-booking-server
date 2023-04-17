@@ -143,7 +143,6 @@ export class UserService {
     let customer: Customer;
     if (phone) {
       customer = await this.customerService.findOneByPhone(phone, {
-        where: { status: UserStatusEnum.INACTIVATE },
         select: {
           otpCode: true,
           otpExpired: true,
@@ -151,7 +150,6 @@ export class UserService {
       });
     } else if (email) {
       customer = await this.customerService.findOneByEmail(email, {
-        where: { status: UserStatusEnum.INACTIVATE },
         select: {
           otpCode: true,
           otpExpired: true,
@@ -160,9 +158,6 @@ export class UserService {
     }
     if (!customer) {
       throw new BadRequestException('USER_NOT_FOUND');
-    }
-    if (customer.status === UserStatusEnum.ACTIVE) {
-      throw new BadRequestException('USER_ALREADY_ACTIVED');
     }
     if (!type) {
       throw new BadRequestException('OTP_TYPE_IS_REQUIRED');

@@ -185,7 +185,6 @@ export class AdminService {
     let staff: Staff;
     if (phone) {
       staff = await this.findOneByPhone(phone, {
-        where: { isActive: true },
         select: {
           otpCode: true,
           otpExpired: true,
@@ -193,7 +192,6 @@ export class AdminService {
       });
     } else if (email) {
       staff = await this.findOneByEmail(email, {
-        where: { isActive: true },
         select: {
           otpCode: true,
           otpExpired: true,
@@ -202,9 +200,6 @@ export class AdminService {
     }
     if (!staff) {
       throw new BadRequestException('USER_NOT_FOUND');
-    }
-    if (!staff.isActive) {
-      throw new BadRequestException('USER_ALREADY_ACTIVED');
     }
     if (type) {
       throw new BadRequestException('OTP_TYPE_IS_REQUIRED');
