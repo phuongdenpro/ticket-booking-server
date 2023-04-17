@@ -320,7 +320,7 @@ export class OrderService {
       sort,
     } = dto;
     const customer = await this.customerService.findOneById(userId);
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -558,7 +558,7 @@ export class OrderService {
     } = dto;
     // check permission
     const customerCreator = await this.customerService.findOneById(creatorId);
-    const admin = await this.adminService.findOneBydId(creatorId);
+    const admin = await this.adminService.findOneById(creatorId);
     if (!creatorId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -755,7 +755,7 @@ export class OrderService {
     id?: string,
     code?: string,
   ) {
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
     console.log('vào');
 
@@ -892,7 +892,7 @@ export class OrderService {
   }
 
   async payment(dto: PaymentDto, userId: string) {
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
     if (!customer && !admin) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -966,7 +966,7 @@ export class OrderService {
     try {
       // check permission
       const customer = await this.customerService.findOneById(userId);
-      const admin = await this.adminService.findOneBydId(userId);
+      const admin = await this.adminService.findOneById(userId);
 
       if (!customer && !admin) {
         throw new UnauthorizedException('USER_NOT_FOUND');
@@ -1154,7 +1154,7 @@ export class OrderService {
   ) {
     const { keywords, status, startDate, endDate, minTotal, maxTotal, sort } =
       dto;
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -1218,7 +1218,7 @@ export class OrderService {
   }
 
   async createOrderRefund(orderCode: string, userId: string, order?: Order) {
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -1344,7 +1344,7 @@ export class OrderService {
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     if (!admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }

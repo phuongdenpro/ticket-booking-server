@@ -144,7 +144,7 @@ export class WardService {
     ward.district = district;
     ward.districtCode = district.code;
 
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -182,7 +182,7 @@ export class WardService {
       ward.districtCode = dist.code;
       ward.district = dist;
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -221,7 +221,7 @@ export class WardService {
       ward.districtCode = dist.code;
       ward.district = dist;
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -239,7 +239,7 @@ export class WardService {
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -258,7 +258,7 @@ export class WardService {
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
