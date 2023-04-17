@@ -59,7 +59,7 @@ export class OrderDetail {
   @JoinColumn({ name: 'price_detail_id', referencedColumnName: 'id' })
   priceDetail: PriceDetail;
 
-  @OneToOne(() => TicketDetail, (ticketDetail) => ticketDetail.orderDetail)
+  @ManyToOne(() => TicketDetail, (ticketDetail) => ticketDetail.orderDetails)
   @JoinColumn({ name: 'ticket_detail_id', referencedColumnName: 'id' })
   ticketDetail: TicketDetail;
 

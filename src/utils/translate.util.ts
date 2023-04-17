@@ -612,6 +612,7 @@ export const mappingTranslate = {
   PAYMENT_METHOD_NOT_FOUND: 'Không tìm thấy phương thức thanh toán',
   PAYMENT_METHOD_IS_REQUIRED: 'Phương thức thanh toán không được để trống',
   PAYMENT_METHOD_IS_ENUM: 'Phương thức thanh toán không hợp lệ',
+  PAYMENT_FAILED: 'Thanh toán thất bại',
 
   // order refund
   CREATE_ORDER_REFUND_DETAIL_FAILED: 'Tạo hoá đơn hoàn trả thất bại',

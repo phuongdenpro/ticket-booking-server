@@ -56,6 +56,8 @@ import {
   FilterOrderRefundDto,
   UpdateOrderRefundDto,
 } from '../order-refund/dto';
+import * as CryptoJS from 'crypto-js';
+import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
 moment.locale('vi');
 
@@ -928,6 +930,7 @@ export class OrderService {
         break;
     }
     order.status = OrderStatusEnum.PAID;
+    let paymentResult;
     if (paymentMethod === PaymentMethod.CASH) {
       order.paymentMethod = paymentMethod;
     } else if (PaymentMethod.ZALO_PAY) {
@@ -939,11 +942,13 @@ export class OrderService {
       const embed_data = {
         redirecturl: this.configService.get('REDIRECT_URL'),
       };
+      const items = [{}];
       const payload = {
         app_id: appId,
         app_trans_id: `${moment().format('YYMMDD')}_${orderCode}`,
         app_user: 'user123',
-        app_time: Date.now(),
+        app_time: Date.now(), // miliseconds
+        item: JSON.stringify(items),
         embed_data: JSON.stringify(embed_data),
         amount: Number(order.finalTotal),
         description: `Thanh toan ve ${orderCode}`,
@@ -962,9 +967,22 @@ export class OrderService {
         payload.app_time +
         '|' +
         payload.embed_data +
-        '|';
-      // payload.item;
-      // payload.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
+        '|' +
+        payload.item;
+      payload['mac'] = CryptoJS.HmacSHA256(data, key1).toString();
+      axios
+        .post(endpoint, null, { params: order })
+        .then((result) => {
+          paymentResult = {
+            zalo: result.data,
+            appTransId: payload.app_trans_id,
+            appTime: payload.app_time,
+          };
+        })
+        .catch((err) => {
+          console.log(err);
+          throw new BadRequestException('PAYMENT_FAILED');
+        });
     } else {
       throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
     }
@@ -985,7 +1003,10 @@ export class OrderService {
     await Promise.all(ticketDetails);
     const newOrder = await this.findOneOrderByCode(orderCode);
     delete newOrder.deletedAt;
-    return newOrder;
+    return {
+      order: newOrder,
+      paymentResult,
+    };
   }
 
   // order detail
@@ -1095,7 +1116,7 @@ export class OrderService {
       if (!dataResult) {
         throw new NotFoundException('PRICE_DETAIL_NOT_FOUND');
       }
-
+      console.log('price list');
       const priceDetail: PriceDetail = dataResult;
       delete priceDetail.trip;
       delete priceDetail.priceList;
@@ -1105,6 +1126,7 @@ export class OrderService {
       orderDetail.priceDetail = priceDetail;
       orderDetail.total = priceDetail.price;
 
+      console.log('create order detail');
       const createOrderDetail = await queryRunnerOrderDetail.manager.save(
         orderDetail,
       );
@@ -1115,6 +1137,7 @@ export class OrderService {
       // update ticket detail status
       const ticketDetailDto = new UpdateTicketDetailDto();
       ticketDetailDto.status = TicketStatusEnum.PENDING;
+      console.log('update ticket detail');
       const saveTicketDetail = await this.ticketService.updateTicketDetailById(
         ticketDetailId,
         ticketDetailDto,
@@ -1124,6 +1147,7 @@ export class OrderService {
       if (!saveTicketDetail) {
         throw new BadRequestException('UPDATE_TICKET_DETAIL_FAILED');
       }
+
       await queryRunnerOrderDetail.commitTransaction();
 
       delete createOrderDetail.deletedAt;

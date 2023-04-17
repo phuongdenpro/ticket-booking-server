@@ -9,7 +9,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   DeleteDateColumn,
-  OneToOne,
+  OneToMany,
 } from 'typeorm';
 
 @Entity({ name: 'ticket_detail' })
@@ -55,6 +55,6 @@ export class TicketDetail {
   @JoinColumn({ name: 'seat_id', referencedColumnName: 'id' })
   seat: Seat;
 
-  @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.ticketDetail)
-  orderDetail: OrderDetail;
+  @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.ticketDetail)
+  orderDetails: OrderDetail[];
 }

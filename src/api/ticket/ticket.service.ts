@@ -484,6 +484,8 @@ export class TicketService {
       try {
         saveTicketDetail = await manager.save(ticketDetail);
       } catch (error) {
+        // rollbackTransaction
+        await manager.query('ROLLBACK');
         throw new BadRequestException('UPDATE_TICKET_DETAIL_FAIL');
       }
     } else {
