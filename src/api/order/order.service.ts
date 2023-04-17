@@ -928,15 +928,47 @@ export class OrderService {
         break;
     }
     order.status = OrderStatusEnum.PAID;
-    switch (paymentMethod) {
-      case PaymentMethod.CASH:
-      case PaymentMethod.ZALO_PAY:
-        order.paymentMethod = paymentMethod;
-        break;
-      default:
-        throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
-        break;
+    if (paymentMethod === PaymentMethod.CASH) {
+      order.paymentMethod = paymentMethod;
+    } else if (PaymentMethod.ZALO_PAY) {
+      order.paymentMethod = paymentMethod;
+      const appId = this.configService.get('ZALO_PAY_APP_ID');
+      const key1 = this.configService.get('ZALO_PAY_KEY_1');
+      const key2 = this.configService.get('ZALO_PAY_KEY_2');
+      const endpoint = this.configService.get('ZALO_PAY_ENDPOINT');
+      const embed_data = {
+        redirecturl: this.configService.get('REDIRECT_URL'),
+      };
+      const payload = {
+        app_id: appId,
+        app_trans_id: `${moment().format('YYMMDD')}_${orderCode}`,
+        app_user: 'user123',
+        app_time: Date.now(),
+        embed_data: JSON.stringify(embed_data),
+        amount: Number(order.finalTotal),
+        description: `Thanh toan ve ${orderCode}`,
+        bank_code: 'CC',
+        title: 'thanh toan ve @123',
+      };
+      const data =
+        appId +
+        '|' +
+        payload.app_trans_id +
+        '|' +
+        payload.app_user +
+        '|' +
+        payload.amount +
+        '|' +
+        payload.app_time +
+        '|' +
+        payload.embed_data +
+        '|';
+      // payload.item;
+      // payload.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
+    } else {
+      throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
     }
+
     order.updatedBy = userId;
     await this.orderRepository.save(order);
 

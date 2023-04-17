@@ -214,6 +214,9 @@ export class AuthCustomerService {
 
   async sendOtp(dto: SendOtpDto) {
     const { oldEmail, newEmail, phone } = dto;
+    if (!oldEmail && !phone) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
     let customer: Customer;
     if (oldEmail) {
       customer = await this.customerService.findOneByEmail(oldEmail);
@@ -244,7 +247,15 @@ export class AuthCustomerService {
         otpExpiredTime,
       );
     } else {
-      await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      if (newEmail) {
+        await this.authService.sendEmailCodeOtp(
+          newEmail,
+          otpCode,
+          otpExpiredTime,
+        );
+      } else {
+        await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      }
     }
 
     return {
