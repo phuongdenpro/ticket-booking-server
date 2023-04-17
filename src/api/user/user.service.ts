@@ -164,7 +164,7 @@ export class UserService {
     if (customer.status === UserStatusEnum.ACTIVE) {
       throw new BadRequestException('USER_ALREADY_ACTIVED');
     }
-    if (type) {
+    if (!type) {
       throw new BadRequestException('OTP_TYPE_IS_REQUIRED');
     }
     this.checkOTP(otp, customer.otpCode, customer.otpExpired);
