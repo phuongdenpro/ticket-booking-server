@@ -342,8 +342,8 @@ export class OrderService {
       const subQuery = this.orderRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id IN (${subQuery})`, {
@@ -1116,7 +1116,6 @@ export class OrderService {
       if (!dataResult) {
         throw new NotFoundException('PRICE_DETAIL_NOT_FOUND');
       }
-      console.log('price list');
       const priceDetail: PriceDetail = dataResult;
       delete priceDetail.trip;
       delete priceDetail.priceList;
@@ -1126,7 +1125,6 @@ export class OrderService {
       orderDetail.priceDetail = priceDetail;
       orderDetail.total = priceDetail.price;
 
-      console.log('create order detail');
       const createOrderDetail = await queryRunnerOrderDetail.manager.save(
         orderDetail,
       );
@@ -1137,7 +1135,6 @@ export class OrderService {
       // update ticket detail status
       const ticketDetailDto = new UpdateTicketDetailDto();
       ticketDetailDto.status = TicketStatusEnum.PENDING;
-      console.log('update ticket detail');
       const saveTicketDetail = await this.ticketService.updateTicketDetailById(
         ticketDetailId,
         ticketDetailDto,

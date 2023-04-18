@@ -225,9 +225,9 @@ export class TripService {
       const subQuery = this.tripRepository
         .createQueryBuilder('q')
         .select('q.id')
-        .where('q.code LIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q.name LIKE :name', { name: `%${newKeywords}%` })
-        .orWhere('q.note LIKE :note', { note: `%${newKeywords}%` })
+        .where('q.code ILIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q.name ILIKE :name', { name: `%${newKeywords}%` })
+        .orWhere('q.note ILIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

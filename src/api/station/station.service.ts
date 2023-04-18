@@ -215,10 +215,10 @@ export class StationService {
       const subQuery = this.stationRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
-        .where('q2.address LIKE :address', { address: `%${newKeywords}%` })
-        .where('q2.fullAddress LIKE :fullAddress', {
+        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name ILIKE :name', { name: `%${newKeywords}%` })
+        .where('q2.address ILIKE :address', { address: `%${newKeywords}%` })
+        .where('q2.fullAddress ILIKE :fullAddress', {
           fullAddress: `%${newKeywords}%`,
         })
         .getQuery();
@@ -523,8 +523,8 @@ export class StationService {
       const query = this.stationRepository.createQueryBuilder('r');
       if (dto?.keywords) {
         query
-          .orWhere('r.name like :query')
-          .orWhere('r.address like :query')
+          .orWhere('r.name ILIKE :query')
+          .orWhere('r.address ILIKE :query')
           .setParameter('query', `%${dto?.keywords}%`);
       }
 

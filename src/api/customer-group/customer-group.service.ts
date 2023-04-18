@@ -151,12 +151,12 @@ export class CustomerGroupService {
       const subQuery = this.customerGroupRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
-        .orWhere('q2.description LIKE :description', {
+        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name ILIKE :name', { name: `%${newKeywords}%` })
+        .orWhere('q2.description ILIKE :description', {
           description: `%${newKeywords}%`,
         })
-        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {
@@ -372,11 +372,11 @@ export class CustomerGroupService {
 
     if (keywords) {
       query
-        .orWhere('c.fullName LIKE :fullName', { fullName: `%${keywords}%` })
-        .orWhere('c.phone LIKE :phone', { phone: `%${keywords}%` })
-        .orWhere('c.email LIKE :email', { email: `%${keywords}%` })
-        .orWhere('c.address LIKE :address', { address: `%${keywords}%` })
-        .orWhere('c.fullAddress LIKE :fullAddress', {
+        .orWhere('c.fullName ILIKE :fullName', { fullName: `%${keywords}%` })
+        .orWhere('c.phone ILIKE :phone', { phone: `%${keywords}%` })
+        .orWhere('c.email ILIKE :email', { email: `%${keywords}%` })
+        .orWhere('c.address ILIKE :address', { address: `%${keywords}%` })
+        .orWhere('c.fullAddress ILIKE :fullAddress', {
           fullAddress: `%${keywords}%`,
         });
     }
