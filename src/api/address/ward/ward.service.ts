@@ -97,13 +97,13 @@ export class WardService {
     const query = this.wardRepository.createQueryBuilder('w');
 
     if (name) {
-      query.andWhere('w.name ILIKE :name', { name: `%${name}%` });
+      query.andWhere('w.name LIKE :name', { name: `%${name}%` });
     }
     if (type) {
-      query.andWhere('w.type ILIKE :type', { type: `%${type}%` });
+      query.andWhere('w.type LIKE :type', { type: `%${type}%` });
     }
     if (codename) {
-      query.andWhere('w.codename ILIKE :codename', {
+      query.andWhere('w.codename LIKE :codename', {
         codename: `%${codename}%`,
       });
     }

@@ -210,14 +210,14 @@ export class CustomerService {
       const subQuery = this.customerRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.fullName ILIKE :fullName', { fullName: `%${newKeywords}%` })
-        .orWhere('q2.email ILIKE :email', { email: `%${newKeywords}%` })
-        .orWhere('q2.phone ILIKE :phone', { phone: `%${newKeywords}%` })
-        .orWhere('q2.address ILIKE :address', { address: `%${newKeywords}%` })
-        .orWhere('q2.fullAddress ILIKE :fullAddress', {
+        .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
+        .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
+        .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
+        .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
+        .orWhere('q2.fullAddress LIKE :fullAddress', {
           fullAddress: `%${newKeywords}%`,
         })
-        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {
@@ -800,8 +800,8 @@ export class CustomerService {
     const query = this.customerRepository.createQueryBuilder('u');
 
     query
-      .orWhere('u.phone ILIKE :query')
-      .orWhere('u.email ILIKE :query')
+      .orWhere('u.phone LIKE :query')
+      .orWhere('u.email LIKE :query')
       .setParameter('query', `%${keywords}%`)
       .leftJoinAndSelect('u.ward', 'w')
       .leftJoinAndSelect('w.district', 'd')

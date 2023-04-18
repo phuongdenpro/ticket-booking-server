@@ -100,12 +100,12 @@ export class PromotionService {
       const subQuery = this.promotionRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.name ILIKE :name', { name: `%${newKeywords}%` })
-        .orWhere(`q2.description ILIKE :description`, {
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .orWhere(`q2.description LIKE :description`, {
           description: `%${keywords}%`,
         })
-        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

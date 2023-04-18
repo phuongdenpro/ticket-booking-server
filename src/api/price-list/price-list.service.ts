@@ -263,9 +263,9 @@ export class PriceListService {
       const subQuery = this.priceListRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.name ILIKE :name', { name: `%${newKeywords}%` })
-        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {
@@ -638,8 +638,8 @@ export class PriceListService {
       const subQuery = this.priceDetailRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

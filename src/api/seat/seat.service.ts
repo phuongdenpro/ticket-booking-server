@@ -122,14 +122,14 @@ export class SeatService {
 
     if (keywords) {
       query
-        .orWhere('q.code ILIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.name ILIKE :keywords', { keywords: `%${keywords}%` });
+        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` });
       const newKeywords = keywords.trim();
       const subQuery = this.seatRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.name ILIKE :name', { name: `%${newKeywords}%` })
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
         .getQuery();
       query.andWhere(`q.id IN (${subQuery})`, {
         code: `%${newKeywords}%`,
@@ -176,8 +176,8 @@ export class SeatService {
 
     if (keywords) {
       query
-        .orWhere('q.code ILIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.name ILIKE :keywords', { keywords: `%${keywords}%` });
+        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
+        .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` });
     }
     // if (status) {
     //   query

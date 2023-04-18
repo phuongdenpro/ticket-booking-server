@@ -213,12 +213,12 @@ export class VehicleService {
       const subQuery = this.vehicleService
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.licensePlate ILIKE :licensePlate', {
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.licensePlate LIKE :licensePlate', {
           licensePlate: `%${newKeywords}%`,
         })
-        .where('q2.name ILIKE :name', { name: `%${newKeywords}%` })
-        .where('q2.description ILIKE :description', {
+        .where('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .where('q2.description LIKE :description', {
           description: `%${newKeywords}%`,
         })
         .getQuery();

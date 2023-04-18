@@ -342,8 +342,8 @@ export class OrderService {
       const subQuery = this.orderRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id IN (${subQuery})`, {
@@ -1228,9 +1228,9 @@ export class OrderService {
     if (keywords) {
       const subQuery = this.orderRefundRepository.createQueryBuilder('q1');
       subQuery
-        .where('q1.code ILIKE :code', { code: `%${keywords}%` })
-        .orWhere('q1.note ILIKE :note', { note: `%${keywords}%` })
-        .orWhere('q1.orderCode ILIKE :orderCode', {
+        .where('q1.code LIKE :code', { code: `%${keywords}%` })
+        .orWhere('q1.note LIKE :note', { note: `%${keywords}%` })
+        .orWhere('q1.orderCode LIKE :orderCode', {
           orderCode: `%${keywords}%`,
         })
         .select('q1.id');

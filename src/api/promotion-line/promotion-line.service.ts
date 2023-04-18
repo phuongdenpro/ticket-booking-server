@@ -302,15 +302,15 @@ export class PromotionLineService {
       const subQuery = this.promotionLineRepository
         .createQueryBuilder('q2')
         .select('q2.id')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.couponCode ILIKE :couponCode', {
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.couponCode LIKE :couponCode', {
           couponCode: `%${newKeywords}%`,
         })
-        .where('q2.title ILIKE :title', { title: `%${newKeywords}%` })
-        .where('q2.description ILIKE :description', {
+        .where('q2.title LIKE :title', { title: `%${newKeywords}%` })
+        .where('q2.description LIKE :description', {
           description: `%${newKeywords}%`,
         })
-        .where('q2.note ILIKE :note', { note: `%${newKeywords}%` })
+        .where('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

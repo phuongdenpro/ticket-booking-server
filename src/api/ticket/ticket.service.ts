@@ -216,8 +216,8 @@ export class TicketService {
       const newKeywords = keywords.trim();
       const subQuery = this.ticketRepository
         .createQueryBuilder('q2')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .select('q2.id');
       query.andWhere('q.id IN (' + subQuery.getQuery() + ')', {
         code: `%${newKeywords}%`,
@@ -379,8 +379,8 @@ export class TicketService {
       const newKeywords = keywords.trim();
       const subQuery = this.ticketDetailRepository
         .createQueryBuilder('q2')
-        .where('q2.code ILIKE :code', { code: `%${newKeywords}%` })
-        .orWhere('q2.note ILIKE :note', { note: `%${newKeywords}%` })
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .select('q2.id')
         .getQuery();
 

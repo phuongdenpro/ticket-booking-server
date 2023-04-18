@@ -68,13 +68,13 @@ export class ProvinceService {
     const query = this.provinceRepository.createQueryBuilder('p');
 
     if (name) {
-      query.andWhere('p.name ILIKE :name', { name: `%${name}%` });
+      query.andWhere('p.name LIKE :name', { name: `%${name}%` });
     }
     if (type) {
-      query.andWhere('p.type ILIKE :type', { type: `%${type}%` });
+      query.andWhere('p.type LIKE :type', { type: `%${type}%` });
     }
     if (codename) {
-      query.andWhere('p.codename ILIKE :codename', {
+      query.andWhere('p.codename LIKE :codename', {
         codename: `%${codename}%`,
       });
     }

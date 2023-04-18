@@ -81,13 +81,13 @@ export class DistrictService {
     const query = this.districtRepository.createQueryBuilder('d');
 
     if (name) {
-      query.andWhere('d.name ILIKE :name', { name: `%${name}%` });
+      query.andWhere('d.name LIKE :name', { name: `%${name}%` });
     }
     if (type) {
-      query.andWhere('d.type ILIKE :type', { type: `%${type}%` });
+      query.andWhere('d.type LIKE :type', { type: `%${type}%` });
     }
     if (codename) {
-      query.andWhere('d.codename ILIKE :codename', {
+      query.andWhere('d.codename LIKE :codename', {
         codename: `%${codename}%`,
       });
     }
