@@ -9,7 +9,7 @@ export class TopCustomerStatisticsDto {
   @IsOptional()
   type: string;
 
-  @ApiPropertyOptional({ example: 10 })
+  @ApiPropertyOptional({ example: 5 })
   @IsNumber({}, { message: 'LIMIT_MUST_BE_NUMBER' })
   @IsOptional()
   limit: number;

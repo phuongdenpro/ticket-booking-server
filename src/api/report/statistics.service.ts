@@ -96,7 +96,7 @@ export class StatisticsService {
 
     const { count } = await this.orderRepository
       .createQueryBuilder('q')
-      .leftJoinAndSelect('order.customer', 'c')
+      .leftJoinAndSelect('q.customer', 'c')
       .select('COUNT(DISTINCT c.id)', 'count')
       .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
@@ -122,4 +122,52 @@ export class StatisticsService {
   }
 
   // tìm 5 khách hàng mua vé với số tiền nhiều nhất trong 7 or 30 ngày gần đây
+  async getTopCustomersLastDays(dto: TopCustomerStatisticsDto) {
+    // week, month
+    const { type, limit } = dto;
+    let numOrDate = 1;
+    if (type === 'week' || !type) {
+      numOrDate = 7;
+    } else if (type === 'month') {
+      numOrDate = 30;
+    }
+
+    const topCustomers = await this.customerRepository
+      .createQueryBuilder('q')
+      .leftJoinAndSelect('q.orders', 'o')
+      .select([
+        'q.id as customerId',
+        'q.fullName as fullName',
+        'SUM(o.finalTotal) as total',
+        'COUNT(o.id) as numberOfOrders',
+      ])
+      .where(`o.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
+      .andWhere('o.status = :status', { status: OrderStatusEnum.PAID })
+      .groupBy('q.id')
+      .orderBy('total', 'DESC')
+      .limit(limit || 5)
+      .getRawMany();
+
+    // Lấy số lượng hoá đơn cho mỗi khách hàng trong 7 ngày gần đây
+    const numberOfOrdersByCustomers = await this.customerRepository
+      .createQueryBuilder('q2')
+      .leftJoin('q2.orders', 'o2')
+      .select(['q2.id as customerId', 'COUNT(o2.id) as numberOfOrders'])
+      .where(`o2.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
+      .groupBy('q2.id')
+      .getRawMany();
+
+    // Kết hợp kết quả của hai truy vấn và trả về kết quả cuối cùng
+    const result = topCustomers.map((customer) => {
+      const numberOfOrders = numberOfOrdersByCustomers.find(
+        (item) => item.customerId === customer.customerId,
+      )?.numberOfOrders;
+      return {
+        ...customer,
+        numberOfOrders: Number(numberOfOrders),
+      };
+    });
+
+    return result;
+  }
 }
