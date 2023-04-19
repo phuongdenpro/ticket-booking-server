@@ -170,4 +170,26 @@ export class StatisticsService {
 
     return result;
   }
+
+  // tính doanh thu theo từng ngày trong 7 ngày gần đây
+  async getRevenueByDayLastDays(dto: StatisticsDto) {
+    // week, month
+    const { type } = dto;
+    let numOrDate = 1;
+    if (type === 'week' || !type) {
+      numOrDate = 7;
+    } else if (type === 'month') {
+      numOrDate = 30;
+    }
+
+    const revenueByDay = await this.orderRepository
+      .createQueryBuilder('q')
+      .select(['DATE(q.createdAt) as day', 'SUM(q.finalTotal) as total'])
+      .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+      .groupBy('day')
+      .getRawMany();
+
+    return revenueByDay;
+  }
 }

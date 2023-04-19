@@ -71,4 +71,13 @@ export class StatisticsController {
   async getTopCustomersLastDays(@Query() dto: TopCustomerStatisticsDto) {
     return this.statisticsService.getTopCustomersLastDays(dto);
   }
+
+  @Get('revenue-by-day')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getRevenueByDayLastDays(@Query() dto: StatisticsDto) {
+    return this.statisticsService.getRevenueByDayLastDays(dto);
+  }
 }
