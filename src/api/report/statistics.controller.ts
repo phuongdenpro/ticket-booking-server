@@ -11,7 +11,12 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StatisticsService } from './statistics.service';
-import { StatisticsDto, TopCustomerStatisticsDto } from './dto';
+import {
+  RevenueCustomerStatisticsDto,
+  StatisticsDto,
+  TicketStatisticsDto,
+  TopCustomerStatisticsDto,
+} from './dto';
 
 @ApiTags('Statistics')
 @Controller('statistics')
@@ -79,5 +84,25 @@ export class StatisticsController {
   @ApiBearerAuth()
   async getRevenueByDayLastDays(@Query() dto: StatisticsDto) {
     return this.statisticsService.getRevenueByDayLastDays(dto);
+  }
+
+  @Get('revenue-by-customer')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getRevenueCustomersLastDays(
+    @Query() dto: RevenueCustomerStatisticsDto,
+  ) {
+    return this.statisticsService.getRevenueCustomers(dto);
+  }
+
+  @Get('ticket-sold-by-route')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getTicketsSoldByRoute(@Query() dto: TicketStatisticsDto) {
+    return this.statisticsService.getTicketsSoldByRoute(dto);
   }
 }

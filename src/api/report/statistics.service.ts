@@ -3,7 +3,13 @@ import { Customer, Order, OrderDetail } from '../../database/entities';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { StatisticsDto, TopCustomerStatisticsDto } from './dto';
+import {
+  RevenueCustomerStatisticsDto,
+  StatisticsDto,
+  TicketStatisticsDto,
+  TopCustomerStatisticsDto,
+} from './dto';
+import * as moment from 'moment';
 
 @Injectable()
 export class StatisticsService {
@@ -125,50 +131,22 @@ export class StatisticsService {
   async getTopCustomersLastDays(dto: TopCustomerStatisticsDto) {
     // week, month
     const { type, limit } = dto;
-    let numOrDate = 1;
+    let startDate;
+    const endDate = moment().endOf('day').toDate();
     if (type === 'week' || !type) {
-      numOrDate = 7;
+      startDate = moment().subtract(7, 'days').startOf('day').toDate();
     } else if (type === 'month') {
-      numOrDate = 30;
+      startDate = moment().subtract(30, 'days').startOf('day').toDate();
     }
 
-    const topCustomers = await this.customerRepository
-      .createQueryBuilder('q')
-      .leftJoinAndSelect('q.orders', 'o')
-      .select([
-        'q.id as customerId',
-        'q.fullName as fullName',
-        'SUM(o.finalTotal) as total',
-        'COUNT(o.id) as numberOfOrders',
-      ])
-      .where(`o.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
-      .andWhere('o.status = :status', { status: OrderStatusEnum.PAID })
-      .groupBy('q.id')
-      .orderBy('total', 'DESC')
-      .limit(limit || 5)
-      .getRawMany();
-
-    // Lấy số lượng hoá đơn cho mỗi khách hàng trong 7 ngày gần đây
-    const numberOfOrdersByCustomers = await this.customerRepository
-      .createQueryBuilder('q2')
-      .leftJoin('q2.orders', 'o2')
-      .select(['q2.id as customerId', 'COUNT(o2.id) as numberOfOrders'])
-      .where(`o2.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
-      .groupBy('q2.id')
-      .getRawMany();
-
-    // Kết hợp kết quả của hai truy vấn và trả về kết quả cuối cùng
-    const result = topCustomers.map((customer) => {
-      const numberOfOrders = numberOfOrdersByCustomers.find(
-        (item) => item.customerId === customer.customerId,
-      )?.numberOfOrders;
-      return {
-        ...customer,
-        numberOfOrders: Number(numberOfOrders),
-      };
-    });
-
-    return result;
+    const topCustomersDto = new RevenueCustomerStatisticsDto();
+    topCustomersDto.limit = limit;
+    topCustomersDto.startDate = startDate;
+    topCustomersDto.endDate = endDate;
+    const topCustomers = await this.getRevenueCustomers(
+      topCustomersDto,
+    );
+    return topCustomers;
   }
 
   // tính doanh thu theo từng ngày trong 7 ngày gần đây
@@ -191,5 +169,100 @@ export class StatisticsService {
       .getRawMany();
 
     return revenueByDay;
+  }
+
+  // tính tổng số vé bán được theo tuyến trong khoảng thời gian a -> b
+  async getTicketsSoldByRoute(dto: TicketStatisticsDto) {
+    const { startDate, endDate, limit } = dto;
+    const newStartDate = startDate
+      ? moment().subtract(7, 'days').startOf('day').toDate()
+      : moment(startDate).startOf('day').toDate();
+    const newEndDate = endDate
+      ? moment().endOf('day').toDate()
+      : moment(endDate).endOf('day').toDate();
+
+    const queryBuilder = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin('order.orderDetails', 'orderDetail')
+      .innerJoin('orderDetail.ticketDetail', 'ticketDetail')
+      .innerJoin('ticketDetail.ticket', 'ticket')
+      .innerJoin('ticket.tripDetail', 'tripDetail')
+      .innerJoin('tripDetail.trip', 'trip')
+      .select('trip.code', 'tripCode')
+      .addSelect('COUNT(ticket.id)', 'totalTickets')
+      .where('order.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('order.deletedAt IS NULL')
+      .andWhere('order.status = :status', { status: OrderStatusEnum.PAID })
+      .andWhere('ticketDetail.deletedAt IS NULL')
+      .andWhere('ticket.deletedAt IS NULL')
+      .andWhere('tripDetail.deletedAt IS NULL')
+      .groupBy('trip.id')
+      .orderBy('totalTickets', 'DESC')
+      .limit(limit || 10);
+
+    const result = await queryBuilder.getRawMany();
+    return result.map((item) => ({
+      tripCode: item.tripCode,
+      totalTickets: parseInt(item.totalTickets),
+    }));
+  }
+
+  // tính doanh thu theo khách hàng
+  async getRevenueCustomers(dto: RevenueCustomerStatisticsDto) {
+    // week, month
+    const { startDate, endDate, limit } = dto;
+    const newStartDate = startDate
+      ? moment().subtract(7, 'days').startOf('day').toDate()
+      : moment(startDate).startOf('day').toDate();
+    const newEndDate = endDate
+      ? moment().endOf('day').toDate()
+      : moment(endDate).endOf('day').toDate();
+
+    const topCustomers = await this.customerRepository
+      .createQueryBuilder('q')
+      .leftJoinAndSelect('q.orders', 'o')
+      .select([
+        'q.id as customerId',
+        'q.fullName as fullName',
+        'SUM(o.finalTotal) as total',
+        'COUNT(o.id) as numberOfOrders',
+      ])
+      .where(`o.createdAt BETWEEN :startDate AND :endDate`, {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('o.status = :status', { status: OrderStatusEnum.PAID })
+      .groupBy('q.id')
+      .orderBy('total', 'DESC')
+      .limit(limit || 5)
+      .getRawMany();
+
+    // Lấy số lượng hoá đơn cho mỗi khách hàng trong 7 ngày gần đây
+    const numberOfOrdersByCustomers = await this.customerRepository
+      .createQueryBuilder('q2')
+      .leftJoin('q2.orders', 'o2')
+      .select(['q2.id as customerId', 'COUNT(o2.id) as numberOfOrders'])
+      .where(`o2.createdAt BETWEEN :startDate AND :endDate`, {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .groupBy('q2.id')
+      .getRawMany();
+
+    // Kết hợp kết quả của hai truy vấn và trả về kết quả cuối cùng
+    const result = topCustomers.map((customer) => {
+      const numberOfOrders = numberOfOrdersByCustomers.find(
+        (item) => item.customerId === customer.customerId,
+      )?.numberOfOrders;
+      return {
+        ...customer,
+        numberOfOrders: Number(numberOfOrders),
+      };
+    });
+
+    return result;
   }
 }

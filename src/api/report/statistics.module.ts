@@ -6,12 +6,24 @@ import {
   Customer,
   Order,
   OrderDetail,
+  Ticket,
   TicketDetail,
+  Trip,
+  TripDetail,
 } from '../../database/entities';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Order, TicketDetail, OrderDetail, Customer]),
+    TypeOrmModule.forFeature([
+      Order,
+      TicketDetail,
+      OrderDetail,
+      Customer,
+      Trip,
+      TripDetail,
+      TicketDetail,
+      Ticket,
+    ]),
   ],
   providers: [StatisticsService],
   controllers: [StatisticsController],
