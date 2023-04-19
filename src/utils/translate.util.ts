@@ -626,4 +626,5 @@ export const mappingTranslate = {
   // statistic
   STATISTICS_TYPE_MUST_BE_WEEK_OR_MONTH:
     'Loại thống kê phải là tuần hoặc tháng',
+  LIMIT_MUST_BE_NUMBER: 'Số lượng người cần lấy phải là số',
 };
