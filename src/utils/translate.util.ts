@@ -622,4 +622,8 @@ export const mappingTranslate = {
 
   // otp
   SEND_SMS_FAILED: 'Gửi mã otp thất bại',
+
+  // statistic
+  STATISTICS_TYPE_MUST_BE_WEEK_OR_MONTH:
+    'Loại thống kê phải là tuần hoặc tháng',
 };
