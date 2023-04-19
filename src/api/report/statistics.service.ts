@@ -1,22 +1,24 @@
-import { OrderStatusEnum } from '../../enums';
-import { Order, Ticket } from '../../database/entities';
+import { OrderStatusEnum, TicketStatusEnum } from '../../enums';
+import { Customer, Order, OrderDetail } from '../../database/entities';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
-import { StatisticsDto } from './dto';
+import { StatisticsDto, TopCustomerStatisticsDto } from './dto';
 
 @Injectable()
 export class StatisticsService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
-    @InjectRepository(Ticket)
-    private readonly ticketRepository: Repository<Ticket>,
+    @InjectRepository(OrderDetail)
+    private readonly orderDetailRepository: Repository<OrderDetail>,
+    @InjectRepository(Customer)
+    private readonly customerRepository: Repository<Customer>,
     private dataSource: DataSource,
   ) {}
 
   // tính tổng doanh thu
-  async getTotalRevenueLastDays(dto: StatisticsDto) {
+  async getTotalRevenueLastDays(dto: StatisticsDto): Promise<number> {
     // week, month
     const { type } = dto;
     let numOrDate = 1;
@@ -33,11 +35,11 @@ export class StatisticsService {
       .andWhere('q.deletedAt IS NULL')
       .getRawOne();
 
-    return sum;
+    return Number(sum);
   }
 
   // tính tổng hoá đơn
-  async getTotalOrdersLastDays(dto: StatisticsDto) {
+  async getTotalOrdersLastDays(dto: StatisticsDto): Promise<number> {
     // week, month
     const { type } = dto;
     let numOrDate = 1;
@@ -68,32 +70,56 @@ export class StatisticsService {
       numOrDate = 30;
     }
 
-    const { sum } = await this.ticketRepository
+    const orderDetails = await this.orderDetailRepository
       .createQueryBuilder('q')
-      .select('SUM(q.quantitySold)', 'sum')
+      .leftJoinAndSelect('q.ticketDetail', 'td')
+      .leftJoinAndSelect('q.order', 'oo')
       .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
-      .andWhere('q.deletedAt IS NULL')
+      .andWhere('td.status = :soldStatus', {
+        soldStatus: TicketStatusEnum.SOLD,
+      })
+      .getMany();
+
+    return orderDetails.length;
+  }
+
+  // Tính tổng số khách hàng mua vé
+  async getTotalCustomersLastDays(dto: StatisticsDto): Promise<number> {
+    // week, month
+    const { type } = dto;
+    let numOrDate = 1;
+    if (type === 'week' || !type) {
+      numOrDate = 7;
+    } else if (type === 'month') {
+      numOrDate = 30;
+    }
+
+    const { count } = await this.orderRepository
+      .createQueryBuilder('q')
+      .leftJoinAndSelect('order.customer', 'c')
+      .select('COUNT(DISTINCT c.id)', 'count')
+      .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
       .getRawOne();
-    return sum;
+    return Number(count);
   }
 
   //
   async getStatisticsLastDays(dto: StatisticsDto) {
-    const [
-      totalRevenue,
-      totalOrders,
-      // totalTicketsSold, totalCustomers
-    ] = await Promise.all([
-      this.getTotalRevenueLastDays(dto),
-      this.getTotalOrdersLastDays(dto),
-      // this.getTotalTicketsSoldLast7Days(dto),
-      // this.getTotalCustomersLast7Days(dto),
-    ]);
+    const [totalRevenue, totalOrders, totalTicketsSold, totalCustomers] =
+      await Promise.all([
+        this.getTotalRevenueLastDays(dto),
+        this.getTotalOrdersLastDays(dto),
+        this.getTotalTicketsSoldLastDays(dto),
+        this.getTotalCustomersLastDays(dto),
+      ]);
     return {
       totalRevenue,
       totalOrders,
-      // totalTicketsSold,
-      // totalCustomers,
+      totalTicketsSold,
+      totalCustomers,
     };
   }
+
+  // tìm 5 khách hàng mua vé với số tiền nhiều nhất trong 7 or 30 ngày gần đây
 }

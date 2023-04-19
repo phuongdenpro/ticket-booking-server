@@ -37,7 +37,29 @@ export class StatisticsController {
   }
 
   @Get('orders')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   async getTotalOrdersLastDays(@Query() dto: StatisticsDto) {
     return this.statisticsService.getTotalOrdersLastDays(dto);
+  }
+
+  @Get('tickets')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getTotalTicketsSoldLastDays(@Query() dto: StatisticsDto) {
+    return this.statisticsService.getTotalTicketsSoldLastDays(dto);
+  }
+
+  @Get('customer')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getTotalCustomersLastDays(@Query() dto: StatisticsDto) {
+    return this.statisticsService.getTotalCustomersLastDays(dto);
   }
 }
