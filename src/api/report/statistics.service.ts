@@ -143,9 +143,7 @@ export class StatisticsService {
     topCustomersDto.limit = limit;
     topCustomersDto.startDate = startDate;
     topCustomersDto.endDate = endDate;
-    const topCustomers = await this.getRevenueCustomers(
-      topCustomersDto,
-    );
+    const topCustomers = await this.getRevenueCustomers(topCustomersDto);
     return topCustomers;
   }
 
@@ -210,7 +208,7 @@ export class StatisticsService {
     }));
   }
 
-  // tính doanh thu theo khách hàng
+  // tính doanh thu theo khách hàng trong khoảng thời gian a -> b
   async getRevenueCustomers(dto: RevenueCustomerStatisticsDto) {
     // week, month
     const { startDate, endDate, limit } = dto;
