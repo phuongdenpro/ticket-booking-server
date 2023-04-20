@@ -179,11 +179,11 @@ export class StatisticsService {
   ) {
     const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
-      ? moment().subtract(7, 'days').startOf('day').toDate()
-      : moment(startDate).startOf('day').toDate();
+      ? moment(startDate).startOf('day').toDate()
+      : moment().subtract(7, 'days').startOf('day').toDate();
     const newEndDate = endDate
-      ? moment().endOf('day').toDate()
-      : moment(endDate).endOf('day').toDate();
+      ? moment(endDate).endOf('day').toDate()
+      : moment().endOf('day').toDate();
 
     let newKeywords;
     let subQuery;
@@ -261,11 +261,11 @@ export class StatisticsService {
     // week, month
     const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
-      ? moment().subtract(7, 'days').startOf('day').toDate()
-      : moment(startDate).startOf('day').toDate();
+      ? moment(startDate).startOf('day').toDate()
+      : moment().subtract(7, 'days').startOf('day').toDate();
     const newEndDate = endDate
-      ? moment().endOf('day').toDate()
-      : moment(endDate).endOf('day').toDate();
+      ? moment(endDate).endOf('day').toDate()
+      : moment().endOf('day').toDate();
 
     let subQuery;
     let newKeywords;
