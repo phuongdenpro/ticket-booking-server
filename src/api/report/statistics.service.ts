@@ -10,6 +10,7 @@ import {
   TopCustomerStatisticsDto,
 } from './dto';
 import * as moment from 'moment';
+import { Pagination } from './../../decorator';
 
 @Injectable()
 export class StatisticsService {
@@ -140,10 +141,12 @@ export class StatisticsService {
     }
 
     const topCustomersDto = new RevenueCustomerStatisticsDto();
-    topCustomersDto.limit = limit;
     topCustomersDto.startDate = startDate;
     topCustomersDto.endDate = endDate;
-    const topCustomers = await this.getRevenueCustomers(topCustomersDto);
+    const topCustomers = await this.getRevenueCustomers(topCustomersDto, {
+      take: limit || 5,
+      skip: 0,
+    });
     return topCustomers;
   }
 
@@ -170,8 +173,11 @@ export class StatisticsService {
   }
 
   // tính tổng số vé bán được theo tuyến trong khoảng thời gian a -> b
-  async getTicketsSoldByRoute(dto: TicketStatisticsDto) {
-    const { startDate, endDate, limit } = dto;
+  async getTicketsSoldByRoute(
+    dto: TicketStatisticsDto,
+    pagination?: Pagination,
+  ) {
+    const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
       ? moment().subtract(7, 'days').startOf('day').toDate()
       : moment(startDate).startOf('day').toDate();
@@ -179,39 +185,69 @@ export class StatisticsService {
       ? moment().endOf('day').toDate()
       : moment(endDate).endOf('day').toDate();
 
+    const newKeywords = keyword.trim();
+    const subQuery = this.orderRepository
+      .createQueryBuilder('q2')
+      .innerJoin('q2.orderDetails', 'od2')
+      .innerJoin('od2.ticketDetail', 'td2')
+      .innerJoin('td2.ticket', 't2')
+      .innerJoin('t2.tripDetail', 'trd2')
+      .innerJoin('trd2.trip', 'tr2')
+      .where('tr2.code LIKE :code', { code: `%${newKeywords}%` })
+      .orWhere('tr2.name LIKE :name', { name: `%${newKeywords}%` })
+      .orWhere('tr2.note LIKE :note', { note: `%${newKeywords}%` })
+      .select('tr2.id');
+
     const queryBuilder = await this.orderRepository
-      .createQueryBuilder('order')
-      .innerJoin('order.orderDetails', 'orderDetail')
-      .innerJoin('orderDetail.ticketDetail', 'ticketDetail')
-      .innerJoin('ticketDetail.ticket', 'ticket')
-      .innerJoin('ticket.tripDetail', 'tripDetail')
-      .innerJoin('tripDetail.trip', 'trip')
-      .select('trip.code', 'tripCode')
-      .addSelect('COUNT(ticket.id)', 'totalTickets')
-      .where('order.createdAt BETWEEN :startDate AND :endDate', {
+      .createQueryBuilder('q')
+      .innerJoin('q.orderDetails', 'od')
+      .innerJoin('od.ticketDetail', 'td')
+      .innerJoin('td.ticket', 't')
+      .innerJoin('t.tripDetail', 'trd')
+      .innerJoin('trd.trip', 'tr')
+      .select([
+        'tr.id as id',
+        'tr.code as code',
+        'tr.name as name',
+        'tr.startDate as startDate',
+        'tr.endDate as endDate',
+        'tr.status as status',
+        'COUNT(t.id) as totalTickets',
+      ])
+      .where('q.createdAt BETWEEN :startDate AND :endDate', {
         startDate: newStartDate,
         endDate: newEndDate,
       })
-      .andWhere('order.deletedAt IS NULL')
-      .andWhere('order.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('ticketDetail.deletedAt IS NULL')
-      .andWhere('ticket.deletedAt IS NULL')
-      .andWhere('tripDetail.deletedAt IS NULL')
-      .groupBy('trip.id')
+      .andWhere('tr.id IN (' + subQuery.getQuery() + ')')
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+      .andWhere('q.deletedAt IS NULL')
+      .andWhere('td.deletedAt IS NULL')
+      .andWhere('t.deletedAt IS NULL')
+      .andWhere('trd.deletedAt IS NULL')
+      .groupBy('tr.id')
       .orderBy('totalTickets', 'DESC')
-      .limit(limit || 10);
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10);
 
     const result = await queryBuilder.getRawMany();
     return result.map((item) => ({
-      tripCode: item.tripCode,
+      id: item.id,
+      code: item.code,
+      name: item.name,
+      startDate: item.startDate,
+      endDate: item.endDate,
+      status: item.status,
       totalTickets: parseInt(item.totalTickets),
     }));
   }
 
   // tính doanh thu theo khách hàng trong khoảng thời gian a -> b
-  async getRevenueCustomers(dto: RevenueCustomerStatisticsDto) {
+  async getRevenueCustomers(
+    dto: RevenueCustomerStatisticsDto,
+    pagination?: Pagination,
+  ) {
     // week, month
-    const { startDate, endDate, limit } = dto;
+    const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
       ? moment().subtract(7, 'days').startOf('day').toDate()
       : moment(startDate).startOf('day').toDate();
@@ -219,23 +255,55 @@ export class StatisticsService {
       ? moment().endOf('day').toDate()
       : moment(endDate).endOf('day').toDate();
 
+    const newKeywords = keyword.trim();
+    const subQuery = this.customerRepository
+      .createQueryBuilder('q2')
+      .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
+      .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
+      .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
+      .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
+      .orWhere('q2.fullAddress LIKE :fullAddress', {
+        fullAddress: `%${newKeywords}%`,
+      })
+      .select('q2.id')
+      .getQuery();
+
     const topCustomers = await this.customerRepository
       .createQueryBuilder('q')
       .leftJoinAndSelect('q.orders', 'o')
+      .leftJoinAndSelect('q.ward', 'w')
+      .leftJoinAndSelect('q.customerGroup', 'cg')
       .select([
         'q.id as customerId',
         'q.fullName as fullName',
-        'SUM(o.finalTotal) as total',
+        'q.phone as phone',
+        'q.email as email',
+        'q.gender as gender',
+        'q.status as status',
+        'w.code as wardCode',
+        'cg.code as customerGroupCode',
+        'cg.name as customerGroupName',
+        'SUM(o.total) as total',
+        'SUM(o.finalTotal) as finalTotal',
         'COUNT(o.id) as numberOfOrders',
       ])
       .where(`o.createdAt BETWEEN :startDate AND :endDate`, {
         startDate: newStartDate,
         endDate: newEndDate,
       })
+      .andWhere(`q.id in (${subQuery})`, {
+        fullName: `%${newKeywords}%`,
+        email: `%${newKeywords}%`,
+        phone: `%${newKeywords}%`,
+        address: `%${newKeywords}%`,
+        fullAddress: `%${newKeywords}%`,
+      })
       .andWhere('o.status = :status', { status: OrderStatusEnum.PAID })
+      .andWhere('o.deletedAt IS NULL')
       .groupBy('q.id')
       .orderBy('total', 'DESC')
-      .limit(limit || 5)
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10)
       .getRawMany();
 
     // Lấy số lượng hoá đơn cho mỗi khách hàng trong 7 ngày gần đây

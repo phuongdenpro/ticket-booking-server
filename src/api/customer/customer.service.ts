@@ -209,7 +209,6 @@ export class CustomerService {
       const newKeywords = keywords.trim();
       const subQuery = this.customerRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
         .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
         .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
@@ -218,6 +217,7 @@ export class CustomerService {
           fullAddress: `%${newKeywords}%`,
         })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

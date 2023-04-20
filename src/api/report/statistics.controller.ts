@@ -1,5 +1,5 @@
 import { JwtAuthGuard } from '../../auth/guards';
-import { Roles } from '../../decorator';
+import { GetPagination, Pagination, Roles } from '../../decorator';
 import { RoleEnum } from '../../enums';
 import {
   Controller,
@@ -93,8 +93,9 @@ export class StatisticsController {
   @ApiBearerAuth()
   async getRevenueCustomersLastDays(
     @Query() dto: RevenueCustomerStatisticsDto,
+    @GetPagination() pagination?: Pagination,
   ) {
-    return this.statisticsService.getRevenueCustomers(dto);
+    return this.statisticsService.getRevenueCustomers(dto, pagination);
   }
 
   @Get('ticket-sold-by-route')
@@ -102,7 +103,10 @@ export class StatisticsController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async getTicketsSoldByRoute(@Query() dto: TicketStatisticsDto) {
-    return this.statisticsService.getTicketsSoldByRoute(dto);
+  async getTicketsSoldByRoute(
+    @Query() dto: TicketStatisticsDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return this.statisticsService.getTicketsSoldByRoute(dto, pagination);
   }
 }

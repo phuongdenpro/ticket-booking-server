@@ -1,8 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDate, IsNumber, IsOptional } from 'class-validator';
+import { IsDate, IsOptional, IsString } from 'class-validator';
 import * as moment from 'moment';
 
 export class RevenueCustomerStatisticsDto {
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'KEYWORD_MUST_BE_STRING' })
+  @IsOptional()
+  keyword: string;
+
   @ApiPropertyOptional({
     example: moment().subtract(7, 'days').format('YYYY-MM-DD'),
   })
@@ -16,9 +21,4 @@ export class RevenueCustomerStatisticsDto {
   @IsDate({ message: 'END_DATE_IS_DATE' })
   @IsOptional()
   endDate: Date;
-
-  @ApiPropertyOptional({ example: 5 })
-  @IsNumber({}, { message: 'LIMIT_MUST_BE_NUMBER' })
-  @IsOptional()
-  limit: number;
 }
