@@ -959,7 +959,66 @@ export class OrderService {
     };
   }
 
-  async getZaloPayPaymentUrl(dto) {}
+  async getZaloPayPaymentUrl(orderCode: string) {
+    let paymentResult;
+    try {
+      const orderExist = await this.findOneOrderByCode(orderCode);
+      if (!orderExist) {
+        throw new BadRequestException('ORDER_NOT_FOUND');
+      }
+      const config = {
+        app_id: this.configService.get('ZALO_PAY_APP_ID'),
+        key1: this.configService.get('ZALO_PAY_KEY_1'),
+        key2: this.configService.get('ZALO_PAY_KEY_2'),
+        endpoint: this.configService.get('ZALO_PAY_ENDPOINT'),
+      };
+      const embed_data = {
+        redirecturl: this.configService.get('REDIRECT_URL'),
+      };
+      const items = [{}];
+      const order = {
+        app_id: config.app_id,
+        app_trans_id: `${moment().format('YYMMDD')}_${orderCode}`,
+        app_user: 'user123',
+        app_time: Date.now(), // miliseconds
+        item: JSON.stringify(items),
+        embed_data: JSON.stringify(embed_data),
+        amount: Number(orderExist.finalTotal),
+        description: `Thanh toan ve  ${moment().format('YYMMDD')}_${orderCode}`,
+        bank_code: 'CC',
+        title: 'thanh toan ve ' + orderCode,
+      };
+      const data =
+        config.app_id +
+        '|' +
+        order.app_trans_id +
+        '|' +
+        order.app_user +
+        '|' +
+        order.amount +
+        '|' +
+        order.app_time +
+        '|' +
+        order.embed_data +
+        '|' +
+        order.item;
+      order['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
+      axios
+        .post(config.endpoint, null, { params: order })
+        .then((result) => {
+          console.log(result.data);
+          paymentResult = {
+            zalo: result.data,
+            appTransId: order.app_trans_id,
+            appTime: order.app_time,
+          };
+        })
+        .catch((err) => console.log(err));
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+    return paymentResult;
+  }
 
   // order detail
   async createOrderDetail(

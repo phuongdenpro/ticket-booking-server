@@ -12,6 +12,4 @@ export class PaymentDto {
   @IsNotEmpty({ message: 'PAYMENT_METHOD_IS_REQUIRED' })
   @IsEnum(PaymentMethod, { message: 'PAYMENT_METHOD_IS_ENUM' })
   paymentMethod: PaymentMethod;
-
-  // paymentAmount: number;
 }

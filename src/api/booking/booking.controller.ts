@@ -5,8 +5,10 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -34,5 +36,17 @@ export class BookingController {
   @ApiBearerAuth()
   async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
     return this.bookingService.payment(dto, user.id);
+  }
+
+  @Get('zalopay-payment-url/:orderCode')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getZaloPayPaymentUrl(
+    @Param('orderCode') orderCode: string,
+    @CurrentUser() user,
+  ) {
+    return this.bookingService.getZaloPayPaymentUrl(orderCode);
   }
 }

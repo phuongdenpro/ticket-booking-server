@@ -30,4 +30,8 @@ export class BookingService {
   async payment(dto: PaymentDto, userId: string) {
     return await this.orderService.payment(dto, userId);
   }
+
+  async getZaloPayPaymentUrl(orderCode: string) {
+    return await this.orderService.getZaloPayPaymentUrl(orderCode);
+  }
 }

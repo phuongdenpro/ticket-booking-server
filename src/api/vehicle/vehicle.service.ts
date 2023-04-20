@@ -157,30 +157,14 @@ export class VehicleService {
     }
 
     // create seats
-    const numOfSeat = Math.round(totalSeat / 2);
-    for (let i = 1; i <= totalSeat; i++) {
+    const seatsPerFloor = Math.floor(totalSeat / 2);
+    for (let i = 0; i < totalSeat; i++) {
+      const seatNum = i < seatsPerFloor ? i + 1 : i + 1 - seatsPerFloor;
       const dto = new CreateSeatDto();
-      if (numOfSeat % 2 == 0) {
-        if (numOfSeat >= i) {
-          dto.code = `${code}A${i}`;
-          dto.name = `A${i}`;
-          dto.floor = 1;
-        } else {
-          dto.code = `${code}B${i}`;
-          dto.name = `B${i - numOfSeat}`;
-          dto.floor = 2;
-        }
-      } else {
-        if (numOfSeat > i) {
-          dto.code = `${code}A${numOfSeat - i}`;
-          dto.name = `A${i}`;
-          dto.floor = 1;
-        } else {
-          dto.code = `${code}B${i - numOfSeat}`;
-          dto.name = `B${i - numOfSeat}`;
-          dto.floor = 2;
-        }
-      }
+      dto.code =
+        i < seatsPerFloor ? `${code}A${seatNum}` : `${code}B${seatNum}`;
+      dto.name = i < seatsPerFloor ? `A${seatNum}` : `B${seatNum}`;
+      dto.floor = i < seatsPerFloor ? 1 : 2;
       dto.vehicleId = newVehicle.id;
       await this.seatService.createSeat(dto, userId);
     }

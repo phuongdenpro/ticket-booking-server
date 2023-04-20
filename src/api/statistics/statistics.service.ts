@@ -210,6 +210,8 @@ export class StatisticsService {
       .innerJoin('td.ticket', 't')
       .innerJoin('t.tripDetail', 'trd')
       .innerJoin('trd.trip', 'tr')
+      .innerJoin('tr.fromStation', 'fs')
+      .innerJoin('tr.toStation', 'ts')
       .select([
         'tr.id as id',
         'tr.code as code',
@@ -218,6 +220,12 @@ export class StatisticsService {
         'tr.endDate as endDate',
         'tr.status as status',
         'COUNT(t.id) as totalTickets',
+        'fs.id as fromStationId',
+        'fs.code as fromStationCode',
+        'fs.name as fromStationName',
+        'ts.id as toStationId',
+        'ts.code as toStationCode',
+        'ts.name as toStationName',
       ])
       .where('q.createdAt BETWEEN :startDate AND :endDate', {
         startDate: newStartDate,
@@ -250,6 +258,16 @@ export class StatisticsService {
       endDate: item.endDate,
       status: item.status,
       totalTickets: parseInt(item.totalTickets),
+      fromStation: {
+        id: item['fromStationId'],
+        code: item['fromStationCode'],
+        name: item['fromStationName'],
+      },
+      toStation: {
+        id: item['toStationId'],
+        code: item['toStationCode'],
+        name: item['toStationName'],
+      },
     }));
   }
 
