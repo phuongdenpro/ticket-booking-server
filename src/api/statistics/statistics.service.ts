@@ -185,18 +185,23 @@ export class StatisticsService {
       ? moment().endOf('day').toDate()
       : moment(endDate).endOf('day').toDate();
 
-    const newKeywords = keyword.trim();
-    const subQuery = this.orderRepository
-      .createQueryBuilder('q2')
-      .innerJoin('q2.orderDetails', 'od2')
-      .innerJoin('od2.ticketDetail', 'td2')
-      .innerJoin('td2.ticket', 't2')
-      .innerJoin('t2.tripDetail', 'trd2')
-      .innerJoin('trd2.trip', 'tr2')
-      .where('tr2.code LIKE :code', { code: `%${newKeywords}%` })
-      .orWhere('tr2.name LIKE :name', { name: `%${newKeywords}%` })
-      .orWhere('tr2.note LIKE :note', { note: `%${newKeywords}%` })
-      .select('tr2.id');
+    let newKeywords;
+    let subQuery;
+    if (keyword) {
+      newKeywords = keyword.trim();
+      subQuery = this.orderRepository
+        .createQueryBuilder('q2')
+        .innerJoin('q2.orderDetails', 'od2')
+        .innerJoin('od2.ticketDetail', 'td2')
+        .innerJoin('td2.ticket', 't2')
+        .innerJoin('t2.tripDetail', 'trd2')
+        .innerJoin('trd2.trip', 'tr2')
+        .where('tr2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('tr2.name LIKE :name', { name: `%${newKeywords}%` })
+        .orWhere('tr2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('tr2.id')
+        .getQuery();
+    }
 
     const queryBuilder = await this.orderRepository
       .createQueryBuilder('q')
@@ -217,8 +222,15 @@ export class StatisticsService {
       .where('q.createdAt BETWEEN :startDate AND :endDate', {
         startDate: newStartDate,
         endDate: newEndDate,
-      })
-      .andWhere('tr.id IN (' + subQuery.getQuery() + ')')
+      });
+    if (keyword) {
+      queryBuilder.andWhere('tr.id IN (' + subQuery + ')', {
+        code: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
+    }
+    queryBuilder
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
       .andWhere('q.deletedAt IS NULL')
       .andWhere('td.deletedAt IS NULL')
@@ -255,20 +267,24 @@ export class StatisticsService {
       ? moment().endOf('day').toDate()
       : moment(endDate).endOf('day').toDate();
 
-    const newKeywords = keyword.trim();
-    const subQuery = this.customerRepository
-      .createQueryBuilder('q2')
-      .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
-      .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
-      .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
-      .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
-      .orWhere('q2.fullAddress LIKE :fullAddress', {
-        fullAddress: `%${newKeywords}%`,
-      })
-      .select('q2.id')
-      .getQuery();
+    let subQuery;
+    let newKeywords;
+    if (keyword) {
+      newKeywords = keyword.trim();
+      subQuery = this.customerRepository
+        .createQueryBuilder('q2')
+        .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
+        .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
+        .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
+        .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
+        .orWhere('q2.fullAddress LIKE :fullAddress', {
+          fullAddress: `%${newKeywords}%`,
+        })
+        .select('q2.id')
+        .getQuery();
+    }
 
-    const topCustomers = await this.customerRepository
+    const query = this.customerRepository
       .createQueryBuilder('q')
       .leftJoinAndSelect('q.orders', 'o')
       .leftJoinAndSelect('q.ward', 'w')
@@ -290,21 +306,25 @@ export class StatisticsService {
       .where(`o.createdAt BETWEEN :startDate AND :endDate`, {
         startDate: newStartDate,
         endDate: newEndDate,
-      })
-      .andWhere(`q.id in (${subQuery})`, {
+      });
+    if (keyword) {
+      query.andWhere(`q.id in (${subQuery})`, {
         fullName: `%${newKeywords}%`,
         email: `%${newKeywords}%`,
         phone: `%${newKeywords}%`,
         address: `%${newKeywords}%`,
         fullAddress: `%${newKeywords}%`,
-      })
+      });
+    }
+    query
       .andWhere('o.status = :status', { status: OrderStatusEnum.PAID })
       .andWhere('o.deletedAt IS NULL')
       .groupBy('q.id')
       .orderBy('total', 'DESC')
       .offset(pagination.skip || 0)
-      .limit(pagination.take || 10)
-      .getRawMany();
+      .limit(pagination.take || 10);
+
+    const dataResult = await query.getRawMany();
 
     // Lấy số lượng hoá đơn cho mỗi khách hàng trong 7 ngày gần đây
     const numberOfOrdersByCustomers = await this.customerRepository
@@ -319,7 +339,7 @@ export class StatisticsService {
       .getRawMany();
 
     // Kết hợp kết quả của hai truy vấn và trả về kết quả cuối cùng
-    const result = topCustomers.map((customer) => {
+    const result = dataResult.map((customer) => {
       const numberOfOrders = numberOfOrdersByCustomers.find(
         (item) => item.customerId === customer.customerId,
       )?.numberOfOrders;
