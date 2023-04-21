@@ -901,7 +901,7 @@ export class OrderService {
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    const admin = await this.adminService.findOneById(userId);
+    const admin: Staff = await this.adminService.findOneById(userId);
     if (!admin) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -960,7 +960,7 @@ export class OrderService {
       if (!userId) {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
-      const customer = await this.customerService.findOneById(userId);
+      const customer: Customer = await this.customerService.findOneById(userId);
       if (!customer) {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
@@ -1059,7 +1059,7 @@ export class OrderService {
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    const customer = await this.customerService.findOneById(userId);
+    const customer: Customer = await this.customerService.findOneById(userId);
     if (!customer) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -1092,7 +1092,7 @@ export class OrderService {
         endpoint: this.configService.get('ZALO_PAY_ENDPOINT'),
       };
       const embed_data = {
-        // redirecturl: this.configService.get('REDIRECT_URL'),
+        redirecturl: this.configService.get('REDIRECT_URL'),
       };
       const items = [{}];
       const transID = Math.floor(Math.random() * 1000000);
@@ -1108,6 +1108,7 @@ export class OrderService {
         bank_code: 'CC',
         title: 'thanh toan ve #' + orderCode,
         redirect_url: 'https://www.facebook.com/',
+        callback_url: this.configService.get('CALLBACK_URL'),
       };
       const data =
         config.app_id +
@@ -1124,6 +1125,7 @@ export class OrderService {
         '|' +
         order.item;
       order['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
+      console.log(order);
       await axios
         .post(config.endpoint, null, { params: order })
         .then((result) => {
