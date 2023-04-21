@@ -30,6 +30,7 @@ import { OrderModule } from './api/order/order.module';
 import { PromotionLineModule } from './api/promotion-line/promotion-line.module';
 import { PromotionHistoryModule } from './api/promotion-history/promotion-history.module';
 import { StatisticsModule } from './api/statistics/statistics.module';
+import { CallbackModule } from './api/callback/callback.module';
 
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import { StatisticsModule } from './api/statistics/statistics.module';
     OrderModule,
     StatisticsModule,
     UploadModule,
+    CallbackModule,
   ],
   providers: [
     {

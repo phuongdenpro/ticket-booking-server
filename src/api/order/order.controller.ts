@@ -68,7 +68,7 @@ export class OrderController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
-    return this.orderService.payment(dto, user.id);
+    return this.orderService.paymentForAdmin(dto, user.id);
   }
 
   @Get()

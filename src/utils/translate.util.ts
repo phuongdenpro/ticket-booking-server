@@ -566,7 +566,7 @@ export const mappingTranslate = {
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',
   ORDER_ALREADY_CANCEL: 'Hoá đơn đã bị hủy',
   ORDER_ALREADY_PAID: 'Hoá đơn đã thanh toán',
-  ORDER_ALREADY_RETURNED: 'Hoá đơn đã được hoàn trả',
+  ORDER_ALREADY_RETURNED: 'Hoá đơn đã huỷ và tra lại vé',
   ORDER_NOT_PAID: 'Hoá đơn chưa thanh toán',
   ORDER_NOT_BELONG_TO_USER: 'Hoá đơn không thuộc về người dùng',
   ORDER_CODE_IS_REQUIRED: 'Mã đơn hàng không được để trống',
@@ -612,7 +612,6 @@ export const mappingTranslate = {
   PAYMENT_METHOD_NOT_FOUND: 'Không tìm thấy phương thức thanh toán',
   PAYMENT_METHOD_IS_REQUIRED: 'Phương thức thanh toán không được để trống',
   PAYMENT_METHOD_IS_ENUM: 'Phương thức thanh toán không hợp lệ',
-  PAYMENT_FAILED: 'Thanh toán thất bại',
 
   // order refund
   CREATE_ORDER_REFUND_DETAIL_FAILED: 'Tạo hoá đơn hoàn trả thất bại',
@@ -629,4 +628,10 @@ export const mappingTranslate = {
   LIMIT_MUST_BE_NUMBER: 'Số lượng người cần lấy phải là số',
   START_DATE_OR_END_DATE_IS_REQUIRED:
     'Ngày bắt đầu và ngày kết thúc không được để trống',
+
+  // payment
+  CONNECT_ZALOPAY_FAIL: 'Kết nối với ZaloPay thất bại',
+  APP_TRANS_ID_REQUIRED: 'AppTransId không được để trống',
+  APP_TIME_MUST_BE_NUMBER: 'AppTime phải là số',
+  PAYMENT_FAILED: 'Thanh toán thất bại',
 };

@@ -15,8 +15,7 @@ export class BookingService {
     }
     if (seatIds && seatIds.length > 0) {
       dtoOrder.seatIds = seatIds;
-    }
-    if (seatCodes && seatCodes.length > 0) {
+    } else if (seatCodes && seatCodes.length > 0) {
       dtoOrder.seatCodes = seatCodes;
     }
     dtoOrder.tripDetailCode = tripDetailCode;
@@ -28,10 +27,10 @@ export class BookingService {
   }
 
   async payment(dto: PaymentDto, userId: string) {
-    return await this.orderService.payment(dto, userId);
+    await this.orderService.paymentForCustomer(dto, userId);
   }
 
-  async getZaloPayPaymentUrl(orderCode: string) {
-    return await this.orderService.getZaloPayPaymentUrl(orderCode);
+  async getZaloPayPaymentUrl(orderCode: string, userId: string) {
+    return await this.orderService.getZaloPayPaymentUrl(orderCode, userId);
   }
 }

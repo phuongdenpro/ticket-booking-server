@@ -35,7 +35,7 @@ export class BookingController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
-    return this.bookingService.payment(dto, user.id);
+    await this.bookingService.payment(dto, user.id);
   }
 
   @Get('zalopay-payment-url/:orderCode')
@@ -47,6 +47,6 @@ export class BookingController {
     @Param('orderCode') orderCode: string,
     @CurrentUser() user,
   ) {
-    return this.bookingService.getZaloPayPaymentUrl(orderCode);
+    return await this.bookingService.getZaloPayPaymentUrl(orderCode, user.id);
   }
 }
