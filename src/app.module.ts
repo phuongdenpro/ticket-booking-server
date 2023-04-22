@@ -60,8 +60,8 @@ import { CronjobModule } from './api/cronjob/cronjob.module';
     BookingModule,
     OrderModule,
     StatisticsModule,
-    CallbackModule,
     UploadModule,
+    CallbackModule,
     CronjobModule,
   ],
   providers: [

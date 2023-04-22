@@ -115,6 +115,12 @@ export class CallbackService {
           result['return_message'] = 'success';
           console.log('thanh toán thành công');
         } else {
+          orderExist.transId = '';
+          orderExist.zaloTransId = '';
+          orderExist.note = 'Thanh toán thất bại';
+          orderExist.updatedBy = orderExist.customer.id;
+
+          await this.orderRepository.save(orderExist);
           result['return_code'] = 0;
           result['return_message'] = 'fail';
           console.log('thanh toán thất bại');

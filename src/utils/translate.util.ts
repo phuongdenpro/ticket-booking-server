@@ -634,6 +634,8 @@ export const mappingTranslate = {
   APP_TRANS_ID_REQUIRED: 'AppTransId không được để trống',
   APP_TIME_MUST_BE_NUMBER: 'AppTime phải là số',
   PAYMENT_FAILED: 'Thanh toán thất bại',
+  PAYMENT_FAIL: 'Thanh toán thất bại',
+  PAYMENT_NOT_COMPLETE: 'Thanh toán chưa được	thực hiện',
   TRANSACTION_ID_REQUIRED: 'Hoá đơn này chưa từng được thanh toán',
 
   // cron job

@@ -822,6 +822,8 @@ export class OrderService {
     try {
       switch (status) {
         case OrderUpdateStatusCustomerEnum.CANCEL:
+          order.createAppTime = '';
+          order.transId = '';
           if (order.status === OrderStatusEnum.PAID) {
             throw new BadRequestException('ORDER_ALREADY_PAID');
           }
@@ -933,6 +935,7 @@ export class OrderService {
     orderExist.status = OrderStatusEnum.PAID;
     orderExist.paymentMethod = PaymentMethodEnum.CASH;
     orderExist.transId = `CASH_${orderCode}`;
+    orderExist.createAppTime = '';
 
     orderExist.updatedBy = userId;
     await this.orderRepository.save(orderExist);
@@ -1016,31 +1019,46 @@ export class OrderService {
         },
         data: qs.stringify(postData),
       };
-      const flag = await axios(postConfig)
-        .then(async function (response) {
-          console.log(response.data);
-          if (response.data.return_code === 1) {
-            orderExist.updatedBy = userId;
-            orderExist.zaloTransId = response.data.zp_trans_id;
-            const paymentTime = moment
-              .unix(response.data.server_time / 1000)
-              .toDate();
-            orderExist.paymentTime = paymentTime;
-            return true;
-          } else if (
-            Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
-            response.data.return_code == 2
-          ) {
-            throw new BadRequestException('PAYMENT_FAIL');
-          }
-        })
-        .catch(function (error) {
-          console.log(error);
-        });
-      console.log(orderCode);
-      console.log(flag);
-      if (!flag) {
+      let flag = 0;
+      const logData = {
+        orderCode,
+        paymentMethod,
+        transId: orderExist.transId,
+        createAppTime: orderExist.createAppTime,
+      };
+      console.log('check payment: ', logData);
+
+      await axios(postConfig).then(async function (response) {
+        if (response.data.return_code === 1) {
+          orderExist.updatedBy = userId;
+          orderExist.zaloTransId = response.data.zp_trans_id;
+          const paymentTime = moment
+            .unix(response.data.server_time / 1000)
+            .toDate();
+          orderExist.paymentTime = paymentTime;
+          flag = 1;
+        } else if (
+          Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
+          response.data.return_code == 2
+        ) {
+          orderExist.updatedBy = userId;
+          orderExist.createAppTime = '';
+          orderExist.transId = '';
+          orderExist.note = 'Giao dịch thất bại';
+          flag = 0;
+          throw new BadRequestException('PAYMENT_FAIL');
+        } else if (response.data.return_code == 3) {
+          orderExist.updatedBy = userId;
+          orderExist.createAppTime = '';
+          orderExist.transId = '';
+          orderExist.note = 'Giao dịch chưa được thực hiện';
+          flag = 2;
+        }
+      });
+      if (flag === 0) {
         throw new BadRequestException('PAYMENT_FAIL');
+      } else if (flag === 2) {
+        throw new BadRequestException('PAYMENT_NOT_COMPLETE');
       }
       const orderDetails: OrderDetail[] = orderExist.orderDetails;
       const ticketDetails = orderDetails.map(async (orderDetail) => {
@@ -1057,7 +1075,6 @@ export class OrderService {
       saveOrder = await this.findOneOrderByCode(orderCode);
       delete saveOrder.deletedAt;
     } catch (error) {
-      console.log(error);
       throw new BadRequestException(error.message);
     }
     return saveOrder;
