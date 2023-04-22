@@ -48,6 +48,25 @@ export class Order {
   })
   transId: string;
 
+  @Column({
+    name: 'create_app_time',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  createAppTime: string;
+
+  @Column({
+    name: 'zalo_trans_Id',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  zaloTransId: string;
+
+  @Column({ name: 'zalo_trans_time', type: 'timestamp', nullable: false })
+  paymentTime: Date;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 

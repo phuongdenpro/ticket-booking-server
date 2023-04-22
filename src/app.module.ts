@@ -59,8 +59,8 @@ import { CallbackModule } from './api/callback/callback.module';
     BookingModule,
     OrderModule,
     StatisticsModule,
-    UploadModule,
     CallbackModule,
+    UploadModule,
   ],
   providers: [
     {

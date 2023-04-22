@@ -1,7 +1,9 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import { CallbackService } from './callback.service';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('callback')
+@ApiTags('Callback')
 export class CallbackController {
   constructor(private callbackService: CallbackService) {}
 

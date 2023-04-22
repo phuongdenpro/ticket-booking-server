@@ -23,6 +23,8 @@ import {
   CreateOrderDetailDto,
   FilterBillHistoryDto,
   FilterBillAvailableDto,
+  CheckStatusZaloPayPaymentDto,
+  PaymentAdminDto,
 } from './dto';
 import {
   BadRequestException,
@@ -35,7 +37,7 @@ import {
   OrderStatusEnum,
   OrderUpdateStatusCustomerEnum,
   OrderRefundStatusEnum,
-  PaymentMethod,
+  PaymentMethodEnum,
   PromotionHistoryTypeEnum,
   PromotionTypeEnum,
   SortEnum,
@@ -52,7 +54,6 @@ import { UpdateTicketDetailDto } from '../ticket/dto';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 import { CreatePromotionHistoryDto } from '../promotion-history/dto';
-import { PaymentDto } from '../booking/dto';
 import * as moment from 'moment';
 import {
   FilterOrderRefundDto,
@@ -307,7 +308,9 @@ export class OrderService {
 
   async getPaymentMethod() {
     return {
-      dataResult: Object.keys(PaymentMethod).map((key) => PaymentMethod[key]),
+      dataResult: Object.keys(PaymentMethodEnum).map(
+        (key) => PaymentMethodEnum[key],
+      ),
     };
   }
 
@@ -897,7 +900,7 @@ export class OrderService {
     }
   }
 
-  async paymentForAdmin(dto: PaymentDto, userId: string) {
+  async paymentForAdmin(dto: PaymentAdminDto, userId: string) {
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -908,7 +911,7 @@ export class OrderService {
     if (admin && !admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-    const { orderCode, paymentMethod, appTransId, appTime } = dto;
+    const { orderCode } = dto;
     if (!orderCode) {
       throw new BadRequestException('ORDER_CODE_REQUIRED');
     }
@@ -928,11 +931,8 @@ export class OrderService {
         break;
     }
     orderExist.status = OrderStatusEnum.PAID;
-    if (paymentMethod) {
-      throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
-    }
-    orderExist.paymentMethod = paymentMethod;
-    orderExist.transId = orderCode;
+    orderExist.paymentMethod = PaymentMethodEnum.CASH;
+    orderExist.transId = `CASH_${orderCode}`;
 
     orderExist.updatedBy = userId;
     await this.orderRepository.save(orderExist);
@@ -955,7 +955,8 @@ export class OrderService {
     };
   }
 
-  async paymentForCustomer(dto: PaymentDto, userId: string) {
+  async checkStatusZaloPay(dto: CheckStatusZaloPayPaymentDto, userId: string) {
+    let saveOrder: Order;
     try {
       if (!userId) {
         throw new UnauthorizedException('UNAUTHORIZED');
@@ -967,7 +968,7 @@ export class OrderService {
       if (customer.status === UserStatusEnum.INACTIVATE) {
         throw new BadRequestException('USER_NOT_ACTIVE');
       }
-      const { orderCode, paymentMethod, appTransId, appTime } = dto;
+      const { orderCode, paymentMethod } = dto;
       if (!orderCode) {
         throw new BadRequestException('ORDER_CODE_REQUIRED');
       }
@@ -987,11 +988,13 @@ export class OrderService {
           break;
       }
       orderExist.status = OrderStatusEnum.PAID;
-      if (paymentMethod !== PaymentMethod.ZALO_PAY) {
+      if (paymentMethod !== PaymentMethodEnum.ZALO_PAY) {
         throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
       }
       orderExist.paymentMethod = paymentMethod;
-      orderExist.transId = appTransId;
+      if (!orderExist.transId || !orderExist.createAppTime) {
+        throw new BadRequestException('TRANSACTION_ID_REQUIRED');
+      }
       const config = {
         app_id: this.configService.get('ZALO_PAY_APP_ID'),
         key1: this.configService.get('ZALO_PAY_KEY_1'),
@@ -1000,7 +1003,7 @@ export class OrderService {
       };
       const postData = {
         app_id: config.app_id,
-        app_trans_id: appTransId,
+        app_trans_id: orderExist.transId,
       };
       const data = `${postData.app_id}|${postData.app_trans_id}|${config.key1}`;
       postData['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
@@ -1013,46 +1016,48 @@ export class OrderService {
         },
         data: qs.stringify(postData),
       };
-      const check = await setInterval(() => {
-        axios(postConfig)
-          .then(async function (response) {
-            console.log(response.data);
-            if (response.data.return_code === 1) {
-              clearInterval(check);
-              orderExist.updatedBy = userId;
-              await this.orderRepository.save(orderExist);
-
-              const orderDetails: OrderDetail[] = orderExist.orderDetails;
-              const ticketDetails = orderDetails.map(async (orderDetail) => {
-                let ticketDetail: TicketDetail = orderDetail.ticketDetail;
-                ticketDetail.status = TicketStatusEnum.SOLD;
-                ticketDetail = await this.dataSource
-                  .getRepository(TicketDetail)
-                  .save(ticketDetail);
-                delete ticketDetail.deletedAt;
-                return ticketDetail;
-              });
-              await Promise.all(ticketDetails);
-              const newOrder = await this.findOneOrderByCode(orderCode);
-              delete newOrder.deletedAt;
-            } else if (
-              Date.now() > appTime + 15 * 60 * 1000 ||
-              response.data.return_code == 2
-            ) {
-              clearInterval(check);
-
-              throw new BadRequestException('PAYMENT_FAIL');
-            }
-            console.log(response.data);
-          })
-          .catch(function (error) {
-            console.log(error);
-          });
-      }, 61000);
+      const flag = await axios(postConfig)
+        .then(async function (response) {
+          console.log(response.data);
+          if (response.data.return_code === 1) {
+            orderExist.updatedBy = userId;
+            orderExist.zaloTransId = response.data.zp_trans_id;
+            const paymentTime = moment
+              .unix(response.data.server_time / 1000)
+              .toDate();
+            orderExist.paymentTime = paymentTime;
+            return true;
+          } else if (
+            Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
+            response.data.return_code == 2
+          ) {
+            throw new BadRequestException('PAYMENT_FAIL');
+          }
+        })
+        .catch(function (error) {
+          console.log(error);
+        });
+      if (!flag) {
+        throw new BadRequestException('PAYMENT_FAIL');
+      }
+      const orderDetails: OrderDetail[] = orderExist.orderDetails;
+      const ticketDetails = orderDetails.map(async (orderDetail) => {
+        let ticketDetail: TicketDetail = orderDetail.ticketDetail;
+        ticketDetail.status = TicketStatusEnum.SOLD;
+        ticketDetail = await this.dataSource
+          .getRepository(TicketDetail)
+          .save(ticketDetail);
+        delete ticketDetail.deletedAt;
+        return ticketDetail;
+      });
+      await Promise.all(ticketDetails);
+      saveOrder = await this.orderRepository.save(orderExist);
+      delete saveOrder.deletedAt;
     } catch (error) {
       console.log(error);
       throw new BadRequestException(error.message);
     }
+    return saveOrder;
   }
 
   async getZaloPayPaymentUrl(orderCode: string, userId: string) {
@@ -1086,7 +1091,7 @@ export class OrderService {
           break;
       }
       const config = {
-        app_id: this.configService.get('ZALO_PAY_APP_ID'),
+        app_id: Number(this.configService.get('ZALO_PAY_APP_ID')),
         key1: this.configService.get('ZALO_PAY_KEY_1'),
         key2: this.configService.get('ZALO_PAY_KEY_2'),
         endpoint: this.configService.get('ZALO_PAY_ENDPOINT'),
@@ -1094,17 +1099,23 @@ export class OrderService {
       const embed_data = {
         redirecturl: this.configService.get('REDIRECT_URL'),
       };
-      const items = [{}];
-      const transID = Math.floor(Math.random() * 1000000);
-      const order = {
+      const randomCode = Math.floor(Math.random() * 1000000);
+      const transID = `${moment().format('YYMMDD')}_${orderCode}-${randomCode}`;
+      const items = [
+        {
+          orderCode,
+          transID,
+        },
+      ];
+      const payload = {
         app_id: config.app_id,
-        app_trans_id: `${moment().format('YYMMDD')}_${transID}`,
+        app_trans_id: transID,
         app_user: 'user123',
-        app_time: Date.now(), // miliseconds
+        app_time: Date.now(), // milliseconds
         item: JSON.stringify(items),
         embed_data: JSON.stringify(embed_data),
         amount: Number(orderExist.finalTotal),
-        description: `Thanh toan ve #${moment().format('YYMMDD')}_${transID}`,
+        description: `Thanh toan ve #${orderCode}`,
         bank_code: 'CC',
         title: 'thanh toan ve #' + orderCode,
         redirect_url: 'https://www.facebook.com/',
@@ -1113,36 +1124,38 @@ export class OrderService {
       const data =
         config.app_id +
         '|' +
-        order.app_trans_id +
+        payload.app_trans_id +
         '|' +
-        order.app_user +
+        payload.app_user +
         '|' +
-        order.amount +
+        payload.amount +
         '|' +
-        order.app_time +
+        payload.app_time +
         '|' +
-        order.embed_data +
+        payload.embed_data +
         '|' +
-        order.item;
-      order['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
-      console.log(order);
+        payload.item;
+      payload['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
       await axios
-        .post(config.endpoint, null, { params: order })
+        .post(config.endpoint, null, { params: payload })
         .then((result) => {
           paymentResult = {
             zalo: result.data,
-            appTransId: order.app_trans_id,
-            appTime: order.app_time,
+            appTransId: payload.app_trans_id,
+            appTime: payload.app_time,
           };
         })
         .catch((err) => console.log(err));
+      orderExist.transId = payload.app_trans_id;
+      orderExist.createAppTime = payload.app_time + '';
+      orderExist.updatedBy = userId;
+      await this.orderRepository.save(orderExist);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
     if (!paymentResult) {
       throw new BadRequestException('CONNECT_ZALOPAY_FAIL');
     }
-    console.log(paymentResult);
     return paymentResult;
   }
 

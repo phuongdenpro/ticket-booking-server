@@ -13,7 +13,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
-import { CreateBookingDto, PaymentDto } from './dto';
+import { CreateBookingDto } from './dto';
 
 @Controller('booking')
 @ApiTags('Booking')
@@ -29,14 +29,14 @@ export class BookingController {
     return this.bookingService.booking(dto, user.id);
   }
 
-  @Post('payment')
-  @HttpCode(HttpStatus.CREATED)
-  @Roles(RoleEnum.CUSTOMER)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
-    await this.bookingService.payment(dto, user.id);
-  }
+  // @Post('payment')
+  // @HttpCode(HttpStatus.CREATED)
+  // @Roles(RoleEnum.CUSTOMER)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
+  //   await this.bookingService.payment(dto, user.id);
+  // }
 
   @Get('zalopay-payment-url/:orderCode')
   @HttpCode(HttpStatus.OK)
