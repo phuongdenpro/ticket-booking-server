@@ -93,7 +93,7 @@ export class CallbackService {
         const orderExist = await this.findOneOrderByCode(orderCode);
         if (orderExist) {
           orderExist.transId = app_trans_id + '';
-          orderExist.paymentMethod = PaymentMethodEnum.ZALO_PAY;
+          orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
           orderExist.status = OrderStatusEnum.PAID;
           orderExist.zaloTransId = zp_trans_id + '';
           orderExist.paymentTime = moment.unix(server_time / 1000).toDate();

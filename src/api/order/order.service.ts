@@ -991,7 +991,7 @@ export class OrderService {
           break;
       }
       orderExist.status = OrderStatusEnum.PAID;
-      if (paymentMethod !== PaymentMethodEnum.ZALO_PAY) {
+      if (paymentMethod !== PaymentMethodEnum.ZALOPAY) {
         throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
       }
       orderExist.paymentMethod = paymentMethod;
@@ -1168,6 +1168,7 @@ export class OrderService {
         .catch((err) => console.log(err));
       orderExist.transId = payload.app_trans_id;
       orderExist.createAppTime = payload.app_time + '';
+      orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
       orderExist.updatedBy = userId;
       await this.orderRepository.save(orderExist);
     } catch (error) {

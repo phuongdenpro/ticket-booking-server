@@ -43,7 +43,7 @@ export class CronjobService {
         const { code } = item;
         const dto = new CheckStatusZaloPayPaymentDto();
         dto.orderCode = code;
-        dto.paymentMethod = PaymentMethodEnum.ZALO_PAY;
+        dto.paymentMethod = PaymentMethodEnum.ZALOPAY;
         const order = await this.orderService.checkStatusZaloPay(dto, userId);
         return order;
       });
