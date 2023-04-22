@@ -523,8 +523,8 @@ export class StationService {
       const query = this.stationRepository.createQueryBuilder('r');
       if (dto?.keywords) {
         query
-          .orWhere('r.name like :query')
-          .orWhere('r.address like :query')
+          .orWhere('r.name LIKE :query')
+          .orWhere('r.address LIKE :query')
           .setParameter('query', `%${dto?.keywords}%`);
       }
 

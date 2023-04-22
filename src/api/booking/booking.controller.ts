@@ -5,13 +5,15 @@ import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { BookingService } from './booking.service';
-import { CreateBookingDto, PaymentDto } from './dto';
+import { CreateBookingDto } from './dto';
 
 @Controller('booking')
 @ApiTags('Booking')
@@ -27,12 +29,24 @@ export class BookingController {
     return this.bookingService.booking(dto, user.id);
   }
 
-  @Post('payment')
-  @HttpCode(HttpStatus.CREATED)
+  // @Post('payment')
+  // @HttpCode(HttpStatus.CREATED)
+  // @Roles(RoleEnum.CUSTOMER)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
+  //   await this.bookingService.payment(dto, user.id);
+  // }
+
+  @Get('zalopay-payment-url/:orderCode')
+  @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.CUSTOMER)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
-    return this.bookingService.payment(dto, user.id);
+  async getZaloPayPaymentUrl(
+    @Param('orderCode') orderCode: string,
+    @CurrentUser() user,
+  ) {
+    return await this.bookingService.getZaloPayPaymentUrl(orderCode, user.id);
   }
 }

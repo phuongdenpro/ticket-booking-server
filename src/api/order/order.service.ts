@@ -1,6 +1,7 @@
 import { Pagination } from './../../decorator';
 import { TripDetailService } from './../trip-detail/trip-detail.service';
 import {
+  Customer,
   Order,
   OrderDetail,
   OrderRefund,
@@ -8,6 +9,7 @@ import {
   PriceDetail,
   PromotionHistory,
   Seat,
+  Staff,
   TicketDetail,
   TripDetail,
   Vehicle,
@@ -21,6 +23,8 @@ import {
   CreateOrderDetailDto,
   FilterBillHistoryDto,
   FilterBillAvailableDto,
+  CheckStatusZaloPayPaymentDto,
+  PaymentAdminDto,
 } from './dto';
 import {
   BadRequestException,
@@ -33,7 +37,7 @@ import {
   OrderStatusEnum,
   OrderUpdateStatusCustomerEnum,
   OrderRefundStatusEnum,
-  PaymentMethod,
+  PaymentMethodEnum,
   PromotionHistoryTypeEnum,
   PromotionTypeEnum,
   SortEnum,
@@ -50,12 +54,15 @@ import { UpdateTicketDetailDto } from '../ticket/dto';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 import { CreatePromotionHistoryDto } from '../promotion-history/dto';
-import { PaymentDto } from '../booking/dto';
 import * as moment from 'moment';
 import {
   FilterOrderRefundDto,
   UpdateOrderRefundDto,
 } from '../order-refund/dto';
+import * as CryptoJS from 'crypto-js';
+import axios from 'axios';
+import { ConfigService } from '@nestjs/config';
+import * as qs from 'qs';
 moment.locale('vi');
 
 @Injectable()
@@ -82,6 +89,7 @@ export class OrderService {
     private readonly promotionLineService: PromotionLineService,
     private readonly promotionHistoryService: PromotionHistoryService,
     private dataSource: DataSource,
+    private configService: ConfigService,
   ) {}
 
   private SEAT_TYPE_DTO_ID = 'id';
@@ -300,7 +308,9 @@ export class OrderService {
 
   async getPaymentMethod() {
     return {
-      dataResult: Object.keys(PaymentMethod).map((key) => PaymentMethod[key]),
+      dataResult: Object.keys(PaymentMethodEnum).map(
+        (key) => PaymentMethodEnum[key],
+      ),
     };
   }
 
@@ -320,7 +330,7 @@ export class OrderService {
       sort,
     } = dto;
     const customer = await this.customerService.findOneById(userId);
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -558,7 +568,7 @@ export class OrderService {
     } = dto;
     // check permission
     const customerCreator = await this.customerService.findOneById(creatorId);
-    const admin = await this.adminService.findOneBydId(creatorId);
+    const admin = await this.adminService.findOneById(creatorId);
     if (!creatorId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -755,9 +765,8 @@ export class OrderService {
     id?: string,
     code?: string,
   ) {
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
-    console.log('vào');
 
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -813,6 +822,8 @@ export class OrderService {
     try {
       switch (status) {
         case OrderUpdateStatusCustomerEnum.CANCEL:
+          order.createAppTime = '';
+          order.transId = '';
           if (order.status === OrderStatusEnum.PAID) {
             throw new BadRequestException('ORDER_ALREADY_PAID');
           }
@@ -891,52 +902,45 @@ export class OrderService {
     }
   }
 
-  async payment(dto: PaymentDto, userId: string) {
-    const admin = await this.adminService.findOneBydId(userId);
-    const customer = await this.customerService.findOneById(userId);
-    if (!customer && !admin) {
+  async paymentForAdmin(dto: PaymentAdminDto, userId: string) {
+    if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (
-      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      (admin && !admin.isActive)
-    ) {
+    const admin: Staff = await this.adminService.findOneById(userId);
+    if (!admin) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (admin && !admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-    const { orderCode, paymentMethod } = dto;
+    const { orderCode } = dto;
     if (!orderCode) {
       throw new BadRequestException('ORDER_CODE_REQUIRED');
     }
 
-    const order = await this.findOneOrderByCode(orderCode);
-    if (!order) {
+    const orderExist = await this.findOneOrderByCode(orderCode);
+    if (!orderExist) {
       throw new BadRequestException('ORDER_NOT_FOUND');
     }
-    if (order.status === OrderStatusEnum.PAID) {
-      throw new BadRequestException('ORDER_ALREADY_PAID');
-    }
-    if (order.status === OrderStatusEnum.CANCEL) {
-      throw new BadRequestException('ORDER_ALREADY_CANCEL');
-    }
-    if (order.status === OrderStatusEnum.RETURNED) {
-      throw new BadRequestException('ORDER_ALREADY_RETURNED');
-    }
-    order.status = OrderStatusEnum.PAID;
-    switch (paymentMethod) {
-      case PaymentMethod.CASH:
-      case PaymentMethod.BANK_TRANSFER:
-      case PaymentMethod.MOMO:
-      case PaymentMethod.ZALO_PAY:
-        order.paymentMethod = paymentMethod;
-        break;
+    switch (orderExist.status) {
+      case OrderStatusEnum.PAID:
+        throw new BadRequestException('ORDER_ALREADY_PAID');
+      case OrderStatusEnum.CANCEL:
+        throw new BadRequestException('ORDER_ALREADY_CANCEL');
+      case OrderStatusEnum.RETURNED:
+        throw new BadRequestException('ORDER_ALREADY_RETURNED');
       default:
-        throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
         break;
     }
-    order.updatedBy = userId;
-    await this.orderRepository.save(order);
+    orderExist.status = OrderStatusEnum.PAID;
+    orderExist.paymentMethod = PaymentMethodEnum.CASH;
+    orderExist.transId = `CASH_${orderCode}`;
+    orderExist.createAppTime = '';
 
-    const orderDetails: OrderDetail[] = order.orderDetails;
+    orderExist.updatedBy = userId;
+    await this.orderRepository.save(orderExist);
+
+    const orderDetails: OrderDetail[] = orderExist.orderDetails;
     const ticketDetails = orderDetails.map(async (orderDetail) => {
       let ticketDetail: TicketDetail = orderDetail.ticketDetail;
       ticketDetail.status = TicketStatusEnum.SOLD;
@@ -949,7 +953,231 @@ export class OrderService {
     await Promise.all(ticketDetails);
     const newOrder = await this.findOneOrderByCode(orderCode);
     delete newOrder.deletedAt;
-    return newOrder;
+    return {
+      order: newOrder,
+    };
+  }
+
+  async checkStatusZaloPay(dto: CheckStatusZaloPayPaymentDto, userId: string) {
+    let saveOrder: Order;
+    try {
+      if (!userId) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      const staff: Staff = await this.adminService.findOneById(userId);
+      if (!staff) {
+        throw new UnauthorizedException('UNAUTHORIZED');
+      }
+      if (!staff.isActive) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
+      const { orderCode, paymentMethod } = dto;
+      if (!orderCode) {
+        throw new BadRequestException('ORDER_CODE_REQUIRED');
+      }
+
+      const orderExist = await this.findOneOrderByCode(orderCode);
+      if (!orderExist) {
+        throw new BadRequestException('ORDER_NOT_FOUND');
+      }
+      switch (orderExist.status) {
+        case OrderStatusEnum.PAID:
+          throw new BadRequestException('ORDER_ALREADY_PAID');
+        case OrderStatusEnum.CANCEL:
+          throw new BadRequestException('ORDER_ALREADY_CANCEL');
+        case OrderStatusEnum.RETURNED:
+          throw new BadRequestException('ORDER_ALREADY_RETURNED');
+        default:
+          break;
+      }
+      orderExist.status = OrderStatusEnum.PAID;
+      if (paymentMethod !== PaymentMethodEnum.ZALOPAY) {
+        throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
+      }
+      orderExist.paymentMethod = paymentMethod;
+      if (!orderExist.transId || !orderExist.createAppTime) {
+        throw new BadRequestException('TRANSACTION_ID_REQUIRED');
+      }
+      const config = {
+        app_id: this.configService.get('ZALO_PAY_APP_ID'),
+        key1: this.configService.get('ZALO_PAY_KEY_1'),
+        key2: this.configService.get('ZALO_PAY_KEY_2'),
+        endpoint: this.configService.get('ZALO_PAY_ENDPOINT_QUERY'),
+      };
+      const postData = {
+        app_id: config.app_id,
+        app_trans_id: orderExist.transId,
+      };
+      const data = `${postData.app_id}|${postData.app_trans_id}|${config.key1}`;
+      postData['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
+
+      const postConfig = {
+        method: 'post',
+        url: config.endpoint,
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        data: qs.stringify(postData),
+      };
+      let flag = 0;
+      const logData = {
+        orderCode,
+        paymentMethod,
+        transId: orderExist.transId,
+        createAppTime: orderExist.createAppTime,
+      };
+      console.log('check payment: ', logData);
+
+      await axios(postConfig).then(async function (response) {
+        if (response.data.return_code === 1) {
+          orderExist.updatedBy = userId;
+          orderExist.zaloTransId = response.data.zp_trans_id;
+          const paymentTime = moment
+            .unix(response.data.server_time / 1000)
+            .toDate();
+          orderExist.paymentTime = paymentTime;
+          flag = 1;
+        } else if (
+          Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
+          response.data.return_code == 2
+        ) {
+          orderExist.updatedBy = userId;
+          orderExist.createAppTime = '';
+          orderExist.transId = '';
+          orderExist.note = 'Giao dịch thất bại';
+          flag = 0;
+          throw new BadRequestException('PAYMENT_FAIL');
+        } else if (response.data.return_code == 3) {
+          orderExist.updatedBy = userId;
+          orderExist.createAppTime = '';
+          orderExist.transId = '';
+          orderExist.note = 'Giao dịch chưa được thực hiện';
+          flag = 2;
+        }
+      });
+      if (flag === 0) {
+        throw new BadRequestException('PAYMENT_FAIL');
+      } else if (flag === 2) {
+        throw new BadRequestException('PAYMENT_NOT_COMPLETE');
+      }
+      const orderDetails: OrderDetail[] = orderExist.orderDetails;
+      const ticketDetails = orderDetails.map(async (orderDetail) => {
+        let ticketDetail: TicketDetail = orderDetail.ticketDetail;
+        ticketDetail.status = TicketStatusEnum.SOLD;
+        ticketDetail = await this.dataSource
+          .getRepository(TicketDetail)
+          .save(ticketDetail);
+        delete ticketDetail.deletedAt;
+        return ticketDetail;
+      });
+      await Promise.all(ticketDetails);
+      saveOrder = await this.orderRepository.save(orderExist);
+      saveOrder = await this.findOneOrderByCode(orderCode);
+      delete saveOrder.deletedAt;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+    return saveOrder;
+  }
+
+  async getZaloPayPaymentUrl(orderCode: string, userId: string) {
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    const customer: Customer = await this.customerService.findOneById(userId);
+    if (!customer) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    if (customer.status === UserStatusEnum.INACTIVATE) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+    let paymentResult;
+    try {
+      const orderExist = await this.findOneOrderByCode(orderCode);
+      if (!orderExist) {
+        throw new BadRequestException('ORDER_NOT_FOUND');
+      }
+      switch (orderExist.status) {
+        case OrderStatusEnum.PAID:
+          throw new BadRequestException('ORDER_ALREADY_PAID');
+          break;
+        case OrderStatusEnum.CANCEL:
+          throw new BadRequestException('ORDER_ALREADY_CANCEL');
+          break;
+        case OrderStatusEnum.RETURNED:
+          throw new BadRequestException('ORDER_ALREADY_RETURNED');
+          break;
+        default:
+          break;
+      }
+      const config = {
+        app_id: Number(this.configService.get('ZALO_PAY_APP_ID')),
+        key1: this.configService.get('ZALO_PAY_KEY_1'),
+        key2: this.configService.get('ZALO_PAY_KEY_2'),
+        endpoint: this.configService.get('ZALO_PAY_ENDPOINT'),
+      };
+      const embed_data = {
+        redirecturl: this.configService.get('REDIRECT_URL'),
+      };
+      const randomCode = Math.floor(Math.random() * 1000000);
+      const transID = `${moment().format('YYMMDD')}_${orderCode}-${randomCode}`;
+      const items = [
+        {
+          orderCode,
+          transID,
+        },
+      ];
+      const payload = {
+        app_id: config.app_id,
+        app_trans_id: transID,
+        app_user: 'user123',
+        app_time: Date.now(), // milliseconds
+        item: JSON.stringify(items),
+        embed_data: JSON.stringify(embed_data),
+        amount: Number(orderExist.finalTotal),
+        description: `Thanh toan ve #${orderCode}`,
+        bank_code: 'CC',
+        title: 'thanh toan ve #' + orderCode,
+        redirect_url: 'https://www.facebook.com/',
+        callback_url: this.configService.get('CALLBACK_URL'),
+      };
+      const data =
+        config.app_id +
+        '|' +
+        payload.app_trans_id +
+        '|' +
+        payload.app_user +
+        '|' +
+        payload.amount +
+        '|' +
+        payload.app_time +
+        '|' +
+        payload.embed_data +
+        '|' +
+        payload.item;
+      payload['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
+      await axios
+        .post(config.endpoint, null, { params: payload })
+        .then((result) => {
+          paymentResult = {
+            zalo: result.data,
+            appTransId: payload.app_trans_id,
+            appTime: payload.app_time,
+          };
+        })
+        .catch((err) => console.log(err));
+      orderExist.transId = payload.app_trans_id;
+      orderExist.createAppTime = payload.app_time + '';
+      orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
+      orderExist.updatedBy = userId;
+      await this.orderRepository.save(orderExist);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+    if (!paymentResult) {
+      throw new BadRequestException('CONNECT_ZALOPAY_FAIL');
+    }
+    return paymentResult;
   }
 
   // order detail
@@ -966,7 +1194,7 @@ export class OrderService {
     try {
       // check permission
       const customer = await this.customerService.findOneById(userId);
-      const admin = await this.adminService.findOneBydId(userId);
+      const admin = await this.adminService.findOneById(userId);
 
       if (!customer && !admin) {
         throw new UnauthorizedException('USER_NOT_FOUND');
@@ -1059,7 +1287,6 @@ export class OrderService {
       if (!dataResult) {
         throw new NotFoundException('PRICE_DETAIL_NOT_FOUND');
       }
-
       const priceDetail: PriceDetail = dataResult;
       delete priceDetail.trip;
       delete priceDetail.priceList;
@@ -1088,6 +1315,7 @@ export class OrderService {
       if (!saveTicketDetail) {
         throw new BadRequestException('UPDATE_TICKET_DETAIL_FAILED');
       }
+
       await queryRunnerOrderDetail.commitTransaction();
 
       delete createOrderDetail.deletedAt;
@@ -1154,7 +1382,7 @@ export class OrderService {
   ) {
     const { keywords, status, startDate, endDate, minTotal, maxTotal, sort } =
       dto;
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -1171,9 +1399,9 @@ export class OrderService {
     if (keywords) {
       const subQuery = this.orderRefundRepository.createQueryBuilder('q1');
       subQuery
-        .where('q1.code ILIKE :code', { code: `%${keywords}%` })
-        .orWhere('q1.note ILIKE :note', { note: `%${keywords}%` })
-        .orWhere('q1.orderCode ILIKE :orderCode', {
+        .where('q1.code LIKE :code', { code: `%${keywords}%` })
+        .orWhere('q1.note LIKE :note', { note: `%${keywords}%` })
+        .orWhere('q1.orderCode LIKE :orderCode', {
           orderCode: `%${keywords}%`,
         })
         .select('q1.id');
@@ -1218,7 +1446,7 @@ export class OrderService {
   }
 
   async createOrderRefund(orderCode: string, userId: string, order?: Order) {
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
@@ -1344,7 +1572,7 @@ export class OrderService {
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    const admin = await this.adminService.findOneBydId(userId);
+    const admin = await this.adminService.findOneById(userId);
     if (!admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }

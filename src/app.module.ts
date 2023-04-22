@@ -29,6 +29,9 @@ import { TicketModule } from './api/ticket/ticket.module';
 import { OrderModule } from './api/order/order.module';
 import { PromotionLineModule } from './api/promotion-line/promotion-line.module';
 import { PromotionHistoryModule } from './api/promotion-history/promotion-history.module';
+import { StatisticsModule } from './api/statistics/statistics.module';
+import { CallbackModule } from './api/callback/callback.module';
+import { CronjobModule } from './api/cronjob/cronjob.module';
 
 @Module({
   imports: [
@@ -56,7 +59,10 @@ import { PromotionHistoryModule } from './api/promotion-history/promotion-histor
     PromotionHistoryModule,
     BookingModule,
     OrderModule,
+    StatisticsModule,
     UploadModule,
+    CallbackModule,
+    CronjobModule,
   ],
   providers: [
     {

@@ -49,6 +49,9 @@ export class Customer {
   @Column({ name: 'note', type: 'text', nullable: true })
   note?: string;
 
+  @Column({ name: 'note_status', type: 'text', nullable: true })
+  noteStatus: string;
+
   @Column({ name: 'birthday', type: 'date', nullable: true })
   birthday?: Date;
 

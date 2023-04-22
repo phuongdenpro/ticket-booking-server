@@ -81,7 +81,7 @@ export class CustomerGroupService {
     customerGroup.description = description;
     customerGroup.note = note;
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -98,7 +98,7 @@ export class CustomerGroupService {
   }
 
   async getCustomerGroupById(id: string, adminId: string, options?: any) {
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -115,7 +115,7 @@ export class CustomerGroupService {
   }
 
   async getCustomerGroupByCode(code: string, adminId: string, options?: any) {
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -136,7 +136,7 @@ export class CustomerGroupService {
     adminId: string,
     pagination?: Pagination,
   ) {
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -199,7 +199,7 @@ export class CustomerGroupService {
       customerGroup.note = note;
     }
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -236,7 +236,7 @@ export class CustomerGroupService {
       customerGroup.note = note;
     }
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -263,7 +263,7 @@ export class CustomerGroupService {
       throw new BadRequestException('CUSTOMER_GROUP_HAS_CUSTOMERS');
     }
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -290,7 +290,7 @@ export class CustomerGroupService {
       throw new BadRequestException('CUSTOMER_GROUP_HAS_CUSTOMERS');
     }
 
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -351,7 +351,7 @@ export class CustomerGroupService {
     dto: FilterCustomerDto,
     pagination?: Pagination,
   ) {
-    const adminExist = await this.adminService.findOneBydId(adminId);
+    const adminExist = await this.adminService.findOneById(adminId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -461,7 +461,7 @@ export class CustomerGroupService {
   //     throw new BadRequestException('CUSTOMER_ALREADY_IN_GROUP');
   //   }
 
-  //   const adminExist = await this.adminService.findOneBydId(adminId);
+  //   const adminExist = await this.adminService.findOneById(adminId);
   //   if (!adminExist) {
   //     throw new UnauthorizedException('UNAUTHORIZED');
   //   }
@@ -489,7 +489,7 @@ export class CustomerGroupService {
   //     adminId,
   //   );
 
-  //   const adminExist = await this.adminService.findOneBydId(adminId);
+  //   const adminExist = await this.adminService.findOneById(adminId);
   //   if (!adminExist) {
   //     throw new UnauthorizedException('UNAUTHORIZED');
   //   }
@@ -578,7 +578,7 @@ export class CustomerGroupService {
   //     throw new BadRequestException('CUSTOMER_NOT_IN_GROUP');
   //   }
 
-  //   const adminExist = await this.adminService.findOneBydId(adminId);
+  //   const adminExist = await this.adminService.findOneById(adminId);
   //   if (!adminExist) {
   //     throw new UnauthorizedException('UNAUTHORIZED');
   //   }
@@ -604,7 +604,7 @@ export class CustomerGroupService {
   //     adminId,
   //   );
 
-  //   const adminExist = await this.adminService.findOneBydId(adminId);
+  //   const adminExist = await this.adminService.findOneById(adminId);
   //   if (!adminExist) {
   //     throw new UnauthorizedException('UNAUTHORIZED');
   //   }

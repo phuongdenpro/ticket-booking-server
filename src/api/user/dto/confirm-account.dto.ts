@@ -1,13 +1,15 @@
+import { ActiveOtpTypeEnum } from './../../../enums';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsPhoneNumber,
   IsString,
 } from 'class-validator';
 
-export class CustomerConfirmAccountDto {
+export class ConfirmAccountDto {
   @ApiPropertyOptional({ example: '09xxxxxxxx' })
   @IsPhoneNumber('VN', { message: 'INVALID_PHONE_NUMBER' })
   @IsString({ message: 'PHONE_IS_STRING' })
@@ -24,4 +26,9 @@ export class CustomerConfirmAccountDto {
   @IsString({ message: 'OTP_IS_STRING' })
   @IsNotEmpty({ message: 'OTP_IS_REQUIRED' })
   otp: string;
+
+  @ApiProperty({ example: ActiveOtpTypeEnum.ACTIVE })
+  @IsNotEmpty({ message: 'OTP_TYPE_IS_REQUIRED' })
+  @IsEnum(ActiveOtpTypeEnum, { message: 'INVALID_OTP_TYPE' })
+  type: ActiveOtpTypeEnum;
 }

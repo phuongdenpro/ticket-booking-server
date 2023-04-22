@@ -11,6 +11,9 @@ export const mappingTranslate = {
   USER_ALREADY_ACTIVED: 'Tài khoản đã được kích hoạt',
   OTP_EXPIRED: 'Mã OTP đã hết hạn',
   OTP_INVALID: 'Mã OTP không hợp lệ',
+  INVALID_OTP_TYPE: 'Loại mã OTP không hợp lệ',
+  OTP_TYPE_IS_REQUIRED: 'Loại mã OTP không được để trống',
+  USER_NOT_RESET_PASSWORD: 'Tài khoản chưa yêu cầu đổi mật khẩu',
   USERNAME_REQUIRED: 'Tên đăng nhập không được để trống',
   OTP_REQUIRED: 'Mã OTP không được để trống',
   ID_OR_CODE_IS_REQUIRED: 'Id hoặc mã không được để trống',
@@ -33,8 +36,11 @@ export const mappingTranslate = {
   SORT_IS_STRING: 'Giá trị sắp xếp phải là chuỗi ký tự',
   SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
+  OLD_EMAIL_IS_STRING: 'Email cũ phải là chuỗi ký tự',
+  NEW_EMAIL_IS_STRING: 'Email mới phải là chuỗi ký tự',
   EMAIL_IS_REQUIRED: 'Email không được để trống',
-  EMAIL_INVALID: 'Email không đúng định dạng',
+  OLD_EMAIL_INVALID: 'Email cũ không đúng định dạng',
+  NEW_EMAIL_INVALID: 'Email mới không đúng định dạng',
   EMAIL_LENGTH: 'Email phải từ 6 đến 100 ký tự',
   NAME_BETWEEN_1_100_CHARACTERS: 'Tên phải từ 1 đến 100 ký tự',
   CODE_BETWEEN_1_10_CHARACTERS: 'Mã phải từ 1 đến 10 ký tự',
@@ -74,6 +80,7 @@ export const mappingTranslate = {
   Unauthorized: 'Không có quyền truy cập',
   INVALID_USERNAME_OR_PASSWORD: 'Tên đăng nhập hoặc mật khẩu không đúng.',
   INVALID_PHONE_NUMBER: 'Số điện thoại không đúng định dạng.',
+  INVALID_OLD_EMAIL: 'Email cũ không đúng định dạng.',
   INVALID_EMAIL: 'Email không đúng định dạng.',
   USERNAME_ALREADY_EXIST: 'Tên đăng nhập đã tồn tại',
   USER_NOT_FOUND: 'Không tìm thấy tài khoản',
@@ -559,7 +566,7 @@ export const mappingTranslate = {
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',
   ORDER_ALREADY_CANCEL: 'Hoá đơn đã bị hủy',
   ORDER_ALREADY_PAID: 'Hoá đơn đã thanh toán',
-  ORDER_ALREADY_RETURNED: 'Hoá đơn đã được hoàn trả',
+  ORDER_ALREADY_RETURNED: 'Hoá đơn đã huỷ và tra lại vé',
   ORDER_NOT_PAID: 'Hoá đơn chưa thanh toán',
   ORDER_NOT_BELONG_TO_USER: 'Hoá đơn không thuộc về người dùng',
   ORDER_CODE_IS_REQUIRED: 'Mã đơn hàng không được để trống',
@@ -614,4 +621,23 @@ export const mappingTranslate = {
 
   // otp
   SEND_SMS_FAILED: 'Gửi mã otp thất bại',
+
+  // statistic
+  STATISTICS_TYPE_MUST_BE_WEEK_OR_MONTH:
+    'Loại thống kê phải là tuần hoặc tháng',
+  LIMIT_MUST_BE_NUMBER: 'Số lượng người cần lấy phải là số',
+  START_DATE_OR_END_DATE_IS_REQUIRED:
+    'Ngày bắt đầu và ngày kết thúc không được để trống',
+
+  // payment
+  CONNECT_ZALOPAY_FAIL: 'Kết nối với ZaloPay thất bại',
+  APP_TRANS_ID_REQUIRED: 'AppTransId không được để trống',
+  APP_TIME_MUST_BE_NUMBER: 'AppTime phải là số',
+  PAYMENT_FAILED: 'Thanh toán thất bại',
+  PAYMENT_FAIL: 'Thanh toán thất bại',
+  PAYMENT_NOT_COMPLETE: 'Thanh toán chưa được	thực hiện',
+  TRANSACTION_ID_REQUIRED: 'Hoá đơn này chưa từng được thanh toán',
+
+  // cron job
+  SECRET_KEY_IS_NOT_VALID: 'secret key không hợp lệ',
 };

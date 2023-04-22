@@ -1,16 +1,6 @@
-export enum PaymentMethod {
+export enum PaymentMethodEnum {
   CASH = 'tiền mặt',
-  BANK_TRANSFER = 'Chuyển khoản ngân hàng',
-  MOMO = 'Momo',
-  ZALO_PAY = 'ZaloPay',
-  // VNPAY = 'VNPAY',
-  // PAYPAL = 'Paypal',
-  // VISA = 'VISA',
-  // MASTER_CARD = 'MASTER_CARD',
-  // JCB = 'JCB',
-  // AMEX = 'AMEX',
-  // DISCOVER = 'DISCOVER',
-  // DINERS_CLUB = 'DINERS_CLUB',
-  // UNION_PAY = 'UNION_PAY',
-  // OTHER = 'OTHER',
+  // BANK_TRANSFER = 'Chuyển khoản ngân hàng',
+  // MOMO = 'Momo',
+  ZALOPAY = 'ZaloPay',
 }

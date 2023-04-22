@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateBookingDto, PaymentDto } from './dto';
+import { CreateBookingDto } from './dto';
 import { CreateOrderDto } from '../order/dto';
 import { OrderService } from '../order/order.service';
 
@@ -15,8 +15,7 @@ export class BookingService {
     }
     if (seatIds && seatIds.length > 0) {
       dtoOrder.seatIds = seatIds;
-    }
-    if (seatCodes && seatCodes.length > 0) {
+    } else if (seatCodes && seatCodes.length > 0) {
       dtoOrder.seatCodes = seatCodes;
     }
     dtoOrder.tripDetailCode = tripDetailCode;
@@ -27,7 +26,7 @@ export class BookingService {
     return order;
   }
 
-  async payment(dto: PaymentDto, userId: string) {
-    return await this.orderService.payment(dto, userId);
+  async getZaloPayPaymentUrl(orderCode: string, userId: string) {
+    return await this.orderService.getZaloPayPaymentUrl(orderCode, userId);
   }
 }

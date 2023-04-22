@@ -191,8 +191,6 @@ export class TripDetailService {
     if (departureTime) {
       const minTime = moment(departureTime).startOf('day').toDate();
       const maxTime = moment(departureTime).endOf('day').toDate();
-      console.log(minTime);
-      console.log(maxTime);
       query
         .andWhere('q.departureTime >= :minTime', { minTime })
         .andWhere('q.departureTime <= :maxTime', { maxTime });
@@ -237,8 +235,8 @@ export class TripDetailService {
       // .leftJoinAndSelect('q.vehicle', 'v')
       // .leftJoinAndSelect('v.images', 'i')
       .select(this.tripDetailSelect)
-      .orderBy('q.createdAt', SortEnum.ASC)
-      .addOrderBy('q.departureTime', sort)
+      .orderBy('q.departureTime', sort || SortEnum.ASC)
+      .addOrderBy('q.createdAt', SortEnum.ASC)
       .addOrderBy('q.code', SortEnum.ASC)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10)

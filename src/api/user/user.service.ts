@@ -1,4 +1,4 @@
-import { UserStatusEnum } from './../../enums';
+import { ActiveOtpTypeEnum, UserStatusEnum } from './../../enums';
 import { Customer } from './../../database/entities';
 import { AuthService } from './../../auth/auth.service';
 import {
@@ -10,7 +10,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { CustomerService } from '../customer/customer.service';
 import { Repository } from 'typeorm';
 import {
-  CustomerConfirmAccountDto,
+  ConfirmAccountDto,
   UpdateCustomerDto,
   UserResetPasswordDto,
   UserUpdatePasswordDto,
@@ -87,12 +87,9 @@ export class UserService {
   }
 
   async resetPassword(dto: UserResetPasswordDto) {
-    const { phone, email, otp, newPassword, confirmNewPassword } = dto;
+    const { phone, email, newPassword, confirmNewPassword } = dto;
     if (!phone && !email) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
-    }
-    if (!otp) {
-      throw new BadRequestException('OTP_REQUIRED');
     }
     if (!newPassword) {
       throw new BadRequestException('NEW_PASSWORD_REQUIRED');
@@ -103,17 +100,11 @@ export class UserService {
     let customer: Customer;
     if (phone) {
       customer = await this.customerService.findOneByPhone(phone, {
-        select: {
-          otpCode: true,
-          otpExpired: true,
-        },
+        select: { noteStatus: true },
       });
     } else if (email) {
       customer = await this.customerService.findOneByEmail(email, {
-        select: {
-          otpCode: true,
-          otpExpired: true,
-        },
+        select: { noteStatus: true },
       });
     }
     if (!customer) {
@@ -122,15 +113,14 @@ export class UserService {
     if (customer.status === UserStatusEnum.INACTIVATE) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-    console.log(otp, customer.otpCode, customer.otpExpired);
-    this.checkOTP(otp, customer.otpCode, customer.otpExpired);
+    if (customer.noteStatus !== ActiveOtpTypeEnum.RESET_PASSWORD) {
+      throw new BadRequestException('USER_NOT_RESET_PASSWORD');
+    }
     if (newPassword !== confirmNewPassword)
       throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
     const passwordHash = await this.authService.hashData(newPassword);
     customer.password = passwordHash;
     customer.updatedBy = customer.id;
-    customer.otpCode = null;
-    customer.otpExpired = null;
     customer.refreshToken = null;
     customer.accessToken = null;
     const saveCustomer = await this.customerRepository.save(customer);
@@ -138,14 +128,12 @@ export class UserService {
     delete saveCustomer.updatedBy;
     delete saveCustomer.refreshToken;
     delete saveCustomer.accessToken;
-    delete saveCustomer.otpCode;
-    delete saveCustomer.otpExpired;
 
     return saveCustomer;
   }
 
-  async confirmAccount(dto: CustomerConfirmAccountDto) {
-    const { phone, email, otp } = dto;
+  async confirmAccount(dto: ConfirmAccountDto) {
+    const { phone, email, otp, type } = dto;
     if (!phone && !email) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
     }
@@ -155,7 +143,6 @@ export class UserService {
     let customer: Customer;
     if (phone) {
       customer = await this.customerService.findOneByPhone(phone, {
-        where: { status: UserStatusEnum.INACTIVATE },
         select: {
           otpCode: true,
           otpExpired: true,
@@ -163,7 +150,6 @@ export class UserService {
       });
     } else if (email) {
       customer = await this.customerService.findOneByEmail(email, {
-        where: { status: UserStatusEnum.INACTIVATE },
         select: {
           otpCode: true,
           otpExpired: true,
@@ -173,15 +159,21 @@ export class UserService {
     if (!customer) {
       throw new BadRequestException('USER_NOT_FOUND');
     }
-    if (customer.status === UserStatusEnum.ACTIVE) {
-      throw new BadRequestException('USER_ALREADY_ACTIVED');
+    if (!type) {
+      throw new BadRequestException('OTP_TYPE_IS_REQUIRED');
     }
-    console.log(otp, customer.otpCode, customer.otpExpired);
-
     this.checkOTP(otp, customer.otpCode, customer.otpExpired);
-    const saveCustomer = await this.customerService.updateActiveCustomer(
-      customer.id,
-    );
+    let saveCustomer: Customer;
+    if (type === ActiveOtpTypeEnum.ACTIVE) {
+      saveCustomer = await this.customerService.updateActive(customer.id);
+    } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
+      saveCustomer = await this.customerService.updateOtp(
+        customer.id,
+        null,
+        null,
+        ActiveOtpTypeEnum.RESET_PASSWORD,
+      );
+    }
 
     return {
       customer: {
@@ -191,7 +183,7 @@ export class UserService {
     };
   }
 
-  private checkOTP(sendOTP, dbOTP, otpTime) {
+  private checkOTP(sendOTP: string, dbOTP: string, otpTime: Date) {
     if (!dbOTP) {
       throw new BadRequestException('OTP_INVALID');
     }

@@ -6,3 +6,5 @@ export * from './filter-bill.dto';
 export * from './filter-bill-history.dto';
 export * from './filter-bill-available.dto';
 export * from './create-order-detail.dto';
+export * from './check-status-zalopay-payment.dto';
+export * from './payment-admin.dto';

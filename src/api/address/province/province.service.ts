@@ -68,13 +68,13 @@ export class ProvinceService {
     const query = this.provinceRepository.createQueryBuilder('p');
 
     if (name) {
-      query.andWhere('p.name like :name', { name: `%${name}%` });
+      query.andWhere('p.name LIKE :name', { name: `%${name}%` });
     }
     if (type) {
-      query.andWhere('p.type like :type', { type: `%${type}%` });
+      query.andWhere('p.type LIKE :type', { type: `%${type}%` });
     }
     if (codename) {
-      query.andWhere('p.codename like :codename', {
+      query.andWhere('p.codename LIKE :codename', {
         codename: `%${codename}%`,
       });
     }
@@ -104,7 +104,7 @@ export class ProvinceService {
     province.type = type;
     province.code = code;
     province.codename = codename;
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -131,7 +131,7 @@ export class ProvinceService {
     if (codename) {
       province.codename = codename;
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -159,7 +159,7 @@ export class ProvinceService {
     if (codename) {
       province.codename = codename;
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -177,7 +177,7 @@ export class ProvinceService {
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -195,7 +195,7 @@ export class ProvinceService {
     if (!province) {
       throw new BadRequestException('PROVINCE_NOT_FOUND');
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }

@@ -1,4 +1,9 @@
-import { GenderEnum, SortEnum, UserStatusEnum } from './../../enums';
+import {
+  GenderEnum,
+  SortEnum,
+  UserStatusEnum,
+  ActiveOtpTypeEnum,
+} from './../../enums';
 import { Pagination } from '../../decorator';
 import { Customer, CustomerGroup, Staff, Ward } from '../../database/entities';
 import {
@@ -84,7 +89,7 @@ export class CustomerService {
     },
   };
 
-  private checkOTP(sendOTP, dbOTP, otpTime) {
+  private checkOTP(sendOTP: string, dbOTP: string, otpTime: Date) {
     if (!dbOTP) {
       throw new BadRequestException('OTP_INVALID');
     }
@@ -204,7 +209,6 @@ export class CustomerService {
       const newKeywords = keywords.trim();
       const subQuery = this.customerRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
         .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
         .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
@@ -213,6 +217,7 @@ export class CustomerService {
           fullAddress: `%${newKeywords}%`,
         })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {
@@ -400,15 +405,23 @@ export class CustomerService {
     return saveCustomer;
   }
 
-  async updateOtpCustomer(id: string, otpCode: string, otpExpired: Date) {
+  async updateOtp(
+    id: string,
+    otpCode: string,
+    otpExpired: Date,
+    otpType?: ActiveOtpTypeEnum,
+  ) {
     const customer = await this.getCustomerById(id);
     customer.otpCode = otpCode;
     customer.otpExpired = otpExpired;
+    if (otpType && otpType === ActiveOtpTypeEnum.RESET_PASSWORD) {
+      customer.noteStatus = ActiveOtpTypeEnum.RESET_PASSWORD;
+    }
     const saveCustomer = await this.customerRepository.save(customer);
     return saveCustomer;
   }
 
-  async updateActiveCustomer(id: string) {
+  async updateActive(id: string) {
     const customer = await this.getCustomerById(id);
     if (customer.status === UserStatusEnum.ACTIVE) {
       throw new BadRequestException('USER_ALREADY_ACTIVE');
@@ -787,8 +800,8 @@ export class CustomerService {
     const query = this.customerRepository.createQueryBuilder('u');
 
     query
-      .orWhere('u.phone like :query')
-      .orWhere('u.email like :query')
+      .orWhere('u.phone LIKE :query')
+      .orWhere('u.email LIKE :query')
       .setParameter('query', `%${keywords}%`)
       .leftJoinAndSelect('u.ward', 'w')
       .leftJoinAndSelect('w.district', 'd')

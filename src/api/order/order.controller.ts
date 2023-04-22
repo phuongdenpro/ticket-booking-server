@@ -5,6 +5,8 @@ import {
   FilterBillHistoryDto,
   FilterOrderDto,
   UpdateOrderDto,
+  PaymentAdminDto,
+  CheckStatusZaloPayPaymentDto,
 } from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums';
@@ -28,7 +30,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { PaymentDto } from '../booking/dto';
 
 @Controller('order')
 @ApiTags('Order')
@@ -67,8 +68,20 @@ export class OrderController {
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  async payment(@Body() dto: PaymentDto, @CurrentUser() user) {
-    return this.orderService.payment(dto, user.id);
+  async payment(@Body() dto: PaymentAdminDto, @CurrentUser() user) {
+    return this.orderService.paymentForAdmin(dto, user.id);
+  }
+
+  @Post('check-payment-status')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async checkPaymentStatus(
+    @Body() dto: CheckStatusZaloPayPaymentDto,
+    @CurrentUser() user,
+  ) {
+    return await this.orderService.checkStatusZaloPay(dto, user.id);
   }
 
   @Get()

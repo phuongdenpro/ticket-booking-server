@@ -10,88 +10,21 @@ import { EMAIL_REGEX, PHONE_REGEX } from '../../utils/regex.util';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { AdminLoginDto, AdminRegisterDto } from './dto';
+import { SendOtpDto } from '../customer/dto';
+import * as moment from 'moment';
+import { ConfigService } from '@nestjs/config';
+import { AdminService } from './../../api/admin/admin.service';
 
 @Injectable()
 export class AuthAdminService {
+  private configService = new ConfigService();
   constructor(
     @InjectRepository(Staff)
     private readonly staffRepository: Repository<Staff>,
     private readonly authService: AuthService,
+    private readonly adminService: AdminService,
     private readonly dataSource: DataSource,
   ) {}
-
-  async findOneAdmin(options?: any) {
-    return await this.staffRepository.findOne({
-      where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
-      select: {
-        id: true,
-        lastLogin: true,
-        isActive: true,
-        phone: true,
-        email: true,
-        fullName: true,
-        gender: true,
-        address: true,
-        note: true,
-        birthDay: true,
-        code: true,
-        createdAt: true,
-        ...options?.select,
-      },
-      ...options?.other,
-    });
-  }
-
-  async findOneById(id: string, options?: any) {
-    if (options) {
-      options.where = { id, ...options?.where };
-    } else {
-      options = { where: { id } };
-    }
-    return await this.findOneAdmin(options);
-  }
-
-  async findOneByRefreshToken(refreshToken: string, options?: any) {
-    if (options) {
-      options.where = {
-        refreshToken,
-        ...options?.where,
-        select: {
-          refreshToken: true,
-          accessToken: true,
-          ...options?.select,
-        },
-      };
-    } else {
-      options = {
-        where: { refreshToken },
-        select: {
-          refreshToken: true,
-          accessToken: true,
-        },
-      };
-    }
-    return await this.findOneAdmin(options);
-  }
-
-  async findOneByEmail(email: string, options?: any) {
-    if (options) {
-      options.where = { email, ...options?.where };
-    } else {
-      options = { where: { email } };
-    }
-    return await this.findOneAdmin(options);
-  }
-
-  async findOneByPhone(phone: string, options?: any) {
-    if (options) {
-      options.where = { phone, ...options?.where };
-    } else {
-      options = { where: { phone } };
-    }
-    return await this.findOneAdmin(options);
-  }
 
   async updateStaffByAdminId(staffId: string, data: any) {
     return this.staffRepository.update({ id: staffId }, data);
@@ -108,8 +41,8 @@ export class AuthAdminService {
       throw new BadRequestException('INVALID_EMAIL');
     }
 
-    const staffPhoneExist = await this.findOneByPhone(phone);
-    const staffEmailExist = await this.findOneByEmail(email);
+    const staffPhoneExist = await this.adminService.findOneByPhone(phone);
+    const staffEmailExist = await this.adminService.findOneByEmail(email);
     if (staffPhoneExist || staffEmailExist) {
       throw new BadRequestException('STAFF_ALREADY_EXIST');
     }
@@ -154,13 +87,13 @@ export class AuthAdminService {
     }
     let staffExist: Staff;
     if (email) {
-      staffExist = await this.findOneByEmail(email, {
+      staffExist = await this.adminService.findOneByEmail(email, {
         select: {
           password: true,
         },
       });
     } else if (phone) {
-      staffExist = await this.findOneByPhone(phone, {
+      staffExist = await this.adminService.findOneByPhone(phone, {
         select: {
           password: true,
         },
@@ -212,7 +145,9 @@ export class AuthAdminService {
   }
 
   async refreshToken(refreshToken: string) {
-    const staffExist = await this.findOneByRefreshToken(refreshToken);
+    const staffExist = await this.adminService.findOneByRefreshToken(
+      refreshToken,
+    );
     if (!staffExist || !staffExist.refreshToken) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -227,5 +162,44 @@ export class AuthAdminService {
       accessToken: tokens.access_token,
     });
     return tokens;
+  }
+
+  async sendOtp(dto: SendOtpDto) {
+    const { oldEmail: email, phone: phone } = dto;
+    let staff: Staff;
+    if (email) {
+      staff = await this.adminService.findOneByEmail(email);
+    } else if (phone) {
+      staff = await this.adminService.findOneByPhone(phone);
+    } else {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
+    if (!staff) {
+      throw new BadRequestException('USER_NOT_FOUND');
+    }
+    const otpCode = Math.floor(100000 + Math.random() * 900000) + '';
+    const otpExpiredTime = this.configService.get('OTP_EXPIRE_MINUTE');
+    const otpExpired = moment().add(otpExpiredTime, 'minutes').toDate();
+
+    const saveCustomer = await this.adminService.updateOtp(
+      staff.id,
+      otpCode,
+      otpExpired,
+    );
+    if (!saveCustomer) {
+      throw new BadRequestException('SEND_OTP_FAILED');
+    }
+    if (email) {
+      await this.authService.sendEmailCodeOtp(email, otpCode, otpExpiredTime);
+    } else {
+      await this.authService.sendPhoneCodeOtp(phone, otpCode);
+    }
+
+    return {
+      customer: {
+        id: staff.id,
+      },
+      message: 'Gửi mã OTP thành công',
+    };
   }
 }

@@ -97,13 +97,13 @@ export class WardService {
     const query = this.wardRepository.createQueryBuilder('w');
 
     if (name) {
-      query.andWhere('w.name like :name', { name: `%${name}%` });
+      query.andWhere('w.name LIKE :name', { name: `%${name}%` });
     }
     if (type) {
-      query.andWhere('w.type like :type', { type: `%${type}%` });
+      query.andWhere('w.type LIKE :type', { type: `%${type}%` });
     }
     if (codename) {
-      query.andWhere('w.codename like :codename', {
+      query.andWhere('w.codename LIKE :codename', {
         codename: `%${codename}%`,
       });
     }
@@ -144,7 +144,7 @@ export class WardService {
     ward.district = district;
     ward.districtCode = district.code;
 
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -182,7 +182,7 @@ export class WardService {
       ward.districtCode = dist.code;
       ward.district = dist;
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -221,7 +221,7 @@ export class WardService {
       ward.districtCode = dist.code;
       ward.district = dist;
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -239,7 +239,7 @@ export class WardService {
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -258,7 +258,7 @@ export class WardService {
     if (!ward) {
       throw new BadRequestException('WARD_NOT_FOUND');
     }
-    const adminExist = await this.adminService.findOneBydId(userId);
+    const adminExist = await this.adminService.findOneById(userId);
     if (!adminExist) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }

@@ -11,6 +11,7 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../guards';
 import { AuthAdminService } from './auth-admin.service';
 import { AdminLoginDto, AdminRegisterDto, AdminRefreshTokenDto } from './dto';
+import { SendOtpDto } from '../customer/dto';
 
 @Controller('auth/admin')
 @ApiTags('Auth Admin')
@@ -43,5 +44,11 @@ export class AuthAdminController {
   @HttpCode(HttpStatus.OK)
   async refreshToken(@Body() dto: AdminRefreshTokenDto) {
     return this.adminService.refreshToken(dto.refreshToken);
+  }
+
+  @Post('send-otp')
+  @HttpCode(HttpStatus.OK)
+  async sendOtp(@Body() dto: SendOtpDto) {
+    return this.adminService.sendOtp(dto);
   }
 }

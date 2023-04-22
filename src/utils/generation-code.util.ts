@@ -8,6 +8,14 @@ export function generateOrderCode() {
   shortId.characters(
     '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@',
   );
-  const id = shortId.generate().replace(/[^A-Z0-9]/g, '');
-  return `${year}${month}${day}${id}`;
+  const code = shortId.generate().replace(/[^A-Z0-9]/g, '');
+  return `${year}${month}${day}${code}`;
+}
+
+export function generateCode() {
+  shortId.characters(
+    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@',
+  );
+  const code = shortId.generate().replace(/[^A-Z0-9]/g, '');
+  return code;
 }

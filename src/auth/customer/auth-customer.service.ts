@@ -213,10 +213,13 @@ export class AuthCustomerService {
   }
 
   async sendOtp(dto: SendOtpDto) {
-    const { email, phone } = dto;
+    const { oldEmail, newEmail, phone } = dto;
+    if (!oldEmail && !phone) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
     let customer: Customer;
-    if (email) {
-      customer = await this.customerService.findOneByEmail(email);
+    if (oldEmail) {
+      customer = await this.customerService.findOneByEmail(oldEmail);
     } else if (phone) {
       customer = await this.customerService.findOneByPhone(phone);
     } else {
@@ -229,7 +232,7 @@ export class AuthCustomerService {
     const otpExpiredTime = this.configService.get('OTP_EXPIRE_MINUTE');
     const otpExpired = moment().add(otpExpiredTime, 'minutes').toDate();
 
-    const saveCustomer = await this.customerService.updateOtpCustomer(
+    const saveCustomer = await this.customerService.updateOtp(
       customer.id,
       otpCode,
       otpExpired,
@@ -237,10 +240,22 @@ export class AuthCustomerService {
     if (!saveCustomer) {
       throw new BadRequestException('SEND_OTP_FAILED');
     }
-    if (email) {
-      await this.authService.sendEmailCodeOtp(email, otpCode, otpExpiredTime);
+    if (oldEmail || newEmail) {
+      await this.authService.sendEmailCodeOtp(
+        newEmail || oldEmail,
+        otpCode,
+        otpExpiredTime,
+      );
     } else {
-      await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      if (newEmail) {
+        await this.authService.sendEmailCodeOtp(
+          newEmail,
+          otpCode,
+          otpExpiredTime,
+        );
+      } else {
+        await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      }
     }
 
     return {
