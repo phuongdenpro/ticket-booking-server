@@ -31,15 +31,12 @@ export class CallbackService {
           total: true,
           note: true,
           orderCode: true,
-        },
-        staff: {
-          id: true,
-          isActive: true,
-          phone: true,
-          email: true,
-          fullName: true,
-          gender: true,
-          birthDay: true,
+          ticketDetail: {
+            id: true,
+            code: true,
+            status: true,
+            note: true,
+          },
         },
         customer: {
           id: true,
@@ -47,18 +44,12 @@ export class CallbackService {
           phone: true,
           email: true,
           fullName: true,
-          gender: true,
-          address: true,
-          fullAddress: true,
-          note: true,
-          birthday: true,
         },
         deletedAt: false,
         ...options?.select,
       },
       relations: {
-        orderDetails: true,
-        staff: true,
+        orderDetails: { ticketDetail: true },
         customer: true,
         ...options?.relations,
       },
@@ -87,27 +78,25 @@ export class CallbackService {
     try {
       const { data: dataStr, mac: reqMac } = dto;
       const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
-      console.log('mac', mac);
-      console.log('reqMac', reqMac);
       // kiểm tra callback hợp lệ (đến từ ZaloPay server)
       if (reqMac !== mac) {
         // callback không hợp lệ
         result['return_code'] = -1;
         result['return_message'] = 'mac not equal';
+        console.log('mac not equal');
       } else {
         // thanh toán thành công
         // merchant cập nhật trạng thái cho đơn hàng
         const dataJson = JSON.parse(dataStr, config.key2);
-        console.log('dataJson =', dataJson);
         const { app_trans_id, item, zp_trans_id, server_time } = dataJson;
         const orderCode = item[0].orderCode;
         const orderExist = await this.findOneOrderByCode(orderCode);
         if (orderExist) {
-          orderExist.transId = app_trans_id;
+          orderExist.transId = app_trans_id + '';
           orderExist.paymentMethod = PaymentMethodEnum.ZALO_PAY;
           orderExist.status = OrderStatusEnum.PAID;
-          orderCode.zaloTransId = zp_trans_id;
-          orderCode.paymentTime = moment.unix(server_time / 1000).toDate();
+          orderExist.zaloTransId = zp_trans_id + '';
+          orderExist.paymentTime = moment.unix(server_time / 1000).toDate();
           orderExist.updatedBy = orderExist.customer.id;
 
           await this.orderRepository.save(orderExist);
@@ -122,11 +111,13 @@ export class CallbackService {
             return ticketDetail;
           });
           await Promise.all(ticketDetails);
-          result['return_code'] = 0;
-          result['return_message'] = 'fail';
-        } else {
           result['return_code'] = 1;
           result['return_message'] = 'success';
+          console.log('thanh toán thành công');
+        } else {
+          result['return_code'] = 0;
+          result['return_message'] = 'fail';
+          console.log('thanh toán thất bại');
         }
       }
     } catch (error) {

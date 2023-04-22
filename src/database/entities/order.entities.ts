@@ -61,6 +61,7 @@ export class Order {
     type: 'varchar',
     length: 100,
     nullable: true,
+    default: '',
   })
   zaloTransId: string;
 
