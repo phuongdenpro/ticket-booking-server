@@ -81,15 +81,11 @@ export class CallbackService {
 
   async callbackZaloPayV2(dto) {
     const config = {
-      key1: this.configService.get('ZALO_PAY_KEY_1'),
       key2: this.configService.get('ZALO_PAY_KEY_2'),
     };
-    console.log(config);
     const result = {};
     try {
       const { data: dataStr, mac: reqMac } = dto;
-      console.log(dataStr);
-
       const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
       console.log('mac', mac);
       console.log('reqMac', reqMac);
@@ -102,7 +98,7 @@ export class CallbackService {
         // thanh toán thành công
         // merchant cập nhật trạng thái cho đơn hàng
         const dataJson = JSON.parse(dataStr, config.key2);
-        // console.log('dataJson =', dataJson);
+        console.log('dataJson =', dataJson);
         const { app_trans_id, item, zp_trans_id, server_time } = dataJson;
         const orderCode = item[0].orderCode;
         const orderExist = await this.findOneOrderByCode(orderCode);
