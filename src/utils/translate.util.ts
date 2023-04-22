@@ -635,4 +635,7 @@ export const mappingTranslate = {
   APP_TIME_MUST_BE_NUMBER: 'AppTime phải là số',
   PAYMENT_FAILED: 'Thanh toán thất bại',
   TRANSACTION_ID_REQUIRED: 'Hoá đơn này chưa từng được thanh toán',
+
+  // cron job
+  SECRET_KEY_IS_NOT_VALID: 'secret key không hợp lệ',
 };

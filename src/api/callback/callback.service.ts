@@ -85,6 +85,7 @@ export class CallbackService {
     };
     const result = {};
     try {
+      console.log('callback dto', dto);
       const { data: dataStr, mac: reqMac } = dto;
 
       const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();

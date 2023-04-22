@@ -73,7 +73,7 @@ export class OrderController {
   }
 
   @Post('check-payment-status')
-  @HttpCode(HttpStatus.CREATED)
+  @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF)
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()

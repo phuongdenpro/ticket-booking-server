@@ -961,11 +961,11 @@ export class OrderService {
       if (!userId) {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
-      const customer: Customer = await this.customerService.findOneById(userId);
-      if (!customer) {
+      const staff: Staff = await this.adminService.findOneById(userId);
+      if (!staff) {
         throw new UnauthorizedException('UNAUTHORIZED');
       }
-      if (customer.status === UserStatusEnum.INACTIVATE) {
+      if (!staff.isActive) {
         throw new BadRequestException('USER_NOT_ACTIVE');
       }
       const { orderCode, paymentMethod } = dto;
@@ -1037,6 +1037,8 @@ export class OrderService {
         .catch(function (error) {
           console.log(error);
         });
+      console.log(orderCode);
+      console.log(flag);
       if (!flag) {
         throw new BadRequestException('PAYMENT_FAIL');
       }
