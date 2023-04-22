@@ -81,14 +81,18 @@ export class CallbackService {
 
   async callbackZaloPayV2(dto) {
     const config = {
+      key1: this.configService.get('ZALO_PAY_KEY_1'),
       key2: this.configService.get('ZALO_PAY_KEY_2'),
     };
+    console.log(config);
     const result = {};
     try {
-      console.log('callback dto', dto);
       const { data: dataStr, mac: reqMac } = dto;
+      console.log(dataStr);
 
       const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
+      console.log('mac', mac);
+      console.log('reqMac', reqMac);
       // kiểm tra callback hợp lệ (đến từ ZaloPay server)
       if (reqMac !== mac) {
         // callback không hợp lệ
@@ -133,7 +137,7 @@ export class CallbackService {
       result['return_code'] = 0; // ZaloPay server sẽ callback lại (tối đa 3 lần)
       result['return_message'] = error.message;
     }
-
+    console.log('result =', result);
     // thông báo kết quả cho ZaloPay server
     return result;
   }
