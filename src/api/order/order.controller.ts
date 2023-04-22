@@ -81,7 +81,7 @@ export class OrderController {
     @Body() dto: CheckStatusZaloPayPaymentDto,
     @CurrentUser() user,
   ) {
-    return this.orderService.checkStatusZaloPay(dto, user.id);
+    return await this.orderService.checkStatusZaloPay(dto, user.id);
   }
 
   @Get()

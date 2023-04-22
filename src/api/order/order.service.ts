@@ -1052,6 +1052,7 @@ export class OrderService {
       });
       await Promise.all(ticketDetails);
       saveOrder = await this.orderRepository.save(orderExist);
+      saveOrder = await this.findOneOrderByCode(orderCode);
       delete saveOrder.deletedAt;
     } catch (error) {
       console.log(error);

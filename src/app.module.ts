@@ -31,6 +31,7 @@ import { PromotionLineModule } from './api/promotion-line/promotion-line.module'
 import { PromotionHistoryModule } from './api/promotion-history/promotion-history.module';
 import { StatisticsModule } from './api/statistics/statistics.module';
 import { CallbackModule } from './api/callback/callback.module';
+import { CronjobModule } from './api/cronjob/cronjob.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { CallbackModule } from './api/callback/callback.module';
     StatisticsModule,
     CallbackModule,
     UploadModule,
+    CronjobModule,
   ],
   providers: [
     {
