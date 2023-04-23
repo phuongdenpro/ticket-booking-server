@@ -159,30 +159,18 @@ export class AuthCustomerService {
     if (!isPasswordMatches) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
-    const queryRunner = await this.dataSource.createQueryRunner();
-    try {
-      await queryRunner.connect();
-      await queryRunner.startTransaction();
 
-      const tokens = await this.authService.createTokens(
-        customer,
-        RoleEnum.CUSTOMER,
-      );
+    const tokens = await this.authService.createTokens(
+      customer,
+      RoleEnum.CUSTOMER,
+    );
 
-      await this.updateUserCredentialByUserId(customer.id, {
-        refreshToken: tokens.refresh_token,
-        accessToken: tokens.access_token,
-        lastLogin: new Date(),
-      });
-      await queryRunner.commitTransaction();
-
-      return tokens;
-    } catch (err) {
-      await queryRunner.rollbackTransaction();
-      return err;
-    } finally {
-      await queryRunner.release();
-    }
+    await this.updateUserCredentialByUserId(customer.id, {
+      refreshToken: tokens.refresh_token,
+      accessToken: tokens.access_token,
+      lastLogin: new Date(),
+    });
+    return tokens;
   }
 
   async logout(userId: any) {

@@ -67,10 +67,10 @@ export class Customer {
   @Column({ name: 'updated_by', type: 'varchar', nullable: true })
   updatedBy: string;
 
-  @Column({ name: 'refresh_token', type: 'varchar', nullable: true })
+  @Column({ name: 'refresh_token', type: 'text', nullable: true })
   refreshToken?: string;
 
-  @Column({ name: 'access_token', type: 'varchar', nullable: true })
+  @Column({ name: 'access_token', type: 'text', nullable: true })
   accessToken?: string;
 
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })

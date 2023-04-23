@@ -19,12 +19,10 @@ export class AtStrategy extends PassportStrategy(Strategy, 'jwt') {
 
   async validate(req: any, payload: JwtPayload) {
     const tokenRequest = req.headers['authorization'].replace('Bearer ', '');
-
     const user = await this.authService.validateUserByJwt(payload);
     if (!user) throw new UnauthorizedException('WRONG_CREDENTIALS');
 
     // user just login one device
-
     if (payload.type === RoleEnum.CUSTOMER) {
       if (tokenRequest !== user.access_token)
         throw new UnauthorizedException('WRONG_CREDENTIALS');
