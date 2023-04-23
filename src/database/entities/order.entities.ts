@@ -7,10 +7,10 @@ import {
   OneToOne,
   CreateDateColumn,
   UpdateDateColumn,
-  DeleteDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Customer, OrderDetail, OrderRefund, PromotionHistory, Staff } from '.';
+import { PaymentHistory } from './payment-history.entities';
 
 @Entity({ name: 'order' })
 export class Order {
@@ -19,6 +19,14 @@ export class Order {
 
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
+
+  @Column({
+    name: 'order_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  orderCode: string;
 
   @Column({ name: 'note', type: 'text' })
   note: string;
@@ -80,14 +88,6 @@ export class Order {
   @UpdateDateColumn({ name: 'updated_at', type: 'timestamp', nullable: true })
   public updatedAt?: Date;
 
-  @DeleteDateColumn({
-    name: 'deleted_at',
-    type: 'timestamp',
-    nullable: true,
-    select: false,
-  })
-  public deletedAt?: Date;
-
   // relationship
   @ManyToOne(() => Customer, (customer) => customer.orders)
   @JoinColumn({ name: 'customer_id', referencedColumnName: 'id' })
@@ -108,4 +108,7 @@ export class Order {
     (promotionHistory) => promotionHistory.order,
   )
   promotionHistories: PromotionHistory[];
+
+  @OneToMany(() => PaymentHistory, (paymentHistory) => paymentHistory.order)
+  paymentHistories: PaymentHistory[];
 }

@@ -688,7 +688,6 @@ export class OrderService {
 
       saveOrder = await queryRunnerOrder.manager.save(createOrder);
       await queryRunnerOrder.commitTransaction();
-      delete saveOrder.deletedAt;
       delete saveOrder?.staff;
       delete saveOrder?.customer;
     } catch (error) {
@@ -755,7 +754,6 @@ export class OrderService {
     } finally {
       await queryRunnerOrder2.release();
     }
-    delete saveOrder.deletedAt;
     return saveOrder;
   }
 
@@ -894,7 +892,6 @@ export class OrderService {
       await queryTickerDetail.commitTransaction();
 
       const saveOrder = await this.orderRepository.save(order);
-      delete saveOrder.deletedAt;
       return saveOrder;
     } catch (error) {
       await queryTickerDetail.rollbackTransaction();
@@ -952,7 +949,6 @@ export class OrderService {
     });
     await Promise.all(ticketDetails);
     const newOrder = await this.findOneOrderByCode(orderCode);
-    delete newOrder.deletedAt;
     return {
       order: newOrder,
     };
@@ -1073,7 +1069,6 @@ export class OrderService {
       await Promise.all(ticketDetails);
       saveOrder = await this.orderRepository.save(orderExist);
       saveOrder = await this.findOneOrderByCode(orderCode);
-      delete saveOrder.deletedAt;
     } catch (error) {
       throw new BadRequestException(error.message);
     }

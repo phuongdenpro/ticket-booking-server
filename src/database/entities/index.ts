@@ -23,3 +23,4 @@ export * from './trip.entities';
 export * from './vehicle.entities';
 export * from './vi-address-ward.entities';
 export * from './image-resource.entities';
+export * from './payment-history.entities';
