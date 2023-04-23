@@ -985,11 +985,10 @@ export class OrderService {
         default:
           break;
       }
-      orderExist.status = OrderStatusEnum.PAID;
       if (paymentMethod !== PaymentMethodEnum.ZALOPAY) {
         throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
       }
-      orderExist.paymentMethod = paymentMethod;
+      orderExist.updatedBy = userId;
       if (!orderExist.transId || !orderExist.createAppTime) {
         throw new BadRequestException('TRANSACTION_ID_REQUIRED');
       }
@@ -1023,44 +1022,40 @@ export class OrderService {
       };
       console.log('check payment: ', logData);
 
-      const updateDate = await axios(postConfig).then(async function (
-        response,
-      ) {
+      await axios(postConfig).then(async (response) => {
         console.log('return_code: ' + response.data.return_code);
-        let note = '';
         let paymentTime;
-        let zaloTransId;
         if (response.data.return_code === 1) {
-          zaloTransId = response.data.zp_trans_id;
+          orderExist.paymentMethod = paymentMethod;
+          orderExist.status = OrderStatusEnum.PAID;
+          orderExist.zaloTransId = response.data.zp_trans_id;
           paymentTime = moment.unix(response.data.server_time / 1000).toDate();
-          note = 'Thanh toán thành công';
+          orderExist.paymentTime = paymentTime;
+          orderExist.note = 'Thanh toán thành công';
+          saveOrder = await this.orderRepository.save(orderExist);
           flag = 1;
         } else if (
           Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
-          response.data.return_code == 2
+          response.data.return_code === 2
         ) {
-          note = 'Thanh toán thất bại';
+          orderExist.note = 'Thanh toán thất bại';
+          orderExist.createAppTime = '';
+          orderExist.transId = '';
+          saveOrder = await this.orderRepository.save(orderExist);
           flag = 0;
           throw new BadRequestException('PAYMENT_FAIL');
-        } else if (response.data.return_code == 3) {
-          note = 'Thanh toán đang được thực hiện';
+        } else if (response.data.return_code === 3) {
+          orderExist.note = 'ZaloPay đang xử lý thanh toán';
           flag = 2;
+          saveOrder = await this.orderRepository.save(orderExist);
+          throw new BadRequestException('PAYMENT_NOT_COMPLETE');
         }
-        return { note, paymentTime, zaloTransId };
       });
-      orderExist.updatedBy = userId;
-      orderExist.note = updateDate.note;
+      console.log('flag: ', flag);
+
       if (flag === 0) {
-        orderExist.createAppTime = '';
-        orderExist.transId = '';
-        saveOrder = await this.orderRepository.save(orderExist);
         throw new BadRequestException('PAYMENT_FAIL');
-      } else if (flag === 1) {
-        orderExist.zaloTransId = updateDate.zaloTransId;
-        orderExist.paymentTime = updateDate.paymentTime;
-        saveOrder = await this.orderRepository.save(orderExist);
       } else if (flag === 2) {
-        saveOrder = await this.orderRepository.save(orderExist);
         throw new BadRequestException('PAYMENT_NOT_COMPLETE');
       }
       const orderDetails: OrderDetail[] = orderExist.orderDetails;

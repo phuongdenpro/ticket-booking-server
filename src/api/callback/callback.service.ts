@@ -118,7 +118,7 @@ export class CallbackService {
         } else {
           result['return_code'] = 0;
           result['return_message'] = 'fail';
-          console.log('không tìm thấy hoá đơn');
+          console.log('không tìm thấy đơn hàng');
         }
       }
     } catch (error) {
