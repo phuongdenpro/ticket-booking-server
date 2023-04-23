@@ -1043,13 +1043,11 @@ export class OrderService {
           flag = 0;
           throw new BadRequestException('PAYMENT_FAIL');
         } else if (response.data.return_code == 3) {
-          orderExist.updatedBy = userId;
-          orderExist.createAppTime = '';
-          orderExist.transId = '';
           orderExist.note = 'Giao dịch chưa được thực hiện';
           flag = 2;
         }
       });
+      saveOrder = await this.orderRepository.save(orderExist);
       if (flag === 0) {
         throw new BadRequestException('PAYMENT_FAIL');
       } else if (flag === 2) {
@@ -1066,7 +1064,6 @@ export class OrderService {
         return ticketDetail;
       });
       await Promise.all(ticketDetails);
-      saveOrder = await this.orderRepository.save(orderExist);
       saveOrder = await this.findOneOrderByCode(orderCode);
     } catch (error) {
       throw new BadRequestException(error.message);
