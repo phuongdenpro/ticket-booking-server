@@ -1023,7 +1023,7 @@ export class OrderService {
       console.log('check payment: ', logData);
 
       await axios(postConfig).then(async (response) => {
-        console.log('return_code: ' + response.data.return_code);
+        console.log('return_code: ', response.data.return_code);
         let paymentTime;
         if (response.data.return_code === 1) {
           orderExist.paymentMethod = paymentMethod;
@@ -1111,6 +1111,7 @@ export class OrderService {
         key1: this.configService.get('ZALO_PAY_KEY_1'),
         key2: this.configService.get('ZALO_PAY_KEY_2'),
         endpoint: this.configService.get('ZALO_PAY_ENDPOINT'),
+        company_name: this.configService.get('COMPANY_NAME'),
       };
       const embed_data = {
         redirecturl: this.configService.get('REDIRECT_URL'),
@@ -1131,10 +1132,9 @@ export class OrderService {
         item: JSON.stringify(items),
         embed_data: JSON.stringify(embed_data),
         amount: Number(orderExist.finalTotal),
-        description: `Thanh toan ve #${orderCode}`,
+        description: `${config.company_name} - Thanh toán vé #${orderCode}`,
         bank_code: 'CC',
-        title: 'thanh toan ve #' + orderCode,
-        redirect_url: 'https://www.facebook.com/',
+        title: `${config.company_name} - Thanh toán vé #${orderCode}`,
         callback_url: this.configService.get('CALLBACK_URL'),
       };
       const data =

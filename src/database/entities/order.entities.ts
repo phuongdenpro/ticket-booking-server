@@ -20,14 +20,6 @@ export class Order {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
-  @Column({
-    name: 'order_code',
-    type: 'varchar',
-    length: 100,
-    nullable: false,
-  })
-  orderCode: string;
-
   @Column({ name: 'note', type: 'text' })
   note: string;
 

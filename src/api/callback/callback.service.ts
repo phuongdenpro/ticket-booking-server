@@ -101,6 +101,8 @@ export class CallbackService {
           orderExist.note = 'Thanh toán thành công';
 
           await this.orderRepository.save(orderExist);
+          const o = await this.findOneOrderByCode(orderCode);
+          console.log(o);
           const orderDetails: OrderDetail[] = orderExist.orderDetails;
           const ticketDetails = orderDetails.map(async (orderDetail) => {
             let ticketDetail: TicketDetail = orderDetail.ticketDetail;
