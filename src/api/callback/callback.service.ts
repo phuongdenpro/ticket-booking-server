@@ -98,6 +98,7 @@ export class CallbackService {
           orderExist.zaloTransId = zp_trans_id + '';
           orderExist.paymentTime = moment.unix(server_time / 1000).toDate();
           orderExist.updatedBy = orderExist.customer.id;
+          orderExist.note = 'Thanh toán thành công';
 
           await this.orderRepository.save(orderExist);
           const orderDetails: OrderDetail[] = orderExist.orderDetails;
@@ -117,7 +118,7 @@ export class CallbackService {
         } else {
           result['return_code'] = 0;
           result['return_message'] = 'fail';
-          console.log('thanh toán thất bại');
+          console.log('không tìm thấy hoá đơn');
         }
       }
     } catch (error) {

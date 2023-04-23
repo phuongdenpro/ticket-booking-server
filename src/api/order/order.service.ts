@@ -1023,34 +1023,44 @@ export class OrderService {
       };
       console.log('check payment: ', logData);
 
-      await axios(postConfig).then(async function (response) {
+      const updateDate = await axios(postConfig).then(async function (
+        response,
+      ) {
+        console.log('return_code: ' + response.data.return_code);
+        let note = '';
+        let paymentTime;
+        let zaloTransId;
         if (response.data.return_code === 1) {
-          orderExist.updatedBy = userId;
-          orderExist.zaloTransId = response.data.zp_trans_id;
-          const paymentTime = moment
-            .unix(response.data.server_time / 1000)
-            .toDate();
-          orderExist.paymentTime = paymentTime;
+          zaloTransId = response.data.zp_trans_id;
+          paymentTime = moment.unix(response.data.server_time / 1000).toDate();
+          note = 'Thanh toán thành công';
           flag = 1;
         } else if (
           Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
           response.data.return_code == 2
         ) {
-          orderExist.updatedBy = userId;
-          orderExist.createAppTime = '';
-          orderExist.transId = '';
-          orderExist.note = 'Giao dịch thất bại';
+          note = 'Thanh toán thất bại';
           flag = 0;
           throw new BadRequestException('PAYMENT_FAIL');
         } else if (response.data.return_code == 3) {
-          orderExist.note = 'Giao dịch chưa được thực hiện';
+          note = 'Thanh toán đang được thực hiện';
           flag = 2;
         }
+        return { note, paymentTime, zaloTransId };
       });
-      saveOrder = await this.orderRepository.save(orderExist);
+      orderExist.updatedBy = userId;
+      orderExist.note = updateDate.note;
       if (flag === 0) {
+        orderExist.createAppTime = '';
+        orderExist.transId = '';
+        saveOrder = await this.orderRepository.save(orderExist);
         throw new BadRequestException('PAYMENT_FAIL');
+      } else if (flag === 1) {
+        orderExist.zaloTransId = updateDate.zaloTransId;
+        orderExist.paymentTime = updateDate.paymentTime;
+        saveOrder = await this.orderRepository.save(orderExist);
       } else if (flag === 2) {
+        saveOrder = await this.orderRepository.save(orderExist);
         throw new BadRequestException('PAYMENT_NOT_COMPLETE');
       }
       const orderDetails: OrderDetail[] = orderExist.orderDetails;
