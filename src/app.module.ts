@@ -32,6 +32,8 @@ import { PromotionHistoryModule } from './api/promotion-history/promotion-histor
 import { StatisticsModule } from './api/statistics/statistics.module';
 import { CallbackModule } from './api/callback/callback.module';
 import { CronjobModule } from './api/cronjob/cronjob.module';
+import { PaymentModule } from './api/payment/payment.module';
+import { PaymentHistoryModule } from './api/payment-history/payment-history.module';
 
 @Module({
   imports: [
@@ -63,6 +65,8 @@ import { CronjobModule } from './api/cronjob/cronjob.module';
     UploadModule,
     CallbackModule,
     CronjobModule,
+    PaymentModule,
+    PaymentHistoryModule,
   ],
   providers: [
     {

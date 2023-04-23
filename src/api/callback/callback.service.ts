@@ -45,7 +45,6 @@ export class CallbackService {
           email: true,
           fullName: true,
         },
-        deletedAt: false,
         ...options?.select,
       },
       relations: {
@@ -88,6 +87,7 @@ export class CallbackService {
         // thanh toán thành công
         // merchant cập nhật trạng thái cho đơn hàng
         const dataJson = JSON.parse(dataStr, config.key2);
+        console.log(dataJson);
         const { app_trans_id, item, zp_trans_id, server_time } = dataJson;
         const orderCode = item[0].orderCode;
         const orderExist = await this.findOneOrderByCode(orderCode);
@@ -115,12 +115,6 @@ export class CallbackService {
           result['return_message'] = 'success';
           console.log('thanh toán thành công');
         } else {
-          orderExist.transId = '';
-          orderExist.zaloTransId = '';
-          orderExist.note = 'Thanh toán thất bại';
-          orderExist.updatedBy = orderExist.customer.id;
-
-          await this.orderRepository.save(orderExist);
           result['return_code'] = 0;
           result['return_message'] = 'fail';
           console.log('thanh toán thất bại');

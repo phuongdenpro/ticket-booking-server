@@ -216,7 +216,6 @@ export class OrderService {
           promotionLineCode: true,
           orderCode: true,
         },
-        deletedAt: false,
         ...options?.select,
       },
       relations: {

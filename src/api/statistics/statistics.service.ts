@@ -39,7 +39,6 @@ export class StatisticsService {
       .select('SUM(q.finalTotal)', 'sum')
       .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('q.deletedAt IS NULL')
       .getRawOne();
 
     return Number(sum);
@@ -61,7 +60,6 @@ export class StatisticsService {
       .select('COUNT(q.id)', 'count')
       .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('q.deletedAt IS NULL')
       .getRawOne();
     return Number(count);
   }
@@ -240,7 +238,6 @@ export class StatisticsService {
     }
     queryBuilder
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('q.deletedAt IS NULL')
       .andWhere('td.deletedAt IS NULL')
       .andWhere('t.deletedAt IS NULL')
       .andWhere('trd.deletedAt IS NULL')
