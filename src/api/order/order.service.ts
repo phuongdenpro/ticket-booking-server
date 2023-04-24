@@ -593,16 +593,16 @@ export class OrderService {
       },
     );
     const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
-    const currentDatePlus2Hours = new Date(
-      moment().add(2, 'hours').format('YYYY-MM-DD HH:mm'),
+    const currentDatePlus1Hours = new Date(
+      moment().add(1, 'hours').format('YYYY-MM-DD HH:mm'),
     );
     if (currentDate >= tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
     } else if (
       customerCreator &&
-      currentDatePlus2Hours >= tripDetail.departureTime
+      currentDatePlus1Hours >= tripDetail.departureTime
     ) {
-      throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_2_HOURS');
+      throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_1_HOURS');
     }
     // check trip
     const trip = tripDetail.trip;

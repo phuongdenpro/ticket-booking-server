@@ -54,6 +54,18 @@ export class PaymentService {
             code: true,
             status: true,
             note: true,
+            ticket: {
+              id: true,
+              code: true,
+              startDate: true,
+              endDate: true,
+              tripDetail: {
+                id: true,
+                code: true,
+                departureTime: true,
+                expectedTime: true,
+              },
+            },
           },
         },
         customer: {
@@ -71,7 +83,13 @@ export class PaymentService {
         ...options?.select,
       },
       relations: {
-        orderDetails: { ticketDetail: true },
+        orderDetails: {
+          ticketDetail: {
+            ticket: {
+              tripDetail: true,
+            },
+          },
+        },
         staff: true,
         customer: true,
         ...options?.relations,
@@ -122,6 +140,12 @@ export class PaymentService {
           break;
         default:
           break;
+      }
+      const tripDetail =
+        orderExist.orderDetails[0].ticketDetail.ticket.tripDetail;
+      const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+      if (currentDate >= tripDetail.departureTime) {
+        throw new BadRequestException('TRIP_DETAIL_HAS_PASSED_NOT_PAYMENT');
       }
       const config = {
         app_id: Number(this.configService.get('ZALO_PAY_APP_ID')),
