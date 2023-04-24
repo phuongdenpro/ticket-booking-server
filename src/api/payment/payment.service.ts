@@ -1,4 +1,3 @@
-import { MomoPaymentTypeEnum } from './../../enums';
 import {
   Staff,
   Order,
@@ -225,11 +224,10 @@ export class PaymentService {
         default:
           break;
       }
-      orderExist.status = OrderStatusEnum.PAID;
       if (paymentMethod !== PaymentMethodEnum.ZALOPAY) {
         throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
       }
-      orderExist.paymentMethod = paymentMethod;
+      orderExist.updatedBy = userId;
       if (!orderExist.transId || !orderExist.createAppTime) {
         throw new BadRequestException('TRANSACTION_ID_REQUIRED');
       }
@@ -263,33 +261,36 @@ export class PaymentService {
       };
       console.log('check payment: ', logData);
 
-      await axios(postConfig).then(async function (response) {
+      await axios(postConfig).then(async (response) => {
+        console.log('return_code: ', response.data.return_code);
+        let paymentTime;
         if (response.data.return_code === 1) {
-          orderExist.updatedBy = userId;
+          orderExist.paymentMethod = paymentMethod;
+          orderExist.status = OrderStatusEnum.PAID;
           orderExist.zaloTransId = response.data.zp_trans_id;
-          const paymentTime = moment
-            .unix(response.data.server_time / 1000)
-            .toDate();
+          paymentTime = moment.unix(response.data.server_time / 1000).toDate();
           orderExist.paymentTime = paymentTime;
+          orderExist.note = 'Thanh toán thành công';
+          saveOrder = await this.orderRepository.save(orderExist);
           flag = 1;
         } else if (
           Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
-          response.data.return_code == 2
+          response.data.return_code === 2
         ) {
-          orderExist.updatedBy = userId;
+          orderExist.note = 'Thanh toán thất bại';
           orderExist.createAppTime = '';
           orderExist.transId = '';
-          orderExist.note = 'Giao dịch thất bại';
+          saveOrder = await this.orderRepository.save(orderExist);
           flag = 0;
           throw new BadRequestException('PAYMENT_FAIL');
-        } else if (response.data.return_code == 3) {
-          orderExist.updatedBy = userId;
-          orderExist.createAppTime = '';
-          orderExist.transId = '';
-          orderExist.note = 'Giao dịch chưa được thực hiện';
+        } else if (response.data.return_code === 3) {
+          orderExist.note = 'ZaloPay đang xử lý thanh toán';
           flag = 2;
+          saveOrder = await this.orderRepository.save(orderExist);
+          throw new BadRequestException('PAYMENT_NOT_COMPLETE');
         }
       });
+
       if (flag === 0) {
         throw new BadRequestException('PAYMENT_FAIL');
       } else if (flag === 2) {
@@ -306,115 +307,10 @@ export class PaymentService {
         return ticketDetail;
       });
       await Promise.all(ticketDetails);
-      saveOrder = await this.orderRepository.save(orderExist);
       saveOrder = await this.findOneOrderByCode(orderCode);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
     return saveOrder;
-  }
-
-  async getMoMoPaymentUrl(orderCode: string, userId: string) {
-    if (!userId) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    const customer = await this.customerService.findOneById(userId);
-    if (!customer) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (customer.status === UserStatusEnum.INACTIVATE) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-    let paymentResult;
-    try {
-      const orderExist = await this.findOneOrderByCode(orderCode);
-      if (!orderExist) {
-        throw new BadRequestException('ORDER_NOT_FOUND');
-      }
-      switch (orderExist.status) {
-        case OrderStatusEnum.PAID:
-          throw new BadRequestException('ORDER_ALREADY_PAID');
-          break;
-        case OrderStatusEnum.CANCEL:
-          throw new BadRequestException('ORDER_ALREADY_CANCEL');
-          break;
-        case OrderStatusEnum.RETURNED:
-          throw new BadRequestException('ORDER_ALREADY_RETURNED');
-          break;
-        default:
-          break;
-      }
-      const config = {
-        partnerCode: this.configService.get('MOMO_PARTNER_CODE'),
-        partnerName: this.configService.get('MOMO_PARTNER_NAME'),
-        storeId: this.configService.get('MOMO_STORE_ID'),
-        redirectUrl: this.configService.get('REDIRECT_URL'),
-        key1: this.configService.get('MOMO_KEY_1'),
-        endpoint: this.configService.get('MOMO_ENDPOINT'),
-      };
-      const randomCode = Math.floor(Math.random() * 1000000);
-      const transID = `${moment().format('YYMMDD')}_${orderCode}-${randomCode}`;
-      const payload = {
-        partnerCode: config.partnerCode,
-        partnerName: config.partnerName,
-        storeId: config.storeId,
-        requestId: transID,
-        amount: orderExist.finalTotal,
-        orderId: orderCode,
-        orderInfo: `Thanh toán Vé #${orderCode}`,
-        redirectUrl: config.redirectUrl,
-        ipnUrl: config.redirectUrl,
-        requestType: MomoPaymentTypeEnum.ATM,
-        extraData: {
-          orderCode,
-        },
-        lang: 'vi',
-        signature: '',
-      };
-      const data =
-        'accessKey=' +
-        '&amount=' +
-        payload.amount +
-        '&extraData=' +
-        payload.extraData +
-        '&ipnUrl=' +
-        payload.ipnUrl +
-        '&orderId=' +
-        payload.orderId +
-        '&orderInfo=' +
-        payload.orderInfo +
-        '&partnerCode=' +
-        payload.partnerCode +
-        '&redirectUrl=' +
-        payload.redirectUrl +
-        '&requestId=' +
-        payload.requestId +
-        '&requestType=' +
-        payload.requestType;
-      payload.signature = CryptoJS.HmacSHA256(data, config.key1).toString();
-      await axios
-        .post(config.endpoint, null, {
-          headers: {
-            'Content-Type': 'application/json; charset=UTF-8',
-          },
-          params: payload,
-        })
-        .then((result) => {
-          console.log('result.data', result.data);
-          paymentResult = {
-            ...result.data,
-          };
-        })
-        .catch((err) => console.log(err));
-      orderExist.paymentMethod = PaymentMethodEnum.MOMO;
-      orderExist.updatedBy = userId;
-      await this.orderRepository.save(orderExist);
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-    if (!paymentResult) {
-      throw new BadRequestException('CONNECT_ZALOPAY_FAIL');
-    }
-    return paymentResult;
   }
 }

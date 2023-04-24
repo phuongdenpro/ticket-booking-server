@@ -5,7 +5,7 @@ import {
   TicketStatusEnum,
 } from './../../enums';
 import { Order, OrderDetail, TicketDetail } from './../../database/entities';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -61,6 +61,9 @@ export class CallbackService {
   }
 
   private async findOneOrderByCode(code: string, options?: any) {
+    if (!code) {
+      throw new BadRequestException('ORDER_CODE_IS_REQUIRED');
+    }
     if (options) {
       options.where = { code, ...options?.where };
     } else {
@@ -71,16 +74,15 @@ export class CallbackService {
 
   async callbackZaloPayV2(dto) {
     const config = {
-      key2: this.configService.get('ZALO_PAY_KEY_2'),
+      key2: await this.configService.get('ZALO_PAY_KEY_2'),
     };
     const result = {};
+    const dataStr = dto.data;
+    const reqMac = dto.mac;
+    const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
     try {
-      console.log('callback dto', dto + '');
-      const { data: dataStr, mac: reqMac } = dto;
-
-      const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
       // kiểm tra callback hợp lệ (đến từ ZaloPay server)
-      if (mac !== reqMac) {
+      if (reqMac !== mac) {
         // callback không hợp lệ
         result['return_code'] = -1;
         result['return_message'] = 'mac not equal';
@@ -89,52 +91,47 @@ export class CallbackService {
         // thanh toán thành công
         // merchant cập nhật trạng thái cho đơn hàng
         const dataJson = JSON.parse(dataStr, config.key2);
-        console.log('dataJson =', dataJson);
+        console.log(dataJson);
         const { app_trans_id, item, zp_trans_id, server_time } = dataJson;
-        const orderCode = item[0].orderCode;
+        const itemJson = JSON.parse(item);
+        const orderCode = itemJson[0].orderCode;
         const orderExist = await this.findOneOrderByCode(orderCode);
         if (orderExist) {
-          const dataOrder = {
-            transId: app_trans_id + '',
-            paymentMethod: PaymentMethodEnum.ZALOPAY,
-            status: OrderStatusEnum.PAID,
-            zaloTransId: zp_trans_id + '',
-            paymentTime: moment.unix(server_time / 1000).toDate(),
-            updatedBy: orderExist.customer.id,
-            note: 'thanh toán thành công',
-          };
-          delete orderExist.customer;
-          const updateOrder = Object.assign(orderExist, dataOrder);
-          // update order
-          await this.orderRepository.save(updateOrder);
+          orderExist.transId = app_trans_id + '';
+          orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
+          orderExist.status = OrderStatusEnum.PAID;
+          orderExist.zaloTransId = zp_trans_id + '';
+          orderExist.paymentTime = moment.unix(server_time / 1000).toDate();
+          orderExist.updatedBy = orderExist.customer.id;
+          orderExist.note = 'Thanh toán thành công';
 
-          const orderDetails: OrderDetail[] = orderExist.orderDetails;
+          await this.orderRepository.save(orderExist); // Lưu đơn hàng
+          const orderDetails: OrderDetail[] = orderExist.orderDetails; // Lấy chi tiết đơn hàng đã lưu
           const ticketDetails = orderDetails.map(async (orderDetail) => {
-            const ticketDetail: TicketDetail = orderDetail.ticketDetail;
-            const updateTicketDetail = Object.assign(ticketDetail, {
-              status: TicketStatusEnum.SOLD,
-            });
-            await this.dataSource
+            let ticketDetail: TicketDetail = orderDetail.ticketDetail;
+            ticketDetail.status = TicketStatusEnum.SOLD;
+            ticketDetail = await this.dataSource
               .getRepository(TicketDetail)
-              .save(updateTicketDetail);
+              .save(ticketDetail); // Lưu chi tiết vé
+            delete ticketDetail.deletedAt;
+            return ticketDetail;
           });
-          await Promise.all(ticketDetails);
+          await Promise.all(ticketDetails); // Chờ tất cả các lệnh lưu chi tiết vé hoàn tất
           result['return_code'] = 1;
           result['return_message'] = 'success';
           console.log('thanh toán thành công');
         } else {
           result['return_code'] = 0;
           result['return_message'] = 'fail';
-          console.log('thanh toán thất bại');
+          console.log('không tìm thấy đơn hàng');
         }
-        console.log('result =', result);
-        return result;
       }
     } catch (error) {
       result['return_code'] = 0; // ZaloPay server sẽ callback lại (tối đa 3 lần)
       result['return_message'] = error.message;
-      console.log('result =', result);
-      return result;
     }
+    console.log('result =', result);
+    // thông báo kết quả cho ZaloPay server
+    return result;
   }
 }

@@ -43,16 +43,4 @@ export class PaymentController {
   ) {
     return await this.paymentService.checkStatusZaloPay(dto, user.id);
   }
-
-  @Get('momo/:orderCode/url')
-  @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.CUSTOMER)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async getMomoPaymentUrl(
-    @Param('orderCode') orderCode: string,
-    @CurrentUser() user,
-  ) {
-    return await this.paymentService.getMoMoPaymentUrl(orderCode, user.id);
-  }
 }

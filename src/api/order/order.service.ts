@@ -257,6 +257,9 @@ export class OrderService {
   }
 
   async findOneOrderByCode(code: string, options?: any) {
+    if (!code) {
+      throw new BadRequestException('ORDER_CODE_IS_REQUIRED');
+    }
     if (options) {
       options.where = { code, ...options?.where };
     } else {
