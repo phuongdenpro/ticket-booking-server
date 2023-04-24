@@ -34,6 +34,7 @@ import { CallbackModule } from './api/callback/callback.module';
 import { CronjobModule } from './api/cronjob/cronjob.module';
 import { PaymentModule } from './api/payment/payment.module';
 import { PaymentHistoryModule } from './api/payment-history/payment-history.module';
+import { OrderRefundModule } from './api/order-refund/order-refund.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { PaymentHistoryModule } from './api/payment-history/payment-history.modu
     PromotionHistoryModule,
     BookingModule,
     OrderModule,
+    OrderRefundModule,
     StatisticsModule,
     UploadModule,
     CallbackModule,
