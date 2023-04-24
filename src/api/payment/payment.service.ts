@@ -5,7 +5,7 @@ import {
   TicketDetail,
   Customer,
 } from './../../database/entities';
-import { CheckStatusZaloPayPaymentDto } from '../order/dto';
+import { CheckStatusZaloPayPaymentDto } from './dto';
 import {
   OrderStatusEnum,
   PaymentMethodEnum,
@@ -126,8 +126,8 @@ export class PaymentService {
       const config = {
         app_id: Number(this.configService.get('ZALO_PAY_APP_ID')),
         key1: this.configService.get('ZALO_PAY_KEY_1'),
-        key2: this.configService.get('ZALO_PAY_KEY_2'),
         endpoint: this.configService.get('ZALO_PAY_ENDPOINT'),
+        company_name: this.configService.get('COMPANY_NAME'),
       };
       const embed_data = {
         redirecturl: this.configService.get('REDIRECT_URL'),
@@ -148,10 +148,11 @@ export class PaymentService {
         item: JSON.stringify(items),
         embed_data: JSON.stringify(embed_data),
         amount: Number(orderExist.finalTotal),
-        description: `Thanh toan ve #${orderCode}`,
+        description: `${config.company_name} - Thanh toán vé #${orderCode}`,
         bank_code: 'CC',
-        title: 'thanh toan ve #' + orderCode,
+        title: `${config.company_name} - Thanh toán vé #${orderCode}`,
         callback_url: this.configService.get('CALLBACK_URL'),
+        mac: '',
       };
       const data =
         config.app_id +
@@ -167,7 +168,7 @@ export class PaymentService {
         payload.embed_data +
         '|' +
         payload.item;
-      payload['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
+      payload.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
       await axios
         .post(config.endpoint, null, { params: payload })
         .then((result) => {

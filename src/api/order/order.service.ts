@@ -1,7 +1,6 @@
 import { Pagination } from './../../decorator';
 import { TripDetailService } from './../trip-detail/trip-detail.service';
 import {
-  Customer,
   Order,
   OrderDetail,
   OrderRefund,
@@ -23,7 +22,6 @@ import {
   CreateOrderDetailDto,
   FilterBillHistoryDto,
   FilterBillAvailableDto,
-  CheckStatusZaloPayPaymentDto,
   PaymentAdminDto,
 } from './dto';
 import {
@@ -59,10 +57,7 @@ import {
   FilterOrderRefundDto,
   UpdateOrderRefundDto,
 } from '../order-refund/dto';
-import * as CryptoJS from 'crypto-js';
-import axios from 'axios';
 import { ConfigService } from '@nestjs/config';
-import * as qs from 'qs';
 moment.locale('vi');
 
 @Injectable()
@@ -954,229 +949,6 @@ export class OrderService {
     return {
       order: newOrder,
     };
-  }
-
-  async checkStatusZaloPay(dto: CheckStatusZaloPayPaymentDto, userId: string) {
-    let saveOrder: Order;
-    try {
-      if (!userId) {
-        throw new UnauthorizedException('UNAUTHORIZED');
-      }
-      const staff: Staff = await this.adminService.findOneById(userId);
-      if (!staff) {
-        throw new UnauthorizedException('UNAUTHORIZED');
-      }
-      if (!staff.isActive) {
-        throw new BadRequestException('USER_NOT_ACTIVE');
-      }
-      const { orderCode, paymentMethod } = dto;
-      if (!orderCode) {
-        throw new BadRequestException('ORDER_CODE_REQUIRED');
-      }
-
-      const orderExist = await this.findOneOrderByCode(orderCode);
-      if (!orderExist) {
-        throw new BadRequestException('ORDER_NOT_FOUND');
-      }
-      switch (orderExist.status) {
-        case OrderStatusEnum.PAID:
-          throw new BadRequestException('ORDER_ALREADY_PAID');
-        case OrderStatusEnum.CANCEL:
-          throw new BadRequestException('ORDER_ALREADY_CANCEL');
-        case OrderStatusEnum.RETURNED:
-          throw new BadRequestException('ORDER_ALREADY_RETURNED');
-        default:
-          break;
-      }
-      if (paymentMethod !== PaymentMethodEnum.ZALOPAY) {
-        throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
-      }
-      orderExist.updatedBy = userId;
-      if (!orderExist.transId || !orderExist.createAppTime) {
-        throw new BadRequestException('TRANSACTION_ID_REQUIRED');
-      }
-      const config = {
-        app_id: this.configService.get('ZALO_PAY_APP_ID'),
-        key1: this.configService.get('ZALO_PAY_KEY_1'),
-        key2: this.configService.get('ZALO_PAY_KEY_2'),
-        endpoint: this.configService.get('ZALO_PAY_ENDPOINT_QUERY'),
-      };
-      const postData = {
-        app_id: config.app_id,
-        app_trans_id: orderExist.transId,
-      };
-      const data = `${postData.app_id}|${postData.app_trans_id}|${config.key1}`;
-      postData['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
-
-      const postConfig = {
-        method: 'post',
-        url: config.endpoint,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        data: qs.stringify(postData),
-      };
-      let flag = 0;
-      const logData = {
-        orderCode,
-        paymentMethod,
-        transId: orderExist.transId,
-        createAppTime: orderExist.createAppTime,
-      };
-      console.log('check payment: ', logData);
-
-      await axios(postConfig).then(async (response) => {
-        console.log('return_code: ', response.data.return_code);
-        let paymentTime;
-        if (response.data.return_code === 1) {
-          orderExist.paymentMethod = paymentMethod;
-          orderExist.status = OrderStatusEnum.PAID;
-          orderExist.zaloTransId = response.data.zp_trans_id;
-          paymentTime = moment.unix(response.data.server_time / 1000).toDate();
-          orderExist.paymentTime = paymentTime;
-          orderExist.note = 'Thanh toán thành công';
-          saveOrder = await this.orderRepository.save(orderExist);
-          flag = 1;
-        } else if (
-          Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
-          response.data.return_code === 2
-        ) {
-          orderExist.note = 'Thanh toán thất bại';
-          orderExist.createAppTime = '';
-          orderExist.transId = '';
-          saveOrder = await this.orderRepository.save(orderExist);
-          flag = 0;
-          throw new BadRequestException('PAYMENT_FAIL');
-        } else if (response.data.return_code === 3) {
-          orderExist.note = 'ZaloPay đang xử lý thanh toán';
-          flag = 2;
-          saveOrder = await this.orderRepository.save(orderExist);
-          throw new BadRequestException('PAYMENT_NOT_COMPLETE');
-        }
-      });
-      console.log('flag: ', flag);
-
-      if (flag === 0) {
-        throw new BadRequestException('PAYMENT_FAIL');
-      } else if (flag === 2) {
-        throw new BadRequestException('PAYMENT_NOT_COMPLETE');
-      }
-      const orderDetails: OrderDetail[] = orderExist.orderDetails;
-      const ticketDetails = orderDetails.map(async (orderDetail) => {
-        let ticketDetail: TicketDetail = orderDetail.ticketDetail;
-        ticketDetail.status = TicketStatusEnum.SOLD;
-        ticketDetail = await this.dataSource
-          .getRepository(TicketDetail)
-          .save(ticketDetail);
-        delete ticketDetail.deletedAt;
-        return ticketDetail;
-      });
-      await Promise.all(ticketDetails);
-      saveOrder = await this.findOneOrderByCode(orderCode);
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-    return saveOrder;
-  }
-
-  async getZaloPayPaymentUrl(orderCode: string, userId: string) {
-    if (!userId) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    const customer: Customer = await this.customerService.findOneById(userId);
-    if (!customer) {
-      throw new UnauthorizedException('UNAUTHORIZED');
-    }
-    if (customer.status === UserStatusEnum.INACTIVATE) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
-    let paymentResult;
-    try {
-      const orderExist = await this.findOneOrderByCode(orderCode);
-      if (!orderExist) {
-        throw new BadRequestException('ORDER_NOT_FOUND');
-      }
-      switch (orderExist.status) {
-        case OrderStatusEnum.PAID:
-          throw new BadRequestException('ORDER_ALREADY_PAID');
-          break;
-        case OrderStatusEnum.CANCEL:
-          throw new BadRequestException('ORDER_ALREADY_CANCEL');
-          break;
-        case OrderStatusEnum.RETURNED:
-          throw new BadRequestException('ORDER_ALREADY_RETURNED');
-          break;
-        default:
-          break;
-      }
-      const config = {
-        app_id: Number(this.configService.get('ZALO_PAY_APP_ID')),
-        key1: this.configService.get('ZALO_PAY_KEY_1'),
-        endpoint: this.configService.get('ZALO_PAY_ENDPOINT'),
-        company_name: this.configService.get('COMPANY_NAME'),
-      };
-      const embed_data = {
-        redirecturl: this.configService.get('REDIRECT_URL'),
-      };
-      const randomCode = Math.floor(Math.random() * 1000000);
-      const transID = `${moment().format('YYMMDD')}_${orderCode}-${randomCode}`;
-      const items = [
-        {
-          orderCode,
-          transID,
-        },
-      ];
-      const payload = {
-        app_id: config.app_id,
-        app_trans_id: transID,
-        app_user: 'user123',
-        app_time: Date.now(), // milliseconds
-        item: JSON.stringify(items),
-        embed_data: JSON.stringify(embed_data),
-        amount: Number(orderExist.finalTotal),
-        description: `${config.company_name} - Thanh toán vé #${orderCode}`,
-        bank_code: 'CC',
-        title: `${config.company_name} - Thanh toán vé #${orderCode}`,
-        callback_url: this.configService.get('CALLBACK_URL'),
-        mac: '',
-      };
-      const data =
-        config.app_id +
-        '|' +
-        payload.app_trans_id +
-        '|' +
-        payload.app_user +
-        '|' +
-        payload.amount +
-        '|' +
-        payload.app_time +
-        '|' +
-        payload.embed_data +
-        '|' +
-        payload.item;
-      payload.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
-      await axios
-        .post(config.endpoint, null, { params: payload })
-        .then((result) => {
-          paymentResult = {
-            zalo: result.data,
-            appTransId: payload.app_trans_id,
-            appTime: payload.app_time,
-          };
-        })
-        .catch((err) => console.log(err));
-      orderExist.transId = payload.app_trans_id;
-      orderExist.createAppTime = payload.app_time + '';
-      orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
-      orderExist.updatedBy = userId;
-      await this.orderRepository.save(orderExist);
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-    if (!paymentResult) {
-      throw new BadRequestException('CONNECT_ZALOPAY_FAIL');
-    }
-    return paymentResult;
   }
 
   // order detail

@@ -28,6 +28,7 @@ import { OrderService } from './order.service';
 import { OrderController } from './order.controller';
 import { TicketService } from '../ticket/ticket.service';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
+import { PaymentService } from '../payment/payment.service';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { PromotionHistoryService } from '../promotion-history/promotion-history.
     PriceListService,
     PromotionLineService,
     PromotionHistoryService,
+    PaymentService,
   ],
   exports: [OrderService],
 })

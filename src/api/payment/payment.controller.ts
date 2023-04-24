@@ -13,7 +13,7 @@ import {
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from 'src/enums';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { CheckStatusZaloPayPaymentDto } from '../order/dto';
+import { CheckStatusZaloPayPaymentDto } from './dto';
 
 @Controller('payment')
 @ApiTags('Payment')

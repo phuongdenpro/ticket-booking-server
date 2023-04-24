@@ -6,7 +6,6 @@ import {
   FilterOrderDto,
   UpdateOrderDto,
   PaymentAdminDto,
-  CheckStatusZaloPayPaymentDto,
 } from './dto';
 import { JwtAuthGuard } from './../../auth/guards';
 import { RoleEnum } from './../../enums';
@@ -30,11 +29,16 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { PaymentService } from '../payment/payment.service';
+import { CheckStatusZaloPayPaymentDto } from '../payment/dto';
 
 @Controller('order')
 @ApiTags('Order')
 export class OrderController {
-  constructor(private orderService: OrderService) {}
+  constructor(
+    private orderService: OrderService,
+    private paymentService: PaymentService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -81,7 +85,7 @@ export class OrderController {
     @Body() dto: CheckStatusZaloPayPaymentDto,
     @CurrentUser() user,
   ) {
-    return await this.orderService.checkStatusZaloPay(dto, user.id);
+    return await this.paymentService.checkStatusZaloPay(dto, user.id);
   }
 
   @Get()

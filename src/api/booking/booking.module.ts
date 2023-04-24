@@ -28,6 +28,7 @@ import { TicketService } from '../ticket/ticket.service';
 import { PriceListService } from '../price-list/price-list.service';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
+import { PaymentService } from '../payment/payment.service';
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { PromotionHistoryService } from '../promotion-history/promotion-history.
   ],
   providers: [
     BookingService,
+    PaymentService,
     OrderService,
     CustomerService,
     AdminService,

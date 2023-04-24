@@ -1,13 +1,13 @@
+import { CheckStatusZaloPayPaymentDto } from './../payment/dto';
 import { OrderStatusEnum, PaymentMethodEnum } from './../../enums';
 import { DataSource, IsNull, Not, Repository } from 'typeorm';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { OrderService } from '../order/order.service';
 import { CronjobOrderPaymentDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order } from './../../database/entities';
-import { CheckStatusZaloPayPaymentDto } from '../order/dto';
 import * as moment from 'moment';
+import { PaymentService } from '../payment/payment.service';
 moment.locale('vi');
 
 @Injectable()
@@ -15,7 +15,7 @@ export class CronjobService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
-    private orderService: OrderService,
+    private paymentService: PaymentService,
     private dataSource: DataSource,
     private configService: ConfigService,
   ) {}
@@ -44,7 +44,7 @@ export class CronjobService {
         const dto = new CheckStatusZaloPayPaymentDto();
         dto.orderCode = code;
         dto.paymentMethod = PaymentMethodEnum.ZALOPAY;
-        const order = await this.orderService.checkStatusZaloPay(dto, userId);
+        const order = await this.paymentService.checkStatusZaloPay(dto, userId);
         return order;
       });
       await Promise.all(cronjob);
