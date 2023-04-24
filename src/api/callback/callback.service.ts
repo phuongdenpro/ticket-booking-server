@@ -76,7 +76,11 @@ export class CallbackService {
     const result = {};
     try {
       const { data: dataStr, mac: reqMac } = dto;
+      console.log('dto', dto);
+
       const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
+      console.log('mac', mac);
+
       // kiểm tra callback hợp lệ (đến từ ZaloPay server)
       if (reqMac !== mac) {
         // callback không hợp lệ
@@ -101,8 +105,6 @@ export class CallbackService {
           orderExist.note = 'Thanh toán thành công';
 
           await this.orderRepository.save(orderExist);
-          const o = await this.findOneOrderByCode(orderCode);
-          console.log(o);
           const orderDetails: OrderDetail[] = orderExist.orderDetails;
           const ticketDetails = orderDetails.map(async (orderDetail) => {
             let ticketDetail: TicketDetail = orderDetail.ticketDetail;
