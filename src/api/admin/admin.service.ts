@@ -34,7 +34,7 @@ export class AdminService {
   async findOneAdmin(options?: any) {
     return await this.adminRepository.findOne({
       where: { ...options?.where },
-      relations: [].concat(options?.relations || []),
+      relations: { ...options?.relations },
       select: {
         id: true,
         lastLogin: true,
