@@ -1109,7 +1109,6 @@ export class OrderService {
       const config = {
         app_id: Number(this.configService.get('ZALO_PAY_APP_ID')),
         key1: this.configService.get('ZALO_PAY_KEY_1'),
-        key2: this.configService.get('ZALO_PAY_KEY_2'),
         endpoint: this.configService.get('ZALO_PAY_ENDPOINT'),
         company_name: this.configService.get('COMPANY_NAME'),
       };
@@ -1136,6 +1135,7 @@ export class OrderService {
         bank_code: 'CC',
         title: `${config.company_name} - Thanh toán vé #${orderCode}`,
         callback_url: this.configService.get('CALLBACK_URL'),
+        mac: '',
       };
       const data =
         config.app_id +
@@ -1151,7 +1151,8 @@ export class OrderService {
         payload.embed_data +
         '|' +
         payload.item;
-      payload['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
+      payload.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
+      console.log('mac', payload.mac);
       await axios
         .post(config.endpoint, null, { params: payload })
         .then((result) => {

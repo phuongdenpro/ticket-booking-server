@@ -71,16 +71,20 @@ export class CallbackService {
 
   async callbackZaloPayV2(dto) {
     const config = {
-      key2: this.configService.get('ZALO_PAY_KEY_2'),
+      key2: await this.configService.get('ZALO_PAY_KEY_2'),
     };
+    console.log('config', config);
+
     const result = {};
+    const dataStr = dto.data;
+    const reqMac = dto.mac;
+    console.log('dataStr', dataStr);
+    console.log('reqMac', reqMac);
+
+    const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
+    console.log('mac', mac);
+
     try {
-      const { data: dataStr, mac: reqMac } = dto;
-      console.log('dto', dto);
-
-      const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
-      console.log('mac', mac);
-
       // kiểm tra callback hợp lệ (đến từ ZaloPay server)
       if (reqMac !== mac) {
         // callback không hợp lệ
@@ -104,9 +108,11 @@ export class CallbackService {
           orderExist.updatedBy = orderExist.customer.id;
           orderExist.note = 'Thanh toán thành công';
 
-          await this.orderRepository.save(orderExist);
+          const saveOrder = await this.orderRepository.save(orderExist);
+          console.log('saveOrder', saveOrder);
+
           const orderDetails: OrderDetail[] = orderExist.orderDetails;
-          const ticketDetails = orderDetails.map(async (orderDetail) => {
+          const ticketDetails = await orderDetails.map(async (orderDetail) => {
             let ticketDetail: TicketDetail = orderDetail.ticketDetail;
             ticketDetail.status = TicketStatusEnum.SOLD;
             ticketDetail = await this.dataSource
