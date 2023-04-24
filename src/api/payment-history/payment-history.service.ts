@@ -8,4 +8,6 @@ export class PaymentHistoryService {
     private dataSource: DataSource,
     private configService: ConfigService,
   ) {}
+
+  async createPaymentHistory() {}
 }

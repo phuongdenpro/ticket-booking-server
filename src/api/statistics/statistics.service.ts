@@ -333,7 +333,6 @@ export class StatisticsService {
     }
     query
       .andWhere('o.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('o.deletedAt IS NULL')
       .groupBy('q.id')
       .orderBy('total', 'DESC')
       .offset(pagination.skip || 0)
@@ -366,4 +365,6 @@ export class StatisticsService {
 
     return result;
   }
+
+  // tính doanh thu theo nhân viên trong khoảng thời gian a -> b
 }
