@@ -1152,7 +1152,6 @@ export class OrderService {
         '|' +
         payload.item;
       payload.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
-      console.log('mac', payload.mac);
       await axios
         .post(config.endpoint, null, { params: payload })
         .then((result) => {

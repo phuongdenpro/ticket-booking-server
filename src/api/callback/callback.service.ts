@@ -18,8 +18,8 @@ export class CallbackService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
-    private dataSource: DataSource,
     private configService: ConfigService,
+    private dataSource: DataSource,
   ) {}
 
   private async findOneOrder(options: any) {
@@ -71,22 +71,16 @@ export class CallbackService {
 
   async callbackZaloPayV2(dto) {
     const config = {
-      key2: await this.configService.get('ZALO_PAY_KEY_2'),
+      key2: this.configService.get('ZALO_PAY_KEY_2'),
     };
-    console.log('config', config);
-
     const result = {};
-    const dataStr = dto.data;
-    const reqMac = dto.mac;
-    console.log('dataStr', dataStr);
-    console.log('reqMac', reqMac);
-
-    const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
-    console.log('mac', mac);
-
     try {
+      console.log('callback dto', dto + '');
+      const { data: dataStr, mac: reqMac } = dto;
+
+      const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
       // kiểm tra callback hợp lệ (đến từ ZaloPay server)
-      if (reqMac !== mac) {
+      if (mac !== reqMac) {
         // callback không hợp lệ
         result['return_code'] = -1;
         result['return_message'] = 'mac not equal';
@@ -95,31 +89,34 @@ export class CallbackService {
         // thanh toán thành công
         // merchant cập nhật trạng thái cho đơn hàng
         const dataJson = JSON.parse(dataStr, config.key2);
-        console.log(dataJson);
+        console.log('dataJson =', dataJson);
         const { app_trans_id, item, zp_trans_id, server_time } = dataJson;
         const orderCode = item[0].orderCode;
         const orderExist = await this.findOneOrderByCode(orderCode);
         if (orderExist) {
-          orderExist.transId = app_trans_id + '';
-          orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
-          orderExist.status = OrderStatusEnum.PAID;
-          orderExist.zaloTransId = zp_trans_id + '';
-          orderExist.paymentTime = moment.unix(server_time / 1000).toDate();
-          orderExist.updatedBy = orderExist.customer.id;
-          orderExist.note = 'Thanh toán thành công';
-
-          const saveOrder = await this.orderRepository.save(orderExist);
-          console.log('saveOrder', saveOrder);
+          const dataOrder = {
+            transId: app_trans_id + '',
+            paymentMethod: PaymentMethodEnum.ZALOPAY,
+            status: OrderStatusEnum.PAID,
+            zaloTransId: zp_trans_id + '',
+            paymentTime: moment.unix(server_time / 1000).toDate(),
+            updatedBy: orderExist.customer.id,
+            note: 'thanh toán thành công',
+          };
+          delete orderExist.customer;
+          const updateOrder = Object.assign(orderExist, dataOrder);
+          // update order
+          await this.orderRepository.save(updateOrder);
 
           const orderDetails: OrderDetail[] = orderExist.orderDetails;
-          const ticketDetails = await orderDetails.map(async (orderDetail) => {
-            let ticketDetail: TicketDetail = orderDetail.ticketDetail;
-            ticketDetail.status = TicketStatusEnum.SOLD;
-            ticketDetail = await this.dataSource
+          const ticketDetails = orderDetails.map(async (orderDetail) => {
+            const ticketDetail: TicketDetail = orderDetail.ticketDetail;
+            const updateTicketDetail = Object.assign(ticketDetail, {
+              status: TicketStatusEnum.SOLD,
+            });
+            await this.dataSource
               .getRepository(TicketDetail)
-              .save(ticketDetail);
-            delete ticketDetail.deletedAt;
-            return ticketDetail;
+              .save(updateTicketDetail);
           });
           await Promise.all(ticketDetails);
           result['return_code'] = 1;
@@ -128,15 +125,16 @@ export class CallbackService {
         } else {
           result['return_code'] = 0;
           result['return_message'] = 'fail';
-          console.log('không tìm thấy đơn hàng');
+          console.log('thanh toán thất bại');
         }
+        console.log('result =', result);
+        return result;
       }
     } catch (error) {
       result['return_code'] = 0; // ZaloPay server sẽ callback lại (tối đa 3 lần)
       result['return_message'] = error.message;
+      console.log('result =', result);
+      return result;
     }
-    console.log('result =', result);
-    // thông báo kết quả cho ZaloPay server
-    return result;
   }
 }
