@@ -1,6 +1,6 @@
 import { GenderEnum, UserStatusEnum } from './../../enums';
 import { Entity, OneToMany, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Order, Ward, CustomerGroup } from '.';
+import { Order, Ward, CustomerGroup, OrderRefund } from '.';
 import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
@@ -18,6 +18,14 @@ export class Customer {
 
   @Column({ name: 'last_login', type: 'timestamp', nullable: true })
   lastLogin?: Date;
+
+  @Column({
+    name: 'code',
+    type: 'varchar',
+    nullable: false,
+    length: 100,
+  })
+  code: string;
 
   @Column({
     name: 'status',
@@ -97,4 +105,7 @@ export class Customer {
 
   @OneToMany(() => Order, (order) => order.customer)
   orders?: Order[];
+
+  @OneToMany(() => OrderRefund, (order) => order.customer)
+  orderRefunds?: OrderRefund[];
 }

@@ -10,6 +10,7 @@ import { GenderEnum, RoleEnum, UserStatusEnum } from '../../enums';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../auth.service';
 import { CustomerLoginDto, CustomerRegisterDto, SendOtpDto } from './dto';
+import { generateCustomerCode } from './../../utils';
 import * as moment from 'moment';
 import { ConfigService } from '@nestjs/config';
 moment.locale('vi');
@@ -69,8 +70,19 @@ export class AuthCustomerService {
       if (!ward) {
         throw new BadRequestException('WARD_NOT_FOUND');
       }
+      let code = generateCustomerCode();
+      let flag = true;
+      while (flag) {
+        const customerExist = await this.customerService.findOneByCode(code);
+        if (!customerExist) {
+          flag = false;
+        } else {
+          code = generateCustomerCode();
+        }
+      }
 
       const user = new Customer();
+      user.code = code;
       user.password = passwordHashed;
       user.fullName = fullName;
       user.phone = phone;

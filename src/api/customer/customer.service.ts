@@ -21,8 +21,9 @@ import {
   OrderCustomerSearch,
 } from './dto';
 import { UpdateCustomerDto, UserUpdatePasswordDto } from '../user/dto';
-import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
+import { generateCustomerCode } from './../../utils';
+import * as bcrypt from 'bcrypt';
 import * as moment from 'moment';
 
 @Injectable()
@@ -35,6 +36,7 @@ export class CustomerService {
 
   private selectFieldsWithQ = [
     'u.id',
+    'u.code',
     'u.lastLogin',
     'u.status',
     'u.phone',
@@ -114,6 +116,7 @@ export class CustomerService {
       where: { ...options?.where },
       select: {
         id: true,
+        code: true,
         lastLogin: true,
         status: true,
         phone: true,
@@ -187,6 +190,15 @@ export class CustomerService {
       options.where = { id, ...options?.where };
     } else {
       options = { where: { id } };
+    }
+    return await this.findOneCustomer(options);
+  }
+
+  async findOneByCode(code: string, options?: any) {
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
     }
     return await this.findOneCustomer(options);
   }
@@ -455,8 +467,19 @@ export class CustomerService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
+    let code = generateCustomerCode();
+    let flag = true;
+    while (flag) {
+      const customerExist = await this.findOneByCode(code);
+      if (!customerExist) {
+        flag = false;
+      } else {
+        code = generateCustomerCode();
+      }
+    }
 
     const customer = new Customer();
+    customer.code = code;
     customer.fullName = fullName;
     customer.note = note;
     switch (gender) {

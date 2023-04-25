@@ -10,7 +10,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { Order, Ward } from '.';
+import { Order, OrderRefund, Ward } from '.';
 
 @Entity({ name: 'staff' })
 export class Staff {
@@ -126,4 +126,7 @@ export class Staff {
 
   @OneToMany(() => Order, (order) => order.staff)
   orders?: Order[];
+
+  @OneToMany(() => OrderRefund, (order) => order.customer)
+  orderRefunds?: OrderRefund[];
 }

@@ -1,4 +1,4 @@
-import { OrderRefundDetail, Order, PromotionHistory } from '.';
+import { OrderRefundDetail, Order, PromotionHistory, Customer, Staff } from '.';
 import {
   CreateDateColumn,
   UpdateDateColumn,
@@ -9,6 +9,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
   OneToMany,
+  ManyToOne,
 } from 'typeorm';
 
 @Entity({ name: 'order_refund' })
@@ -72,4 +73,12 @@ export class OrderRefund {
     (promotionHistory) => promotionHistory.orderRefund,
   )
   promotionHistories: PromotionHistory[];
+
+  @ManyToOne(() => Customer, (customer) => customer.orderRefunds)
+  @JoinColumn({ name: 'customer_id', referencedColumnName: 'id' })
+  customer: Customer;
+
+  @ManyToOne(() => Staff, (staff) => staff.orderRefunds)
+  @JoinColumn({ name: 'staff_id', referencedColumnName: 'id' })
+  staff: Staff;
 }

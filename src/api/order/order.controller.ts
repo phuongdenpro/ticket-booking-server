@@ -30,7 +30,6 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PaymentService } from '../payment/payment.service';
-import { CheckStatusZaloPayPaymentDto } from '../payment/dto';
 
 @Controller('order')
 @ApiTags('Order')
@@ -74,18 +73,6 @@ export class OrderController {
   @ApiBearerAuth()
   async payment(@Body() dto: PaymentAdminDto, @CurrentUser() user) {
     return this.orderService.paymentForAdmin(dto, user.id);
-  }
-
-  @Post('check-payment-status')
-  @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async checkPaymentStatus(
-    @Body() dto: CheckStatusZaloPayPaymentDto,
-    @CurrentUser() user,
-  ) {
-    return await this.paymentService.checkStatusZaloPay(dto, user.id);
   }
 
   @Get()

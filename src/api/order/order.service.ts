@@ -118,6 +118,22 @@ export class OrderService {
     'ord.note',
     'ord.orderRefundCode',
     'ord.createdAt',
+    'c.id',
+    'c.code',
+    'c.status',
+    'c.fullName',
+    'c.gender',
+    'c.phone',
+    'c.email',
+    'c.fullAddress',
+    's.id',
+    's.code',
+    's.isActive',
+    's.fullName',
+    's.gender',
+    's.phone',
+    's.email',
+    's.address',
   ];
 
   // order
@@ -1202,10 +1218,13 @@ export class OrderService {
     }
     query
       .orderBy('q.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('q.total', SortEnum.ASC)
       .addOrderBy('q.code', SortEnum.ASC);
 
     const dataResult = await query
       .leftJoinAndSelect('q.orderRefundDetails', 'ord')
+      .leftJoinAndSelect('q.customer', 'c')
+      .leftJoinAndSelect('q.staff', 's')
       .select(this.selectFieldsOrderRefundWithQ)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10)
