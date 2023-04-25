@@ -1,5 +1,15 @@
-import { OrderStatusEnum, TicketStatusEnum } from '../../enums';
-import { Customer, Order, OrderDetail, Staff } from '../../database/entities';
+import {
+  OrderStatusEnum,
+  PromotionHistoryTypeEnum,
+  TicketStatusEnum,
+} from '../../enums';
+import {
+  Customer,
+  Order,
+  OrderDetail,
+  PromotionLine,
+  Staff,
+} from '../../database/entities';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -23,6 +33,8 @@ export class StatisticsService {
     private readonly customerRepository: Repository<Customer>,
     @InjectRepository(Staff)
     private readonly staffRepository: Repository<Staff>,
+    @InjectRepository(PromotionLine)
+    private readonly pLineRepository: Repository<PromotionLine>,
     private dataSource: DataSource,
   ) {}
 
@@ -397,7 +409,7 @@ export class StatisticsService {
       subQuery = this.staffRepository
         .createQueryBuilder('q2')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
-        .where('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
+        .orWhere('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
         .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
         .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
         .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
@@ -462,6 +474,79 @@ export class StatisticsService {
       return {
         ...customer,
         numberOfOrders: Number(numberOfOrders),
+      };
+    });
+
+    return result;
+  }
+
+  // Lấy danh sách khuyến mãi đã áp dụng trong khoảng thời gian a -> b
+  async getStatisticsPromotionLines(
+    dto: RevenueStatisticsDto,
+    pagination?: Pagination,
+  ) {
+    const { startDate, endDate, keyword } = dto;
+    const newStartDate = startDate
+      ? moment(startDate).startOf('day').toDate()
+      : moment().subtract(7, 'days').startOf('day').toDate();
+    const newEndDate = endDate
+      ? moment(endDate).endOf('day').toDate()
+      : moment().endOf('day').toDate();
+
+    let subQuery;
+    let newKeywords;
+    const query = this.orderRepository
+      .createQueryBuilder('q')
+      .leftJoinAndSelect('q.promotionHistories', 'ph')
+      .leftJoinAndSelect('ph.promotionLine', 'pl')
+      .where(`q.createdAt BETWEEN :startDate AND :endDate`, {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+      .andWhere('ph.quantity > 0')
+      .andWhere('ph.type not in (:type)', {
+        type: [
+          PromotionHistoryTypeEnum.CANCEL,
+          PromotionHistoryTypeEnum.REFUND,
+        ],
+      });
+    if (keyword) {
+      newKeywords = keyword.trim();
+      subQuery = this.pLineRepository
+        .createQueryBuilder('q2')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .select('q2.id')
+        .getQuery();
+      query.andWhere(`pl.id in (${subQuery})`, { code: `%${newKeywords}%` });
+    }
+    query
+      .select([
+        'pl.id as promotionLineId',
+        'pl.code as code',
+        'pl.couponCode as couponCode',
+        'pl.title as title',
+        'pl.description as description',
+        'pl.startDate as startDate',
+        'pl.endDate as endDate',
+        'pl.type as type',
+        'pl.applyAll as applyAll',
+        'pl.maxQuantity as maxQuantity',
+        'SUM(ph.quantity) as totalUseQuantity',
+        'pl.maxBudget as maxBudget',
+        'SUM(ph.amount) * (-1) as totalUseBudget',
+      ])
+      .groupBy('pl.id')
+      .orderBy('pl.id', 'DESC')
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10);
+
+    const dataResult = await query.getRawMany();
+    // convert dataResult.totalUseQuantity to number
+    const result = dataResult.map((item) => {
+      return {
+        ...item,
+        totalUseQuantity: Number(item.totalUseQuantity),
       };
     });
 

@@ -120,4 +120,16 @@ export class StatisticsController {
   ) {
     return this.statisticsService.getTicketsSoldByRoute(dto, pagination);
   }
+
+  @Get('promotion-lines')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getPromotionLines(
+    @Query() dto: RevenueStatisticsDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return this.statisticsService.getStatisticsPromotionLines(dto, pagination);
+  }
 }
