@@ -30,6 +30,15 @@ export class Staff {
   @Column({ name: 'is_active', type: 'bool', default: false })
   isActive?: boolean;
 
+  @Column({
+    name: 'code',
+    type: 'varchar',
+    unique: true,
+    nullable: false,
+    length: 100,
+  })
+  code: string;
+
   @Column({ name: 'phone', type: 'varchar', nullable: true })
   phone?: string;
 
@@ -80,15 +89,6 @@ export class Staff {
     default: null,
   })
   accessToken?: string;
-
-  @Column({
-    name: 'code',
-    type: 'int',
-    unique: true,
-    nullable: false,
-    generated: 'increment',
-  })
-  code: number;
 
   @Column({ name: 'otp_code', type: 'varchar', length: 10, nullable: true })
   otpCode: string;

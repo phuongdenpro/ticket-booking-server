@@ -127,8 +127,9 @@ export class AuthService {
   }
 
   async sendPhoneCodeOtp(phoneNumber: string, code: string) {
+    const companyName = this.configService.get('COMPANY_NAME');
     try {
-      const message = `Mã OTP của bạn là: ${code}`;
+      const message = `${companyName} - Mã OTP của bạn là: ${code}`;
       const response = await this.twilioClient.messages.create({
         body: message,
         from: process.env.TWILIO_PHONE_NUMBER,
@@ -144,6 +145,7 @@ export class AuthService {
 
   async sendEmailCodeOtp(email: string, otp: string, otpExpireMinute) {
     const fromEmail = this.configService.get('EMAIL');
+    const companyName = this.configService.get('COMPANY_NAME');
     const transporter = nodemailer.createTransport({
       host: this.configService.get('SMTP_HOST'),
       port: this.configService.get('SMTP_PORT'),
@@ -157,7 +159,7 @@ export class AuthService {
     const options = {
       from: fromEmail,
       to: email,
-      subject: 'PD Bus - Mã OTP xác nhận',
+      subject: `${companyName} - Mã OTP xác nhận`,
       html: templateHtml(otp, otpExpireMinute),
     };
     await transporter.sendMail(options);

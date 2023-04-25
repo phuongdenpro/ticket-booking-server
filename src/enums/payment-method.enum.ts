@@ -1,6 +1,6 @@
 export enum PaymentMethodEnum {
   CASH = 'tiền mặt',
   // BANK_TRANSFER = 'Chuyển khoản ngân hàng',
-  // MOMO = 'Momo',
+  MOMO = 'Momo',
   ZALOPAY = 'ZaloPay',
 }

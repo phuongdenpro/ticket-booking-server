@@ -301,7 +301,6 @@ export class PromotionLineService {
       const newKeywords = keywords.trim();
       const subQuery = this.promotionLineRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.couponCode LIKE :couponCode', {
           couponCode: `%${newKeywords}%`,
@@ -311,6 +310,7 @@ export class PromotionLineService {
           description: `%${newKeywords}%`,
         })
         .where('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

@@ -5,7 +5,7 @@ import {
   TicketStatusEnum,
 } from './../../enums';
 import { Order, OrderDetail, TicketDetail } from './../../database/entities';
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -18,8 +18,8 @@ export class CallbackService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
-    private dataSource: DataSource,
     private configService: ConfigService,
+    private dataSource: DataSource,
   ) {}
 
   private async findOneOrder(options: any) {
@@ -45,7 +45,6 @@ export class CallbackService {
           email: true,
           fullName: true,
         },
-        deletedAt: false,
         ...options?.select,
       },
       relations: {
@@ -62,6 +61,9 @@ export class CallbackService {
   }
 
   private async findOneOrderByCode(code: string, options?: any) {
+    if (!code) {
+      throw new BadRequestException('ORDER_CODE_IS_REQUIRED');
+    }
     if (options) {
       options.where = { code, ...options?.where };
     } else {
@@ -72,12 +74,13 @@ export class CallbackService {
 
   async callbackZaloPayV2(dto) {
     const config = {
-      key2: this.configService.get('ZALO_PAY_KEY_2'),
+      key2: await this.configService.get('ZALO_PAY_KEY_2'),
     };
     const result = {};
+    const dataStr = dto.data;
+    const reqMac = dto.mac;
+    const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
     try {
-      const { data: dataStr, mac: reqMac } = dto;
-      const mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
       // kiểm tra callback hợp lệ (đến từ ZaloPay server)
       if (reqMac !== mac) {
         // callback không hợp lệ
@@ -88,8 +91,10 @@ export class CallbackService {
         // thanh toán thành công
         // merchant cập nhật trạng thái cho đơn hàng
         const dataJson = JSON.parse(dataStr, config.key2);
+        console.log(dataJson);
         const { app_trans_id, item, zp_trans_id, server_time } = dataJson;
-        const orderCode = item[0].orderCode;
+        const itemJson = JSON.parse(item);
+        const orderCode = itemJson[0].orderCode;
         const orderExist = await this.findOneOrderByCode(orderCode);
         if (orderExist) {
           orderExist.transId = app_trans_id + '';
@@ -98,32 +103,27 @@ export class CallbackService {
           orderExist.zaloTransId = zp_trans_id + '';
           orderExist.paymentTime = moment.unix(server_time / 1000).toDate();
           orderExist.updatedBy = orderExist.customer.id;
+          orderExist.note = 'Thanh toán thành công';
 
-          await this.orderRepository.save(orderExist);
-          const orderDetails: OrderDetail[] = orderExist.orderDetails;
+          await this.orderRepository.save(orderExist); // Lưu đơn hàng
+          const orderDetails: OrderDetail[] = orderExist.orderDetails; // Lấy chi tiết đơn hàng đã lưu
           const ticketDetails = orderDetails.map(async (orderDetail) => {
             let ticketDetail: TicketDetail = orderDetail.ticketDetail;
             ticketDetail.status = TicketStatusEnum.SOLD;
             ticketDetail = await this.dataSource
               .getRepository(TicketDetail)
-              .save(ticketDetail);
+              .save(ticketDetail); // Lưu chi tiết vé
             delete ticketDetail.deletedAt;
             return ticketDetail;
           });
-          await Promise.all(ticketDetails);
+          await Promise.all(ticketDetails); // Chờ tất cả các lệnh lưu chi tiết vé hoàn tất
           result['return_code'] = 1;
           result['return_message'] = 'success';
           console.log('thanh toán thành công');
         } else {
-          orderExist.transId = '';
-          orderExist.zaloTransId = '';
-          orderExist.note = 'Thanh toán thất bại';
-          orderExist.updatedBy = orderExist.customer.id;
-
-          await this.orderRepository.save(orderExist);
           result['return_code'] = 0;
           result['return_message'] = 'fail';
-          console.log('thanh toán thất bại');
+          console.log('không tìm thấy đơn hàng');
         }
       }
     } catch (error) {

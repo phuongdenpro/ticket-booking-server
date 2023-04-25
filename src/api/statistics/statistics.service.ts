@@ -1,10 +1,20 @@
-import { OrderStatusEnum, TicketStatusEnum } from '../../enums';
-import { Customer, Order, OrderDetail } from '../../database/entities';
+import {
+  OrderStatusEnum,
+  PromotionHistoryTypeEnum,
+  TicketStatusEnum,
+} from '../../enums';
+import {
+  Customer,
+  Order,
+  OrderDetail,
+  PromotionLine,
+  Staff,
+} from '../../database/entities';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import {
-  RevenueCustomerStatisticsDto,
+  RevenueStatisticsDto,
   StatisticsDto,
   TicketStatisticsDto,
   TopCustomerStatisticsDto,
@@ -21,6 +31,10 @@ export class StatisticsService {
     private readonly orderDetailRepository: Repository<OrderDetail>,
     @InjectRepository(Customer)
     private readonly customerRepository: Repository<Customer>,
+    @InjectRepository(Staff)
+    private readonly staffRepository: Repository<Staff>,
+    @InjectRepository(PromotionLine)
+    private readonly pLineRepository: Repository<PromotionLine>,
     private dataSource: DataSource,
   ) {}
 
@@ -39,7 +53,6 @@ export class StatisticsService {
       .select('SUM(q.finalTotal)', 'sum')
       .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('q.deletedAt IS NULL')
       .getRawOne();
 
     return Number(sum);
@@ -61,7 +74,6 @@ export class StatisticsService {
       .select('COUNT(q.id)', 'count')
       .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('q.deletedAt IS NULL')
       .getRawOne();
     return Number(count);
   }
@@ -140,7 +152,7 @@ export class StatisticsService {
       startDate = moment().subtract(30, 'days').startOf('day').toDate();
     }
 
-    const topCustomersDto = new RevenueCustomerStatisticsDto();
+    const topCustomersDto = new RevenueStatisticsDto();
     topCustomersDto.startDate = startDate;
     topCustomersDto.endDate = endDate;
     const topCustomers = await this.getRevenueCustomers(topCustomersDto, {
@@ -220,6 +232,9 @@ export class StatisticsService {
         'tr.endDate as endDate',
         'tr.status as status',
         'COUNT(t.id) as totalTickets',
+        'sum(q.total) as totalRevenue',
+        'sum(q.finalTotal) as finalTotalRevenue',
+        'sum(q.total - q.finalTotal) as totalDiscount',
         'fs.id as fromStationId',
         'fs.code as fromStationCode',
         'fs.name as fromStationName',
@@ -240,7 +255,6 @@ export class StatisticsService {
     }
     queryBuilder
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('q.deletedAt IS NULL')
       .andWhere('td.deletedAt IS NULL')
       .andWhere('t.deletedAt IS NULL')
       .andWhere('trd.deletedAt IS NULL')
@@ -258,6 +272,9 @@ export class StatisticsService {
       endDate: item.endDate,
       status: item.status,
       totalTickets: parseInt(item.totalTickets),
+      totalRevenue: parseFloat(item.totalRevenue),
+      finalTotalRevenue: parseFloat(item.finalTotalRevenue),
+      totalDiscount: parseFloat(item.totalDiscount),
       fromStation: {
         id: item['fromStationId'],
         code: item['fromStationCode'],
@@ -273,7 +290,7 @@ export class StatisticsService {
 
   // tính doanh thu theo khách hàng trong khoảng thời gian a -> b
   async getRevenueCustomers(
-    dto: RevenueCustomerStatisticsDto,
+    dto: RevenueStatisticsDto,
     pagination?: Pagination,
   ) {
     // week, month
@@ -307,6 +324,22 @@ export class StatisticsService {
       .leftJoinAndSelect('q.orders', 'o')
       .leftJoinAndSelect('q.ward', 'w')
       .leftJoinAndSelect('q.customerGroup', 'cg')
+      .where(`o.createdAt BETWEEN :startDate AND :endDate`, {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('o.status = :status', { status: OrderStatusEnum.PAID });
+    if (keyword) {
+      query.andWhere(`q.id in (${subQuery})`, {
+        fullName: `%${newKeywords}%`,
+        email: `%${newKeywords}%`,
+        phone: `%${newKeywords}%`,
+        address: `%${newKeywords}%`,
+        fullAddress: `%${newKeywords}%`,
+      });
+    }
+    query
+      .groupBy('q.id')
       .select([
         'q.id as customerId',
         'q.fullName as fullName',
@@ -319,25 +352,9 @@ export class StatisticsService {
         'cg.name as customerGroupName',
         'SUM(o.total) as total',
         'SUM(o.finalTotal) as finalTotal',
+        'SUM(o.total - o.finalTotal) as totalDiscount',
         'COUNT(o.id) as numberOfOrders',
       ])
-      .where(`o.createdAt BETWEEN :startDate AND :endDate`, {
-        startDate: newStartDate,
-        endDate: newEndDate,
-      });
-    if (keyword) {
-      query.andWhere(`q.id in (${subQuery})`, {
-        fullName: `%${newKeywords}%`,
-        email: `%${newKeywords}%`,
-        phone: `%${newKeywords}%`,
-        address: `%${newKeywords}%`,
-        fullAddress: `%${newKeywords}%`,
-      });
-    }
-    query
-      .andWhere('o.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('o.deletedAt IS NULL')
-      .groupBy('q.id')
       .orderBy('total', 'DESC')
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10);
@@ -348,11 +365,12 @@ export class StatisticsService {
     const numberOfOrdersByCustomers = await this.customerRepository
       .createQueryBuilder('q2')
       .leftJoin('q2.orders', 'o2')
-      .select(['q2.id as customerId', 'COUNT(o2.id) as numberOfOrders'])
       .where(`o2.createdAt BETWEEN :startDate AND :endDate`, {
         startDate: newStartDate,
         endDate: newEndDate,
       })
+      .andWhere('o2.status = :status', { status: OrderStatusEnum.PAID })
+      .select(['q2.id as customerId', 'COUNT(o2.id) as numberOfOrders'])
       .groupBy('q2.id')
       .getRawMany();
 
@@ -364,6 +382,190 @@ export class StatisticsService {
       return {
         ...customer,
         numberOfOrders: Number(numberOfOrders),
+      };
+    });
+
+    return result;
+  }
+
+  // tính doanh thu theo nhân viên trong khoảng thời gian a -> b
+  async getRevenueEmployees(
+    dto: RevenueStatisticsDto,
+    pagination?: Pagination,
+  ) {
+    // week, month
+    const { keyword, startDate, endDate } = dto;
+    const newStartDate = startDate
+      ? moment(startDate).startOf('day').toDate()
+      : moment().subtract(7, 'days').startOf('day').toDate();
+    const newEndDate = endDate
+      ? moment(endDate).endOf('day').toDate()
+      : moment().endOf('day').toDate();
+
+    let subQuery;
+    let newKeywords;
+    if (keyword) {
+      newKeywords = keyword.trim();
+      subQuery = this.staffRepository
+        .createQueryBuilder('q2')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q2.fullName LIKE :fullName', { fullName: `%${newKeywords}%` })
+        .orWhere('q2.email LIKE :email', { email: `%${newKeywords}%` })
+        .orWhere('q2.phone LIKE :phone', { phone: `%${newKeywords}%` })
+        .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
+        .select('q2.id')
+        .getQuery();
+    }
+
+    const query = this.staffRepository
+      .createQueryBuilder('q')
+      .leftJoinAndSelect('q.orders', 'o')
+      .where(`o.createdAt BETWEEN :startDate AND :endDate`, {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('o.status = :status', { status: OrderStatusEnum.PAID });
+    if (keyword) {
+      query.andWhere(`q.id in (${subQuery})`, {
+        code: `%${newKeywords}%`,
+        fullName: `%${newKeywords}%`,
+        email: `%${newKeywords}%`,
+        phone: `%${newKeywords}%`,
+        address: `%${newKeywords}%`,
+      });
+    }
+    query
+      .select([
+        'q.id as staffId',
+        'q.fullName as fullName',
+        'q.code as code',
+        'q.email as email',
+        'q.phone as phone',
+        'SUM(o.total) as total',
+        'SUM(o.finalTotal) as finalTotal',
+        'SUM(o.total - o.finalTotal) as totalDiscount',
+        'COUNT(o.id) as numberOfOrders',
+      ])
+      .groupBy('q.id')
+      .orderBy('total', 'DESC')
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10);
+
+    const dataResult = await query.getRawMany();
+
+    // Lấy số lượng hoá đơn cho mỗi khách hàng trong 7 ngày gần đây
+    const numberOfOrdersByCustomers = await this.staffRepository
+      .createQueryBuilder('q2')
+      .leftJoin('q2.orders', 'o2')
+      .where(`o2.createdAt BETWEEN :startDate AND :endDate`, {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('o2.status = :status', { status: OrderStatusEnum.PAID })
+      .select(['q2.id as staffId', 'COUNT(o2.id) as numberOfOrders'])
+      .groupBy('q2.id')
+      .getRawMany();
+
+    // Kết hợp kết quả của hai truy vấn và trả về kết quả cuối cùng
+    const result = dataResult.map((customer) => {
+      const numberOfOrders = numberOfOrdersByCustomers.find(
+        (item) => item.staffId === customer.staffId,
+      )?.numberOfOrders;
+      return {
+        ...customer,
+        numberOfOrders: Number(numberOfOrders),
+      };
+    });
+
+    return result;
+  }
+
+  // Lấy danh sách khuyến mãi đã áp dụng trong khoảng thời gian a -> b
+  async getStatisticsPromotionLines(
+    dto: RevenueStatisticsDto,
+    pagination?: Pagination,
+  ) {
+    const { startDate, endDate, keyword } = dto;
+    const newStartDate = startDate
+      ? moment(startDate).startOf('day').toDate()
+      : moment().subtract(7, 'days').startOf('day').toDate();
+    const newEndDate = endDate
+      ? moment(endDate).endOf('day').toDate()
+      : moment().endOf('day').toDate();
+
+    let subQuery;
+    let newKeywords;
+    const query = this.orderRepository
+      .createQueryBuilder('q')
+      .leftJoinAndSelect('q.promotionHistories', 'ph')
+      .leftJoinAndSelect('ph.promotionLine', 'pl')
+      .leftJoinAndSelect('pl.promotionDetail', 'pd')
+      .where(`q.createdAt BETWEEN :startDate AND :endDate`, {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+      .andWhere('ph.quantity > 0')
+      .andWhere('ph.type not in (:type)', {
+        type: [
+          PromotionHistoryTypeEnum.CANCEL,
+          PromotionHistoryTypeEnum.REFUND,
+        ],
+      });
+    if (keyword) {
+      newKeywords = keyword.trim();
+      subQuery = this.pLineRepository
+        .createQueryBuilder('q2')
+        .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
+        .select('q2.id')
+        .getQuery();
+      query.andWhere(`pl.id in (${subQuery})`, { code: `%${newKeywords}%` });
+    }
+    query
+      .select([
+        'pl.id as promotionLineId',
+        'pl.code as code',
+        'pl.couponCode as couponCode',
+        'pl.title as title',
+        'pl.description as description',
+        'pl.startDate as startDate',
+        'pl.endDate as endDate',
+        'pl.type as type',
+        'pl.applyAll as applyAll',
+        'pl.useQuantity as useQuantity',
+        'pl.maxQuantity as maxQuantity',
+        'SUM(ph.quantity) as totalUseQuantityInTime',
+        'pl.useBudget as useBudget',
+        'pl.maxBudget as maxBudget',
+        'SUM(ph.amount) * (-1) as totalUseBudgetInTime',
+        // promotionDetail
+        'pd.id as promotionDetail_id',
+        'pd.quantityBuy as promotionDetail_quantityBuy',
+        'pd.purchaseAmount as promotionDetail_purchaseAmount',
+        'pd.reductionAmount as promotionDetail_reductionAmount',
+        'pd.percentDiscount as promotionDetail_percentDiscount',
+        'pd.maxReductionAmount as promotionDetail_maxReductionAmount',
+      ])
+      .groupBy('pl.id')
+      .orderBy('pl.id', 'DESC')
+      .offset(pagination.skip || 0)
+      .limit(pagination.take || 10);
+
+    const dataResult = await query.getRawMany();
+    const result = dataResult.map((item) => {
+      // convert filed first word = promotionDetail_<item> => promotionDetail.item
+      const newObject = {};
+      Object.keys(item).forEach((key) => {
+        if (key.includes('promotionDetail_')) {
+          const newKey = key.replace('promotionDetail_', '');
+          newObject[newKey] = item[key];
+          delete item[key];
+        }
+      });
+      return {
+        ...item,
+        totalUseQuantity: Number(item.totalUseQuantity),
+        promotionDetail: { ...newObject },
       };
     });
 

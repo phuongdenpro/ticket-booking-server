@@ -19,3 +19,12 @@ export function generateCode() {
   const code = shortId.generate().replace(/[^A-Z0-9]/g, '');
   return code;
 }
+
+export function generateStaffCode() {
+  shortId.characters(
+    '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@',
+  );
+  const randomNum = Math.floor(Math.random() * 10000).toString();
+  const code = `NV${shortId.generate().replace(/[^A-Z0-9]/g, '')}${randomNum}`;
+  return code;
+}

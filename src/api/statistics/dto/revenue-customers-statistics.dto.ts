@@ -2,7 +2,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDate, IsOptional, IsString } from 'class-validator';
 import * as moment from 'moment';
 
-export class RevenueCustomerStatisticsDto {
+export class RevenueStatisticsDto {
   @ApiPropertyOptional({ example: '' })
   @IsString({ message: 'KEYWORD_MUST_BE_STRING' })
   @IsOptional()

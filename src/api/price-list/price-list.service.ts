@@ -581,7 +581,6 @@ export class PriceListService {
   }
 
   async getPriceDetailByCode(code: string, options?: any) {
-    console.log('options', options);
     const priceDetail = await this.findOnePriceDetailByCode(code, options);
     if (!priceDetail) {
       throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');

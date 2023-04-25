@@ -12,7 +12,7 @@ import {
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { StatisticsService } from './statistics.service';
 import {
-  RevenueCustomerStatisticsDto,
+  RevenueStatisticsDto,
   StatisticsDto,
   TicketStatisticsDto,
   TopCustomerStatisticsDto,
@@ -92,10 +92,21 @@ export class StatisticsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   async getRevenueCustomersLastDays(
-    @Query() dto: RevenueCustomerStatisticsDto,
+    @Query() dto: RevenueStatisticsDto,
     @GetPagination() pagination?: Pagination,
   ) {
     return this.statisticsService.getRevenueCustomers(dto, pagination);
+  }
+  @Get('revenue-by-employees')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getRevenueEmployeesLastDays(
+    @Query() dto: RevenueStatisticsDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return this.statisticsService.getRevenueEmployees(dto, pagination);
   }
 
   @Get('ticket-sold-by-route')
@@ -108,5 +119,17 @@ export class StatisticsController {
     @GetPagination() pagination?: Pagination,
   ) {
     return this.statisticsService.getTicketsSoldByRoute(dto, pagination);
+  }
+
+  @Get('promotion-lines')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getPromotionLines(
+    @Query() dto: RevenueStatisticsDto,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return this.statisticsService.getStatisticsPromotionLines(dto, pagination);
   }
 }

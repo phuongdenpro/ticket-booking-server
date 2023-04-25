@@ -285,8 +285,10 @@ export const mappingTranslate = {
   TRIP_DETAIL_ID_IS_STRING: 'Id của chuyến xe phải là chuỗi ký tự',
   TRIP_DETAIL_ID_IS_36_CHARACTERS: 'Id của chuyến xe phải có 36 ký tự',
   TRIP_DETAIL_HAS_PASSED: 'Chuyến xe đã khởi hành không thể đặt vé',
-  TRIP_DETAIL_HAS_PASSED_2_HOURS:
-    'Chuyến xe còn 2 giờ nữa sẽ khởi hành không thể đặt vé, vui lòng hãy đến phòng vé để được hỗ trợ đặt vé',
+  TRIP_DETAIL_HAS_PASSED_NOT_PAYMENT:
+    'Chuyến xe đã khởi hành không thể thanh toán',
+  TRIP_DETAIL_HAS_PASSED_1_HOURS:
+    'Chuyến xe còn 1 giờ nữa sẽ khởi hành không thể đặt vé, vui lòng hãy đến phòng vé để được hỗ trợ đặt vé',
   TRIP_DETAIL_NOT_ACTIVE: 'Chuyến xe không còn hoạt động',
   TRIP_DETAIL_HAS_ENDED_NOT_UPDATE: 'Chuyến xe đã khởi hành không thể cập nhật',
   TRIP_HAS_ENDED_NOT_UPDATE: 'Tuyến xe đã kết thúc không thể cập nhật',
@@ -635,7 +637,7 @@ export const mappingTranslate = {
   APP_TIME_MUST_BE_NUMBER: 'AppTime phải là số',
   PAYMENT_FAILED: 'Thanh toán thất bại',
   PAYMENT_FAIL: 'Thanh toán thất bại',
-  PAYMENT_NOT_COMPLETE: 'Thanh toán chưa được	thực hiện',
+  PAYMENT_NOT_COMPLETE: 'Chưa thực hiện thanh toán',
   TRANSACTION_ID_REQUIRED: 'Hoá đơn này chưa từng được thanh toán',
 
   // cron job

@@ -321,8 +321,8 @@ export class VehicleService {
   }
 
   async deleteVehicleById(userId: string, id: string) {
-    const hiddenVehicle = await this.vehicleService.findOne({ where: { id } });
-    if (!hiddenVehicle) {
+    const deleteVehicle = await this.vehicleService.findOne({ where: { id } });
+    if (!deleteVehicle) {
       throw new BadRequestException('VEHICLE_NOT_FOUND');
     }
     const adminExist = await this.dataSource
@@ -332,10 +332,10 @@ export class VehicleService {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
 
-    hiddenVehicle.deletedAt = new Date();
-    hiddenVehicle.updatedBy = adminExist.id;
+    deleteVehicle.deletedAt = new Date();
+    deleteVehicle.updatedBy = adminExist.id;
 
-    return await this.vehicleService.save(hiddenVehicle);
+    return await this.vehicleService.save(deleteVehicle);
   }
 
   async deleteMultipleVehicle(userId: string, dto: VehicleDeleteMultiInput) {
