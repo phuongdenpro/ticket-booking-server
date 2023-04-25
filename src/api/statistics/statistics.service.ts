@@ -499,6 +499,7 @@ export class StatisticsService {
       .createQueryBuilder('q')
       .leftJoinAndSelect('q.promotionHistories', 'ph')
       .leftJoinAndSelect('ph.promotionLine', 'pl')
+      .leftJoinAndSelect('pl.promotionDetail', 'pd')
       .where(`q.createdAt BETWEEN :startDate AND :endDate`, {
         startDate: newStartDate,
         endDate: newEndDate,
@@ -531,10 +532,19 @@ export class StatisticsService {
         'pl.endDate as endDate',
         'pl.type as type',
         'pl.applyAll as applyAll',
+        'pl.useQuantity as useQuantity',
         'pl.maxQuantity as maxQuantity',
-        'SUM(ph.quantity) as totalUseQuantity',
+        'SUM(ph.quantity) as totalUseQuantityInTime',
+        'pl.useBudget as useBudget',
         'pl.maxBudget as maxBudget',
-        'SUM(ph.amount) * (-1) as totalUseBudget',
+        'SUM(ph.amount) * (-1) as totalUseBudgetInTime',
+        // promotionDetail
+        'pd.id as promotionDetail_id',
+        'pd.quantityBuy as promotionDetail_quantityBuy',
+        'pd.purchaseAmount as promotionDetail_purchaseAmount',
+        'pd.reductionAmount as promotionDetail_reductionAmount',
+        'pd.percentDiscount as promotionDetail_percentDiscount',
+        'pd.maxReductionAmount as promotionDetail_maxReductionAmount',
       ])
       .groupBy('pl.id')
       .orderBy('pl.id', 'DESC')
@@ -542,11 +552,20 @@ export class StatisticsService {
       .limit(pagination.take || 10);
 
     const dataResult = await query.getRawMany();
-    // convert dataResult.totalUseQuantity to number
     const result = dataResult.map((item) => {
+      // convert filed first word = promotionDetail_<item> => promotionDetail.item
+      const newObject = {};
+      Object.keys(item).forEach((key) => {
+        if (key.includes('promotionDetail_')) {
+          const newKey = key.replace('promotionDetail_', '');
+          newObject[newKey] = item[key];
+          delete item[key];
+        }
+      });
       return {
         ...item,
         totalUseQuantity: Number(item.totalUseQuantity),
+        promotionDetail: { ...newObject },
       };
     });
 
