@@ -20,3 +20,4 @@ export * from './order-update-status-customer.enum';
 export * from './delete-dto-type.enum';
 export * from './payment-method.enum';
 export * from './payment-history-status.enum';
+export * from './update-payment-history-dto.enum';

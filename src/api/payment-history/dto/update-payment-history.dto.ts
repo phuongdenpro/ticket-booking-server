@@ -1,4 +1,8 @@
-import { PaymentHistoryStatusEnum, PaymentMethodEnum } from '../../../enums';
+import {
+  PaymentHistoryStatusEnum,
+  PaymentMethodEnum,
+  UpdatePayHTypeDtoEnum,
+} from '../../../enums';
 import {
   IsDate,
   IsEnum,
@@ -27,11 +31,23 @@ export class UpdatePaymentHistoryDto {
   @IsOptional()
   paymentMethod: PaymentMethodEnum;
 
-  @IsNotEmpty({ message: 'ZALO_TRANS_ID_REQUIRED' })
+  @IsNotEmpty({ message: 'PAYMENT_HISTORY_TYPE_IS_REQUIRED' })
+  @IsEnum(UpdatePayHTypeDtoEnum, { message: 'PAYMENT_HISTORY_TYPE_IS_ENUM' })
+  type: UpdatePayHTypeDtoEnum;
+
+  @IsString({ message: 'APP_TRANS_ID_STRING' })
+  @IsOptional()
+  transId: string;
+
+  @IsNumber({}, { message: 'APP_TIME_MUST_BE_NUMBER' })
+  @IsOptional()
+  createAppTime: number;
+
   @IsString({ message: 'ZALO_TRANS_ID_STRING' })
+  @IsOptional()
   zaloTransId: string;
 
-  @IsNotEmpty({ message: 'PAYMENT_TIME_ID_REQUIRED' })
   @IsDate({ message: 'PAYMENT_TIME_IS_DATE' })
+  @IsOptional()
   paymentTime: Date;
 }

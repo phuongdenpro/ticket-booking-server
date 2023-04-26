@@ -4,6 +4,7 @@ import {
   PaymentMethodEnum,
   SortEnum,
   TicketStatusEnum,
+  UpdatePayHTypeDtoEnum,
 } from './../../enums';
 import { Order, OrderDetail, TicketDetail } from './../../database/entities';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -111,11 +112,12 @@ export class CallbackService {
             );
           if (paymentHistory) {
             const phDto = new UpdatePaymentHistoryDto();
+            phDto.status = PaymentHistoryStatusEnum.SUCCESS;
             phDto.paymentMethod = PaymentMethodEnum.ZALOPAY;
             phDto.zaloTransId = zp_trans_id;
-            phDto.paymentTime = moment.unix(server_time / 1000).toDate();
-            phDto.status = PaymentHistoryStatusEnum.SUCCESS;
-            await this.paymentHistoryService.updatePaymentHistoryByCode(
+            phDto.paymentTime = new Date(server_time);
+            phDto.type = UpdatePayHTypeDtoEnum.UPDATE;
+            await this.paymentHistoryService.updatePaymentHistoryByOrderCode(
               paymentHistory.code,
               phDto,
             );

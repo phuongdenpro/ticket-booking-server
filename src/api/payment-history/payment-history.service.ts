@@ -3,6 +3,7 @@ import {
   PaymentHistoryStatusEnum,
   PaymentMethodEnum,
   SortEnum,
+  UpdatePayHTypeDtoEnum,
   UserStatusEnum,
 } from './../../enums';
 import {
@@ -33,74 +34,11 @@ export class PaymentHistoryService {
     private configService: ConfigService,
   ) {}
 
+  // order
   private async findOneOrder(options: any) {
     return await this.orderRepository.findOne({
       where: { ...options?.where },
       select: {
-        // orderDetails: {
-        //   id: true,
-        //   total: true,
-        //   note: true,
-        //   orderCode: true,
-        //   // ticketDetail: {
-        //   //   id: true,
-        //   //   code: true,
-        //   //   status: true,
-        //   //   note: true,
-        //   //   seat: {
-        //   //     id: true,
-        //   //     code: true,
-        //   //     name: true,
-        //   //     vehicle: {
-        //   //       id: true,
-        //   //       code: true,
-        //   //       name: true,
-        //   //       licensePlate: true,
-        //   //       totalSeat: true,
-        //   //       status: true,
-        //   //     },
-        //   //   },
-        //   //   ticket: {
-        //   //     id: true,
-        //   //     code: true,
-        //   //     startDate: true,
-        //   //     endDate: true,
-        //   //     tripDetail: {
-        //   //       id: true,
-        //   //       code: true,
-        //   //       departureTime: true,
-        //   //       expectedTime: true,
-        //   //       trip: {
-        //   //         id: true,
-        //   //         code: true,
-        //   //         name: true,
-        //   //         status: true,
-        //   //         fromStation: {
-        //   //           id: true,
-        //   //           code: true,
-        //   //           name: true,
-        //   //           fullAddress: true,
-        //   //         },
-        //   //         toStation: {
-        //   //           id: true,
-        //   //           code: true,
-        //   //           name: true,
-        //   //           fullAddress: true,
-        //   //         },
-        //   //       },
-        //   //     },
-        //   //   },
-        //   // },
-        // },
-        // staff: {
-        //   id: true,
-        //   isActive: true,
-        //   phone: true,
-        //   email: true,
-        //   fullName: true,
-        //   gender: true,
-        //   birthDay: true,
-        // },
         customer: {
           id: true,
           status: true,
@@ -113,37 +51,10 @@ export class PaymentHistoryService {
           note: true,
           birthday: true,
         },
-        // promotionHistories: {
-        //   id: true,
-        //   code: true,
-        //   amount: true,
-        //   note: true,
-        //   quantity: true,
-        //   type: true,
-        //   promotionLineCode: true,
-        //   orderCode: true,
-        // },
         ...options?.select,
       },
       relations: {
-        // orderDetails: {
-        //   ticketDetail: {
-        //     seat: {
-        //       vehicle: true,
-        //     },
-        //     ticket: {
-        //       tripDetail: {
-        //         trip: {
-        //           fromStation: true,
-        //           toStation: true,
-        //         },
-        //       },
-        //     },
-        //   },
-        // },
-        // staff: true,
         customer: true,
-        // promotionHistories: true,
         ...options?.relations,
       },
       order: {
@@ -174,6 +85,7 @@ export class PaymentHistoryService {
     return order;
   }
 
+  // payment history
   private async findOnePaymentHistory(options: any) {
     return await this.paymentHRepository.findOne({
       where: { ...options?.where },
@@ -201,6 +113,26 @@ export class PaymentHistoryService {
       options = { where: { code } };
     }
     return await this.findOnePaymentHistory(options);
+  }
+
+  async findPaymentHForOrderCode(orderCode: string, options?: any) {
+    if (!orderCode) {
+      throw new BadRequestException('ORDER_CODE_IS_REQUIRED');
+    }
+    return await this.paymentHRepository.findOne({
+      where: { orderCode, ...options?.where },
+      select: {
+        ...options?.select,
+      },
+      relations: {
+        ...options?.relations,
+      },
+      order: {
+        createdAt: SortEnum.DESC,
+        ...options?.order,
+      },
+      ...options?.other,
+    });
   }
 
   async getPaymentHistoryByCode(code: string, options?: any) {
@@ -289,7 +221,7 @@ export class PaymentHistoryService {
     }
 
     if (!transId) {
-      throw new BadRequestException('');
+      throw new BadRequestException('APP_TRANS_ID_REQUIRED');
     }
     paymentHistory.transId = transId;
 
@@ -305,8 +237,14 @@ export class PaymentHistoryService {
     return paymentHistoryCreated;
   }
 
-  async updatePaymentHistoryByCode(code: string, dto: UpdatePaymentHistoryDto) {
-    const paymentHistory = await this.getPaymentHistoryByCode(code);
+  async updatePaymentHistoryByOrderCode(
+    orderCode: string,
+    dto: UpdatePaymentHistoryDto,
+  ) {
+    const paymentHistory = await this.findPaymentHForOrderCode(orderCode);
+    if (!paymentHistory) {
+      throw new BadRequestException('PAYMENT_HISTORY_NOT_FOUND');
+    }
     const order = await this.getOrderByCode(paymentHistory.orderCode);
     if (order.status === OrderStatusEnum.CANCEL) {
       throw new BadRequestException('ORDER_IS_CANCEL');
@@ -323,8 +261,17 @@ export class PaymentHistoryService {
     if (paymentHistory.status === PaymentHistoryStatusEnum.FAILED) {
       throw new BadRequestException('PAYMENT_HISTORY_IS_FAILED');
     }
-    const { note, amount, paymentMethod, paymentTime, zaloTransId, status } =
-      dto;
+    const {
+      note,
+      amount,
+      paymentMethod,
+      paymentTime,
+      zaloTransId,
+      status,
+      transId,
+      createAppTime,
+      type,
+    } = dto;
     if (note) {
       paymentHistory.note = note;
     }
@@ -353,14 +300,25 @@ export class PaymentHistoryService {
       default:
         break;
     }
-    if (!paymentTime) {
-      throw new BadRequestException('PAYMENT_TIME_IS_REQUIRED');
+    if (type === UpdatePayHTypeDtoEnum.GENERATE_NEW_LINK) {
+      if (!transId) {
+        throw new BadRequestException('APP_TRANS_ID_REQUIRED');
+      }
+      paymentHistory.transId = transId;
+      if (!createAppTime) {
+        throw new BadRequestException('CREATE_APP_TIME_IS_REQUIRED');
+      }
+      paymentHistory.createAppTime = new Date(createAppTime);
+    } else if (type === UpdatePayHTypeDtoEnum.UPDATE) {
+      if (!paymentTime) {
+        throw new BadRequestException('PAYMENT_TIME_IS_REQUIRED');
+      }
+      paymentHistory.paymentTime = paymentTime;
+      if (!zaloTransId) {
+        throw new BadRequestException('ZALO_TRANS_ID_IS_REQUIRED');
+      }
+      paymentHistory.zaloTransId = zaloTransId;
     }
-    paymentHistory.paymentTime = paymentTime;
-    if (!zaloTransId) {
-      throw new BadRequestException('ZALO_TRANS_ID_IS_REQUIRED');
-    }
-    paymentHistory.zaloTransId = zaloTransId;
     paymentHistory.order = order;
 
     const paymentHistoryUpdated = await this.paymentHRepository.save(

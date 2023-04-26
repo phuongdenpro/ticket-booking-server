@@ -8,9 +8,11 @@ import {
 import { CheckStatusZaloPayPaymentDto } from './dto';
 import {
   OrderStatusEnum,
+  PaymentHistoryStatusEnum,
   PaymentMethodEnum,
   SortEnum,
   TicketStatusEnum,
+  UpdatePayHTypeDtoEnum,
   UserStatusEnum,
 } from './../../enums';
 import {
@@ -28,7 +30,10 @@ import axios from 'axios';
 import * as qs from 'qs';
 import * as moment from 'moment';
 import { PaymentHistoryService } from '../payment-history/payment-history.service';
-import { CreatePaymentHistoryDto } from '../payment-history/dto';
+import {
+  CreatePaymentHistoryDto,
+  UpdatePaymentHistoryDto,
+} from '../payment-history/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -207,13 +212,30 @@ export class PaymentService {
           };
         })
         .catch((err) => console.log(err));
-      const phDto = new CreatePaymentHistoryDto();
-      phDto.amount = orderExist.finalTotal;
-      phDto.createAppTime = payload.app_time;
-      phDto.orderCode = orderExist.code;
-      phDto.paymentMethod = PaymentMethodEnum.ZALOPAY;
-      phDto.transId = payload.app_trans_id;
-      await this.paymentHService.createPaymentHistory(phDto, userId);
+      const paymentHistory =
+        await this.paymentHService.findPaymentHForOrderCode(orderCode);
+      if (paymentHistory) {
+        const phUpdateDto = new UpdatePaymentHistoryDto();
+        phUpdateDto.amount = orderExist.finalTotal;
+        phUpdateDto.status = PaymentHistoryStatusEnum.ZALOPAY_PENDING;
+        phUpdateDto.paymentMethod = PaymentMethodEnum.ZALOPAY;
+        phUpdateDto.transId = payload.app_trans_id;
+        phUpdateDto.createAppTime = payload.app_time;
+        phUpdateDto.type = UpdatePayHTypeDtoEnum.GENERATE_NEW_LINK;
+        await this.paymentHService.updatePaymentHistoryByOrderCode(
+          orderCode,
+          phUpdateDto,
+        );
+      } else {
+        const phCreateDto = new CreatePaymentHistoryDto();
+        phCreateDto.status = PaymentHistoryStatusEnum.ZALOPAY_PENDING;
+        phCreateDto.amount = orderExist.finalTotal;
+        phCreateDto.orderCode = orderExist.code;
+        phCreateDto.paymentMethod = PaymentMethodEnum.ZALOPAY;
+        phCreateDto.transId = payload.app_trans_id;
+        phCreateDto.createAppTime = payload.app_time;
+        await this.paymentHService.createPaymentHistory(phCreateDto, userId);
+      }
 
       orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
       orderExist.updatedBy = userId;
@@ -249,6 +271,11 @@ export class PaymentService {
       if (!orderExist) {
         throw new BadRequestException('ORDER_NOT_FOUND');
       }
+      const paymentHistory =
+        await this.paymentHService.findPaymentHForOrderCode(orderCode);
+      if (!paymentHistory) {
+        throw new BadRequestException('PAYMENT_HISTORY_NOT_FOUND');
+      }
       switch (orderExist.status) {
         case OrderStatusEnum.PAID:
           throw new BadRequestException('ORDER_ALREADY_PAID');
@@ -263,7 +290,7 @@ export class PaymentService {
         throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
       }
       orderExist.updatedBy = userId;
-      if (!orderExist.transId || !orderExist.createAppTime) {
+      if (!paymentHistory.transId || !paymentHistory.createAppTime) {
         throw new BadRequestException('TRANSACTION_ID_REQUIRED');
       }
       const config = {
@@ -274,7 +301,7 @@ export class PaymentService {
       };
       const postData = {
         app_id: config.app_id,
-        app_trans_id: orderExist.transId,
+        app_trans_id: paymentHistory.transId,
       };
       const data = `${postData.app_id}|${postData.app_trans_id}|${config.key1}`;
       postData['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
@@ -291,23 +318,28 @@ export class PaymentService {
       const logData = {
         orderCode,
         paymentMethod,
-        transId: orderExist.transId,
-        createAppTime: orderExist.createAppTime,
+        transId: paymentHistory.transId,
+        createAppTime: paymentHistory.createAppTime,
       };
       console.log('check payment: ', logData);
 
       await axios(postConfig).then(async (response) => {
         console.log('return_code: ', response.data.return_code);
-        let paymentTime;
         if (response.data.return_code === 1) {
           orderExist.paymentMethod = paymentMethod;
           orderExist.status = OrderStatusEnum.PAID;
           orderExist.note = 'Thanh toán thành công';
-          const paymentHistory =
-            await this.paymentHService.getPaymentHistoryByCode(orderCode);
-          paymentTime = moment.unix(response.data.server_time).toDate();
-          // orderExist.paymentTime = paymentTime;
-          // orderExist.zaloTransId = response.data.zp_trans_id;
+          const dtoPH = new UpdatePaymentHistoryDto();
+          dtoPH.status = PaymentHistoryStatusEnum.SUCCESS;
+          dtoPH.paymentMethod = paymentMethod;
+          dtoPH.zaloTransId = response.data.zp_trans_id;
+          dtoPH.paymentTime = new Date(response.data.server_time);
+          dtoPH.type = UpdatePayHTypeDtoEnum.UPDATE;
+          dtoPH.amount = orderExist.finalTotal;
+          await this.paymentHService.updatePaymentHistoryByOrderCode(
+            orderCode,
+            dtoPH,
+          );
           saveOrder = await this.orderRepository.save(orderExist);
           flag = 1;
         } else if (

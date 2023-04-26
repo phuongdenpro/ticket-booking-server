@@ -653,12 +653,18 @@ export const mappingTranslate = {
   TRANSACTION_ID_REQUIRED: 'Hoá đơn này chưa từng được thanh toán',
   AMOUNT_IS_NOT_EMPTY: 'Số tiền không được để trống',
   AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Số tiền phải lớn hơn hoặc bằng 0',
+
+  // payment history
+  PAYMENT_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử thanh toán',
   PAYMENT_HISTORY_CODE_IS_REQUIRED: 'Mã thanh toán không được để trống',
   ZALO_TRANS_ID_IS_REQUIRED: 'ZaloTransId không được để trống',
   PAYMENT_HISTORY_STATUS_IS_ENUM: 'Trạng thái thanh toán không hợp lệ',
   PAYMENT_TIME_IS_DATE: 'PaymentTime phải là ngày tháng',
   PAYMENT_HISTORY_IS_SUCCESS: 'lần thanh toán này đã thành công',
   PAYMENT_HISTORY_IS_FAILED: 'lần thanh toán này đã thất bại',
+  PAYMENT_HISTORY_TYPE_IS_REQUIRED:
+    'Loại Lịch sử thanh toán DTO không được để trống',
+  PAYMENT_HISTORY_TYPE_IS_ENUM: 'Loại Lịch sử thanh toán DTO không hợp lệ',
   // cron job
   SECRET_KEY_IS_NOT_VALID: 'secret key không hợp lệ',
 };
