@@ -665,6 +665,7 @@ export const mappingTranslate = {
   PAYMENT_HISTORY_TYPE_IS_REQUIRED:
     'Loại Lịch sử thanh toán DTO không được để trống',
   PAYMENT_HISTORY_TYPE_IS_ENUM: 'Loại Lịch sử thanh toán DTO không hợp lệ',
+  PAYMENT_HISTORY_ID_IS_REQUIRED: 'Id Lịch sử thanh toán không được để trống',
   // cron job
   SECRET_KEY_IS_NOT_VALID: 'secret key không hợp lệ',
 };

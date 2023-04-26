@@ -212,8 +212,9 @@ export class PaymentService {
           };
         })
         .catch((err) => console.log(err));
-      const paymentHistory =
-        await this.paymentHService.findPaymentHForOrderCode(orderCode);
+      const paymentHistory = await this.paymentHService.findPaymentHByOrderCode(
+        orderCode,
+      );
       if (paymentHistory) {
         const phUpdateDto = new UpdatePaymentHistoryDto();
         phUpdateDto.amount = orderExist.finalTotal;
@@ -271,8 +272,9 @@ export class PaymentService {
       if (!orderExist) {
         throw new BadRequestException('ORDER_NOT_FOUND');
       }
-      const paymentHistory =
-        await this.paymentHService.findPaymentHForOrderCode(orderCode);
+      const paymentHistory = await this.paymentHService.findPaymentHByOrderCode(
+        orderCode,
+      );
       if (!paymentHistory) {
         throw new BadRequestException('PAYMENT_HISTORY_NOT_FOUND');
       }

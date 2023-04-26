@@ -97,7 +97,7 @@ export class CallbackService {
         // merchant cập nhật trạng thái cho đơn hàng
         const dataJson = JSON.parse(dataStr, config.key2);
         console.log(dataJson);
-        const { app_trans_id, item, zp_trans_id, server_time } = dataJson;
+        const { item, zp_trans_id, server_time } = dataJson;
         const itemJson = JSON.parse(item);
         const orderCode = itemJson[0].orderCode;
         const orderExist = await this.findOneOrderByCode(orderCode);
@@ -106,10 +106,9 @@ export class CallbackService {
           orderExist.status = OrderStatusEnum.PAID;
           orderExist.updatedBy = orderExist.customer.id;
           orderExist.note = 'Thanh toán thành công';
+
           const paymentHistory =
-            await this.paymentHistoryService.findOnePaymentHistoryByCode(
-              app_trans_id,
-            );
+            await this.paymentHistoryService.findPaymentHByOrderCode(orderCode);
           if (paymentHistory) {
             const phDto = new UpdatePaymentHistoryDto();
             phDto.status = PaymentHistoryStatusEnum.SUCCESS;
@@ -118,7 +117,7 @@ export class CallbackService {
             phDto.paymentTime = new Date(server_time);
             phDto.type = UpdatePayHTypeDtoEnum.UPDATE;
             await this.paymentHistoryService.updatePaymentHistoryByOrderCode(
-              paymentHistory.code,
+              orderCode,
               phDto,
             );
             await this.orderRepository.save(orderExist); // Lưu đơn hàng

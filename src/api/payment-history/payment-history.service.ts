@@ -115,29 +115,52 @@ export class PaymentHistoryService {
     return await this.findOnePaymentHistory(options);
   }
 
-  async findPaymentHForOrderCode(orderCode: string, options?: any) {
+  async findOnePaymentHistoryById(id: string, options?: any) {
+    if (!id) {
+      throw new BadRequestException('PAYMENT_HISTORY_ID_IS_REQUIRED');
+    }
+    if (options) {
+      options.where = { id, ...options?.where };
+    } else {
+      options = { where: { id } };
+    }
+    return await this.findOnePaymentHistory(options);
+  }
+
+  async findPaymentHByOrderCode(orderCode: string, options?: any) {
     if (!orderCode) {
       throw new BadRequestException('ORDER_CODE_IS_REQUIRED');
     }
-    return await this.paymentHRepository.findOne({
-      where: { orderCode, ...options?.where },
-      select: {
-        ...options?.select,
-      },
-      relations: {
-        ...options?.relations,
-      },
-      order: {
-        createdAt: SortEnum.DESC,
-        ...options?.order,
-      },
-      ...options?.other,
-    });
+    if (options) {
+      options.where = { orderCode, ...options?.where };
+    } else {
+      options = { where: { orderCode } };
+    }
+    return await this.findOnePaymentHistory(options);
   }
 
   async getPaymentHistoryByCode(code: string, options?: any) {
     const paymentHistory = await this.findOnePaymentHistoryByCode(
       code,
+      options,
+    );
+    if (!paymentHistory) {
+      throw new BadRequestException('PAYMENT_HISTORY_NOT_FOUND');
+    }
+    return paymentHistory;
+  }
+
+  async getPaymentHistoryById(id: string, options?: any) {
+    const paymentHistory = await this.findOnePaymentHistoryById(id, options);
+    if (!paymentHistory) {
+      throw new BadRequestException('PAYMENT_HISTORY_NOT_FOUND');
+    }
+    return paymentHistory;
+  }
+
+  async getPaymentHistoryByOrderCode(orderCode: string, options?: any) {
+    const paymentHistory = await this.findPaymentHByOrderCode(
+      orderCode,
       options,
     );
     if (!paymentHistory) {
@@ -241,7 +264,7 @@ export class PaymentHistoryService {
     orderCode: string,
     dto: UpdatePaymentHistoryDto,
   ) {
-    const paymentHistory = await this.findPaymentHForOrderCode(orderCode);
+    const paymentHistory = await this.findPaymentHByOrderCode(orderCode);
     if (!paymentHistory) {
       throw new BadRequestException('PAYMENT_HISTORY_NOT_FOUND');
     }
