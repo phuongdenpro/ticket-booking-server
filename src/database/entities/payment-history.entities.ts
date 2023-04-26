@@ -17,6 +17,9 @@ export class PaymentHistory {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
+  @Column({ name: 'note', type: 'text' })
+  note: string;
+
   @Column({ name: 'amount', type: 'double', nullable: true, default: 0.0 })
   amount: number;
 
@@ -47,13 +50,8 @@ export class PaymentHistory {
   })
   transId: string;
 
-  @Column({
-    name: 'create_app_time',
-    type: 'varchar',
-    length: 100,
-    nullable: false,
-  })
-  createAppTime: string;
+  @Column({ name: 'create_app_time', type: 'timestamp', nullable: false })
+  createAppTime: Date;
 
   @Column({
     name: 'zalo_trans_Id',

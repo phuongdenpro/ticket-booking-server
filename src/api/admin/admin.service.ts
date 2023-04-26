@@ -55,6 +55,9 @@ export class AdminService {
   }
 
   async findOneById(id: string, options?: any) {
+    if (!id) {
+      throw new BadRequestException('ID_REQUIRED');
+    }
     if (options) {
       options.where = { id, ...options?.where };
     } else {
@@ -64,6 +67,9 @@ export class AdminService {
   }
 
   async findOneByPhone(phone: string, options?: any) {
+    if (!phone) {
+      throw new BadRequestException('PHONE_REQUIRED');
+    }
     if (options) {
       options.where = { phone, ...options?.where };
     } else {
@@ -74,6 +80,9 @@ export class AdminService {
   }
 
   async findOneByEmail(email: string, options?: any) {
+    if (!email) {
+      throw new BadRequestException('EMAIL_REQUIRED');
+    }
     if (options) {
       options.where = { email, ...options?.where };
     } else {
@@ -84,6 +93,9 @@ export class AdminService {
   }
 
   async findOneByRefreshToken(refreshToken: string, options?: any) {
+    if (!refreshToken) {
+      throw new BadRequestException('REFRESH_TOKEN_REQUIRED');
+    }
     if (options) {
       options.where = {
         refreshToken,

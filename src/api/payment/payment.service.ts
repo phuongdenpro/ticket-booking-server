@@ -8,6 +8,7 @@ import {
 import { CheckStatusZaloPayPaymentDto } from './dto';
 import {
   OrderStatusEnum,
+  PaymentHistoryStatusEnum,
   PaymentMethodEnum,
   SortEnum,
   TicketStatusEnum,
@@ -27,6 +28,8 @@ import * as CryptoJS from 'crypto-js';
 import axios from 'axios';
 import * as qs from 'qs';
 import * as moment from 'moment';
+import { PaymentHistoryService } from '../payment-history/payment-history.service';
+import { CreatePaymentHistoryDto } from '../payment-history/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -36,6 +39,7 @@ export class PaymentService {
     private readonly orderRepository: Repository<Order>,
     private readonly customerService: CustomerService,
     private readonly adminService: AdminService,
+    private readonly paymentHService: PaymentHistoryService,
     private dataSource: DataSource,
     private configService: ConfigService,
   ) {}
@@ -92,6 +96,7 @@ export class PaymentService {
         },
         staff: true,
         customer: true,
+        paymentHistories: true,
         ...options?.relations,
       },
       order: {
@@ -203,11 +208,19 @@ export class PaymentService {
           };
         })
         .catch((err) => console.log(err));
-      orderExist.transId = payload.app_trans_id;
-      orderExist.createAppTime = payload.app_time + '';
+      const phDto = new CreatePaymentHistoryDto();
+      phDto.amount = orderExist.finalTotal;
+      phDto.createAppTime = payload.app_time + '';
+      phDto.orderCode = orderExist.code;
+      phDto.paymentMethod = PaymentMethodEnum.ZALOPAY;
+      phDto.transId = payload.app_trans_id;
+      await this.paymentHService.createPaymentHistory(phDto, userId);
+      console.log(2);
+
       orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
       orderExist.updatedBy = userId;
       await this.orderRepository.save(orderExist);
+      console.log(3);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -292,10 +305,12 @@ export class PaymentService {
         if (response.data.return_code === 1) {
           orderExist.paymentMethod = paymentMethod;
           orderExist.status = OrderStatusEnum.PAID;
-          orderExist.zaloTransId = response.data.zp_trans_id;
-          paymentTime = moment.unix(response.data.server_time / 1000).toDate();
-          orderExist.paymentTime = paymentTime;
           orderExist.note = 'Thanh toán thành công';
+          const paymentHistory =
+            await this.paymentHService.getPaymentHistoryByCode(orderCode);
+          paymentTime = moment.unix(response.data.server_time).toDate();
+          // orderExist.paymentTime = paymentTime;
+          // orderExist.zaloTransId = response.data.zp_trans_id;
           saveOrder = await this.orderRepository.save(orderExist);
           flag = 1;
         } else if (
@@ -303,8 +318,6 @@ export class PaymentService {
           response.data.return_code === 2
         ) {
           orderExist.note = 'Thanh toán thất bại';
-          orderExist.createAppTime = '';
-          orderExist.transId = '';
           saveOrder = await this.orderRepository.save(orderExist);
           flag = 0;
           throw new BadRequestException('PAYMENT_FAIL');

@@ -29,15 +29,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { PaymentService } from '../payment/payment.service';
 
 @Controller('order')
 @ApiTags('Order')
 export class OrderController {
-  constructor(
-    private orderService: OrderService,
-    private paymentService: PaymentService,
-  ) {}
+  constructor(private orderService: OrderService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

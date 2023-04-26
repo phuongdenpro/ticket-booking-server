@@ -41,6 +41,7 @@ import {
   SortEnum,
   TicketStatusEnum,
   UserStatusEnum,
+  PaymentHistoryStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -58,6 +59,8 @@ import {
   UpdateOrderRefundDto,
 } from '../order-refund/dto';
 import { ConfigService } from '@nestjs/config';
+import { PaymentHistoryService } from '../payment-history/payment-history.service';
+import { CreatePaymentHistoryDto } from '../payment-history/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -83,6 +86,7 @@ export class OrderService {
     private readonly priceListService: PriceListService,
     private readonly promotionLineService: PromotionLineService,
     private readonly promotionHistoryService: PromotionHistoryService,
+    private readonly paymentHService: PaymentHistoryService,
     private dataSource: DataSource,
     private configService: ConfigService,
   ) {}
@@ -944,8 +948,14 @@ export class OrderService {
     }
     orderExist.status = OrderStatusEnum.PAID;
     orderExist.paymentMethod = PaymentMethodEnum.CASH;
-    orderExist.transId = `CASH_${orderCode}`;
-    orderExist.createAppTime = '';
+    const phDto = new CreatePaymentHistoryDto();
+    phDto.amount = orderExist.finalTotal;
+    phDto.createAppTime = Date.now().toString();
+    phDto.orderCode = orderCode;
+    phDto.paymentMethod = PaymentMethodEnum.CASH;
+    phDto.status = PaymentHistoryStatusEnum.SUCCESS;
+    phDto.transId = `CASH_${orderCode}`;
+    await this.paymentHService.createPaymentHistory(phDto, userId);
 
     orderExist.updatedBy = userId;
     await this.orderRepository.save(orderExist);

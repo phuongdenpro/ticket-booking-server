@@ -54,6 +54,11 @@ export const mappingTranslate = {
   LIST_ITEM_IS_STRING: 'Id/code trong danh sách phải là chuỗi ký tự',
   LIST_IS_ARRAY: 'Danh sách phải là mảng',
   INTERNAL_SERVER_ERROR: 'Lỗi hệ thống',
+  ID_REQUIRED: 'Id không được để trống',
+  CODE_REQUIRED: 'Mã không được để trống',
+  PHONE_REQUIRED: 'Số điện thoại không được để trống',
+  EMAIL_REQUIRED: 'Email không được để trống',
+  REFRESH_TOKEN_REQUIRED: 'Refresh token không được để trống',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',
@@ -634,12 +639,24 @@ export const mappingTranslate = {
   // payment
   CONNECT_ZALOPAY_FAIL: 'Kết nối với ZaloPay thất bại',
   APP_TRANS_ID_REQUIRED: 'AppTransId không được để trống',
+  APP_TRANS_ID_STRING: 'AppTransId phải là chuỗi ký tự',
   APP_TIME_MUST_BE_NUMBER: 'AppTime phải là số',
+  APP_TIME_MUST_BE_STRING: 'AppTime phải là chuỗi ký tự',
+  APP_TIME_ID_REQUIRED: 'AppTimeId không được để trống',
+  ZALO_TRANS_ID_REQUIRED: 'ZaloTransId không được để trống',
+  ZALO_TRANS_ID_STRING: 'ZaloTransId phải là chuỗi ký tự',
+  PAYMENT_TIME_ID_REQUIRED: 'PaymentTimeId không được để trống',
+  PAYMENT_TIME_ID_STRING: 'PaymentTimeId phải là chuỗi ký tự',
   PAYMENT_FAILED: 'Thanh toán thất bại',
   PAYMENT_FAIL: 'Thanh toán thất bại',
   PAYMENT_NOT_COMPLETE: 'Chưa thực hiện thanh toán',
   TRANSACTION_ID_REQUIRED: 'Hoá đơn này chưa từng được thanh toán',
-
+  AMOUNT_IS_NOT_EMPTY: 'Số tiền không được để trống',
+  AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Số tiền phải lớn hơn hoặc bằng 0',
+  PAYMENT_HISTORY_CODE_IS_REQUIRED: 'Mã lịch sử thanh toán không được để trống',
+  ZALO_TRANS_ID_IS_REQUIRED: 'ZaloTransId không được để trống',
+  PAYMENT_HISTORY_STATUS_IS_ENUM: 'Trạng thái lịch sử thanh toán không hợp lệ',
+  PAYMENT_TIME_IS_DATE: 'PaymentTime phải là ngày tháng',
   // cron job
   SECRET_KEY_IS_NOT_VALID: 'secret key không hợp lệ',
 };

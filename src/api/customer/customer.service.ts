@@ -186,6 +186,9 @@ export class CustomerService {
   }
 
   async findOneById(id: string, options?: any) {
+    if (!id) {
+      throw new BadRequestException('ID_REQUIRED');
+    }
     if (options) {
       options.where = { id, ...options?.where };
     } else {
@@ -195,6 +198,9 @@ export class CustomerService {
   }
 
   async findOneByCode(code: string, options?: any) {
+    if (!code) {
+      throw new BadRequestException('CODE_REQUIRED');
+    }
     if (options) {
       options.where = { code, ...options?.where };
     } else {
