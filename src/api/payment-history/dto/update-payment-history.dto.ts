@@ -1,4 +1,4 @@
-import { PaymentMethodEnum } from '../../../enums';
+import { PaymentHistoryStatusEnum, PaymentMethodEnum } from '../../../enums';
 import {
   IsDate,
   IsEnum,
@@ -16,6 +16,12 @@ export class UpdatePaymentHistoryDto {
   @IsNumber({}, { message: 'AMOUNT_IS_NUMBER' })
   @IsOptional()
   amount: number;
+
+  @IsEnum(PaymentHistoryStatusEnum, {
+    message: 'PAYMENT_HISTORY_STATUS_IS_ENUM',
+  })
+  @IsOptional()
+  status: PaymentHistoryStatusEnum;
 
   @IsEnum(PaymentMethodEnum, { message: 'PAYMENT_METHOD_IS_ENUM' })
   @IsOptional()

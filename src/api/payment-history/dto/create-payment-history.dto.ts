@@ -35,6 +35,6 @@ export class CreatePaymentHistoryDto {
   transId: string;
 
   @IsNotEmpty({ message: 'APP_TIME_ID_REQUIRED' })
-  @IsString({ message: 'APP_TIME_MUST_BE_STRING' })
-  createAppTime: string;
+  @IsNumber({}, { message: 'APP_TIME_MUST_BE_NUMBER' })
+  createAppTime: number;
 }

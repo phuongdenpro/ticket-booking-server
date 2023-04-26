@@ -1,4 +1,5 @@
 import {
+  OrderStatusEnum,
   PaymentHistoryStatusEnum,
   PaymentMethodEnum,
   SortEnum,
@@ -17,6 +18,7 @@ import { CreatePaymentHistoryDto, UpdatePaymentHistoryDto } from './dto';
 import { Order, PaymentHistory } from './../../database/entities';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class PaymentHistoryService {
@@ -35,70 +37,70 @@ export class PaymentHistoryService {
     return await this.orderRepository.findOne({
       where: { ...options?.where },
       select: {
-        orderDetails: {
-          id: true,
-          total: true,
-          note: true,
-          orderCode: true,
-          // ticketDetail: {
-          //   id: true,
-          //   code: true,
-          //   status: true,
-          //   note: true,
-          //   seat: {
-          //     id: true,
-          //     code: true,
-          //     name: true,
-          //     vehicle: {
-          //       id: true,
-          //       code: true,
-          //       name: true,
-          //       licensePlate: true,
-          //       totalSeat: true,
-          //       status: true,
-          //     },
-          //   },
-          //   ticket: {
-          //     id: true,
-          //     code: true,
-          //     startDate: true,
-          //     endDate: true,
-          //     tripDetail: {
-          //       id: true,
-          //       code: true,
-          //       departureTime: true,
-          //       expectedTime: true,
-          //       trip: {
-          //         id: true,
-          //         code: true,
-          //         name: true,
-          //         status: true,
-          //         fromStation: {
-          //           id: true,
-          //           code: true,
-          //           name: true,
-          //           fullAddress: true,
-          //         },
-          //         toStation: {
-          //           id: true,
-          //           code: true,
-          //           name: true,
-          //           fullAddress: true,
-          //         },
-          //       },
-          //     },
-          //   },
-          // },
-        },
-        staff: {
-          id: true,
-          isActive: true,
-          phone: true,
-          email: true,
-          fullName: true,
-          gender: true,
-          birthDay: true,
-        },
+        // orderDetails: {
+        //   id: true,
+        //   total: true,
+        //   note: true,
+        //   orderCode: true,
+        //   // ticketDetail: {
+        //   //   id: true,
+        //   //   code: true,
+        //   //   status: true,
+        //   //   note: true,
+        //   //   seat: {
+        //   //     id: true,
+        //   //     code: true,
+        //   //     name: true,
+        //   //     vehicle: {
+        //   //       id: true,
+        //   //       code: true,
+        //   //       name: true,
+        //   //       licensePlate: true,
+        //   //       totalSeat: true,
+        //   //       status: true,
+        //   //     },
+        //   //   },
+        //   //   ticket: {
+        //   //     id: true,
+        //   //     code: true,
+        //   //     startDate: true,
+        //   //     endDate: true,
+        //   //     tripDetail: {
+        //   //       id: true,
+        //   //       code: true,
+        //   //       departureTime: true,
+        //   //       expectedTime: true,
+        //   //       trip: {
+        //   //         id: true,
+        //   //         code: true,
+        //   //         name: true,
+        //   //         status: true,
+        //   //         fromStation: {
+        //   //           id: true,
+        //   //           code: true,
+        //   //           name: true,
+        //   //           fullAddress: true,
+        //   //         },
+        //   //         toStation: {
+        //   //           id: true,
+        //   //           code: true,
+        //   //           name: true,
+        //   //           fullAddress: true,
+        //   //         },
+        //   //       },
+        //   //     },
+        //   //   },
+        //   // },
+        // },
+        // staff: {
+        //   id: true,
+        //   isActive: true,
+        //   phone: true,
+        //   email: true,
+        //   fullName: true,
+        //   gender: true,
+        //   birthDay: true,
+        // },
         customer: {
           id: true,
           status: true,
@@ -111,37 +113,37 @@ export class PaymentHistoryService {
           note: true,
           birthday: true,
         },
-        promotionHistories: {
-          id: true,
-          code: true,
-          amount: true,
-          note: true,
-          quantity: true,
-          type: true,
-          promotionLineCode: true,
-          orderCode: true,
-        },
+        // promotionHistories: {
+        //   id: true,
+        //   code: true,
+        //   amount: true,
+        //   note: true,
+        //   quantity: true,
+        //   type: true,
+        //   promotionLineCode: true,
+        //   orderCode: true,
+        // },
         ...options?.select,
       },
       relations: {
-        orderDetails: {
-          // ticketDetail: {
-          //   seat: {
-          //     vehicle: true,
-          //   },
-          //   ticket: {
-          //     tripDetail: {
-          //       trip: {
-          //         fromStation: true,
-          //         toStation: true,
-          //       },
-          //     },
-          //   },
-          // },
-        },
-        staff: true,
+        // orderDetails: {
+        //   ticketDetail: {
+        //     seat: {
+        //       vehicle: true,
+        //     },
+        //     ticket: {
+        //       tripDetail: {
+        //         trip: {
+        //           fromStation: true,
+        //           toStation: true,
+        //         },
+        //       },
+        //     },
+        //   },
+        // },
+        // staff: true,
         customer: true,
-        promotionHistories: true,
+        // promotionHistories: true,
         ...options?.relations,
       },
       order: {
@@ -246,7 +248,11 @@ export class PaymentHistoryService {
       throw new BadRequestException('ORDER_CODE_IS_REQUIRED');
     }
     const orderExist = await this.getOrderByCode(orderCode);
-    paymentHistory.order = orderExist;
+    if (customer.id !== orderExist.customer.id) {
+      throw new BadRequestException('ORDER_NOT_BELONG_TO_USER');
+    }
+    delete orderExist.customer;
+
     paymentHistory.code = transId;
     paymentHistory.orderCode = orderCode;
     switch (status) {
@@ -290,8 +296,9 @@ export class PaymentHistoryService {
     if (!createAppTime) {
       throw new BadRequestException('CREATE_APP_TIME_IS_REQUIRED');
     }
-    paymentHistory.createAppTime = moment.unix(Number(createAppTime)).toDate();
+    paymentHistory.createAppTime = new Date(createAppTime);
 
+    paymentHistory.order = orderExist;
     const paymentHistoryCreated = await this.paymentHRepository.save(
       paymentHistory,
     );
@@ -300,7 +307,24 @@ export class PaymentHistoryService {
 
   async updatePaymentHistoryByCode(code: string, dto: UpdatePaymentHistoryDto) {
     const paymentHistory = await this.getPaymentHistoryByCode(code);
-    const { note, amount, paymentMethod, paymentTime, zaloTransId } = dto;
+    const order = await this.getOrderByCode(paymentHistory.orderCode);
+    if (order.status === OrderStatusEnum.CANCEL) {
+      throw new BadRequestException('ORDER_IS_CANCEL');
+    }
+    if (order.status === OrderStatusEnum.PAID) {
+      throw new BadRequestException('ORDER_IS_PAID');
+    }
+    if (order.status === OrderStatusEnum.RETURNED) {
+      throw new BadRequestException('ORDER_IS_RETURNED');
+    }
+    if (paymentHistory.status === PaymentHistoryStatusEnum.SUCCESS) {
+      throw new BadRequestException('PAYMENT_HISTORY_IS_SUCCESS');
+    }
+    if (paymentHistory.status === PaymentHistoryStatusEnum.FAILED) {
+      throw new BadRequestException('PAYMENT_HISTORY_IS_FAILED');
+    }
+    const { note, amount, paymentMethod, paymentTime, zaloTransId, status } =
+      dto;
     if (note) {
       paymentHistory.note = note;
     }
@@ -320,6 +344,15 @@ export class PaymentHistoryService {
       default:
         break;
     }
+    switch (status) {
+      case PaymentHistoryStatusEnum.SUCCESS:
+      case PaymentHistoryStatusEnum.FAILED:
+      case PaymentHistoryStatusEnum.ZALOPAY_PENDING:
+        paymentHistory.status = status;
+        break;
+      default:
+        break;
+    }
     if (!paymentTime) {
       throw new BadRequestException('PAYMENT_TIME_IS_REQUIRED');
     }
@@ -328,6 +361,7 @@ export class PaymentHistoryService {
       throw new BadRequestException('ZALO_TRANS_ID_IS_REQUIRED');
     }
     paymentHistory.zaloTransId = zaloTransId;
+    paymentHistory.order = order;
 
     const paymentHistoryUpdated = await this.paymentHRepository.save(
       paymentHistory,

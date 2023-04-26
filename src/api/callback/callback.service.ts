@@ -1,5 +1,6 @@
 import {
   OrderStatusEnum,
+  PaymentHistoryStatusEnum,
   PaymentMethodEnum,
   SortEnum,
   TicketStatusEnum,
@@ -113,11 +114,11 @@ export class CallbackService {
             phDto.paymentMethod = PaymentMethodEnum.ZALOPAY;
             phDto.zaloTransId = zp_trans_id;
             phDto.paymentTime = moment.unix(server_time / 1000).toDate();
+            phDto.status = PaymentHistoryStatusEnum.SUCCESS;
             await this.paymentHistoryService.updatePaymentHistoryByCode(
               paymentHistory.code,
               phDto,
             );
-
             await this.orderRepository.save(orderExist); // Lưu đơn hàng
             const orderDetails: OrderDetail[] = orderExist.orderDetails; // Lấy chi tiết đơn hàng đã lưu
             const ticketDetails = orderDetails.map(async (orderDetail) => {

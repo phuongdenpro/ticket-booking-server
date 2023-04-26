@@ -8,7 +8,6 @@ import {
 import { CheckStatusZaloPayPaymentDto } from './dto';
 import {
   OrderStatusEnum,
-  PaymentHistoryStatusEnum,
   PaymentMethodEnum,
   SortEnum,
   TicketStatusEnum,
@@ -210,17 +209,15 @@ export class PaymentService {
         .catch((err) => console.log(err));
       const phDto = new CreatePaymentHistoryDto();
       phDto.amount = orderExist.finalTotal;
-      phDto.createAppTime = payload.app_time + '';
+      phDto.createAppTime = payload.app_time;
       phDto.orderCode = orderExist.code;
       phDto.paymentMethod = PaymentMethodEnum.ZALOPAY;
       phDto.transId = payload.app_trans_id;
       await this.paymentHService.createPaymentHistory(phDto, userId);
-      console.log(2);
 
       orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
       orderExist.updatedBy = userId;
       await this.orderRepository.save(orderExist);
-      console.log(3);
     } catch (error) {
       throw new BadRequestException(error.message);
     }

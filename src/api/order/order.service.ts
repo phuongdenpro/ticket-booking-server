@@ -950,7 +950,7 @@ export class OrderService {
     orderExist.paymentMethod = PaymentMethodEnum.CASH;
     const phDto = new CreatePaymentHistoryDto();
     phDto.amount = orderExist.finalTotal;
-    phDto.createAppTime = Date.now().toString();
+    phDto.createAppTime = Date.now();
     phDto.orderCode = orderCode;
     phDto.paymentMethod = PaymentMethodEnum.CASH;
     phDto.status = PaymentHistoryStatusEnum.SUCCESS;
