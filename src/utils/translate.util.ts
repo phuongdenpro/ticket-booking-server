@@ -666,6 +666,15 @@ export const mappingTranslate = {
     'Loại Lịch sử thanh toán DTO không được để trống',
   PAYMENT_HISTORY_TYPE_IS_ENUM: 'Loại Lịch sử thanh toán DTO không hợp lệ',
   PAYMENT_HISTORY_ID_IS_REQUIRED: 'Id Lịch sử thanh toán không được để trống',
+  CUSTOMER_CODE_IS_STRING: 'Mã khách hàng phải là chuỗi ký tự',
+  STAFF_CODE_IS_STRING: 'Mã nhân viên phải là chuỗi ký tự',
+  FROM_DATE_PAYMENT_TIME_IS_DATE: 'Từ ngày thanh toán phải là ngày tháng',
+  TO_DATE_PAYMENT_TIME_IS_DATE: 'Đến ngày thanh toán phải là ngày tháng',
+  MIN_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền tối thiểu phải lớn hơn hoặc bằng 0',
+  MAX_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền tối đa phải lớn hơn hoặc bằng 0',
+
   // cron job
   SECRET_KEY_IS_NOT_VALID: 'secret key không hợp lệ',
 };

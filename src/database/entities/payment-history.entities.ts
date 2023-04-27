@@ -8,6 +8,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Order } from './order.entities';
+import { Customer } from './customer.entities';
+import { Staff } from './staff.entities';
 
 @Entity({ name: 'payment_history' })
 export class PaymentHistory {
@@ -33,6 +35,22 @@ export class PaymentHistory {
     nullable: false,
   })
   orderCode: string;
+
+  @Column({
+    name: 'customer_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  customerCode: string;
+
+  @Column({
+    name: 'staff_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  staffCode: string;
 
   @Column({
     name: 'payment_method',
@@ -75,4 +93,12 @@ export class PaymentHistory {
   @ManyToOne(() => Order, (order) => order.paymentHistories)
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   order: Order;
+
+  @ManyToOne(() => Customer, (customer) => customer.paymentHistories)
+  @JoinColumn({ name: 'customer_id', referencedColumnName: 'id' })
+  customer: Customer;
+
+  @ManyToOne(() => Staff, (staff) => staff.paymentHistories)
+  @JoinColumn({ name: 'staff_id', referencedColumnName: 'id' })
+  staff: Staff;
 }

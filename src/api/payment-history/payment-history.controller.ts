@@ -4,18 +4,42 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { PaymentHistoryService } from './payment-history.service';
-import { Roles } from './../../decorator';
+import {
+  CurrentUser,
+  GetPagination,
+  Pagination,
+  Roles,
+} from './../../decorator';
 import { RoleEnum } from './../../enums';
 import { JwtAuthGuard } from './../../auth/guards';
+import { FilterPaymentHistoryDto } from './dto';
 
 @Controller('payment-history')
 @ApiTags('Payment History')
 export class PaymentHistoryController {
   constructor(private paymentHistoryService: PaymentHistoryService) {}
+
+  @Get('')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async findAllPaymentHistory(
+    @Query() dto: FilterPaymentHistoryDto,
+    @CurrentUser() user,
+    @GetPagination() pagination?: Pagination,
+  ) {
+    return await this.paymentHistoryService.findAllPaymentHistory(
+      dto,
+      user.id,
+      pagination,
+    );
+  }
 
   @Get('code/:code')
   @HttpCode(HttpStatus.OK)

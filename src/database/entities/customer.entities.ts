@@ -1,6 +1,6 @@
 import { GenderEnum, UserStatusEnum } from './../../enums';
 import { Entity, OneToMany, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { Order, Ward, CustomerGroup, OrderRefund } from '.';
+import { Order, Ward, CustomerGroup, OrderRefund, PaymentHistory } from '.';
 import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
@@ -108,4 +108,7 @@ export class Customer {
 
   @OneToMany(() => OrderRefund, (order) => order.customer)
   orderRefunds?: OrderRefund[];
+
+  @OneToMany(() => PaymentHistory, (paymentHistory) => paymentHistory.customer)
+  paymentHistories: PaymentHistory[];
 }
