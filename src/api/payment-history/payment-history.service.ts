@@ -327,6 +327,7 @@ export class PaymentHistoryService {
     paymentHistory.customer = orderExist.customer;
     paymentHistory.customerCode = orderExist.customer.code;
     delete orderExist.customer;
+    paymentHistory.order = orderExist;
 
     paymentHistory.code = transId;
     paymentHistory.orderCode = orderCode;
@@ -372,12 +373,14 @@ export class PaymentHistoryService {
       throw new BadRequestException('CREATE_APP_TIME_IS_REQUIRED');
     }
     paymentHistory.createAppTime = new Date(createAppTime);
-
-    paymentHistory.order = orderExist;
-    const paymentHistoryCreated = await this.paymentHRepository.save(
+    console.log('paymentHistory', paymentHistory);
+    
+    const savePaymentHistory = await this.paymentHRepository.save(
       paymentHistory,
     );
-    return paymentHistoryCreated;
+    console.log('paymentHistoryCreated', savePaymentHistory);
+    
+    return savePaymentHistory;
   }
 
   async updatePaymentHistoryByOrderCode(
@@ -434,6 +437,8 @@ export class PaymentHistoryService {
       default:
         break;
     }
+    console.log('status', status);
+    
     switch (status) {
       case PaymentHistoryStatusEnum.SUCCESS:
       case PaymentHistoryStatusEnum.FAILED:
@@ -443,6 +448,7 @@ export class PaymentHistoryService {
       default:
         break;
     }
+
     if (type === UpdatePayHTypeDtoEnum.GENERATE_NEW_LINK) {
       if (!transId) {
         throw new BadRequestException('APP_TRANS_ID_REQUIRED');
@@ -462,7 +468,9 @@ export class PaymentHistoryService {
       }
       paymentHistory.zaloTransId = zaloTransId;
     }
+    paymentHistory.orderCode = order.code;
     paymentHistory.order = order;
+
 
     const paymentHistoryUpdated = await this.paymentHRepository.save(
       paymentHistory,

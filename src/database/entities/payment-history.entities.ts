@@ -91,7 +91,7 @@ export class PaymentHistory {
   public updatedAt?: Date;
 
   // relations
-  @OneToOne(() => Order, (order) => order.paymentHistories)
+  @OneToOne(() => Order, (order) => order.paymentHistory)
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   order: Order;
 

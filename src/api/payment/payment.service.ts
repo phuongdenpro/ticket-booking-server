@@ -100,7 +100,7 @@ export class PaymentService {
         },
         staff: true,
         customer: true,
-        paymentHistories: true,
+        paymentHistory: true,
         ...options?.relations,
       },
       order: {

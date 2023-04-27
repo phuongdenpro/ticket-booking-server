@@ -109,6 +109,7 @@ export class CallbackService {
 
           const paymentHistory =
             await this.paymentHistoryService.findPaymentHByOrderCode(orderCode);
+
           if (paymentHistory) {
             const phDto = new UpdatePaymentHistoryDto();
             phDto.status = PaymentHistoryStatusEnum.SUCCESS;
