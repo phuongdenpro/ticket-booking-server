@@ -32,6 +32,22 @@ export class OrderRefund {
   @Column({ name: 'order_code', type: 'varchar', length: 100, nullable: false })
   orderCode: string;
 
+  @Column({
+    name: 'customer_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  customerCode: string;
+
+  @Column({
+    name: 'staff_code',
+    type: 'varchar',
+    length: 100,
+    nullable: false,
+  })
+  staffCode: string;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 

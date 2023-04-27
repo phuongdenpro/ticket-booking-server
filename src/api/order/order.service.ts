@@ -202,6 +202,7 @@ export class OrderService {
         },
         staff: {
           id: true,
+          code: true,
           isActive: true,
           phone: true,
           email: true,
@@ -211,6 +212,7 @@ export class OrderService {
         },
         customer: {
           id: true,
+          code: true,
           status: true,
           phone: true,
           email: true,
@@ -882,6 +884,8 @@ export class OrderService {
             );
           }
           await this.createOrderRefund(order.code, userId);
+
+          // hoàn trả khuyến mãi
           if (promotionHistories && promotionHistories.length > 0) {
             const destroyPromotionHistories = promotionHistories.map(
               async (promotionHistory) => {
@@ -1177,8 +1181,17 @@ export class OrderService {
     userId: string,
     pagination?: Pagination,
   ) {
-    const { keywords, status, startDate, endDate, minTotal, maxTotal, sort } =
-      dto;
+    const {
+      keywords,
+      status,
+      startDate,
+      endDate,
+      minTotal,
+      maxTotal,
+      sort,
+      customerCode,
+      staffCode,
+    } = dto;
     const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
     if (!userId) {
@@ -1224,7 +1237,15 @@ export class OrderService {
       query.andWhere('q.total <= :maxTotal', { maxTotal });
     }
     if (customer) {
-      query.andWhere('q.createdBy = :customerId', { customerId: userId });
+      query.andWhere('q.customerCode = :customerCode', {
+        customerCode: customer.code,
+      });
+    }
+    if (!customer && customerCode) {
+      query.andWhere('q.customerCode = :customerCode', { customerCode });
+    }
+    if (staffCode) {
+      query.andWhere('q.staffCode = :staffCode', { staffCode });
     }
     query
       .orderBy('q.createdAt', sort || SortEnum.DESC)
@@ -1245,20 +1266,20 @@ export class OrderService {
     return { dataResult, total, pagination };
   }
 
-  async createOrderRefund(orderCode: string, userId: string, order?: Order) {
-    const admin = await this.adminService.findOneById(userId);
-    const customer = await this.customerService.findOneById(userId);
+  async createOrderRefund(orderCode: string, userId: string) {
+    const adminExist = await this.adminService.findOneById(userId);
+    const customerExist = await this.customerService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (
-      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      (admin && !admin.isActive)
+      (customerExist && customerExist.status === UserStatusEnum.INACTIVATE) ||
+      (adminExist && !adminExist.isActive)
     ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const orderExist = order || (await this.findOneOrderByCode(orderCode));
+    const orderExist = await this.findOneOrderByCode(orderCode);
     if (!orderExist) {
       throw new BadRequestException('ORDER_NOT_FOUND');
     }
@@ -1269,6 +1290,9 @@ export class OrderService {
         break;
       case OrderStatusEnum.UNPAID:
         throw new BadRequestException('ORDER_IS_UNPAID');
+        break;
+      case OrderStatusEnum.RETURNED:
+        throw new BadRequestException('ORDER_IS_RETURNED');
         break;
       default:
         break;
@@ -1285,10 +1309,15 @@ export class OrderService {
     orderRefund.orderCode = orderExist.code;
     orderRefund.code = orderExist.code;
     orderRefund.total = orderExist.finalTotal;
-    if (customer) {
-      orderRefund.createdBy = customer.id;
+    const customer = orderExist.customer;
+    orderRefund.customerCode = customer.code;
+    orderRefund.customer = customer;
+    if (customerExist) {
+      orderRefund.createdBy = customerExist.id;
     } else {
-      orderRefund.createdBy = admin.id;
+      orderRefund.staffCode = adminExist.code;
+      orderRefund.staff = adminExist;
+      orderRefund.createdBy = adminExist.id;
     }
     orderRefund.status = OrderRefundStatusEnum.PENDING;
     const promotionHistories = orderExist.promotionHistories;

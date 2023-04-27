@@ -4,6 +4,7 @@ import {
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -90,7 +91,7 @@ export class PaymentHistory {
   public updatedAt?: Date;
 
   // relations
-  @ManyToOne(() => Order, (order) => order.paymentHistories)
+  @OneToOne(() => Order, (order) => order.paymentHistories)
   @JoinColumn({ name: 'order_id', referencedColumnName: 'id' })
   order: Order;
 

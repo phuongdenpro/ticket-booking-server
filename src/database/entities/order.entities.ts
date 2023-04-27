@@ -105,6 +105,6 @@ export class Order {
   )
   promotionHistories: PromotionHistory[];
 
-  @OneToMany(() => PaymentHistory, (paymentHistory) => paymentHistory.order)
-  paymentHistories: PaymentHistory[];
+  @OneToOne(() => PaymentHistory, (paymentHistory) => paymentHistory.order)
+  paymentHistories: PaymentHistory;
 }

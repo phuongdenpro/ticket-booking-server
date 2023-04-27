@@ -16,11 +16,21 @@ export class FilterOrderRefundDto {
   @IsOptional()
   keywords: string;
 
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'CUSTOMER_CODE_IS_STRING' })
+  @IsOptional()
+  customerCode: string;
+
+  @ApiPropertyOptional({ example: '' })
+  @IsString({ message: 'STAFF_CODE_IS_STRING' })
+  @IsOptional()
+  staffCode: string;
+
   @ApiPropertyOptional({
     example: [OrderRefundStatusEnum.PENDING, OrderRefundStatusEnum.FINISHED],
-    enum: ['', OrderRefundStatusEnum.PENDING, OrderRefundStatusEnum.FINISHED],
+    enum: [OrderRefundStatusEnum.PENDING, OrderRefundStatusEnum.FINISHED],
   })
-  @IsEnum(['', OrderRefundStatusEnum.PENDING, OrderRefundStatusEnum.FINISHED], {
+  @IsEnum([OrderRefundStatusEnum.PENDING, OrderRefundStatusEnum.FINISHED], {
     message: 'ORDER_REFUND_STATUS_IS_ENUM',
   })
   @IsOptional()
