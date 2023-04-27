@@ -316,7 +316,9 @@ export class PaymentHistoryService {
       throw new BadRequestException('ORDER_CODE_IS_REQUIRED');
     }
     const orderExist = await this.getOrderByCode(orderCode);
-
+    if (!orderExist) {
+      throw new BadRequestException('ORDER_NOT_FOUND');
+    }
     if (customer && customer.id !== orderExist.customer.id) {
       throw new BadRequestException('ORDER_NOT_BELONG_TO_USER');
     }
@@ -327,10 +329,10 @@ export class PaymentHistoryService {
     paymentHistory.customer = orderExist.customer;
     paymentHistory.customerCode = orderExist.customer.code;
     delete orderExist.customer;
-    paymentHistory.order = orderExist;
 
     paymentHistory.code = transId;
     paymentHistory.orderCode = orderCode;
+    paymentHistory.order = orderExist;
     switch (status) {
       case PaymentHistoryStatusEnum.SUCCESS:
       case PaymentHistoryStatusEnum.FAILED:
@@ -376,7 +378,7 @@ export class PaymentHistoryService {
     const savePaymentHistory = await this.paymentHRepository.save(
       paymentHistory,
     );
-    
+
     return savePaymentHistory;
   }
 
@@ -435,7 +437,7 @@ export class PaymentHistoryService {
         break;
     }
     console.log('status', status);
-    
+
     switch (status) {
       case PaymentHistoryStatusEnum.SUCCESS:
       case PaymentHistoryStatusEnum.FAILED:
@@ -465,13 +467,14 @@ export class PaymentHistoryService {
       }
       paymentHistory.zaloTransId = zaloTransId;
     }
+    console.log('order', order);
     paymentHistory.orderCode = order.code;
     paymentHistory.order = order;
-
-
+    
     const paymentHistoryUpdated = await this.paymentHRepository.save(
       paymentHistory,
-    );
+      );
+    console.log('order', paymentHistoryUpdated);
     return paymentHistoryUpdated;
   }
 }
