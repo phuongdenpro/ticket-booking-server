@@ -31,11 +31,16 @@ export class CronjobService {
       const orderCodes = await this.orderRepository.find({
         where: {
           status: OrderStatusEnum.UNPAID,
-          transId: Not(IsNull()),
-          createAppTime: Not(IsNull()),
+          paymentHistory: {
+            transId: Not(IsNull()),
+            createAppTime: Not(IsNull()),
+          },
         },
         select: {
           code: true,
+        },
+        relations: {
+          paymentHistory: true,
         },
       });
       const userId = await this.configService.get('ADMIN_ID');

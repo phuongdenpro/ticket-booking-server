@@ -345,7 +345,7 @@ export class PaymentService {
           saveOrder = await this.orderRepository.save(orderExist);
           flag = 1;
         } else if (
-          Date.now() > Number(orderExist.createAppTime) + 15 * 60 * 1000 ||
+          Date.now() > Number(paymentHistory.createAppTime) + 15 * 60 * 1000 ||
           response.data.return_code === 2
         ) {
           orderExist.note = 'Thanh toán thất bại';

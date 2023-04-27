@@ -373,12 +373,9 @@ export class PaymentHistoryService {
       throw new BadRequestException('CREATE_APP_TIME_IS_REQUIRED');
     }
     paymentHistory.createAppTime = new Date(createAppTime);
-    console.log('paymentHistory', paymentHistory);
-    
     const savePaymentHistory = await this.paymentHRepository.save(
       paymentHistory,
     );
-    console.log('paymentHistoryCreated', savePaymentHistory);
     
     return savePaymentHistory;
   }

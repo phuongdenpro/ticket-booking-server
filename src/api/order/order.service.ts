@@ -839,8 +839,6 @@ export class OrderService {
     try {
       switch (status) {
         case OrderUpdateStatusCustomerEnum.CANCEL:
-          order.createAppTime = '';
-          order.transId = '';
           if (order.status === OrderStatusEnum.PAID) {
             throw new BadRequestException('ORDER_ALREADY_PAID');
           }
