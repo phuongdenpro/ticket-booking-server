@@ -467,14 +467,12 @@ export class PaymentHistoryService {
       }
       paymentHistory.zaloTransId = zaloTransId;
     }
-    console.log('order', order);
     paymentHistory.orderCode = order.code;
     paymentHistory.order = order;
     
     const paymentHistoryUpdated = await this.paymentHRepository.save(
       paymentHistory,
       );
-    console.log('order', paymentHistoryUpdated);
     return paymentHistoryUpdated;
   }
 }
