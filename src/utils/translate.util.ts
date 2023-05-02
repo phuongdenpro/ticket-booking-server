@@ -255,6 +255,8 @@ export const mappingTranslate = {
   TRIP_STATUS_IS_STRING: 'Trạng thái tuyến đi phải là chuỗi ký tự',
   START_DATE_IS_DATE: 'Ngày bắt đầu phải là ngày',
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
+  START_DATE_NOT_MORE_THAN_7_DAYS_FROM_END_DATE:
+    'Ngày bắt đầu không được quá 7 ngày so với ngày kết thúc',
 
   // trip detail
   DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_CURRENT_DATE_PLUS_15_MINUTES:
@@ -619,6 +621,7 @@ export const mappingTranslate = {
   PAYMENT_METHOD_NOT_FOUND: 'Không tìm thấy phương thức thanh toán',
   PAYMENT_METHOD_IS_REQUIRED: 'Phương thức thanh toán không được để trống',
   PAYMENT_METHOD_IS_ENUM: 'Phương thức thanh toán không hợp lệ',
+  PAYMENT_METHOD_NOT_ZALOPAY: 'Phương thức thanh toán không phải là zalopay',
 
   // order refund
   CREATE_ORDER_REFUND_DETAIL_FAILED: 'Tạo hoá đơn hoàn trả thất bại',
@@ -674,6 +677,7 @@ export const mappingTranslate = {
     'Số tiền tối thiểu phải lớn hơn hoặc bằng 0',
   MAX_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
     'Số tiền tối đa phải lớn hơn hoặc bằng 0',
+  PAYMENT_HISTORY_NOT_SUCCESS: 'Thanh toán hoá đơn này chưa thành công',
 
   // cron job
   SECRET_KEY_IS_NOT_VALID: 'secret key không hợp lệ',

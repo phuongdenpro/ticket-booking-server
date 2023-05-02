@@ -26,6 +26,7 @@ import {
   CreateTripDetailDto,
   TripDetailDeleteMultiInput,
   UpdateTripDetailDto,
+  BusScheduleDto,
 } from './dto';
 
 @Controller('trip-detail')
@@ -43,6 +44,18 @@ export class TripDetailController {
     @CurrentUser() user,
   ) {
     return await this.tripDetailService.createTripDetail(dto, user.id);
+  }
+
+  @Get('bus-schedule')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getBusSchedule(
+    @CurrentUser() user,
+    @Query() dto: BusScheduleDto,
+  ) {
+    return await this.tripDetailService.getBusSchedule(dto, user.id);
   }
 
   @Get()

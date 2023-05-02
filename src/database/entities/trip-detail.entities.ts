@@ -68,10 +68,10 @@ export class TripDetail {
   @OneToMany(() => Ticket, (ticket) => ticket.tripDetail)
   tickets: Ticket[];
 
-  @ManyToOne(
-    () => OrderRefundDetail,
-    (orderRefundDetail) => orderRefundDetail.ticketDetail,
-  )
-  @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
-  orderRefundDetail: OrderRefundDetail;
+  // @ManyToOne(
+  //   () => OrderRefundDetail,
+  //   (orderRefundDetail) => orderRefundDetail.ticketDetail,
+  // )
+  // @JoinColumn({ name: 'order_refund_detail_id', referencedColumnName: 'id' })
+  // orderRefundDetail: OrderRefundDetail;
 }

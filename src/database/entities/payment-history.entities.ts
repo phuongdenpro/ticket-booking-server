@@ -11,6 +11,7 @@ import {
 import { Order } from './order.entities';
 import { Customer } from './customer.entities';
 import { Staff } from './staff.entities';
+import { OrderRefund } from './order-refund.entities';
 
 @Entity({ name: 'payment_history' })
 export class PaymentHistory {
@@ -84,6 +85,15 @@ export class PaymentHistory {
   @Column({ name: 'zalo_trans_time', type: 'timestamp', nullable: false })
   paymentTime: Date;
 
+  // @Column({
+  //   name: 'zalo_refund_Id',
+  //   type: 'varchar',
+  //   length: 100,
+  //   nullable: true,
+  //   default: '',
+  // })
+  // zaloRefundId: string;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamp', nullable: true })
   public createdAt?: Date;
 
@@ -102,4 +112,8 @@ export class PaymentHistory {
   @ManyToOne(() => Staff, (staff) => staff.paymentHistories)
   @JoinColumn({ name: 'staff_id', referencedColumnName: 'id' })
   staff: Staff;
+
+  @OneToOne(() => OrderRefund, (orderRefund) => orderRefund.paymentHistory)
+  @JoinColumn({ name: 'order_refund_id', referencedColumnName: 'id' })
+  orderRefund: OrderRefund;
 }

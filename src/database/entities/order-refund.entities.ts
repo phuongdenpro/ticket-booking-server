@@ -1,4 +1,4 @@
-import { OrderRefundDetail, Order, PromotionHistory, Customer, Staff } from '.';
+import { OrderRefundDetail, Order, PromotionHistory, Customer, Staff, PaymentHistory } from '.';
 import {
   CreateDateColumn,
   UpdateDateColumn,
@@ -17,7 +17,7 @@ export class OrderRefund {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
+  @Column({ name: 'code', type: 'varchar', length: 200, nullable: false })
   code: string;
 
   @Column({ name: 'note', type: 'text' })
@@ -97,4 +97,7 @@ export class OrderRefund {
   @ManyToOne(() => Staff, (staff) => staff.orderRefunds)
   @JoinColumn({ name: 'staff_id', referencedColumnName: 'id' })
   staff: Staff;
+
+  @OneToOne(() => PaymentHistory, (paymentHistory) => paymentHistory.order)
+  paymentHistory: PaymentHistory;
 }
