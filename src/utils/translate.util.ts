@@ -112,6 +112,9 @@ export const mappingTranslate = {
   OTP_IS_STRING: 'Mã OTP phải là chuỗi ký tự',
   OTP_IS_REQUIRED: 'Mã OTP không được để trống',
   SEND_OTP_FAILED: 'Gửi mã OTP thất bại',
+  CREATOR_NOT_FOUND: 'Admin không tồn tại',
+  CREATOR_IS_INACTIVE: 'tài khoản Admin này không còn hoạt động',
+  CREATOR_ID_REQUIRED: 'Id Admin không được để trống',
 
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',

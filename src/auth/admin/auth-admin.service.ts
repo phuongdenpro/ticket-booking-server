@@ -44,6 +44,18 @@ export class AuthAdminService {
       throw new BadRequestException('INVALID_EMAIL');
     }
 
+    if (!userId) {
+      throw new BadRequestException('CREATOR_ID_REQUIRED');
+    }
+
+    const creator = await this.adminService.findOneById(userId);
+    if (!creator) {
+      throw new BadRequestException('CREATOR_NOT_FOUND');
+    }
+    if (!creator.isActive) {
+      throw new BadRequestException('CREATOR_IS_INACTIVE');
+    }
+
     const staffPhoneExist = await this.adminService.findOneByPhone(phone);
     const staffEmailExist = await this.adminService.findOneByEmail(email);
     if (staffPhoneExist || staffEmailExist) {
