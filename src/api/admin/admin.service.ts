@@ -213,27 +213,25 @@ export class AdminService {
     if (!staff) {
       throw new BadRequestException('USER_NOT_FOUND');
     }
-    if (type) {
-      throw new BadRequestException('OTP_TYPE_IS_REQUIRED');
-    }
     this.checkOTP(otp, staff.otpCode, staff.otpExpired);
     let saveStaff: Staff;
-    if (type === ActiveOtpTypeEnum.ACTIVE) {
-      saveStaff = await this.updateActive(staff.id);
-    } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
-      saveStaff = await this.updateOtp(
-        staff.id,
-        null,
-        null,
-        ActiveOtpTypeEnum.RESET_PASSWORD,
-      );
-    }
+    let message = 'xác thực đặt lại mật khẩu thành công';
+    // if (type === ActiveOtpTypeEnum.ACTIVE) {
+    //   saveStaff = await this.updateActive(staff.id);
+    // } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
+    // }
+    saveStaff = await this.updateOtp(
+      staff.id,
+      null,
+      null,
+      ActiveOtpTypeEnum.RESET_PASSWORD,
+    );
 
     return {
       customer: {
         id: saveStaff.id,
       },
-      message: 'Kích hoạt tài khoản thành công',
+      message,
     };
   }
 

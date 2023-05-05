@@ -32,6 +32,9 @@ export class AuthAdminService {
 
   async register(userId: string, dto: AdminRegisterDto) {
     const { phone, email, name, gender } = dto;
+    if (!phone && !email) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
     if (phone) {
       if (!phone.match(PHONE_REGEX)) {
         throw new BadRequestException('INVALID_PHONE_NUMBER');
@@ -60,6 +63,7 @@ export class AuthAdminService {
       staffCred.email = email;
       staffCred.gender = gender;
       staffCred.createdBy = userId;
+      staffCred.isActive = true;
 
       const staff = await this.staffRepository.save(staffCred);
       delete staff.createdAt;
@@ -101,6 +105,9 @@ export class AuthAdminService {
     }
     if (!staffExist || !staffExist?.password) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
+    }
+    if (!dto.password) {
+      throw new BadRequestException('PASSWORD_IS_REQUIRED');
     }
 
     const isPasswordMatches = await this.authService.comparePassword(

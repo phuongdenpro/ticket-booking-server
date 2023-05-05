@@ -11,7 +11,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from './../../auth/guards';
-import { RoleEnum } from 'src/enums';
+import { RoleEnum } from './../../enums';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { CheckStatusZaloPayPaymentDto } from './dto';
 
