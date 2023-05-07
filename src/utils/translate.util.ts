@@ -601,6 +601,8 @@ export const mappingTranslate = {
   ORDER_CANNOT_CANCEL_12H_BEFORE:
     'Không thể huỷ vé trước 12 tiếng so với giờ khởi hàng, hãy đến trực tiếp phòng vé để huỷ',
   ORDER_CANNOT_CANCEL_AFTER_DEPARTURE: 'Không thể huỷ vé sau khi khởi hành',
+  ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE: 'Không thể thanh toán vé sau khi khởi hành',
+  ORDER_NOT_CANCELLED: 'Hãy liên hệ với phòng vé gần nhất để được hỗ trợ huỷ vé',
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',

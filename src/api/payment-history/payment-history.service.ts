@@ -308,10 +308,7 @@ export class PaymentHistoryService {
       createAppTime,
       status,
     } = dto;
-    const paymentHistory = new PaymentHistory();
-    if (note) {
-      paymentHistory.note = note;
-    }
+
     if (!orderCode) {
       throw new BadRequestException('ORDER_CODE_IS_REQUIRED');
     }
@@ -321,6 +318,14 @@ export class PaymentHistoryService {
     }
     if (customer && customer.id !== orderExist.customer.id) {
       throw new BadRequestException('ORDER_NOT_BELONG_TO_USER');
+    }
+
+    let paymentHistory = await this.findPaymentHByOrderCode(orderCode);
+    if (!paymentHistory) {
+      paymentHistory = new PaymentHistory();
+    }
+    if (note) {
+      paymentHistory.note = note;
     }
     if (admin) {
       paymentHistory.staffCode = admin.code;
@@ -469,10 +474,10 @@ export class PaymentHistoryService {
     }
     paymentHistory.orderCode = order.code;
     paymentHistory.order = order;
-    
+
     const paymentHistoryUpdated = await this.paymentHRepository.save(
       paymentHistory,
-      );
+    );
     return paymentHistoryUpdated;
   }
 }

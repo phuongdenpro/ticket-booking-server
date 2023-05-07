@@ -1,6 +1,7 @@
 import { Pagination } from './../../decorator';
 import { TripDetailService } from './../trip-detail/trip-detail.service';
 import {
+  Customer,
   Order,
   OrderDetail,
   OrderRefund,
@@ -599,13 +600,19 @@ export class OrderService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const customer = await this.customerService.findOneById(customerId);
-    if (!customerId) {
-      throw new UnauthorizedException('CUSTOMER_NOT_FOUND');
+    let customer = new Customer();
+    if (admin) {
+      customer = await this.customerService.findOneById(customerId);
+      if (!customerId) {
+        throw new UnauthorizedException('CUSTOMER_NOT_FOUND');
+      }
+      if (customer && customer.status === UserStatusEnum.INACTIVATE) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
+    } else {
+      customer = customerCreator;
     }
-    if (customer && customer.status === UserStatusEnum.INACTIVATE) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
+
 
     // check trip detail
     const tripDetail = await this.tripDetailService.getTripDetailByCode(
@@ -782,15 +789,19 @@ export class OrderService {
     id?: string,
     code?: string,
   ) {
-    const admin = await this.adminService.findOneById(userId);
-    const customer = await this.customerService.findOneById(userId);
-
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    const admin = await this.adminService.findOneById(userId);
+    const customer = await this.customerService.findOneById(userId);
+    if (customer) {
+      throw new BadRequestException('ORDER_NOT_CANCELLED');
+    }
+
     if (
-      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      (admin && !admin.isActive)
+      // (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      admin &&
+      !admin.isActive
     ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
@@ -926,7 +937,7 @@ export class OrderService {
     if (!admin) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (admin && !admin.isActive) {
+    if (!admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
     const { orderCode } = dto;
@@ -934,10 +945,36 @@ export class OrderService {
       throw new BadRequestException('ORDER_CODE_REQUIRED');
     }
 
-    const orderExist = await this.findOneOrderByCode(orderCode);
+    const orderExist = await this.findOneOrderByCode(orderCode, {
+      relations: {
+        orderDetails: {
+          ticketDetail: {
+            seat: false,
+            ticket: {
+              tripDetail: {
+                trip: false,
+              },
+            },
+          },
+        },
+        staff: false,
+        customer: false,
+        promotionHistories: false,
+      },
+    });
     if (!orderExist) {
       throw new BadRequestException('ORDER_NOT_FOUND');
     }
+
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+    const tripDetail: TripDetail =
+      orderExist.orderDetails[0].ticketDetail.ticket.tripDetail;
+    const departureTime = tripDetail.departureTime;
+    const timeDiff = moment(departureTime).diff(currentDate, 'hours');
+    if (timeDiff <= 0) {
+      throw new BadRequestException('ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE');
+    }
+
     switch (orderExist.status) {
       case OrderStatusEnum.PAID:
         throw new BadRequestException('ORDER_ALREADY_PAID');

@@ -48,6 +48,7 @@ export class AdminService {
         birthDay: true,
         code: true,
         createdAt: true,
+        isManage: true,
         ...options?.select,
       },
       ...options?.other,
