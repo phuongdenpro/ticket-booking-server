@@ -170,10 +170,21 @@ export class PromotionService {
     promotion.description = description;
     promotion.note = note;
     if (image) {
-      if (!image.match(IMAGE_REGEX)) {
-        throw new BadRequestException('INVALID_IMAGE_URL');
+      if (Array.isArray(image)) {
+        if (image.length > 0) {
+          if (!image[0].match(IMAGE_REGEX)) {
+            throw new BadRequestException('INVALID_IMAGE_URL');
+          }
+          promotion.image = image[0];
+        } else {
+          promotion.image = '';
+        }
+      } else {
+        if (!image.match(IMAGE_REGEX)) {
+          throw new BadRequestException('INVALID_IMAGE_URL');
+        }
+        promotion.image = image;
       }
-      promotion.image = image;
     }
     if (!startDate) {
       throw new BadRequestException('START_DATE_IS_REQUIRED');
@@ -204,6 +215,7 @@ export class PromotionService {
     }
 
     promotion.createdBy = adminExist.id;
+
     const savePromotion = await this.promotionRepository.save(promotion);
     delete promotion.deletedAt;
     return savePromotion;
@@ -253,7 +265,21 @@ export class PromotionService {
       promotion.note = note;
     }
     if (image) {
-      promotion.image = image;
+      if (Array.isArray(image)) {
+        if (image.length > 0) {
+          if (!image[0].match(IMAGE_REGEX)) {
+            throw new BadRequestException('INVALID_IMAGE_URL');
+          }
+          promotion.image = image[0];
+        } else {
+          promotion.image = '';
+        }
+      } else {
+        if (!image.match(IMAGE_REGEX)) {
+          throw new BadRequestException('INVALID_IMAGE_URL');
+        }
+        promotion.image = image;
+      }
     }
     switch (status) {
       case PromotionStatusEnum.ACTIVE:
