@@ -22,7 +22,7 @@ import {
 } from './dto';
 import { UpdateCustomerDto, UserUpdatePasswordDto } from '../user/dto';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
-import { generateCustomerCode } from './../../utils';
+import { EMAIL_REGEX, PHONE_REGEX, generateCustomerCode } from './../../utils';
 import * as bcrypt from 'bcrypt';
 import * as moment from 'moment';
 
@@ -486,6 +486,9 @@ export class CustomerService {
 
     const customer = new Customer();
     customer.code = code;
+    if (!fullName) {
+      throw new BadRequestException('FULL_NAME_IS_REQUIRED');
+    }
     customer.fullName = fullName;
     customer.note = note;
     switch (gender) {
@@ -499,17 +502,30 @@ export class CustomerService {
         break;
     }
     if (birthday) {
+      const dateObj = new Date(birthday);
+      if (isNaN(dateObj.valueOf())) {
+        throw new BadRequestException('INVALID_DATE');
+      }
       customer.birthday = birthday;
     } else {
       customer.birthday = moment().startOf('day').toDate();
     }
 
     if (email) {
+      if (!email.match(EMAIL_REGEX)) {
+        throw new BadRequestException('INVALID_EMAIL');
+      }
       const userEmailExist = await this.findOneByEmail(email);
       if (userEmailExist) {
         throw new BadRequestException('EMAIL_ALREADY_EXIST');
       }
       customer.email = email;
+    }
+    if (!phone) {
+      throw new BadRequestException('PHONE_IS_REQUIRED');
+    }
+    if (!phone.match(PHONE_REGEX)) {
+      throw new BadRequestException('INVALID_PHONE_NUMBER');
     }
 
     const userPhoneExist = await this.findOneByPhone(phone);
@@ -517,6 +533,9 @@ export class CustomerService {
       throw new BadRequestException('PHONE_ALREADY_EXIST');
     }
     customer.phone = phone;
+    if (!wardCode && wardCode !== 0) {
+      throw new BadRequestException('WARD_CODE_IS_REQUIRED');
+    }
     const ward = await this.dataSource.getRepository(Ward).findOne({
       where: {
         code: wardCode,

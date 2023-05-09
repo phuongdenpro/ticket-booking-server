@@ -101,6 +101,12 @@ export class AuthAdminService {
     if (!email && !phone) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
     }
+    if (email && !email.match(EMAIL_REGEX)) {
+      throw new BadRequestException('INVALID_EMAIL');
+    }
+    if (phone && !phone.match(PHONE_REGEX)) {
+      throw new BadRequestException('INVALID_PHONE_NUMBER');
+    }
     let staffExist: Staff;
     if (email) {
       staffExist = await this.adminService.findOneByEmail(email, {
@@ -120,6 +126,9 @@ export class AuthAdminService {
     }
     if (!dto.password) {
       throw new BadRequestException('PASSWORD_IS_REQUIRED');
+    }
+    if (!dto.password?.length || dto.password?.length < 6) {
+      throw new BadRequestException('PASSWORD_IS_MIN_LENGTH_6');
     }
 
     const isPasswordMatches = await this.authService.comparePassword(

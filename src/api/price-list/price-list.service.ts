@@ -225,6 +225,12 @@ export class PriceListService {
     if (!startDate) {
       throw new BadRequestException('START_DATE_IS_REQUIRED');
     }
+
+    const dateStartObj = new Date(startDate);
+    if (isNaN(dateStartObj.valueOf())) {
+      throw new BadRequestException('INVALID_DATE');
+    }
+
     const newStartDate = moment(startDate).startOf('day').toDate();
     const currentDate = moment().startOf('day').toDate();
     if (newStartDate <= currentDate) {
@@ -234,6 +240,10 @@ export class PriceListService {
 
     if (!endDate) {
       throw new BadRequestException('END_DATE_IS_REQUIRED');
+    }
+    const dateEndObj = new Date(endDate);
+    if (isNaN(dateEndObj.valueOf())) {
+      throw new BadRequestException('INVALID_DATE');
     }
     const newEndDate = moment(endDate).endOf('day').toDate();
     if (newEndDate < currentDate) {
