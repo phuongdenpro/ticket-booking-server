@@ -48,5 +48,5 @@ export class CustomerGroup {
 
   // Relations
   @OneToMany(() => Customer, (customer) => customer.customerGroup)
-  customers?: Customer[];
+  customers: Customer[];
 }

@@ -102,7 +102,7 @@ export class Customer {
   
   @ManyToOne(() => CustomerGroup, (customerGroup) => customerGroup.customers)
   @JoinColumn({ name: 'customer_group_id', referencedColumnName: 'id' })
-  customerGroup?: CustomerGroup;
+  customerGroup: CustomerGroup;
 
   @OneToMany(() => Order, (order) => order.customer)
   orders?: Order[];

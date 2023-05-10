@@ -115,7 +115,6 @@ export class TripService {
       toStationId,
       status,
     } = dto;
-    // check permission
     const adminExist = await this.dataSource
       .getRepository(Staff)
       .findOne({ where: { id: userId } });
