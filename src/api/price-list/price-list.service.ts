@@ -712,7 +712,9 @@ export class PriceListService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
-
+    if (!code) {
+      throw new BadRequestException('CODE_IS_REQUIRED');
+    }
     const priceDetailCodeExist = await this.findOnePriceDetailByCode(code);
     if (priceDetailCodeExist) {
       throw new BadRequestException('PRICE_DETAIL_CODE_EXISTED');
@@ -738,7 +740,9 @@ export class PriceListService {
     const priceDetail = new PriceDetail();
     priceDetail.priceList = priceList;
     priceDetail.priceListCode = priceList.code;
-
+    if (!tripCode) {
+      throw new BadRequestException('TRIP_CODE_IS_REQUIRED');
+    }
     const trip = await this.dataSource.getRepository(Trip).findOne({
       where: { code: tripCode },
     });
@@ -754,7 +758,7 @@ export class PriceListService {
         priceDetail.seatType = seatType;
         break;
       default:
-        throw new BadRequestException('SEAT_TYPE_NOT_FOUND');
+        throw new BadRequestException('SEAT_TYPE_IS_ENUM');
     }
     await this.validOverlappingPriceDetail(
       priceList.startDate,
@@ -773,11 +777,14 @@ export class PriceListService {
     }
     priceDetail.code = code;
 
+    if (!price) {
+      throw new BadRequestException('PRICE_MUST_REQUIRED')
+    }
     if (price < 0 || isNaN(price)) {
-      throw new BadRequestException('PRICE_MUST_GREATER_THAN_ZERO');
+      throw new BadRequestException('PRICE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0');
     }
     priceDetail.price = price;
-    priceDetail.note = note;
+    priceDetail.note = note || '';
     priceDetail.createdBy = adminExist.id;
 
     const savePriceDetail = await this.priceDetailRepository.save(priceDetail);

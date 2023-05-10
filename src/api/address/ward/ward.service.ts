@@ -129,6 +129,9 @@ export class WardService {
     if (!district) {
       throw new BadRequestException('DISTRICT_NOT_FOUND');
     }
+    if (!code) {
+      throw new BadRequestException('WARD_CODE_IS_REQUIRED');
+    }
     const wardExists = await this.findOneByCode(code, {
       withDeleted: true,
     });
