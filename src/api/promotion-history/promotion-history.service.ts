@@ -380,12 +380,15 @@ export class PromotionHistoryService {
       delete savedPromotionHistory.deletedAt;
       delete savedPromotionHistory.order;
       delete savedPromotionHistory.promotionLine;
+      
       return savedPromotionHistory;
     } catch (error) {
       await queryRunnerPL.rollbackTransaction();
       await queryRunnerPH.rollbackTransaction();
       throw new BadRequestException(error.message);
     } finally {
+      await queryRunnerPL.release()
+      await queryRunnerPH.release()
     }
   }
 }

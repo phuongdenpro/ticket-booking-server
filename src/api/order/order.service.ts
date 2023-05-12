@@ -927,6 +927,9 @@ export class OrderService {
       await queryOrder.manager.save(order);
       await queryOrder.commitTransaction();
       const saveOrder = await this.findOneOrderByCode(order.code);
+      await queryTickerDetail.release();
+      await queryOrder.release();
+
       return saveOrder;
     } catch (error) {
       await queryTickerDetail.rollbackTransaction();
