@@ -639,6 +639,7 @@ export class OrderService {
     }
 
     const order = new Order();
+    order.tripCode = tripDetail.trip.code;
     order.note = note;
     order.customer = customer;
     if (customerCreator) {

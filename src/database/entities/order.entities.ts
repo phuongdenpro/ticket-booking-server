@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Customer, OrderDetail, OrderRefund, PromotionHistory, Staff } from '.';
+import { Customer, OrderDetail, OrderRefund, PromotionHistory, Staff, Trip } from '.';
 import { PaymentHistory } from './payment-history.entities';
 
 @Entity({ name: 'order' })
@@ -39,6 +39,14 @@ export class Order {
     nullable: true,
   })
   paymentMethod: string;
+
+  @Column({
+    name: 'trip_code',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
+  tripCode: string;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;

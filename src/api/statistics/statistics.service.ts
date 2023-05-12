@@ -197,9 +197,6 @@ export class StatisticsService {
     const newEndDate = endDate
       ? moment(endDate).endOf('day').toDate()
       : moment().endOf('day').toDate();
-    console.log('newStartDate', newStartDate);
-    console.log('newEndDate', newEndDate);
-
     const queryBuilder = await this.orderRepository
       .createQueryBuilder('q')
       .innerJoin('q.orderDetails', 'od')
@@ -241,10 +238,6 @@ export class StatisticsService {
         'tr.startDate as startDate',
         'tr.endDate as endDate',
         'tr.status as status',
-        'COUNT(t.id) as totalTickets',
-        'sum(q.total) as totalRevenue',
-        'sum(q.finalTotal) as finalTotalRevenue',
-        'sum(q.total - q.finalTotal) as totalDiscount',
         'fs.id as fromStationId',
         'fs.code as fromStationCode',
         'fs.name as fromStationName',
@@ -257,34 +250,71 @@ export class StatisticsService {
       .andWhere('t.deletedAt IS NULL')
       .andWhere('trd.deletedAt IS NULL')
       .groupBy('tr.id')
-      .orderBy('totalTickets', 'DESC')
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10);
-    console.log('queryBuilder.getQuery()', queryBuilder.getQuery());
-
     const result = await queryBuilder.getRawMany();
-    return result.map((item) => ({
-      id: item.id,
-      code: item.code,
-      name: item.name,
-      startDate: item.startDate,
-      endDate: item.endDate,
-      status: item.status,
-      totalTickets: parseInt(item.totalTickets),
-      totalRevenue: parseFloat(item.totalRevenue),
-      finalTotalRevenue: parseFloat(item.finalTotalRevenue),
-      totalDiscount: parseFloat(item.totalDiscount),
-      fromStation: {
-        id: item['fromStationId'],
-        code: item['fromStationCode'],
-        name: item['fromStationName'],
-      },
-      toStation: {
-        id: item['toStationId'],
-        code: item['toStationCode'],
-        name: item['toStationName'],
-      },
-    }));
+
+    const order = await this.orderRepository
+      .createQueryBuilder('q')
+      .where('q.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+      .groupBy('q.tripCode')
+      .select([
+        'sum(q.total) as totalRevenue',
+        'sum(q.finalTotal) as finalTotalRevenue',
+        'sum(q.total - q.finalTotal) as totalDiscount',
+        'q.tripCode as tripCode',
+      ])
+      .getRawMany();
+
+    const totalTickets = await this.orderRepository
+      .createQueryBuilder('q')
+      .innerJoin('q.orderDetails', 'od')
+      .where('q.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+      .groupBy('q.tripCode')
+      .select(['COUNT(od.id) as totalTickets', 'q.tripCode as tripCode'])
+      .getRawMany();
+
+    // mapping result, totalTickets, order
+    const data = result.map((item) => {
+      const revenue = order.find(
+        (orderItem) => orderItem.tripCode === item.code,
+      );
+      const total = totalTickets.find(
+        (ticketsItem) => ticketsItem.tripCode === item.code,
+      );
+
+      return {
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        startDate: item.startDate,
+        endDate: item.endDate,
+        status: item.status,
+        totalTickets: total ? total.totalTickets : 0,
+        totalRevenue: revenue ? revenue.totalRevenue : 0,
+        finalTotalRevenue: revenue ? revenue.finalTotalRevenue : 0,
+        totalDiscount: revenue ? revenue.totalDiscount : 0,
+        fromStation: {
+          id: item['fromStationId'],
+          code: item['fromStationCode'],
+          name: item['fromStationName'],
+        },
+        toStation: {
+          id: item['toStationId'],
+          code: item['toStationCode'],
+          name: item['toStationName'],
+        },
+      };
+    });
+    return data;
   }
 
   // tính doanh thu theo khách hàng trong khoảng thời gian a -> b
