@@ -333,9 +333,6 @@ export class TripService {
     if (!trip) {
       throw new BadRequestException('TRIP_NOT_FOUND');
     }
-    if (trip.status === ActiveStatusEnum.ACTIVE) {
-      throw new BadRequestException('TRIP_IS_ACTIVE');
-    }
     if (name) {
       trip.name = name;
     }
@@ -346,35 +343,41 @@ export class TripService {
     const currentDate = moment().startOf('day').toDate();
     if (startDate) {
       const newStartDate = moment(startDate).startOf('day').toDate();
-      if (newStartDate <= currentDate) {
-        throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
+      const oldStartDate = moment(trip.startDate).startOf('day').toDate();
+      if (newStartDate.getTime() !== oldStartDate.getTime()) {
+        if (newStartDate <= currentDate) {
+          throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
+        }
+        if (
+          (endDate && newStartDate > endDate) ||
+          (!endDate && newStartDate > trip.endDate)
+        ) {
+          throw new BadRequestException(
+            'END_DATE_MUST_BE_GREATER_THAN_START_DATE',
+          );
+        }
+        trip.startDate = newStartDate;
       }
-      if (
-        (endDate && newStartDate > endDate) ||
-        (!endDate && newStartDate > trip.endDate)
-      ) {
-        throw new BadRequestException(
-          'END_DATE_MUST_BE_GREATER_THAN_START_DATE',
-        );
-      }
-      trip.startDate = newStartDate;
     }
     if (endDate) {
       const newEndDate = moment(endDate).startOf('day').toDate();
-      if (newEndDate <= currentDate) {
-        throw new BadRequestException(
-          'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
-        );
+      const oldEndDate = moment(trip.endDate).startOf('day').toDate();
+      if (newEndDate.getTime() !== oldEndDate.getTime()) {
+        if (newEndDate < currentDate) {
+          throw new BadRequestException(
+            'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
+          );
+        }
+        if (
+          (startDate && newEndDate < startDate) ||
+          (!startDate && newEndDate < trip.startDate)
+        ) {
+          throw new BadRequestException(
+            'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
+          );
+        }
+        trip.endDate = newEndDate;
       }
-      if (
-        (startDate && newEndDate < startDate) ||
-        (!startDate && newEndDate < trip.startDate)
-      ) {
-        throw new BadRequestException(
-          'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_START_DATE',
-        );
-      }
-      trip.endDate = newEndDate;
     }
 
     if (fromStationId) {
