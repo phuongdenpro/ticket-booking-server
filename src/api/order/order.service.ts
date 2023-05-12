@@ -930,6 +930,7 @@ export class OrderService {
       return saveOrder;
     } catch (error) {
       await queryTickerDetail.rollbackTransaction();
+      await queryOrder.rollbackTransaction();
       throw new BadRequestException(error.message);
     }
   }
