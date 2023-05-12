@@ -63,12 +63,12 @@ import { OrderRefundModule } from './api/order-refund/order-refund.module';
     BookingModule,
     OrderModule,
     OrderRefundModule,
-    StatisticsModule,
-    UploadModule,
-    CallbackModule,
-    CronjobModule,
     PaymentModule,
     PaymentHistoryModule,
+    StatisticsModule,
+    CallbackModule,
+    CronjobModule,
+    UploadModule,
   ],
   providers: [
     {

@@ -30,7 +30,7 @@ export class SaveStationDto {
   })
   @IsNotEmpty({ message: 'CODE_IS_REQUIRED' })
   @IsString({ message: 'CODE_IS_STRING' })
-  @Length(1, 255, { message: 'CODE_BETWEEN_1_10_CHARACTERS' })
+  @Length(1, 100, { message: '  ' })
   code: string;
 
   @ApiProperty({ example: 26914 })

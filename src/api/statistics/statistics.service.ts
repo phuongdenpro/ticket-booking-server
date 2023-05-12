@@ -441,6 +441,7 @@ export class StatisticsService {
         'q.code as code',
         'q.email as email',
         'q.phone as phone',
+        'q.isManage as isManage',
         'SUM(o.total) as total',
         'SUM(o.finalTotal) as finalTotal',
         'SUM(o.total - o.finalTotal) as totalDiscount',

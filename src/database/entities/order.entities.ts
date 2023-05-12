@@ -40,34 +40,6 @@ export class Order {
   })
   paymentMethod: string;
 
-  @Column({
-    name: 'trans_Id',
-    type: 'varchar',
-    length: 100,
-    nullable: true,
-  })
-  transId: string;
-
-  @Column({
-    name: 'create_app_time',
-    type: 'varchar',
-    length: 100,
-    nullable: false,
-  })
-  createAppTime: string;
-
-  @Column({
-    name: 'zalo_trans_Id',
-    type: 'varchar',
-    length: 100,
-    nullable: true,
-    default: '',
-  })
-  zaloTransId: string;
-
-  @Column({ name: 'zalo_trans_time', type: 'timestamp', nullable: false })
-  paymentTime: Date;
-
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 
@@ -101,6 +73,6 @@ export class Order {
   )
   promotionHistories: PromotionHistory[];
 
-  @OneToMany(() => PaymentHistory, (paymentHistory) => paymentHistory.order)
-  paymentHistories: PaymentHistory[];
+  @OneToOne(() => PaymentHistory, (paymentHistory) => paymentHistory.order)
+  paymentHistory: PaymentHistory;
 }

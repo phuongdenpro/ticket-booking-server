@@ -98,33 +98,63 @@ export class VehicleService {
       floorNumber,
       totalSeat,
     } = dto;
-    const vehicleExist = await this.findOneVehicleByCode(code, {
-      withDeleted: true,
-    });
+    if (!code) {
+      throw new BadRequestException('VEHICLE_CODE_REQUIRED');
+    }
+    const vehicleExist = await this.findOneVehicleByCode(code);
     if (vehicleExist) {
       throw new BadRequestException('VEHICLE_CODE_ALREADY_EXIST');
     }
 
     const vehicle = new Vehicle();
     vehicle.code = code;
+    if (!name) {
+      throw new BadRequestException('NAME_IS_REQUIRED');
+    }
     vehicle.name = name;
-    vehicle.description = description;
+    vehicle.description = description || '';
 
     if (!type) {
       throw new BadRequestException('VEHICLE_TYPE_REQUIRED');
     }
-    vehicle.type = type;
+    switch (type) {
+      case VehicleTypeEnum.LIMOUSINE:
+      case VehicleTypeEnum.SEAT_BUS:
+      case VehicleTypeEnum.SLEEPER_BUS:
+        vehicle.type = type;
+        break;
+      default:
+        throw new BadRequestException('VEHICLE_TYPE_IS_ENUM');
+    }
+    if (!licensePlate) {
+      throw new BadRequestException('LICENSE_PLATE_REQUIRED');
+    }
     if (licensePlate.match(LICENSE_PLATE_REGEX)) {
       vehicle.licensePlate = licensePlate;
     } else {
       throw new BadRequestException('LICENSE_PLATE_INVALID');
+    }
+    if (!floorNumber) {
+      throw new BadRequestException('LICENSE_PLATE_REQUIRED');
     }
     if (floorNumber == 1 || floorNumber == 2) {
       vehicle.floorNumber = floorNumber;
     } else {
       throw new BadRequestException('FLOOR_NUMBER_INVALID');
     }
-    vehicle.totalSeat = totalSeat;
+    if (!totalSeat && totalSeat !== 0) {
+      throw new BadRequestException('VEHICLE_TOTAL_SEAT_IS_REQUIRE');
+    }
+    switch (totalSeat) {
+      case 28:
+      case 34:
+      case 44:
+        vehicle.totalSeat = totalSeat;
+        break;
+      default:
+        throw new BadRequestException('VEHICLE_TOTAL_SEAT_IS_ENUM');
+        break;
+    }
 
     const adminExist = await this.dataSource
       .getRepository(Staff)

@@ -63,6 +63,9 @@ export class OrderDetail {
   @JoinColumn({ name: 'ticket_detail_id', referencedColumnName: 'id' })
   ticketDetail: TicketDetail;
 
-  @OneToOne(() => OrderDetail, (orderDetail) => orderDetail.orderRefundDetail)
+  @OneToOne(
+    () => OrderRefundDetail,
+    (orderDetailRefund) => orderDetailRefund.orderDetail,
+  )
   orderRefundDetail: OrderRefundDetail;
 }

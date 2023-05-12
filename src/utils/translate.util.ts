@@ -54,6 +54,11 @@ export const mappingTranslate = {
   LIST_ITEM_IS_STRING: 'Id/code trong danh sách phải là chuỗi ký tự',
   LIST_IS_ARRAY: 'Danh sách phải là mảng',
   INTERNAL_SERVER_ERROR: 'Lỗi hệ thống',
+  ID_REQUIRED: 'Id không được để trống',
+  CODE_REQUIRED: 'Mã không được để trống',
+  PHONE_REQUIRED: 'Số điện thoại không được để trống',
+  EMAIL_REQUIRED: 'Email không được để trống',
+  REFRESH_TOKEN_REQUIRED: 'Refresh token không được để trống',
 
   // file
   FILE_NOT_FOUND: 'Không tìm thấy file',
@@ -107,6 +112,9 @@ export const mappingTranslate = {
   OTP_IS_STRING: 'Mã OTP phải là chuỗi ký tự',
   OTP_IS_REQUIRED: 'Mã OTP không được để trống',
   SEND_OTP_FAILED: 'Gửi mã OTP thất bại',
+  CREATOR_NOT_FOUND: 'Admin không tồn tại',
+  CREATOR_IS_INACTIVE: 'tài khoản Admin này không còn hoạt động',
+  CREATOR_ID_REQUIRED: 'Id Admin không được để trống',
 
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',
@@ -250,6 +258,8 @@ export const mappingTranslate = {
   TRIP_STATUS_IS_STRING: 'Trạng thái tuyến đi phải là chuỗi ký tự',
   START_DATE_IS_DATE: 'Ngày bắt đầu phải là ngày',
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
+  START_DATE_NOT_MORE_THAN_7_DAYS_FROM_END_DATE:
+    'Ngày bắt đầu không được quá 7 ngày so với ngày kết thúc',
 
   // trip detail
   DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_CURRENT_DATE_PLUS_15_MINUTES:
@@ -568,7 +578,7 @@ export const mappingTranslate = {
   ORDER_NOT_FOUND: 'Không tìm thấy hoá đơn',
   ORDER_ALREADY_CANCEL: 'Hoá đơn đã bị hủy',
   ORDER_ALREADY_PAID: 'Hoá đơn đã thanh toán',
-  ORDER_ALREADY_RETURNED: 'Hoá đơn đã huỷ và tra lại vé',
+  ORDER_ALREADY_RETURNED: 'Hoá đơn đã huỷ và trả lại vé',
   ORDER_NOT_PAID: 'Hoá đơn chưa thanh toán',
   ORDER_NOT_BELONG_TO_USER: 'Hoá đơn không thuộc về người dùng',
   ORDER_CODE_IS_REQUIRED: 'Mã đơn hàng không được để trống',
@@ -591,6 +601,8 @@ export const mappingTranslate = {
   ORDER_CANNOT_CANCEL_12H_BEFORE:
     'Không thể huỷ vé trước 12 tiếng so với giờ khởi hàng, hãy đến trực tiếp phòng vé để huỷ',
   ORDER_CANNOT_CANCEL_AFTER_DEPARTURE: 'Không thể huỷ vé sau khi khởi hành',
+  ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE: 'Không thể thanh toán vé sau khi khởi hành',
+  ORDER_NOT_CANCELLED: 'Hãy liên hệ với phòng vé gần nhất để được hỗ trợ huỷ vé',
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',
@@ -614,6 +626,7 @@ export const mappingTranslate = {
   PAYMENT_METHOD_NOT_FOUND: 'Không tìm thấy phương thức thanh toán',
   PAYMENT_METHOD_IS_REQUIRED: 'Phương thức thanh toán không được để trống',
   PAYMENT_METHOD_IS_ENUM: 'Phương thức thanh toán không hợp lệ',
+  PAYMENT_METHOD_NOT_ZALOPAY: 'Phương thức thanh toán không phải là zalopay',
 
   // order refund
   CREATE_ORDER_REFUND_DETAIL_FAILED: 'Tạo hoá đơn hoàn trả thất bại',
@@ -634,11 +647,42 @@ export const mappingTranslate = {
   // payment
   CONNECT_ZALOPAY_FAIL: 'Kết nối với ZaloPay thất bại',
   APP_TRANS_ID_REQUIRED: 'AppTransId không được để trống',
+  APP_TRANS_ID_STRING: 'AppTransId phải là chuỗi ký tự',
   APP_TIME_MUST_BE_NUMBER: 'AppTime phải là số',
+  APP_TIME_MUST_BE_STRING: 'AppTime phải là chuỗi ký tự',
+  APP_TIME_ID_REQUIRED: 'AppTimeId không được để trống',
+  ZALO_TRANS_ID_REQUIRED: 'ZaloTransId không được để trống',
+  ZALO_TRANS_ID_STRING: 'ZaloTransId phải là chuỗi ký tự',
+  PAYMENT_TIME_ID_REQUIRED: 'PaymentTimeId không được để trống',
+  PAYMENT_TIME_ID_STRING: 'PaymentTimeId phải là chuỗi ký tự',
   PAYMENT_FAILED: 'Thanh toán thất bại',
   PAYMENT_FAIL: 'Thanh toán thất bại',
   PAYMENT_NOT_COMPLETE: 'Chưa thực hiện thanh toán',
   TRANSACTION_ID_REQUIRED: 'Hoá đơn này chưa từng được thanh toán',
+  AMOUNT_IS_NOT_EMPTY: 'Số tiền không được để trống',
+  AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0: 'Số tiền phải lớn hơn hoặc bằng 0',
+
+  // payment history
+  PAYMENT_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử thanh toán',
+  PAYMENT_HISTORY_CODE_IS_REQUIRED: 'Mã thanh toán không được để trống',
+  ZALO_TRANS_ID_IS_REQUIRED: 'ZaloTransId không được để trống',
+  PAYMENT_HISTORY_STATUS_IS_ENUM: 'Trạng thái thanh toán không hợp lệ',
+  PAYMENT_TIME_IS_DATE: 'PaymentTime phải là ngày tháng',
+  PAYMENT_HISTORY_IS_SUCCESS: 'lần thanh toán này đã thành công',
+  PAYMENT_HISTORY_IS_FAILED: 'lần thanh toán này đã thất bại',
+  PAYMENT_HISTORY_TYPE_IS_REQUIRED:
+    'Loại Lịch sử thanh toán DTO không được để trống',
+  PAYMENT_HISTORY_TYPE_IS_ENUM: 'Loại Lịch sử thanh toán DTO không hợp lệ',
+  PAYMENT_HISTORY_ID_IS_REQUIRED: 'Id Lịch sử thanh toán không được để trống',
+  CUSTOMER_CODE_IS_STRING: 'Mã khách hàng phải là chuỗi ký tự',
+  STAFF_CODE_IS_STRING: 'Mã nhân viên phải là chuỗi ký tự',
+  FROM_DATE_PAYMENT_TIME_IS_DATE: 'Từ ngày thanh toán phải là ngày tháng',
+  TO_DATE_PAYMENT_TIME_IS_DATE: 'Đến ngày thanh toán phải là ngày tháng',
+  MIN_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền tối thiểu phải lớn hơn hoặc bằng 0',
+  MAX_AMOUNT_MUST_BE_GREATER_THAN_OR_EQUAL_TO_0:
+    'Số tiền tối đa phải lớn hơn hoặc bằng 0',
+  PAYMENT_HISTORY_NOT_SUCCESS: 'Thanh toán hoá đơn này chưa thành công',
 
   // cron job
   SECRET_KEY_IS_NOT_VALID: 'secret key không hợp lệ',

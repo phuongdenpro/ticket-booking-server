@@ -17,6 +17,7 @@ import {
   TripDetailDeleteMultiInput,
   UpdateTripDetailDto,
   FilterTripDetailDto,
+  BusScheduleDto,
 } from './dto';
 import {
   DeleteDtoTypeEnum,
@@ -668,5 +669,84 @@ export class TripDetailService {
     } catch (err) {
       throw new BadRequestException(err.message);
     }
+  }
+
+  async getBusSchedule(dto: BusScheduleDto, userId: string) {
+    const adminExist = await this.dataSource
+      .getRepository(Staff)
+      .findOne({ where: { id: userId } });
+    if (!adminExist) {
+      throw new UnauthorizedException('USER_NOT_FOUND');
+    }
+    if (!adminExist.isActive) {
+      throw new UnauthorizedException('USER_NOT_ACTIVE');
+    }
+
+    const { startDate, endDate, status, tripCode } = dto;
+
+    if (!startDate) {
+      throw new BadRequestException('START_DATE_IS_REQUIRED');
+    }
+    if (!endDate) {
+      throw new BadRequestException('END_DATE_IS_REQUIRED');
+    }
+    if (startDate > endDate) {
+      throw new BadRequestException('START_DATE_MUST_BE_BEFORE_END_DATE');
+    }
+    const newStartDate = moment(startDate).startOf('day').toDate();
+    const newEndDate = moment(endDate).endOf('day').toDate();
+    // startDate not more than 7 days from endDate
+    if (moment(newEndDate).diff(moment(newStartDate), 'days') > 7) {
+      throw new BadRequestException('START_DATE_NOT_MORE_THAN_7_DAYS_FROM_END_DATE');
+    }
+
+    const trips = await this.tripDetailRepository
+      .createQueryBuilder('q')
+      .leftJoinAndSelect('q.trip', 'trip')
+      .leftJoinAndSelect('q.vehicle', 'vehicle')
+      .where('q.departureTime BETWEEN :startDate AND :endDate', {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      });
+
+    if (tripCode) {
+      trips.andWhere('trip.code = :tripCode', { tripCode });
+    }
+
+    if (status) {
+      trips.andWhere('q.status = :status', { status });
+    }
+
+    const data = await trips.getMany();
+
+    const dataResult = data.map((item) => {
+      return {
+        id: item.id,
+        code: item.code,
+        departureTime: item.departureTime,
+        expectedTime: item.expectedTime,
+        status: item.status,
+        createdAt: item.createdAt,
+        updatedAt: item.updatedAt,
+        trip: {
+          id: item.trip.id,
+          code: item.trip.code,
+          name: item.trip.name,
+          status: item.trip.status,
+        },
+        vehicle: {
+          id: item.vehicle.id,
+          code: item.vehicle.code,
+          name: item.vehicle.name,
+          status: item.vehicle.status,
+          type: item.vehicle.type,
+          licensePlate: item.vehicle.licensePlate,
+          floorNumber: item.vehicle.floorNumber,
+          totalSeat: item.vehicle.totalSeat,
+        },
+      };
+    });
+
+    return { dataResult, total: dataResult.length };
   }
 }

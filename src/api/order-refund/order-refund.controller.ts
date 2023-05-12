@@ -32,15 +32,6 @@ export class OrderRefundController {
     return await this.orderService.getOrderRefundStatus();
   }
 
-  @Get('code/:code')
-  @HttpCode(HttpStatus.OK)
-  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async getOrderByCode(@Param('code') code: string) {
-    return await this.orderService.getOrderRefundByCode(code);
-  }
-
   @Get()
   @HttpCode(HttpStatus.OK)
   @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
@@ -52,6 +43,15 @@ export class OrderRefundController {
     @GetPagination() pagination?: Pagination,
   ) {
     return await this.orderService.findAllOrderRefund(dto, user.id, pagination);
+  }
+
+  @Get('code/:code')
+  @HttpCode(HttpStatus.OK)
+  @Roles(RoleEnum.STAFF, RoleEnum.CUSTOMER)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async getOrderByCode(@Param('code') code: string) {
+    return await this.orderService.getOrderRefundByCode(code);
   }
 
   @Patch('id/:id')

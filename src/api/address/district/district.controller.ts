@@ -1,3 +1,4 @@
+import { DataSource } from 'typeorm';
 import { JwtAuthGuard } from './../../../auth/guards';
 import { RoleEnum, DeleteDtoTypeEnum } from './../../../enums';
 import { DistrictService } from './district.service';
@@ -27,11 +28,16 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import axios from 'axios';
+import { Province } from './../../../database/entities';
 
 @Controller('district')
 @ApiTags('District')
 export class DistrictController {
-  constructor(private districtService: DistrictService) {}
+  constructor(
+    private districtService: DistrictService,
+    private dataSource: DataSource,
+  ) {}
 
   @Get()
   @HttpCode(HttpStatus.OK)
@@ -152,19 +158,29 @@ export class DistrictController {
   // @Get('crawl')
   // @HttpCode(HttpStatus.OK)
   // async crawlData(@GetPagination() pagination?: Pagination) {
-  //   const districts = await this.districtService.findAll({}, pagination);
-  //   console.log(districts.dataResult);
-  //   districts.dataResult.forEach(async (district) => {
-  //     const url = `https://provinces.open-api.vn/api/d/${district.code}`;
+  //   const provinces = await this.dataSource.getRepository(Province).find({
+  //     order: {
+  //       code: 'ASC',
+  //     },
+  //     skip: pagination.skip,
+  //     take: pagination.take,
+  //   });
+  //   provinces.forEach(async (province) => {
+  //     const url = `https://provinces.open-api.vn/api/p/${province.code}?depth=2`;
   //     const response = await axios.get(url);
-
-  //     const dto = new UpdateDistrictDto();
-  //     dto.codename = response.data.codename;
-  //     await this.districtService.updateByCode(
-  //       district.code,
-  //       dto,
-  //       '08926136-26d8-4176-827e-060cc7e6285d',
-  //     );
+  //     const districts = response.data.districts;
+  //     districts.forEach(async (district) => {
+  //       const dto = new SaveDistrictDto();
+  //       dto.code = district.code;
+  //       dto.codename = district.codename;
+  //       dto.name = district.name;
+  //       dto.provinceCode = province.code;
+  //       dto.type = district.division_type;
+  //       await this.districtService.createDistrict(
+  //         dto,
+  //         '08926136-26d8-4176-827e-060cc7e6285d',
+  //       );
+  //     });
   //   });
   // }
 }

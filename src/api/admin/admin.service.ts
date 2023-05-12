@@ -48,6 +48,7 @@ export class AdminService {
         birthDay: true,
         code: true,
         createdAt: true,
+        isManage: true,
         ...options?.select,
       },
       ...options?.other,
@@ -55,6 +56,9 @@ export class AdminService {
   }
 
   async findOneById(id: string, options?: any) {
+    if (!id) {
+      throw new BadRequestException('ID_REQUIRED');
+    }
     if (options) {
       options.where = { id, ...options?.where };
     } else {
@@ -64,6 +68,9 @@ export class AdminService {
   }
 
   async findOneByPhone(phone: string, options?: any) {
+    if (!phone) {
+      throw new BadRequestException('PHONE_REQUIRED');
+    }
     if (options) {
       options.where = { phone, ...options?.where };
     } else {
@@ -74,6 +81,9 @@ export class AdminService {
   }
 
   async findOneByEmail(email: string, options?: any) {
+    if (!email) {
+      throw new BadRequestException('EMAIL_REQUIRED');
+    }
     if (options) {
       options.where = { email, ...options?.where };
     } else {
@@ -84,6 +94,9 @@ export class AdminService {
   }
 
   async findOneByRefreshToken(refreshToken: string, options?: any) {
+    if (!refreshToken) {
+      throw new BadRequestException('REFRESH_TOKEN_REQUIRED');
+    }
     if (options) {
       options.where = {
         refreshToken,
@@ -201,27 +214,25 @@ export class AdminService {
     if (!staff) {
       throw new BadRequestException('USER_NOT_FOUND');
     }
-    if (type) {
-      throw new BadRequestException('OTP_TYPE_IS_REQUIRED');
-    }
     this.checkOTP(otp, staff.otpCode, staff.otpExpired);
     let saveStaff: Staff;
-    if (type === ActiveOtpTypeEnum.ACTIVE) {
-      saveStaff = await this.updateActive(staff.id);
-    } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
-      saveStaff = await this.updateOtp(
-        staff.id,
-        null,
-        null,
-        ActiveOtpTypeEnum.RESET_PASSWORD,
-      );
-    }
+    let message = 'xác thực đặt lại mật khẩu thành công';
+    // if (type === ActiveOtpTypeEnum.ACTIVE) {
+    //   saveStaff = await this.updateActive(staff.id);
+    // } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
+    // }
+    saveStaff = await this.updateOtp(
+      staff.id,
+      null,
+      null,
+      ActiveOtpTypeEnum.RESET_PASSWORD,
+    );
 
     return {
       customer: {
         id: saveStaff.id,
       },
-      message: 'Kích hoạt tài khoản thành công',
+      message,
     };
   }
 

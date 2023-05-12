@@ -21,8 +21,9 @@ import {
   OrderCustomerSearch,
 } from './dto';
 import { UpdateCustomerDto, UserUpdatePasswordDto } from '../user/dto';
-import * as bcrypt from 'bcrypt';
 import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
+import { EMAIL_REGEX, PHONE_REGEX, generateCustomerCode } from './../../utils';
+import * as bcrypt from 'bcrypt';
 import * as moment from 'moment';
 
 @Injectable()
@@ -35,6 +36,7 @@ export class CustomerService {
 
   private selectFieldsWithQ = [
     'u.id',
+    'u.code',
     'u.lastLogin',
     'u.status',
     'u.phone',
@@ -114,6 +116,7 @@ export class CustomerService {
       where: { ...options?.where },
       select: {
         id: true,
+        code: true,
         lastLogin: true,
         status: true,
         phone: true,
@@ -183,10 +186,25 @@ export class CustomerService {
   }
 
   async findOneById(id: string, options?: any) {
+    if (!id) {
+      throw new BadRequestException('ID_REQUIRED');
+    }
     if (options) {
       options.where = { id, ...options?.where };
     } else {
       options = { where: { id } };
+    }
+    return await this.findOneCustomer(options);
+  }
+
+  async findOneByCode(code: string, options?: any) {
+    if (!code) {
+      throw new BadRequestException('CODE_REQUIRED');
+    }
+    if (options) {
+      options.where = { code, ...options?.where };
+    } else {
+      options = { where: { code } };
     }
     return await this.findOneCustomer(options);
   }
@@ -455,8 +473,22 @@ export class CustomerService {
     if (!adminExist.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
+    let code = generateCustomerCode();
+    let flag = true;
+    while (flag) {
+      const customerExist = await this.findOneByCode(code);
+      if (!customerExist) {
+        flag = false;
+      } else {
+        code = generateCustomerCode();
+      }
+    }
 
     const customer = new Customer();
+    customer.code = code;
+    if (!fullName) {
+      throw new BadRequestException('FULL_NAME_IS_REQUIRED');
+    }
     customer.fullName = fullName;
     customer.note = note;
     switch (gender) {
@@ -470,17 +502,30 @@ export class CustomerService {
         break;
     }
     if (birthday) {
+      const dateObj = new Date(birthday);
+      if (isNaN(dateObj.valueOf())) {
+        throw new BadRequestException('INVALID_DATE');
+      }
       customer.birthday = birthday;
     } else {
       customer.birthday = moment().startOf('day').toDate();
     }
 
     if (email) {
+      if (!email.match(EMAIL_REGEX)) {
+        throw new BadRequestException('INVALID_EMAIL');
+      }
       const userEmailExist = await this.findOneByEmail(email);
       if (userEmailExist) {
         throw new BadRequestException('EMAIL_ALREADY_EXIST');
       }
       customer.email = email;
+    }
+    if (!phone) {
+      throw new BadRequestException('PHONE_IS_REQUIRED');
+    }
+    if (!phone.match(PHONE_REGEX)) {
+      throw new BadRequestException('INVALID_PHONE_NUMBER');
     }
 
     const userPhoneExist = await this.findOneByPhone(phone);
@@ -488,6 +533,9 @@ export class CustomerService {
       throw new BadRequestException('PHONE_ALREADY_EXIST');
     }
     customer.phone = phone;
+    if (!wardCode && wardCode !== 0) {
+      throw new BadRequestException('WARD_CODE_IS_REQUIRED');
+    }
     const ward = await this.dataSource.getRepository(Ward).findOne({
       where: {
         code: wardCode,

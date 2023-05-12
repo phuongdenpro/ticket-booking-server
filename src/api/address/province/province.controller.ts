@@ -28,6 +28,7 @@ import {
   UpdateProvinceDto,
   ProvinceDeleteMultiId,
 } from './dto';
+import axios from 'axios';
 
 @Controller('province')
 @ApiTags('Province')
@@ -144,14 +145,13 @@ export class ProvinceController {
   //     const { codename, code, division_type, name } = element;
   //     console.log(codename, code);
 
-  //     const dto: UpdateProvinceDto = {
-  //       codename: codename,
+  //     const dto: SaveProvinceDto = {
   //       name: name,
-  //       type: division_type,
+  //       codename: codename,
   //       code: code,
+  //       type: division_type,
   //     };
-  //     await this.updateByCode(
-  //       code,
+  //     await this.provinceService.createProvince(
   //       dto,
   //       '08926136-26d8-4176-827e-060cc7e6285d',
   //     );

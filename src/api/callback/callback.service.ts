@@ -1,8 +1,10 @@
 import {
   OrderStatusEnum,
+  PaymentHistoryStatusEnum,
   PaymentMethodEnum,
   SortEnum,
   TicketStatusEnum,
+  UpdatePayHTypeDtoEnum,
 } from './../../enums';
 import { Order, OrderDetail, TicketDetail } from './../../database/entities';
 import { BadRequestException, Injectable } from '@nestjs/common';
@@ -11,6 +13,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import * as CryptoJS from 'crypto-js';
 import * as moment from 'moment';
+import { PaymentHistoryService } from '../payment-history/payment-history.service';
+import { UpdatePaymentHistoryDto } from '../payment-history/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -18,6 +22,7 @@ export class CallbackService {
   constructor(
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
+    private readonly paymentHistoryService: PaymentHistoryService,
     private configService: ConfigService,
     private dataSource: DataSource,
   ) {}
@@ -92,34 +97,50 @@ export class CallbackService {
         // merchant cập nhật trạng thái cho đơn hàng
         const dataJson = JSON.parse(dataStr, config.key2);
         console.log(dataJson);
-        const { app_trans_id, item, zp_trans_id, server_time } = dataJson;
+        const { item, zp_trans_id, server_time } = dataJson;
         const itemJson = JSON.parse(item);
         const orderCode = itemJson[0].orderCode;
         const orderExist = await this.findOneOrderByCode(orderCode);
         if (orderExist) {
-          orderExist.transId = app_trans_id + '';
           orderExist.paymentMethod = PaymentMethodEnum.ZALOPAY;
           orderExist.status = OrderStatusEnum.PAID;
-          orderExist.zaloTransId = zp_trans_id + '';
-          orderExist.paymentTime = moment.unix(server_time / 1000).toDate();
           orderExist.updatedBy = orderExist.customer.id;
           orderExist.note = 'Thanh toán thành công';
 
-          await this.orderRepository.save(orderExist); // Lưu đơn hàng
-          const orderDetails: OrderDetail[] = orderExist.orderDetails; // Lấy chi tiết đơn hàng đã lưu
-          const ticketDetails = orderDetails.map(async (orderDetail) => {
-            let ticketDetail: TicketDetail = orderDetail.ticketDetail;
-            ticketDetail.status = TicketStatusEnum.SOLD;
-            ticketDetail = await this.dataSource
-              .getRepository(TicketDetail)
-              .save(ticketDetail); // Lưu chi tiết vé
-            delete ticketDetail.deletedAt;
-            return ticketDetail;
-          });
-          await Promise.all(ticketDetails); // Chờ tất cả các lệnh lưu chi tiết vé hoàn tất
-          result['return_code'] = 1;
-          result['return_message'] = 'success';
-          console.log('thanh toán thành công');
+          const paymentHistory =
+            await this.paymentHistoryService.findPaymentHByOrderCode(orderCode);
+
+          if (paymentHistory) {
+            const phDto = new UpdatePaymentHistoryDto();
+            phDto.status = PaymentHistoryStatusEnum.SUCCESS;
+            phDto.paymentMethod = PaymentMethodEnum.ZALOPAY;
+            phDto.zaloTransId = zp_trans_id;
+            phDto.paymentTime = new Date(server_time);
+            phDto.type = UpdatePayHTypeDtoEnum.UPDATE;
+            await this.paymentHistoryService.updatePaymentHistoryByOrderCode(
+              orderCode,
+              phDto,
+            );
+            await this.orderRepository.save(orderExist); // Lưu đơn hàng
+            const orderDetails: OrderDetail[] = orderExist.orderDetails; // Lấy chi tiết đơn hàng đã lưu
+            const ticketDetails = orderDetails.map(async (orderDetail) => {
+              let ticketDetail: TicketDetail = orderDetail.ticketDetail;
+              ticketDetail.status = TicketStatusEnum.SOLD;
+              ticketDetail = await this.dataSource
+                .getRepository(TicketDetail)
+                .save(ticketDetail); // Lưu chi tiết vé
+              delete ticketDetail.deletedAt;
+              return ticketDetail;
+            });
+            await Promise.all(ticketDetails); // Chờ tất cả các lệnh lưu chi tiết vé hoàn tất
+            result['return_code'] = 1;
+            result['return_message'] = 'success';
+            console.log('thanh toán thành công');
+          } else {
+            result['return_code'] = 0;
+            result['return_message'] = 'fail';
+            console.log('không tìm payment history');
+          }
         } else {
           result['return_code'] = 0;
           result['return_message'] = 'fail';

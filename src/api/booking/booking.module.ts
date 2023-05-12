@@ -16,6 +16,7 @@ import {
   PromotionHistory,
   OrderRefund,
   OrderRefundDetail,
+  PaymentHistory,
 } from './../../database/entities';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Module } from '@nestjs/common';
@@ -29,6 +30,7 @@ import { PriceListService } from '../price-list/price-list.service';
 import { PromotionLineService } from '../promotion-line/promotion-line.service';
 import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 import { PaymentService } from '../payment/payment.service';
+import { PaymentHistoryService } from '../payment-history/payment-history.service';
 
 @Module({
   imports: [
@@ -50,6 +52,7 @@ import { PaymentService } from '../payment/payment.service';
       PromotionLine,
       PromotionDetail,
       PromotionHistory,
+      PaymentHistory,
     ]),
   ],
   providers: [
@@ -63,6 +66,7 @@ import { PaymentService } from '../payment/payment.service';
     PriceListService,
     PromotionLineService,
     PromotionHistoryService,
+    PaymentHistoryService,
   ],
   controllers: [BookingController],
   exports: [BookingService],

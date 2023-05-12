@@ -1,6 +1,7 @@
 import { Pagination } from './../../decorator';
 import { TripDetailService } from './../trip-detail/trip-detail.service';
 import {
+  Customer,
   Order,
   OrderDetail,
   OrderRefund,
@@ -41,6 +42,7 @@ import {
   SortEnum,
   TicketStatusEnum,
   UserStatusEnum,
+  PaymentHistoryStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -58,6 +60,8 @@ import {
   UpdateOrderRefundDto,
 } from '../order-refund/dto';
 import { ConfigService } from '@nestjs/config';
+import { PaymentHistoryService } from '../payment-history/payment-history.service';
+import { CreatePaymentHistoryDto } from '../payment-history/dto';
 moment.locale('vi');
 
 @Injectable()
@@ -83,6 +87,7 @@ export class OrderService {
     private readonly priceListService: PriceListService,
     private readonly promotionLineService: PromotionLineService,
     private readonly promotionHistoryService: PromotionHistoryService,
+    private readonly paymentHService: PaymentHistoryService,
     private dataSource: DataSource,
     private configService: ConfigService,
   ) {}
@@ -118,6 +123,22 @@ export class OrderService {
     'ord.note',
     'ord.orderRefundCode',
     'ord.createdAt',
+    'c.id',
+    'c.code',
+    'c.status',
+    'c.fullName',
+    'c.gender',
+    'c.phone',
+    'c.email',
+    'c.fullAddress',
+    's.id',
+    's.code',
+    's.isActive',
+    's.fullName',
+    's.gender',
+    's.phone',
+    's.email',
+    's.address',
   ];
 
   // order
@@ -182,6 +203,7 @@ export class OrderService {
         },
         staff: {
           id: true,
+          code: true,
           isActive: true,
           phone: true,
           email: true,
@@ -191,6 +213,7 @@ export class OrderService {
         },
         customer: {
           id: true,
+          code: true,
           status: true,
           phone: true,
           email: true,
@@ -577,13 +600,19 @@ export class OrderService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const customer = await this.customerService.findOneById(customerId);
-    if (!customerId) {
-      throw new UnauthorizedException('CUSTOMER_NOT_FOUND');
+    let customer = new Customer();
+    if (admin) {
+      customer = await this.customerService.findOneById(customerId);
+      if (!customerId) {
+        throw new UnauthorizedException('CUSTOMER_NOT_FOUND');
+      }
+      if (customer && customer.status === UserStatusEnum.INACTIVATE) {
+        throw new BadRequestException('USER_NOT_ACTIVE');
+      }
+    } else {
+      customer = customerCreator;
     }
-    if (customer && customer.status === UserStatusEnum.INACTIVATE) {
-      throw new BadRequestException('USER_NOT_ACTIVE');
-    }
+
 
     // check trip detail
     const tripDetail = await this.tripDetailService.getTripDetailByCode(
@@ -760,15 +789,19 @@ export class OrderService {
     id?: string,
     code?: string,
   ) {
-    const admin = await this.adminService.findOneById(userId);
-    const customer = await this.customerService.findOneById(userId);
-
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
+    const admin = await this.adminService.findOneById(userId);
+    const customer = await this.customerService.findOneById(userId);
+    if (customer) {
+      throw new BadRequestException('ORDER_NOT_CANCELLED');
+    }
+
     if (
-      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      (admin && !admin.isActive)
+      // (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      admin &&
+      !admin.isActive
     ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
@@ -817,8 +850,6 @@ export class OrderService {
     try {
       switch (status) {
         case OrderUpdateStatusCustomerEnum.CANCEL:
-          order.createAppTime = '';
-          order.transId = '';
           if (order.status === OrderStatusEnum.PAID) {
             throw new BadRequestException('ORDER_ALREADY_PAID');
           }
@@ -862,6 +893,8 @@ export class OrderService {
             );
           }
           await this.createOrderRefund(order.code, userId);
+
+          // hoàn trả khuyến mãi
           if (promotionHistories && promotionHistories.length > 0) {
             const destroyPromotionHistories = promotionHistories.map(
               async (promotionHistory) => {
@@ -904,7 +937,7 @@ export class OrderService {
     if (!admin) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
-    if (admin && !admin.isActive) {
+    if (!admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
     const { orderCode } = dto;
@@ -912,10 +945,36 @@ export class OrderService {
       throw new BadRequestException('ORDER_CODE_REQUIRED');
     }
 
-    const orderExist = await this.findOneOrderByCode(orderCode);
+    const orderExist = await this.findOneOrderByCode(orderCode, {
+      relations: {
+        orderDetails: {
+          ticketDetail: {
+            seat: false,
+            ticket: {
+              tripDetail: {
+                trip: false,
+              },
+            },
+          },
+        },
+        staff: false,
+        customer: false,
+        promotionHistories: false,
+      },
+    });
     if (!orderExist) {
       throw new BadRequestException('ORDER_NOT_FOUND');
     }
+
+    const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
+    const tripDetail: TripDetail =
+      orderExist.orderDetails[0].ticketDetail.ticket.tripDetail;
+    const departureTime = tripDetail.departureTime;
+    const timeDiff = moment(departureTime).diff(currentDate, 'hours');
+    if (timeDiff <= 0) {
+      throw new BadRequestException('ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE');
+    }
+
     switch (orderExist.status) {
       case OrderStatusEnum.PAID:
         throw new BadRequestException('ORDER_ALREADY_PAID');
@@ -928,8 +987,14 @@ export class OrderService {
     }
     orderExist.status = OrderStatusEnum.PAID;
     orderExist.paymentMethod = PaymentMethodEnum.CASH;
-    orderExist.transId = `CASH_${orderCode}`;
-    orderExist.createAppTime = '';
+    const phDto = new CreatePaymentHistoryDto();
+    phDto.amount = orderExist.finalTotal;
+    phDto.createAppTime = Date.now();
+    phDto.orderCode = orderCode;
+    phDto.paymentMethod = PaymentMethodEnum.CASH;
+    phDto.status = PaymentHistoryStatusEnum.SUCCESS;
+    phDto.transId = `CASH_${orderCode}`;
+    await this.paymentHService.createPaymentHistory(phDto, userId);
 
     orderExist.updatedBy = userId;
     await this.orderRepository.save(orderExist);
@@ -1151,8 +1216,17 @@ export class OrderService {
     userId: string,
     pagination?: Pagination,
   ) {
-    const { keywords, status, startDate, endDate, minTotal, maxTotal, sort } =
-      dto;
+    const {
+      keywords,
+      status,
+      startDate,
+      endDate,
+      minTotal,
+      maxTotal,
+      sort,
+      customerCode,
+      staffCode,
+    } = dto;
     const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
     if (!userId) {
@@ -1198,14 +1272,25 @@ export class OrderService {
       query.andWhere('q.total <= :maxTotal', { maxTotal });
     }
     if (customer) {
-      query.andWhere('q.createdBy = :customerId', { customerId: userId });
+      query.andWhere('q.customerCode = :customerCode', {
+        customerCode: customer.code,
+      });
+    }
+    if (!customer && customerCode) {
+      query.andWhere('q.customerCode = :customerCode', { customerCode });
+    }
+    if (staffCode) {
+      query.andWhere('q.staffCode = :staffCode', { staffCode });
     }
     query
       .orderBy('q.createdAt', sort || SortEnum.DESC)
+      .addOrderBy('q.total', SortEnum.ASC)
       .addOrderBy('q.code', SortEnum.ASC);
 
     const dataResult = await query
       .leftJoinAndSelect('q.orderRefundDetails', 'ord')
+      .leftJoinAndSelect('q.customer', 'c')
+      .leftJoinAndSelect('q.staff', 's')
       .select(this.selectFieldsOrderRefundWithQ)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10)
@@ -1216,20 +1301,20 @@ export class OrderService {
     return { dataResult, total, pagination };
   }
 
-  async createOrderRefund(orderCode: string, userId: string, order?: Order) {
-    const admin = await this.adminService.findOneById(userId);
-    const customer = await this.customerService.findOneById(userId);
+  async createOrderRefund(orderCode: string, userId: string) {
+    const adminExist = await this.adminService.findOneById(userId);
+    const customerExist = await this.customerService.findOneById(userId);
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
     if (
-      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      (admin && !admin.isActive)
+      (customerExist && customerExist.status === UserStatusEnum.INACTIVATE) ||
+      (adminExist && !adminExist.isActive)
     ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    const orderExist = order || (await this.findOneOrderByCode(orderCode));
+    const orderExist = await this.findOneOrderByCode(orderCode);
     if (!orderExist) {
       throw new BadRequestException('ORDER_NOT_FOUND');
     }
@@ -1240,6 +1325,9 @@ export class OrderService {
         break;
       case OrderStatusEnum.UNPAID:
         throw new BadRequestException('ORDER_IS_UNPAID');
+        break;
+      case OrderStatusEnum.RETURNED:
+        throw new BadRequestException('ORDER_IS_RETURNED');
         break;
       default:
         break;
@@ -1256,10 +1344,15 @@ export class OrderService {
     orderRefund.orderCode = orderExist.code;
     orderRefund.code = orderExist.code;
     orderRefund.total = orderExist.finalTotal;
-    if (customer) {
-      orderRefund.createdBy = customer.id;
+    const customer = orderExist.customer;
+    orderRefund.customerCode = customer.code;
+    orderRefund.customer = customer;
+    if (customerExist) {
+      orderRefund.createdBy = customerExist.id;
     } else {
-      orderRefund.createdBy = admin.id;
+      orderRefund.staffCode = adminExist.code;
+      orderRefund.staff = adminExist;
+      orderRefund.createdBy = adminExist.id;
     }
     orderRefund.status = OrderRefundStatusEnum.PENDING;
     const promotionHistories = orderExist.promotionHistories;
