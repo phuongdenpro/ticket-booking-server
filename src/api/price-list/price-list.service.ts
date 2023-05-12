@@ -232,6 +232,7 @@ export class PriceListService {
     }
 
     const newStartDate = moment(startDate).startOf('day').toDate();
+    console.log(newStartDate);
     const currentDate = moment().startOf('day').toDate();
     if (newStartDate <= currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');

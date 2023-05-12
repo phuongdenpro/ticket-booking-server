@@ -21,7 +21,7 @@ export class AdminLoginDto {
   @IsOptional()
   phone: string;
 
-  @ApiProperty({ example: '123456' })
+  @ApiProperty({ example: '12345678' })
   @IsNotEmpty({ message: 'PASSWORD_IS_REQUIRED' })
   @IsString({ message: 'PASSWORD_IS_STRING' })
   @MinLength(6, { message: 'PASSWORD_IS_MIN_LENGTH_6' })

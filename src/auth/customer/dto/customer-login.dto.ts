@@ -10,17 +10,17 @@ import {
 } from 'class-validator';
 
 export class CustomerLoginDto {
-  @ApiPropertyOptional({ example: '0354043345' })
-  @IsString({ message: 'PHONE_IS_STRING' })
-  @IsPhoneNumber('VN', { message: 'INVALID_PHONE_NUMBER' })
-  @IsOptional()
-  phone: string;
-
   @ApiPropertyOptional({ example: 'superman@gmail.com' })
   @IsString({ message: 'EMAIL_IS_STRING' })
   @IsEmail({}, { message: 'EMAIL_INVALID' })
   @IsOptional()
   email: string;
+  
+  @ApiPropertyOptional({ example: '0354043345' })
+  @IsString({ message: 'PHONE_IS_STRING' })
+  @IsPhoneNumber('VN', { message: 'INVALID_PHONE_NUMBER' })
+  @IsOptional()
+  phone: string;
 
   @ApiProperty({ example: '12345678' })
   @IsNotEmpty({ message: 'PASSWORD_IS_REQUIRED' })

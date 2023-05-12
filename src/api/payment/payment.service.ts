@@ -187,6 +187,7 @@ export class PaymentService {
         callback_url: this.configService.get('CALLBACK_URL'),
         mac: '',
       };
+
       const data =
         config.app_id +
         '|' +

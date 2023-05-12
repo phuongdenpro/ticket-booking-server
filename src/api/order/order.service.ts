@@ -613,7 +613,6 @@ export class OrderService {
       customer = customerCreator;
     }
 
-
     // check trip detail
     const tripDetail = await this.tripDetailService.getTripDetailByCode(
       tripDetailCode,
@@ -794,14 +793,9 @@ export class OrderService {
     }
     const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
-    if (customer) {
-      throw new BadRequestException('ORDER_NOT_CANCELLED');
-    }
-
     if (
-      // (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      admin &&
-      !admin.isActive
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
     ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
@@ -832,6 +826,11 @@ export class OrderService {
         break;
       case OrderStatusEnum.RETURNED:
         throw new BadRequestException('ORDER_ALREADY_RETURNED');
+        break;
+      case OrderStatusEnum.PAID:
+        if (customer) {
+          throw new BadRequestException('ORDER_NOT_CANCELLED');
+        }
         break;
       default:
         break;

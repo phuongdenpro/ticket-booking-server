@@ -25,6 +25,7 @@ import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
 import { EMAIL_REGEX, PHONE_REGEX, generateCustomerCode } from './../../utils';
 import * as bcrypt from 'bcrypt';
 import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class CustomerService {
@@ -234,11 +235,10 @@ export class CustomerService {
         .orWhere('q2.fullAddress LIKE :fullAddress', {
           fullAddress: `%${newKeywords}%`,
         })
-        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .select('q2.id')
         .getQuery();
 
-      query.andWhere(`q.id in (${subQuery})`, {
+      query.andWhere(`u.id in (${subQuery})`, {
         fullName: `%${newKeywords}%`,
         email: `%${newKeywords}%`,
         phone: `%${newKeywords}%`,
@@ -250,7 +250,6 @@ export class CustomerService {
     if (status) {
       query.andWhere('u.status = :status', { status });
     }
-    const total = await query.clone().getCount();
 
     const dataResult = await query
       .leftJoinAndSelect('u.customerGroup', 'cg')
@@ -261,6 +260,7 @@ export class CustomerService {
       .addOrderBy('u.email', SortEnum.ASC)
       .select(this.selectFieldsWithQ)
       .getMany();
+    const total = await query.clone().getCount();
 
     return { dataResult, pagination, total };
   }
