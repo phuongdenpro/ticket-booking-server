@@ -1,5 +1,5 @@
 import { TicketStatusEnum } from './../../enums';
-import { Seat, Ticket, OrderDetail } from '.';
+import { Seat, Ticket, OrderDetail, OrderRefundDetail } from '.';
 import {
   Column,
   Entity,
@@ -57,4 +57,10 @@ export class TicketDetail {
 
   @OneToMany(() => OrderDetail, (orderDetail) => orderDetail.ticketDetail)
   orderDetails: OrderDetail[];
+
+  @OneToMany(
+    () => OrderRefundDetail,
+    (orderDetailRefund) => orderDetailRefund.ticketDetail,
+  )
+  orderRefundDetails: OrderRefundDetail[];
 }

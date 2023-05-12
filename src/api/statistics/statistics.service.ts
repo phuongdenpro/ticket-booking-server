@@ -21,6 +21,7 @@ import {
 } from './dto';
 import * as moment from 'moment';
 import { Pagination } from './../../decorator';
+moment().locale('vi');
 
 @Injectable()
 export class StatisticsService {
@@ -196,12 +197,25 @@ export class StatisticsService {
     const newEndDate = endDate
       ? moment(endDate).endOf('day').toDate()
       : moment().endOf('day').toDate();
+    console.log('newStartDate', newStartDate);
+    console.log('newEndDate', newEndDate);
 
-    let newKeywords;
-    let subQuery;
+    const queryBuilder = await this.orderRepository
+      .createQueryBuilder('q')
+      .innerJoin('q.orderDetails', 'od')
+      .innerJoin('od.ticketDetail', 'td')
+      .innerJoin('td.ticket', 't')
+      .innerJoin('t.tripDetail', 'trd')
+      .innerJoin('trd.trip', 'tr')
+      .innerJoin('tr.fromStation', 'fs')
+      .innerJoin('tr.toStation', 'ts')
+      .where('q.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      });
     if (keyword) {
-      newKeywords = keyword.trim();
-      subQuery = this.orderRepository
+      const newKeywords = keyword.trim();
+      const subQuery = this.orderRepository
         .createQueryBuilder('q2')
         .innerJoin('q2.orderDetails', 'od2')
         .innerJoin('od2.ticketDetail', 'td2')
@@ -213,17 +227,13 @@ export class StatisticsService {
         .orWhere('tr2.note LIKE :note', { note: `%${newKeywords}%` })
         .select('tr2.id')
         .getQuery();
+      queryBuilder.andWhere('tr.id IN (' + subQuery + ')', {
+        code: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+        note: `%${newKeywords}%`,
+      });
     }
-
-    const queryBuilder = await this.orderRepository
-      .createQueryBuilder('q')
-      .innerJoin('q.orderDetails', 'od')
-      .innerJoin('od.ticketDetail', 'td')
-      .innerJoin('td.ticket', 't')
-      .innerJoin('t.tripDetail', 'trd')
-      .innerJoin('trd.trip', 'tr')
-      .innerJoin('tr.fromStation', 'fs')
-      .innerJoin('tr.toStation', 'ts')
+    queryBuilder
       .select([
         'tr.id as id',
         'tr.code as code',
@@ -242,18 +252,6 @@ export class StatisticsService {
         'ts.code as toStationCode',
         'ts.name as toStationName',
       ])
-      .where('q.createdAt BETWEEN :startDate AND :endDate', {
-        startDate: newStartDate,
-        endDate: newEndDate,
-      });
-    if (keyword) {
-      queryBuilder.andWhere('tr.id IN (' + subQuery + ')', {
-        code: `%${newKeywords}%`,
-        name: `%${newKeywords}%`,
-        note: `%${newKeywords}%`,
-      });
-    }
-    queryBuilder
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
       .andWhere('td.deletedAt IS NULL')
       .andWhere('t.deletedAt IS NULL')
@@ -262,6 +260,7 @@ export class StatisticsService {
       .orderBy('totalTickets', 'DESC')
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10);
+    console.log('queryBuilder.getQuery()', queryBuilder.getQuery());
 
     const result = await queryBuilder.getRawMany();
     return result.map((item) => ({

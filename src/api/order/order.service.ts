@@ -846,6 +846,11 @@ export class OrderService {
       this.ticketDetailRepository.manager.connection.createQueryRunner();
     await queryTickerDetail.connect();
     await queryTickerDetail.startTransaction();
+
+    const queryOrder =
+      this.orderRepository.manager.connection.createQueryRunner();
+    await queryOrder.connect();
+    await queryOrder.startTransaction();
     try {
       switch (status) {
         case OrderUpdateStatusCustomerEnum.CANCEL:
@@ -877,8 +882,6 @@ export class OrderService {
           if (order.status === OrderStatusEnum.UNPAID) {
             throw new BadRequestException('ORDER_NOT_PAID');
           }
-          order.status = OrderStatusEnum.RETURNED;
-
           const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
           const tripDetail: TripDetail =
             order.orderDetails[0].ticketDetail.ticket.tripDetail;
@@ -913,14 +916,17 @@ export class OrderService {
             ticketDetail.status = TicketStatusEnum.NON_SOLD;
             return ticketDetail;
           });
+          order.status = OrderStatusEnum.RETURNED;
           break;
         default:
           break;
       }
       await queryTickerDetail.manager.save(saveTicketDetails);
       await queryTickerDetail.commitTransaction();
-
-      const saveOrder = await this.orderRepository.save(order);
+      
+      await queryOrder.manager.save(order);
+      await queryOrder.commitTransaction();
+      const saveOrder = await this.findOneOrderByCode(order.code);
       return saveOrder;
     } catch (error) {
       await queryTickerDetail.rollbackTransaction();
@@ -1332,6 +1338,7 @@ export class OrderService {
         break;
     }
     const orderRefundExist = await this.findOneOrderRefundByCode(orderCode);
+
     if (orderRefundExist) {
       throw new BadRequestException('ORDER_IS_RETURNED', {
         description: `Đơn hàng đã được trả lại có mã là ${orderRefundExist.code}`,

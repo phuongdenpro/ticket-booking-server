@@ -409,8 +409,6 @@ export class PriceListService {
           );
           await Promise.all(priceDetailsExist);
         }
-        // await this.validOverlappingPriceList(startDate);
-        // await this.validOverlappingPriceList(endDate);
         break;
       case ActiveStatusEnum.INACTIVE:
         priceList.status = status;
