@@ -256,13 +256,13 @@ export class PaymentHistoryService {
         break;
     }
     if (fromDatePaymentTime) {
-      const newFromDate = moment(fromDatePaymentTime).startOf('day').toDate();
+      const newFromDate = moment(fromDatePaymentTime).startOf('day').add(7, 'hour').toDate();
       query.andWhere('q.paymentTime >= :fromDatePaymentTime', {
         fromDatePaymentTime: newFromDate,
       });
     }
     if (toDatePaymentTime) {
-      const newToDate = moment(toDatePaymentTime).startOf('day').toDate();
+      const newToDate = moment(toDatePaymentTime).startOf('day').add(7, 'hour').toDate();
       query.andWhere('q.paymentTime <= :toDatePaymentTime', {
         toDatePaymentTime: newToDate,
       });

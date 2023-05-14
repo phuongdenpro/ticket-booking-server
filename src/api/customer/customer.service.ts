@@ -357,20 +357,16 @@ export class CustomerService {
     }
     switch (gender) {
       case GenderEnum.MALE:
-        oldCustomer.gender = GenderEnum.MALE;
-        break;
       case GenderEnum.FEMALE:
-        oldCustomer.gender = GenderEnum.FEMALE;
-        break;
       case GenderEnum.OTHER:
-        oldCustomer.gender = GenderEnum.OTHER;
+        oldCustomer.gender = gender;
         break;
       default:
         oldCustomer.gender = GenderEnum.OTHER;
         break;
     }
     if (birthDate) {
-      oldCustomer.birthday = birthDate;
+      oldCustomer.birthday = moment(birthDate).startOf('day').add(7, 'hour').toDate();
     }
     if (wardId) {
       const ward = await this.dataSource.getRepository(Ward).findOne({
@@ -508,7 +504,7 @@ export class CustomerService {
       }
       customer.birthday = birthday;
     } else {
-      customer.birthday = moment().startOf('day').toDate();
+      customer.birthday = moment().startOf('day').add(7, 'hour').toDate();
     }
 
     if (email) {
@@ -650,7 +646,7 @@ export class CustomerService {
       }
     }
     if (birthday) {
-      customer.birthday = birthday;
+      customer.birthday = moment(birthday).startOf('day').add(7, 'hour').toDate();
     }
     let customerGroupExist;
     if (customerGroupId) {

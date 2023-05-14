@@ -146,11 +146,11 @@ export class StatisticsService {
     // week, month
     const { type, limit } = dto;
     let startDate;
-    const endDate = moment().endOf('day').toDate();
+    const endDate = moment().endOf('day').add(7, 'hour').toDate();
     if (type === 'week' || !type) {
-      startDate = moment().subtract(7, 'days').startOf('day').toDate();
+      startDate = moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     } else if (type === 'month') {
-      startDate = moment().subtract(30, 'days').startOf('day').toDate();
+      startDate = moment().subtract(30, 'days').startOf('day').add(7, 'hour').toDate();
     }
 
     const topCustomersDto = new RevenueStatisticsDto();
@@ -192,11 +192,11 @@ export class StatisticsService {
   ) {
     const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
-      ? moment(startDate).startOf('day').toDate()
-      : moment().subtract(7, 'days').startOf('day').toDate();
+      ? moment(startDate).startOf('day').add(7, 'hour').toDate()
+      : moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     const newEndDate = endDate
-      ? moment(endDate).endOf('day').toDate()
-      : moment().endOf('day').toDate();
+      ? moment(endDate).endOf('day').add(7, 'hour').toDate()
+      : moment().endOf('day').add(7, 'hour').toDate();
     const queryBuilder = await this.orderRepository
       .createQueryBuilder('q')
       .innerJoin('q.orderDetails', 'od')
@@ -325,11 +325,11 @@ export class StatisticsService {
     // week, month
     const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
-      ? moment(startDate).startOf('day').toDate()
-      : moment().subtract(7, 'days').startOf('day').toDate();
+      ? moment(startDate).startOf('day').add(7, 'hour').toDate()
+      : moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     const newEndDate = endDate
-      ? moment(endDate).endOf('day').toDate()
-      : moment().endOf('day').toDate();
+      ? moment(endDate).endOf('day').add(7, 'hour').toDate()
+      : moment().endOf('day').add(7, 'hour').toDate();
 
     let subQuery;
     let newKeywords;
@@ -425,11 +425,11 @@ export class StatisticsService {
     // week, month
     const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
-      ? moment(startDate).startOf('day').toDate()
-      : moment().subtract(7, 'days').startOf('day').toDate();
+      ? moment(startDate).startOf('day').add(7, 'hour').toDate()
+      : moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     const newEndDate = endDate
-      ? moment(endDate).endOf('day').toDate()
-      : moment().endOf('day').toDate();
+      ? moment(endDate).endOf('day').add(7, 'hour').toDate()
+      : moment().endOf('day').add(7, 'hour').toDate();
 
     let subQuery;
     let newKeywords;
@@ -517,11 +517,11 @@ export class StatisticsService {
   ) {
     const { startDate, endDate, keyword } = dto;
     const newStartDate = startDate
-      ? moment(startDate).startOf('day').toDate()
-      : moment().subtract(7, 'days').startOf('day').toDate();
+      ? moment(startDate).startOf('day').add(7, 'hour').toDate()
+      : moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     const newEndDate = endDate
-      ? moment(endDate).endOf('day').toDate()
-      : moment().endOf('day').toDate();
+      ? moment(endDate).endOf('day').add(7, 'hour').toDate()
+      : moment().endOf('day').add(7, 'hour').toDate();
 
     let subQuery;
     let newKeywords;

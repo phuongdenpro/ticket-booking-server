@@ -62,7 +62,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PaymentHistoryService } from '../payment-history/payment-history.service';
 import { CreatePaymentHistoryDto } from '../payment-history/dto';
-moment.locale('vi');
+// moment.locale('vi');
 
 @Injectable()
 export class OrderService {
@@ -416,11 +416,11 @@ export class OrderService {
     }
 
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       query.andWhere('q.createdAt >= :newStartDate', { newStartDate });
     }
     if (endDate) {
-      const newEndDate = moment(endDate).endOf('day').toDate();
+      const newEndDate = moment(endDate).endOf('day').add(7, 'hour').toDate();
       query.andWhere('q.createdAt <= :newEndDate', { newEndDate });
     }
 
@@ -622,7 +622,7 @@ export class OrderService {
     );
     const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
     const currentDatePlus1Hours = new Date(
-      moment().add(1, 'hours').format('YYYY-MM-DD HH:mm'),
+      moment(currentDate).add(1, 'hours').format('YYYY-MM-DD HH:mm'),
     );
     if (currentDate >= tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
@@ -1121,7 +1121,7 @@ export class OrderService {
       orderDetail.ticketDetail = ticketDetail;
       // get price detail
       const ticketDetailId = ticketDetail.id;
-      const currentDate = moment().startOf('day').toDate();
+      const currentDate = moment().startOf('day').add(7, 'hour').toDate();
 
       const { dataResult } =
         await this.priceListService.findPriceDetailForBooking({

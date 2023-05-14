@@ -231,9 +231,8 @@ export class PriceListService {
       throw new BadRequestException('INVALID_DATE');
     }
 
-    const newStartDate = moment(startDate).startOf('day').toDate();
-    console.log(newStartDate);
-    const currentDate = moment().startOf('day').toDate();
+    const newStartDate = moment(startDate).startOf('day').add(7, 'hours').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hours').toDate();
     if (newStartDate <= currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
@@ -246,7 +245,7 @@ export class PriceListService {
     if (isNaN(dateEndObj.valueOf())) {
       throw new BadRequestException('INVALID_DATE');
     }
-    const newEndDate = moment(endDate).endOf('day').toDate();
+    const newEndDate = moment(endDate).endOf('day').add(7, 'hours').toDate();
     if (newEndDate < currentDate) {
       throw new BadRequestException(
         'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
@@ -289,11 +288,11 @@ export class PriceListService {
       query.where('q.status = :status', { status });
     }
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       query.andWhere('q.startDate >= :startDate', { startDate: newStartDate });
     }
     if (endDate) {
-      const newEndDate = moment(endDate).endOf('day').toDate();
+      const newEndDate = moment(endDate).endOf('day').add(7, 'hour').toDate();
       query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
     query.orderBy('q.createdAt', sort || SortEnum.DESC);
@@ -334,7 +333,7 @@ export class PriceListService {
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (priceList.endDate <= currentDate) {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
@@ -346,7 +345,7 @@ export class PriceListService {
     }
 
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       if (newStartDate.getTime() !== priceList.startDate.getTime()) {
         if (newStartDate <= currentDate) {
           throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -368,8 +367,8 @@ export class PriceListService {
       }
     }
     if (endDate) {
-      const newEndDate = moment(endDate).endOf('day').toDate();
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newEndDate = moment(endDate).endOf('day').add(7, 'hour').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       if (newEndDate.getTime() !== priceList.endDate.getTime()) {
         if (newEndDate < currentDate) {
           throw new BadRequestException(
@@ -446,7 +445,7 @@ export class PriceListService {
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (priceList.endDate <= currentDate) {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
@@ -507,7 +506,7 @@ export class PriceListService {
               message: 'Không tìm thấy bảng giá',
             };
           }
-          const currentDate = moment().startOf('day').toDate();
+          const currentDate = moment().startOf('day').add(7, 'hour').toDate();
           if (priceList.endDate < currentDate) {
             return {
               id: priceList.id,
@@ -607,7 +606,7 @@ export class PriceListService {
 
   async findPriceDetailForBooking(dto: FilterPriceDetailForBookingDto) {
     const { applyDate, seatType, tripDetailCode, tripCode } = dto;
-    const newApplyDate = moment(applyDate).startOf('day').toDate();
+    const newApplyDate = moment(applyDate).startOf('day').add(7, 'hour').toDate();
     const priceDetail = await this.findOnePriceDetail({
       where: {
         seatType,
@@ -731,7 +730,7 @@ export class PriceListService {
     if (!priceList) {
       throw new BadRequestException('PRICE_LIST_NOT_FOUND');
     }
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (priceList.endDate <= currentDate) {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
@@ -832,7 +831,7 @@ export class PriceListService {
     }
     const priceList: PriceList = priceDetail.priceList;
 
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (priceList.endDate <= currentDate) {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
@@ -928,7 +927,7 @@ export class PriceListService {
       throw new BadRequestException('PRICE_DETAIL_NOT_FOUND');
     }
     const priceList: PriceList = priceDetail.priceList;
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (priceList.endDate <= currentDate) {
       throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
     }
@@ -987,7 +986,7 @@ export class PriceListService {
             };
           }
           const priceList: PriceList = priceDetail.priceList;
-          const currentDate = moment().startOf('day').toDate();
+          const currentDate = moment().startOf('day').add(7, 'hour').toDate();
           if (priceList.endDate <= currentDate) {
             throw new BadRequestException('PRICE_LIST_IS_EXPIRED');
           }

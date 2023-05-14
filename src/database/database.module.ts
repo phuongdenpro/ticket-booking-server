@@ -25,6 +25,7 @@ const entities = (
         synchronize: toBoolean(configService.get('DB_SYNC')),
         logger: toBoolean(configService.get('DB_LOG')) && new DatabaseLogger(),
         logging: toBoolean(configService.get('DB_LOG')) && ['query'],
+        timezone: "Asia/Ho_Chi_Minh",
       }),
     }),
   ],

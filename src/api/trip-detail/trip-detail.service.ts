@@ -27,7 +27,7 @@ import {
 import { Pagination } from './../../decorator';
 import { TicketService } from '../ticket/ticket.service';
 import * as moment from 'moment';
-moment.locale('vi');
+// moment.locale('vi');
 
 @Injectable()
 export class TripDetailService {
@@ -190,8 +190,8 @@ export class TripDetailService {
     }
 
     if (departureTime) {
-      const minTime = moment(departureTime).startOf('day').toDate();
-      const maxTime = moment(departureTime).endOf('day').toDate();
+      const minTime = moment(departureTime).startOf('day').add(7, 'hour').toDate();
+      const maxTime = moment(departureTime).endOf('day').add(7, 'hour').toDate();
       query
         .andWhere('q.departureTime >= :minTime', { minTime })
         .andWhere('q.departureTime <= :maxTime', { maxTime });
@@ -231,10 +231,6 @@ export class TripDetailService {
 
     const dataResult = await query
       .leftJoinAndSelect('q.trip', 't')
-      // .leftJoinAndSelect('t.fromStation', 'fs')
-      // .leftJoinAndSelect('t.toStation', 'ts')
-      // .leftJoinAndSelect('q.vehicle', 'v')
-      // .leftJoinAndSelect('v.images', 'i')
       .select(this.tripDetailSelect)
       .orderBy('q.departureTime', sort || SortEnum.ASC)
       .addOrderBy('q.createdAt', SortEnum.ASC)
@@ -306,7 +302,8 @@ export class TripDetailService {
     if (!departureTime) {
       throw new BadRequestException('DEPARTURE_TIME_REQUIRED');
     }
-    const tomorrowDate = new Date(moment().add(1, 'days').format('YYYY-MM-DD'));
+    const tomorrowDate = moment().add(1, 'days').startOf('day').add(7, 'hour').toDate();
+
     if (departureTime < tomorrowDate) {
       throw new BadRequestException(
         'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TOMORROW',
@@ -693,11 +690,13 @@ export class TripDetailService {
     if (startDate > endDate) {
       throw new BadRequestException('START_DATE_MUST_BE_BEFORE_END_DATE');
     }
-    const newStartDate = moment(startDate).startOf('day').toDate();
-    const newEndDate = moment(endDate).endOf('day').toDate();
+    const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+    const newEndDate = moment(endDate).endOf('day').add(7, 'hour').toDate();
     // startDate not more than 7 days from endDate
     if (moment(newEndDate).diff(moment(newStartDate), 'days') > 7) {
-      throw new BadRequestException('START_DATE_NOT_MORE_THAN_7_DAYS_FROM_END_DATE');
+      throw new BadRequestException(
+        'START_DATE_NOT_MORE_THAN_7_DAYS_FROM_END_DATE',
+      );
     }
 
     const trips = await this.tripDetailRepository

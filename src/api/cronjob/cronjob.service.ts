@@ -6,9 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { CronjobOrderPaymentDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order, PaymentHistory } from './../../database/entities';
-import * as moment from 'moment';
 import { PaymentService } from '../payment/payment.service';
-moment.locale('vi');
 
 @Injectable()
 export class CronjobService {
