@@ -138,11 +138,14 @@ export class AuthAdminService {
     if (!isPasswordMatches) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
+    if (!staffExist.isActive && !staffExist.isFirstLogin) {
+      throw new BadRequestException('USER_NOT_ACTIVE')
+    }
 
     const queryRunner = this.dataSource.createQueryRunner();
     try {
       await queryRunner.startTransaction();
-
+      
       const tokens = await this.authService.createTokens(
         staffExist,
         RoleEnum.STAFF,
@@ -153,6 +156,10 @@ export class AuthAdminService {
         accessToken: tokens.access_token,
         lastLogin: new Date(),
       });
+      if (staffExist.isFirstLogin) {
+        staffExist.isFirstLogin = false;
+        await this.dataSource.getRepository(Staff).save(staffExist)
+      }
 
       await queryRunner.commitTransaction();
 

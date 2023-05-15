@@ -3,6 +3,7 @@ export * from './active-otp-type.enum';
 export * from './send-otp-type.enum';
 export * from './gender.enum';
 export * from './roles.enum';
+export * from './admin-roles.enum';
 export * from './sort.enum';
 export * from './trip-detail-status.enum';
 export * from './ticket-status.enum';

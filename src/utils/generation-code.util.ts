@@ -26,7 +26,10 @@ export function generateStaffCode() {
     '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ$@',
   );
   const randomNum = Math.floor(Math.random() * 1000000).toString();
-  const code = `NV${shortId.generate().replace(/[$@]/g, '')}${randomNum}`;
+  const currentDate = moment().format('YYYYMMDD');
+  const code = `NV${currentDate}${shortId
+    .generate()
+    .replace(/[$@]/g, '')}${randomNum}`;
   return code;
 }
 
@@ -40,4 +43,8 @@ export function generateCustomerCode() {
     .generate()
     .replace(/[$@]/g, '')}${randomNum}`;
   return code;
+}
+
+export function generatePassword() {
+  return shortId.generate();
 }

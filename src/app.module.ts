@@ -35,6 +35,7 @@ import { CronjobModule } from './api/cronjob/cronjob.module';
 import { PaymentModule } from './api/payment/payment.module';
 import { PaymentHistoryModule } from './api/payment-history/payment-history.module';
 import { OrderRefundModule } from './api/order-refund/order-refund.module';
+import { StaffModule } from './api/staff/staff.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { OrderRefundModule } from './api/order-refund/order-refund.module';
     DatabaseModule,
     AuthModule,
     AdminModule,
+    StaffModule,
     UserModule,
     CustomerModule,
     CustomerGroupModule,

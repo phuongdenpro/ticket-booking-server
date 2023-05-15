@@ -164,4 +164,26 @@ export class AuthService {
     };
     await transporter.sendMail(options);
   }
+
+  async sendPasswordToEmail(email: string, password: string) {
+    const fromEmail = this.configService.get('EMAIL');
+    const companyName = this.configService.get('COMPANY_NAME');
+    const transporter = nodemailer.createTransport({
+      host: this.configService.get('SMTP_HOST'),
+      port: this.configService.get('SMTP_PORT'),
+      secure: false,
+      auth: {
+        user: fromEmail,
+        pass: this.configService.get('EMAIL_PASSWORD'),
+      },
+    });
+
+    const options = {
+      from: fromEmail,
+      to: email,
+      subject: `${companyName} - Mật khẩu tài khoản admin của bạn`,
+      html: templateHtml(null, null, password),
+    };
+    await transporter.sendMail(options);
+  }
 }

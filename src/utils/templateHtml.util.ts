@@ -1,4 +1,4 @@
-export const templateHtml = (otp, optTime) => {
+export const templateHtml = (otp?, optTime?, password?: string) => {
   const html =
     '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">\n' +
     '<html xmlns="http://www.w3.org/1999/xhtml">\n' +
@@ -189,18 +189,18 @@ export const templateHtml = (otp, optTime) => {
     '                <!-- Body content -->\n' +
     '                <tr>\n' +
     '                  <td class="content-cell">\n' +
-    '                    <p>Mã OTP để xác thực tài khoản của bạn. Có thời hạn là <b> {OTP_TIME} phút </b>  : </p>\n' +
+    '                    <p>{KEYWORD_2}</p>\n' +
     '                    <!-- Action -->\n' +
     '                    <table class="body-action" align="center" width="100%" cellpadding="0" cellspacing="0">\n' +
     '                      <tr>\n' +
     '                        <td align="center">\n' +
     '                          <div>\n' +
-    '                            <p class="button button--blue">{OTP}</p>\n' +
+    '                            <p class="button button--blue">{KEYWORD}</p>\n' +
     '                          </div>\n' +
     '                        </td>\n' +
     '                      </tr>\n' +
     '                    </table>\n' +
-    '                    <p>Vì lí do bảo mật, tuyệt đối không đưa mã này cho người lạ.<br>{appName}</p>\n' +
+    '                    <p>Vì lí do bảo mật, tuyệt đối không đưa {KEYWORD_3} này cho người lạ {KEYWORD_4}.<br>{appName}</p>\n' +
     '                  </td>\n' +
     '                </tr>\n' +
     '              </table>\n' +
@@ -213,9 +213,25 @@ export const templateHtml = (otp, optTime) => {
     '</body>\n' +
     '</html>';
   const appName = 'PD BUS';
-  return html
-    .replace('{OTP}', otp + '')
-    .replace('{OTP_TIME}', optTime)
-    .replace('{appName}', appName)
-    .replace('{appName}', appName);
+  
+  if (otp) {
+    return html
+      .replace('{KEYWORD}', otp + '')
+      .replace(
+        '{KEYWORD_2}',
+        `Mã OTP để xác thực tài khoản của bạn. Có thời hạn là <b> ${optTime} phút </b>  : `,
+      )
+      .replace('{KEYWORD_3}', `mã`)
+      .replace('{KEYWORD_4}', ``)
+      .replace('{appName}', appName)
+      .replace('{appName}', appName);
+  } else if (password) {
+    return html
+      .replace('{KEYWORD}', password + '')
+      .replace('{KEYWORD_2}', `Mật khẩu của bạn là : `)
+      .replace('{KEYWORD_3}', `mật khẩu`)
+      .replace('{KEYWORD_4}', `.Và hãy đổi mật khẩu sau khi đăng nhập`)
+      .replace('{appName}', appName)
+      .replace('{appName}', appName);
+  }
 };

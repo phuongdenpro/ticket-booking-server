@@ -214,13 +214,13 @@ export class StationService {
       const newKeywords = keywords.trim();
       const subQuery = this.stationRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
         .where('q2.address LIKE :address', { address: `%${newKeywords}%` })
         .where('q2.fullAddress LIKE :fullAddress', {
           fullAddress: `%${newKeywords}%`,
         })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

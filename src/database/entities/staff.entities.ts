@@ -74,6 +74,12 @@ export class Staff {
   @Column({ name: 'is_manage', type: 'bool', default: false, select: false })
   isManage?: boolean;
 
+  // @Column({ name: 'full_address', type: 'varchar', nullable: true })
+  // fullAddress?: string;
+
+  @Column({ name: 'is_first_login', type: 'bool', default: false, select: false })
+  isFirstLogin?: boolean;
+  
   @Column({
     name: 'refresh_token',
     type: 'varchar',

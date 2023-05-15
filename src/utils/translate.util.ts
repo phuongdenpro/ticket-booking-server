@@ -116,6 +116,16 @@ export const mappingTranslate = {
   CREATOR_IS_INACTIVE: 'tài khoản Admin này không còn hoạt động',
   CREATOR_ID_REQUIRED: 'Id Admin không được để trống',
 
+  // staff
+  STAFF_NOT_FOUND: 'Không tìm thấy nhân viên',
+  IS_MANAGER_IS_ENUM: 'Trạng thái quản lý không hợp lệ',
+  USER_NOT_MANAGER: 'Bạn không phải là quản lý',
+  PHONE_AND_EMAIL_REQUIRED: 'Số điện thoại và email không được để trống',
+  BIRTHDAY_NOT_MORE_THAN_CURRENT_DATE:
+    'Ngày sinh không được lớn hơn hoặc ngày hiện tại',
+  NOT_DELETE_YOUR_SELF: 'Không thế xoá chính mình',
+  NOT_INACTIVE_YOUR_SELF: 'Không thế vô hiệu hoá chính mình',
+
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',
   CUSTOMER_ID_IS_REQUIRED: 'Mã khách hàng không được để trống',
@@ -136,7 +146,7 @@ export const mappingTranslate = {
   CUSTOMER_GROUP_ID_MUST_BE_36_CHARACTERS:
     'Mã nhóm khách hàng phải có 36 ký tự',
   CUSTOMER_GROUP_HAS_CUSTOMER: 'Nhóm khách hàng vẫn còn khách hàng',
-  CUSTOMER_GROUP_CODE_EXIST: 'Id nhóm khách hàng đã tồn tại',
+  CUSTOMER_GROUP_CODE_EXIST: 'Mã nhóm khách hàng đã tồn tại',
   CUSTOMER_ALREADY_IN_GROUP: 'Khách hàng đã tồn tại trong nhóm',
   CUSTOMER_NOT_IN_GROUP: 'Khách hàng không thuộc nhóm khách hàng này',
   CUSTOMER_GROUP_HAS_CUSTOMERS: 'Nhóm khách hàng vẫn còn khách hàng',
@@ -184,6 +194,7 @@ export const mappingTranslate = {
   WARD_TYPE_BETWEEN_1_50_CHARACTERS: 'loại phường/xã phải từ 1 đến 50 ký tự',
   WARD_TYPE_IS_REQUIRED: 'loại phường/xã không được để trống',
   WARD_CODE_ALREADY_EXIST: 'mã phường/xã đã tồn tại',
+  WARD_CODE_IS_REQUIRED: 'mã phường/xã không được để trống',
 
   // station
   STATION_CODE_EXISTED: 'Mã bến xe đã tồn tại ở một bến xe khác',
@@ -311,17 +322,17 @@ export const mappingTranslate = {
   VEHICLE_ID_REQUIRED: 'Id của xe là không được để trống',
   VEHICLE_ID_IS_STRING: 'Id của xe phải là chuỗi ký tự',
   VEHICLE_ID_INVALID: 'Id của xe không hợp lệ',
+  VEHICLE_CODE_REQUIRED: 'Mã của xe là không được để trống',
   VEHICLE_CODE_IS_STRING: 'Mã của xe phải là chuỗi ký tự',
   VEHICLE_CODE_ALREADY_EXIST: 'Mã xe đã tồn tại',
   LICENSE_PLATE_INVALID: 'Biển số xe không hợp lệ',
-  LICENSE_PLATE_REQUIRED: 'Biển số xe không hợp lệ',
-  LICENSE_PLATE_STRING: 'Biển số xe không hợp lệ',
+  LICENSE_PLATE_REQUIRED: 'Biển số xe không được để trống',
+  LICENSE_PLATE_STRING: 'Biển số xe phải là chuỗi',
   LICENSE_PLATE_BETWEEN_1_20_CHARACTERS: 'Biển số xe phải có 1 đến 20 ký tự',
   FLOOR_NUMBER_INVALID: 'Số tầng không hợp lệ',
   VEHICLE_TYPE_REQUIRED: 'Loại xe không được để trống',
   VEHICLE_TYPE_STRING: 'Loại xe phải là chuỗi',
-  VEHICLE_TYPE_IS_ENUM:
-    'Loại xe phải thuộc 1 trong cái loại sau: "limousine", "giường nằm", "ghế ngồi"',
+  VEHICLE_TYPE_IS_ENUM: 'Loại xe không hợp lệ',
   VEHICLE_FLOOR_NUMBER_IS_NUMBER: 'Số tầng của xe phải là số',
   VEHICLE_FLOOR_NUMBER_MIN_MAX: 'Số tầng của xe chỉ nhận 2 giá trị: 1, 2',
   VEHICLE_TOTAL_SEAT_IS_REQUIRE: 'Tổng số ghế của xe không được để trống',
@@ -401,6 +412,8 @@ export const mappingTranslate = {
     'Giá tối thiểu phải lớn hơn hoặc bằng 0',
   PRICE_IS_TOO_BIG: 'Giá lớn hơn miền giá trị của double',
   PRICE_DETAIL_CODE_EXISTED: 'Mã chi tiết giá đã tồn tại',
+  PRICE_MUST_GREATER_THAN_ZERO: 'Giá phải lớn hơn 0',
+  PRICE_MUST_REQUIRED: 'Giá không được để trống',
 
   // promotion
   PROMOTION_HAS_EXPIRED: 'Chương trình khuyến mãi này đã hết hạn',
@@ -601,8 +614,6 @@ export const mappingTranslate = {
   ORDER_CANNOT_CANCEL_12H_BEFORE:
     'Không thể huỷ vé trước 12 tiếng so với giờ khởi hàng, hãy đến trực tiếp phòng vé để huỷ',
   ORDER_CANNOT_CANCEL_AFTER_DEPARTURE: 'Không thể huỷ vé sau khi khởi hành',
-  ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE: 'Không thể thanh toán vé sau khi khởi hành',
-  ORDER_NOT_CANCELLED: 'Hãy liên hệ với phòng vé gần nhất để được hỗ trợ huỷ vé',
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',
