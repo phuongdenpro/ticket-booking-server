@@ -8,11 +8,14 @@ import {
   Customer,
   OrderRefund,
   PaymentHistory,
+  PromotionHistory,
+  PromotionLine,
 } from './../../database/entities';
 import { AdminService } from './../admin/admin.service';
 import { CustomerService } from './../customer/customer.service';
 import { PaymentService } from '../payment/payment.service';
 import { PaymentHistoryService } from '../payment-history/payment-history.service';
+import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 
 @Module({
   imports: [
@@ -22,6 +25,8 @@ import { PaymentHistoryService } from '../payment-history/payment-history.servic
       Staff,
       Customer,
       PaymentHistory,
+      PromotionHistory,
+      PromotionLine,
     ]),
   ],
   providers: [
@@ -30,6 +35,7 @@ import { PaymentHistoryService } from '../payment-history/payment-history.servic
     CustomerService,
     AdminService,
     PaymentHistoryService,
+    PromotionHistoryService,
   ],
   controllers: [CronjobController],
   exports: [CronjobService],
