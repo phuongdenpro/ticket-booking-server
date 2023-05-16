@@ -1,5 +1,5 @@
 import {  ApiPropertyOptional } from '@nestjs/swagger';
-import { GenderEnum, AdminRolesStringEnum } from '../../../enums';
+import { GenderEnum, AdminRolesStringEnum, ActiveStatusEnum } from '../../../enums';
 import {
   IsDate,
   IsEmail,
@@ -62,6 +62,13 @@ export class UpdateStaffDto {
   })
   @IsOptional()
   isManage: AdminRolesStringEnum;
+
+  @ApiPropertyOptional({ example: ActiveStatusEnum.ACTIVE, enum: ActiveStatusEnum })
+  @IsEnum(ActiveStatusEnum, {
+    message: 'IS_ACTIVE_IS_ENUM',
+  })
+  @IsOptional()
+  isActive: ActiveStatusEnum;
 
   @ApiPropertyOptional({ example: 26914 })
   @IsNumber(

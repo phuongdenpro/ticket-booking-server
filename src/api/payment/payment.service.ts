@@ -355,7 +355,7 @@ export class PaymentService {
             orderExist.note = 'Thanh toán thất bại';
             saveOrder = await this.orderRepository.save(orderExist);
             flag = 0;
-            await this.cancelOrderByCode(userId, undefined, orderCode);
+            await this.cancelOrderByCode(userId, orderCode);
           } else if (response.data.return_code === 2) {
             orderExist.note = 'Thanh toán thất bại';
             saveOrder = await this.orderRepository.save(orderExist);
@@ -394,7 +394,7 @@ export class PaymentService {
           console.log('cancel order: ' + orderCode);
           orderExist.note = 'Không thanh toán tự động huỷ';
           saveOrder = await this.orderRepository.save(orderExist);
-          await this.cancelOrderByCode(userId, undefined, orderCode);
+          await this.cancelOrderByCode(userId, orderCode);
         }
       }
       saveOrder = await this.findOneOrderByCode(orderCode);
@@ -404,7 +404,7 @@ export class PaymentService {
     return saveOrder;
   }
 
-  private async cancelOrderByCode(userId: string, id?: string, code?: string) {
+  private async cancelOrderByCode(userId: string, code: string) {
     if (!userId) {
       throw new UnauthorizedException('UNAUTHORIZED');
     }
@@ -417,8 +417,8 @@ export class PaymentService {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
 
-    if (!id && !code) {
-      throw new BadRequestException('ID_OR_CODE_REQUIRED');
+    if (!code) {
+      throw new BadRequestException('CODE_REQUIRED');
     }
     let order = await this.findOneOrderByCode(code);
     if (!order) {

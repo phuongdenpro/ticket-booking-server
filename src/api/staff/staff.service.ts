@@ -1,7 +1,12 @@
 import { Pagination } from './../../decorator';
 import { AuthService } from './../../auth/auth.service';
 import { EMAIL_REGEX, PHONE_REGEX, generatePassword } from './../../utils';
-import { SortEnum, GenderEnum, AdminRolesStringEnum } from './../../enums';
+import {
+  SortEnum,
+  GenderEnum,
+  AdminRolesStringEnum,
+  ActiveStatusEnum,
+} from './../../enums';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Staff, Ward } from './../../database/entities';
 import {
@@ -340,7 +345,10 @@ export class StaffService {
 
     if (birthDay) {
       const currentDate = moment().startOf('day').add(7, 'hour').toDate();
-      const newBirthDay = moment(birthDay).startOf('day').add(7, 'hour').toDate();
+      const newBirthDay = moment(birthDay)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       if (newBirthDay >= currentDate) {
         throw new BadRequestException('BIRTHDAY_NOT_MORE_THAN_CURRENT_DATE');
       }
@@ -403,6 +411,7 @@ export class StaffService {
       wardCode,
       birthDay,
       isManage,
+      isActive,
       note,
     } = dto;
 
@@ -447,6 +456,20 @@ export class StaffService {
         break;
     }
 
+    switch (isActive) {
+      case ActiveStatusEnum.ACTIVE:
+        staff.isActive = true;
+        break;
+      case ActiveStatusEnum.INACTIVE:
+        if (userId === staff.id) {
+          throw new BadRequestException('NOT_INACTIVE_YOUR_SELF');
+        }
+        staff.isActive = false;
+        break;
+      default:
+        break;
+    }
+
     if (address) {
       staff.address = address.trim();
     }
@@ -466,7 +489,10 @@ export class StaffService {
 
     if (birthDay) {
       const currentDate = moment().startOf('day').add(7, 'hour').toDate();
-      const newBirthDay = moment(birthDay).startOf('day').add(7, 'hour').toDate();
+      const newBirthDay = moment(birthDay)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       if (newBirthDay >= currentDate) {
         throw new BadRequestException('BIRTHDAY_NOT_MORE_THAN_CURRENT_DATE');
       }
@@ -476,7 +502,7 @@ export class StaffService {
     switch (isManage) {
       case AdminRolesStringEnum.STAFF:
         if (userId === staff.id) {
-          throw new BadRequestException('NOT_INACTIVE_YOUR_SELF');
+          throw new BadRequestException('NOT_CHANGE_ROLE_YOUR_SELF');
         }
         staff.isManage = false;
         break;

@@ -125,6 +125,8 @@ export const mappingTranslate = {
     'Ngày sinh không được lớn hơn hoặc ngày hiện tại',
   NOT_DELETE_YOUR_SELF: 'Không thế xoá chính mình',
   NOT_INACTIVE_YOUR_SELF: 'Không thế vô hiệu hoá chính mình',
+  NOT_CHANGE_ROLE_YOUR_SELF: 'Không thế thay đổi quyền chính mình',
+  IS_ACTIVE_IS_ENUM: 'Trạng thái hoạt động không hợp lệ',
 
   // customer
   CUSTOMER_NOT_FOUND: 'Không tìm thấy khách hàng',
