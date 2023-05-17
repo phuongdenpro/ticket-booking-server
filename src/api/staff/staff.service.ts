@@ -283,7 +283,7 @@ export class StaffService {
     }
     const staffExistPhone = await this.findOneStaffByPhone(phone);
     if (staffExistPhone) {
-      throw new BadRequestException('PHONE_EXIST');
+      throw new BadRequestException('PHONE_ALREADY_EXIST');
     }
 
     if (!email.match(EMAIL_REGEX)) {
@@ -291,7 +291,7 @@ export class StaffService {
     }
     const staffExistEmail = await this.findOneStaffByEmail(email);
     if (staffExistEmail) {
-      throw new BadRequestException('EMAIL_EXIST');
+      throw new BadRequestException('EMAIL_ALREADY_EXIST');
     }
     let newFullName = fullName.trim();
     if (!newFullName) {
@@ -308,7 +308,6 @@ export class StaffService {
         code = generateStaffCode();
       }
     }
-
     const staff = new Staff();
     staff.code = code;
     staff.phone = phone;
