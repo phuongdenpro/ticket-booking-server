@@ -14,6 +14,7 @@ import { Twilio } from 'twilio';
 import { templateHtml } from './../utils';
 import * as nodemailer from 'nodemailer';
 import { google } from 'googleapis';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -145,64 +146,104 @@ export class AuthService {
   }
 
   async sendEmailCodeOtp(email: string, otp: string, otpExpireMinute) {
-    const fromEmail = this.configService.get('EMAIL');
-    const companyName = this.configService.get('COMPANY_NAME');
-    const transporter = nodemailer.createTransport({
-      host: this.configService.get('SMTP_HOST'),
-      port: this.configService.get('SMTP_PORT'),
-      secure: false,
-      auth: {
-        user: fromEmail,
-        pass: this.configService.get('EMAIL_PASSWORD'),
-      },
-    });
+    // const fromEmail = this.configService.get('EMAIL');
+    // const transporter = nodemailer.createTransport({
+    //   host: this.configService.get('SMTP_HOST'),
+    //   port: this.configService.get('SMTP_PORT'),
+    //   secure: false,
+    //   auth: {
+    //     user: fromEmail,
+    //     pass: this.configService.get('EMAIL_PASSWORD'),
+    //   },
+    // });
 
-    const options = {
-      from: fromEmail,
-      to: email,
-      subject: `${companyName} - Mã OTP xác nhận`,
-      html: templateHtml(otp, otpExpireMinute),
-    };
-    await transporter.sendMail(options);
+    // const options = {
+    //   from: fromEmail,
+    //   to: email,
+    //   subject: `${companyName} - Mã OTP xác nhận`,
+    //   html: templateHtml(otp, otpExpireMinute),
+    // };
+    // await transporter.sendMail(options);
+    try {
+      const companyName = this.configService.get('COMPANY_NAME');
+      const serverSendMail = this.configService.get('URL_SEND_MAIL_SERVER');
+      await axios.post(
+        serverSendMail,
+        {
+          data: {
+            email,
+            subject: `${companyName} - Mã OTP xác nhận`,
+            otp,
+            optTime: otpExpireMinute,
+          },
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    } catch (error) {
+      console.log(error.message);
+      throw new BadRequestException('SEND_EMAIL_FAILED');
+    }
   }
 
   async sendPasswordToEmail(email: string, password: string) {
-    const clientId = this.configService.get('CLIENT_ID');
-    const clientSecret = this.configService.get('CLIENT_SECRET');
-    const redirectUrl = this.configService.get('REDIRECT_URL');
-    const refreshToken = this.configService.get('REFRESH_TOKEN');
-    const oAuth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUrl);
-    oAuth2Client.setCredentials({ refresh_token: refreshToken });
+    // const clientId = this.configService.get('CLIENT_ID');
+    // const clientSecret = this.configService.get('CLIENT_SECRET');
+    // const redirectUrl = this.configService.get('REDIRECT_URL');
+    // const refreshToken = this.configService.get('REFRESH_TOKEN');
+    // const oAuth2Client = new google.auth.OAuth2(
+    //   clientId,
+    //   clientSecret,
+    //   redirectUrl,
+    // );
+    // oAuth2Client.setCredentials({ refresh_token: refreshToken });
     try {
-      const accessToken = await oAuth2Client.getAccessToken();
-      
-      const fromEmail = this.configService.get('EMAIL');
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        secure: false,
-        auth: {
-          type: 'OAuth2',
-          user: fromEmail,
-          clientId,
-          clientSecret,
-          refreshToken,
-          accessToken,
-        },
-      });
-      
+      // const accessToken = await oAuth2Client.getAccessToken();
+
+      // const fromEmail = this.configService.get('EMAIL');
+      // const transporter = nodemailer.createTransport({
+      //   service: 'gmail',
+      //   secure: false,
+      //   auth: {
+      //     type: 'OAuth2',
+      //     user: fromEmail,
+      //     clientId,
+      //     clientSecret,
+      //     refreshToken,
+      //     accessToken,
+      //   },
+      // });
+
+      // const companyName = this.configService.get('COMPANY_NAME');
+      // const options = {
+      //   from: `"${companyName}" <${fromEmail}>`,
+      //   to: email,
+      //   subject: `${companyName} - Mật khẩu tài khoản admin của bạn`,
+      //   html: templateHtml(null, null, password),
+      // };
+      // await transporter.sendMail(options);
+
       const companyName = this.configService.get('COMPANY_NAME');
-      const options = {
-        from: `"${companyName}" <${fromEmail}>`,
-        to: email,
-        subject: `${companyName} - Mật khẩu tài khoản admin của bạn`,
-        html: templateHtml(null, null, password),
-      };
-      await transporter.sendMail(options);
+      const serverSendMail = this.configService.get('URL_SEND_MAIL_SERVER');
+      await axios.post(
+        serverSendMail,
+        {
+          email,
+          subject: `${companyName} - Mật khẩu tài khoản admin của bạn`,
+          password,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
     } catch (error) {
-      console.log(error);
+      console.log(error.message);
       throw new BadRequestException('SEND_EMAIL_FAILED');
     }
-    
-
   }
 }

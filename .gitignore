@@ -43,6 +43,3 @@ lerna-debug.log*
 .vercel
 yarn.lock
 package-lock.json
-https/ca_bundle.crt
-https/certificate.crt
-https/private.key
