@@ -12,8 +12,18 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import helmet from 'helmet';
 import * as winston from 'winston';
 import * as morgan from 'morgan';
+import * as fs from 'fs';
+import * as https from 'https';
+
 async function bootstrap() {
+  const httpsOptions = {
+    key: fs.readFileSync('./https/private.key'),
+    cert: fs.readFileSync('./https/certificate.crt'),
+    ca: fs.readFileSync('./https/ca_bundle.crt'),
+  };
+
   const app = await NestFactory.create(AppModule, {
+    httpsOptions,
     logger: WinstonModule.createLogger({
       transports: [new winston.transports.Console()],
       format: winston.format.combine(
