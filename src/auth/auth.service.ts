@@ -11,8 +11,9 @@ import { DataSource } from 'typeorm';
 import { JwtPayload } from './interfaces';
 import { Customer, Staff } from '../database/entities';
 import { Twilio } from 'twilio';
-import * as nodemailer from 'nodemailer';
 import { templateHtml } from './../utils';
+import * as nodemailer from 'nodemailer';
+import { google } from 'googleapis';
 
 @Injectable()
 export class AuthService {
@@ -166,24 +167,42 @@ export class AuthService {
   }
 
   async sendPasswordToEmail(email: string, password: string) {
-    const fromEmail = this.configService.get('EMAIL');
-    const companyName = this.configService.get('COMPANY_NAME');
-    const transporter = nodemailer.createTransport({
-      host: this.configService.get('SMTP_HOST'),
-      port: this.configService.get('SMTP_PORT'),
-      secure: false,
-      auth: {
-        user: fromEmail,
-        pass: this.configService.get('EMAIL_PASSWORD'),
-      },
-    });
+    const clientId = this.configService.get('CLIENT_ID');
+    const clientSecret = this.configService.get('CLIENT_SECRET');
+    const redirectUrl = this.configService.get('REDIRECT_URL');
+    const refreshToken = this.configService.get('REFRESH_TOKEN');
+    const oAuth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUrl);
+    oAuth2Client.setCredentials({ refresh_token: refreshToken });
+    try {
+      const accessToken = await oAuth2Client.getAccessToken();
+      
+      const fromEmail = this.configService.get('EMAIL');
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        secure: false,
+        auth: {
+          type: 'OAuth2',
+          user: fromEmail,
+          clientId,
+          clientSecret,
+          refreshToken,
+          accessToken,
+        },
+      });
+      
+      const companyName = this.configService.get('COMPANY_NAME');
+      const options = {
+        from: `"${companyName}" <${fromEmail}>`,
+        to: email,
+        subject: `${companyName} - Mật khẩu tài khoản admin của bạn`,
+        html: templateHtml(null, null, password),
+      };
+      await transporter.sendMail(options);
+    } catch (error) {
+      console.log(error);
+      throw new BadRequestException('SEND_EMAIL_FAILED');
+    }
+    
 
-    const options = {
-      from: fromEmail,
-      to: email,
-      subject: `${companyName} - Mật khẩu tài khoản admin của bạn`,
-      html: templateHtml(null, null, password),
-    };
-    await transporter.sendMail(options);
   }
 }

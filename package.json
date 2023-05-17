@@ -50,6 +50,7 @@
     "cloudinary": "^1.33.0",
     "crypto-js": "^4.1.1",
     "exceljs": "^4.3.0",
+    "googleapis": "^118.0.0",
     "helmet": "^6.0.1",
     "moment": "^2.29.4",
     "morgan": "^1.10.0",

@@ -648,7 +648,8 @@ export const mappingTranslate = {
   ORDER_REFUND_STATUS_IS_ENUM: 'Trạng thái hoá đơn hoàn trả không hợp lệ',
 
   // otp
-  SEND_SMS_FAILED: 'Gửi mã otp thất bại',
+  SEND_SMS_FAILED: 'Gửi sms thất bại',
+  SEND_EMAIL_FAILED: 'Gửi email thất bại',
 
   // statistic
   STATISTICS_TYPE_MUST_BE_WEEK_OR_MONTH:
