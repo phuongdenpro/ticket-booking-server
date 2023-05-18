@@ -13,7 +13,11 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { CurrentUser, Roles } from './../../decorator';
 import { JwtAuthGuard } from './../../auth/guards';
-import { AdminResetPasswordDto, AdminUpdatePasswordDto } from './dto';
+import {
+  AdminResetPasswordDto,
+  AdminUpdateDto,
+  AdminUpdatePasswordDto,
+} from './dto';
 import { ConfirmAccountDto } from '../user/dto';
 
 @Controller('admin')
@@ -28,6 +32,15 @@ export class AdminController {
   @ApiBearerAuth()
   async profile(@CurrentUser() user) {
     return this.adminService.profile(user?.id);
+  }
+
+  @Patch('update-profile')
+  @Roles(RoleEnum.STAFF)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateProfile(@Body() dto: AdminUpdateDto, @CurrentUser() user) {
+    return this.adminService.updateProfile(dto, user?.id);
   }
 
   @Patch('password')

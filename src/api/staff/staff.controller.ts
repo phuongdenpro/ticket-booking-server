@@ -79,7 +79,7 @@ export class StaffController {
     @Body() dto: UpdateStaffDto,
     @CurrentUser() user,
   ) {
-    return await this.staffService.updateStaff(dto, user.id, code);
+    return await this.staffService.updateStaffForAdmin(dto, user.id, code);
   }
 
   @Delete('code/:code')

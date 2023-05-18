@@ -395,6 +395,9 @@ export class CustomerService {
     const province = district.province;
     oldCustomer.fullAddress = `${oldCustomer.address}, ${oldCustomer.ward.name}, ${district.name}, ${province.name}`;
     if (email) {
+      if (!email.match(EMAIL_REGEX)) {
+        throw new BadRequestException('INVALID_EMAIL');
+      }
       if (oldCustomer.email !== email) {
         const userExist = await this.findOneByEmail(email);
         if (userExist) {

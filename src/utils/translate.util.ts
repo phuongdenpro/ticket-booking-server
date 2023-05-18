@@ -36,6 +36,7 @@ export const mappingTranslate = {
   SORT_IS_STRING: 'Giá trị sắp xếp phải là chuỗi ký tự',
   SORT_IS_ENUM: 'Giá trị sắp xếp chỉ nhận 1 trong 2 giá trị: ASC, DESC',
   EMAIL_IS_STRING: 'Email phải là chuỗi ký tự',
+  EMAIL_INVALID: 'Email không đúng định dạng',
   OLD_EMAIL_IS_STRING: 'Email cũ phải là chuỗi ký tự',
   NEW_EMAIL_IS_STRING: 'Email mới phải là chuỗi ký tự',
   EMAIL_IS_REQUIRED: 'Email không được để trống',
@@ -115,6 +116,8 @@ export const mappingTranslate = {
   CREATOR_NOT_FOUND: 'Admin không tồn tại',
   CREATOR_IS_INACTIVE: 'tài khoản Admin này không còn hoạt động',
   CREATOR_ID_REQUIRED: 'Id Admin không được để trống',
+  OLD_PASSWORD_MISMATCH: 'Mật khẩu không đúng',
+  GET_PASSWORD_FAILED: 'Lấy mật khẩu thất bại',
 
   // staff
   STAFF_NOT_FOUND: 'Không tìm thấy nhân viên',

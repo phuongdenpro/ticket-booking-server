@@ -38,6 +38,7 @@ export class StaffService {
     'q.fullName',
     'q.gender',
     'q.address',
+    'q.fullAddress',
     'q.note',
     'q.birthDay',
     'q.isManage',
@@ -63,7 +64,6 @@ export class StaffService {
   async findOneStaff(options: any) {
     return await this.staffRepository.findOne({
       where: { ...options?.where },
-      relations: { ...options?.relations },
       select: {
         id: true,
         lastLogin: true,
@@ -73,12 +73,36 @@ export class StaffService {
         fullName: true,
         gender: true,
         address: true,
+        fullAddress: true,
         note: true,
         birthDay: true,
         code: true,
         createdAt: true,
         isManage: true,
+        ward: {
+          id: true,
+          name: true,
+          code: true,
+          district: {
+            id: true,
+            name: true,
+            code: true,
+            province: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+        },
         ...options?.select,
+      },
+      relations: {
+        ward: {
+          district: {
+            province: true,
+          },
+        },
+        ...options?.relations,
       },
       ...options?.other,
     });
@@ -248,6 +272,8 @@ export class StaffService {
 
     const dataResult = await query
       // .leftJoinAndSelect('q.ward', 'w')
+      // .leftJoinAndSelect('w.district', 'd')
+      // .leftJoinAndSelect('d.province', 'p')
       .select(this.selectFields)
       .offset(pagination.skip)
       .limit(pagination.take)
@@ -336,11 +362,11 @@ export class StaffService {
       relations: { district: { province: true } },
     });
     staff.ward = ward;
-    // if (wardCode) {
-    //   staff.fullAddress = `${address}, ${ward.name}, ${ward.district.name}, ${ward.district.province.name}`;
-    // } else {
-    //   staff.fullAddress = 'Không xác định';
-    // }
+    if (ward) {
+      staff.fullAddress = `${staff.address}, ${ward.name}, ${ward.district.name}, ${ward.district.province.name}`;
+    } else {
+      staff.fullAddress = 'Không xác định';
+    }
 
     if (birthDay) {
       const currentDate = moment().startOf('day').add(7, 'hour').toDate();
@@ -392,7 +418,7 @@ export class StaffService {
     return saveStaff;
   }
 
-  async updateStaff(dto: UpdateStaffDto, userId: string, code: string) {
+  async updateStaffForAdmin(dto: UpdateStaffDto, userId: string, code: string) {
     const admin = await this.getStaffById(userId);
     if (!admin.isActive) {
       throw new BadRequestException('USER_NOT_ACTIVE');
@@ -479,11 +505,9 @@ export class StaffService {
         relations: { district: { province: true } },
       });
       staff.ward = ward;
-      // if (wardCode) {
-      //   staff.fullAddress = `${address}, ${ward.name}, ${ward.district.name}, ${ward.district.province.name}`;
-      // } else {
-      //   staff.fullAddress = 'Không xác định';
-      // }
+      if (ward) {
+        staff.fullAddress = `${staff.address}, ${ward.name}, ${ward.district.name}, ${ward.district.province.name}`;
+      }
     }
 
     if (birthDay) {

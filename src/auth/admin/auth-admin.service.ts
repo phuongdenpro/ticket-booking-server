@@ -200,10 +200,13 @@ export class AuthAdminService {
   }
 
   async sendOtp(dto: SendOtpDto) {
-    const { oldEmail: email, phone: phone } = dto;
+    const { oldEmail, newEmail, phone } = dto;
+    if (!oldEmail && !phone) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
     let staff: Staff;
-    if (email) {
-      staff = await this.adminService.findOneByEmail(email);
+    if (oldEmail) {
+      staff = await this.adminService.findOneByEmail(oldEmail);
     } else if (phone) {
       staff = await this.adminService.findOneByPhone(phone);
     } else {
@@ -224,14 +227,26 @@ export class AuthAdminService {
     if (!saveCustomer) {
       throw new BadRequestException('SEND_OTP_FAILED');
     }
-    if (email) {
-      await this.authService.sendEmailCodeOtp(email, otpCode, otpExpiredTime);
+    if (oldEmail || newEmail) {
+      await this.authService.sendEmailCodeOtp(
+        newEmail || oldEmail,
+        otpCode,
+        otpExpiredTime,
+      );
     } else {
-      await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      if (newEmail) {
+        await this.authService.sendEmailCodeOtp(
+          newEmail,
+          otpCode,
+          otpExpiredTime,
+        );
+      } else {
+        await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      }
     }
 
     return {
-      customer: {
+      staff: {
         id: staff.id,
       },
       message: 'Gửi mã OTP thành công',

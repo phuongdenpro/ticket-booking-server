@@ -17,7 +17,7 @@ export class AdminResetPasswordDto {
 
   @ApiPropertyOptional({ example: 'superman@gmail.com' })
   @IsString({ message: 'EMAIL_IS_STRING' })
-  @IsEmail({}, { message: 'EMAIL_INVALID' })
+  @IsEmail({}, { message: 'INVALID_EMAIL' })
   @IsOptional()
   email: string;
 

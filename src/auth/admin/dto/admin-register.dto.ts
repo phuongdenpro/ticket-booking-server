@@ -16,7 +16,7 @@ export class AdminRegisterDto {
   @IsString({ message: 'EMAIL_IS_STRING' })
   @MinLength(6, { message: 'EMAIL_LENGTH' })
   @MaxLength(100, { message: 'EMAIL_LENGTH' })
-  @IsEmail({}, { message: 'EMAIL_INVALID' })
+  @IsEmail({}, { message: 'INVALID_EMAIL' })
   email: string;
 
   @ApiProperty({ example: '123456' })
