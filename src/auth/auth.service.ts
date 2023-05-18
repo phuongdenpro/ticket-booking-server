@@ -178,12 +178,10 @@ export class AuthService {
       await axios.post(
         serverSendMail,
         {
-          data: {
-            email,
-            subject: `${companyName} - Mã OTP xác nhận`,
-            otp,
-            optTime: otpExpireMinute,
-          },
+          email,
+          subject: `${companyName} - Mã OTP xác nhận`,
+          otp,
+          optTime: otpExpireMinute,
         },
         {
           headers: {
