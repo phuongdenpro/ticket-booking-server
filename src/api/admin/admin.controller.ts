@@ -17,8 +17,8 @@ import {
   AdminResetPasswordDto,
   AdminUpdateDto,
   AdminUpdatePasswordDto,
+  ConfirmAccountAdminDto,
 } from './dto';
-import { ConfirmAccountDto } from '../user/dto';
 
 @Controller('admin')
 @ApiTags('Admin')
@@ -63,7 +63,7 @@ export class AdminController {
 
   @Post('active')
   @HttpCode(HttpStatus.OK)
-  async confirmAccount(@Body() dto: ConfirmAccountDto) {
+  async confirmAccount(@Body() dto: ConfirmAccountAdminDto) {
     return this.adminService.confirmAccount(dto);
   }
 }

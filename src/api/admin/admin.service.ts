@@ -9,9 +9,9 @@ import {
   AdminResetPasswordDto,
   AdminUpdateDto,
   AdminUpdatePasswordDto,
+  ConfirmAccountAdminDto,
 } from './dto';
-import { ConfirmAccountDto } from '../user/dto';
-import moment from 'moment';
+import * as moment from 'moment';
 
 @Injectable()
 export class AdminService {
@@ -352,8 +352,8 @@ export class AdminService {
     return saveUser;
   }
 
-  async confirmAccount(dto: ConfirmAccountDto) {
-    const { phone, email, otp, type } = dto;
+  async confirmAccount(dto: ConfirmAccountAdminDto) {
+    const { phone, email, otp } = dto;
     if (!phone && !email) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
     }
@@ -382,10 +382,7 @@ export class AdminService {
     this.checkOTP(otp, staff.otpCode, staff.otpExpired);
     let saveStaff: Staff;
     let message = 'xác thực đặt lại mật khẩu thành công';
-    // if (type === ActiveOtpTypeEnum.ACTIVE) {
-    //   saveStaff = await this.updateActive(staff.id);
-    // } else if (type === ActiveOtpTypeEnum.RESET_PASSWORD) {
-    // }
+
     saveStaff = await this.updateOtp(
       staff.id,
       null,
@@ -402,12 +399,9 @@ export class AdminService {
   }
 
   async resetPassword(dto: AdminResetPasswordDto) {
-    const { phone, email, otp, newPassword, confirmNewPassword } = dto;
+    const { phone, email, newPassword, confirmNewPassword } = dto;
     if (!phone && !email) {
       throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
-    }
-    if (!otp) {
-      throw new BadRequestException('OTP_REQUIRED');
     }
     if (!newPassword) {
       throw new BadRequestException('NEW_PASSWORD_REQUIRED');
@@ -418,26 +412,20 @@ export class AdminService {
     let admin: Staff;
     if (phone) {
       admin = await this.findOneByPhone(phone, {
-        select: {
-          otpCode: true,
-          otpExpired: true,
-        },
+        select: { noteStatus: true },
       });
     } else if (email) {
       admin = await this.findOneByEmail(email, {
-        select: {
-          otpCode: true,
-          otpExpired: true,
-        },
+        select: { noteStatus: true },
       });
     }
     if (!admin) {
       throw new BadRequestException('USER_NOT_FOUND');
     }
-    // if (!admin.isActive) {
-    //   throw new BadRequestException('USER_NOT_ACTIVE');
-    // }
-    this.checkOTP(otp, admin.otpCode, admin.otpExpired);
+    if (admin.noteStatus !== ActiveOtpTypeEnum.RESET_PASSWORD) {
+      throw new BadRequestException('USER_NOT_RESET_PASSWORD');
+    }
+
     if (newPassword !== confirmNewPassword)
       throw new BadRequestException('PASSWORD_NEW_NOT_MATCH');
     const passwordHash = await this.authService.hashData(newPassword);
@@ -447,14 +435,14 @@ export class AdminService {
     admin.otpExpired = null;
     admin.refreshToken = null;
     admin.accessToken = null;
-    const saveCustomer = await this.adminRepository.save(admin);
-    delete saveCustomer.password;
-    delete saveCustomer.refreshToken;
-    delete saveCustomer.accessToken;
-    delete saveCustomer.otpCode;
-    delete saveCustomer.otpExpired;
-    delete saveCustomer.noteStatus;
+    const saveStaff = await this.adminRepository.save(admin);
+    delete saveStaff.password;
+    delete saveStaff.refreshToken;
+    delete saveStaff.accessToken;
+    delete saveStaff.otpCode;
+    delete saveStaff.otpExpired;
+    delete saveStaff.noteStatus;
 
-    return saveCustomer;
+    return saveStaff;
   }
 }
