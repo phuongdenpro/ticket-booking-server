@@ -449,9 +449,11 @@ export class AdminService {
     admin.accessToken = null;
     const saveCustomer = await this.adminRepository.save(admin);
     delete saveCustomer.password;
-    delete saveCustomer.updatedBy;
     delete saveCustomer.refreshToken;
     delete saveCustomer.accessToken;
+    delete saveCustomer.otpCode;
+    delete saveCustomer.otpExpired;
+    delete saveCustomer.noteStatus;
 
     return saveCustomer;
   }

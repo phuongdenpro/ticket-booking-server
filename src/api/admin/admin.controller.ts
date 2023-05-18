@@ -56,14 +56,8 @@ export class AdminController {
   }
 
   @Patch('reset-password')
-  @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async updateResetPassword(
-    @CurrentUser() user,
-    @Body() dto: AdminResetPasswordDto,
-  ) {
+  async updateResetPassword(@Body() dto: AdminResetPasswordDto) {
     return this.adminService.resetPassword(dto);
   }
 
