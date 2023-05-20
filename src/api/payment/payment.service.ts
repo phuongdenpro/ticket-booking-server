@@ -281,6 +281,7 @@ export class PaymentService {
       const paymentHistory = await this.paymentHService.findPaymentHByOrderCode(
         orderCode,
       );
+
       if (paymentHistory) {
         switch (orderExist.status) {
           case OrderStatusEnum.PAID:
@@ -352,14 +353,22 @@ export class PaymentService {
             Date.now() >
             Number(paymentHistory.createAppTime) + 20 * 60 * 1000
           ) {
-            orderExist.note = 'Thanh toán thất bại';
+            orderExist.note = 'Thanh toán thất bại vì quá thời gian';
             saveOrder = await this.orderRepository.save(orderExist);
             flag = 0;
+            const dtoPH = new UpdatePaymentHistoryDto();
+            dtoPH.status = PaymentHistoryStatusEnum.FAILED;
+            await this.paymentHService.updatePaymentHistoryByOrderCode(orderCode, dtoPH);
             await this.cancelOrderByCode(userId, orderCode);
+            throw new BadRequestException('PAYMENT_FAIL');
           } else if (response.data.return_code === 2) {
             orderExist.note = 'Thanh toán thất bại';
             saveOrder = await this.orderRepository.save(orderExist);
             flag = 0;
+            const dtoPH = new UpdatePaymentHistoryDto();
+            dtoPH.status = PaymentHistoryStatusEnum.FAILED;
+            await this.paymentHService.updatePaymentHistoryByOrderCode(orderCode, dtoPH);
+            await this.cancelOrderByCode(userId, orderCode);
             throw new BadRequestException('PAYMENT_FAIL');
           } else if (response.data.return_code === 3) {
             orderExist.note = 'ZaloPay đang xử lý thanh toán';

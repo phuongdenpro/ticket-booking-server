@@ -170,18 +170,19 @@ export class VehicleService {
     const newVehicle = await this.vehicleService.save(vehicle);
     if (images && images.length > 0) {
       const newImages = await images.map(async (image) => {
-        image.createdBy = adminExist.id;
-        const newImage = await this.imageResourceService.saveImageResource(
-          image,
-          adminExist.id,
-          newVehicle.id,
-        );
-        delete newImage.vehicle;
-        delete newImage.createdBy;
-        delete newImage.updatedBy;
-        delete newImage.deletedAt;
-
-        return newImage;
+        if (!image?.url) {
+          image.createdBy = adminExist.id;
+          const newImage = await this.imageResourceService.saveImageResource(
+            image,
+            adminExist.id,
+            newVehicle.id,
+          );
+          delete newImage.vehicle;
+          delete newImage.createdBy;
+          delete newImage.updatedBy;
+          delete newImage.deletedAt;
+          return newImage;
+        }
       });
       newVehicle.images = await Promise.all(newImages);
     }

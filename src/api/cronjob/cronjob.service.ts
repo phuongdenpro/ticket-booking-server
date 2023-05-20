@@ -29,9 +29,9 @@ export class CronjobService {
       const orderCodes = await this.orderRepository
         .createQueryBuilder('q')
         .where('q.status = :status', { status: OrderStatusEnum.UNPAID })
-        .select(['q.code'])
+        .select(['q.code', 'q.paymentMethod'])
         .getMany();
-
+      
       if (orderCodes.length <= 0) {
         console.log('No order need to cronjob');
       } else {
