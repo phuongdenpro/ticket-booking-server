@@ -413,7 +413,6 @@ export class StatisticsService {
         numberOfOrders: Number(numberOfOrders),
       };
     });
-
     return result;
   }
 

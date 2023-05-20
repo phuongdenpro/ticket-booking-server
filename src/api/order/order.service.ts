@@ -62,7 +62,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PaymentHistoryService } from '../payment-history/payment-history.service';
 import { CreatePaymentHistoryDto } from '../payment-history/dto';
-// moment.locale('vi');
+moment.locale('vi');
 
 @Injectable()
 export class OrderService {
