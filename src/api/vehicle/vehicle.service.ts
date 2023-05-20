@@ -170,18 +170,20 @@ export class VehicleService {
     const newVehicle = await this.vehicleService.save(vehicle);
     if (images && images.length > 0) {
       const newImages = await images.map(async (image) => {
-        if (!image?.url) {
+        if (image?.url && image?.url?.length > 0) {
           image.createdBy = adminExist.id;
           const newImage = await this.imageResourceService.saveImageResource(
             image,
             adminExist.id,
             newVehicle.id,
           );
-          delete newImage.vehicle;
-          delete newImage.createdBy;
-          delete newImage.updatedBy;
-          delete newImage.deletedAt;
-          return newImage;
+          if (newImage) {
+            delete newImage.vehicle;
+            delete newImage.createdBy;
+            delete newImage.updatedBy;
+            delete newImage.deletedAt;
+            return newImage;
+          }
         }
       });
       newVehicle.images = await Promise.all(newImages);
@@ -334,17 +336,20 @@ export class VehicleService {
     const updateVehicle = await this.vehicleService.save(vehicle);
     if (images && images.length > 0) {
       const newImages = await images.map(async (image) => {
-        const newImage = await this.imageResourceService.saveImageResource(
-          image,
-          adminExist.id,
-          updateVehicle.id,
-        );
-        delete newImage.vehicle;
-        delete newImage.createdBy;
-        delete newImage.updatedBy;
-        delete newImage.deletedAt;
-
-        return newImage;
+        if (image?.url && image?.url?.length > 0) {
+          const newImage = await this.imageResourceService.saveImageResource(
+            image,
+            adminExist.id,
+            updateVehicle.id,
+          );
+          if (newImage) {
+            delete newImage.vehicle;
+            delete newImage.createdBy;
+            delete newImage.updatedBy;
+            delete newImage.deletedAt;
+            return newImage;
+          }
+        }
       });
       updateVehicle.images = await Promise.all(newImages);
     }

@@ -20,7 +20,7 @@ export class ImageResourceService {
     vehicleId?: string,
     stationId?: string,
   ) {
-    if (!imageResource?.url) {
+    if (imageResource?.url) {
       const newImage = new ImageResource();
       newImage.url = imageResource.url;
       if (imageResource.id) {
