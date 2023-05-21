@@ -358,7 +358,7 @@ export class PromotionHistoryService {
         if (!promotionHistoryExist) {
           throw new BadRequestException('PROMOTION_HISTORY_NOT_FOUND');
         }
-        promotionHistory.amount = promotionHistoryExist.amount;
+        promotionHistory.amount = promotionHistoryExist.amount * -1;
         promotionHistory.quantity = promotionHistoryExist.quantity;
         promotionHistoryExist.note = PromotionHistoryTypeEnum.CANCEL;
         promotionHistory.type = type;
