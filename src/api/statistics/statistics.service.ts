@@ -148,9 +148,17 @@ export class StatisticsService {
     let startDate;
     const endDate = moment().endOf('day').add(7, 'hour').toDate();
     if (type === 'week' || !type) {
-      startDate = moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
+      startDate = moment()
+        .subtract(7, 'days')
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
     } else if (type === 'month') {
-      startDate = moment().subtract(30, 'days').startOf('day').add(7, 'hour').toDate();
+      startDate = moment()
+        .subtract(30, 'days')
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
     }
 
     const topCustomersDto = new RevenueStatisticsDto();
@@ -174,15 +182,37 @@ export class StatisticsService {
       numOrDate = 30;
     }
 
-    const revenueByDay = await this.orderRepository
+    const result = await this.orderRepository
       .createQueryBuilder('q')
-      .select(['DATE(q.createdAt) as day', 'SUM(q.finalTotal) as total'])
+      .select(['q.createdAt as day', 'SUM(q.finalTotal) as total'])
       .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
       .groupBy('day')
       .getRawMany();
 
-    return revenueByDay;
+    // Sử dụng `reduce` để tính tổng doanh thu từng ngày
+    const dailyRevenue = result.reduce((accumulator, item) => {
+      const day = new Date(item.day);
+      day.setHours(day.getHours() + 7); // Cộng 7 giờ vào giá trị day
+      const formattedDay = day.toISOString().split('T')[0];
+      const total = item.total;
+
+      if (accumulator.has(formattedDay)) {
+        const currentTotal = accumulator.get(formattedDay);
+        accumulator.set(formattedDay, currentTotal + total);
+      } else {
+        accumulator.set(formattedDay, total);
+      }
+
+      return accumulator;
+    }, new Map());
+
+    // Chuyển đổi dữ liệu từ Map thành mảng với định dạng giống result
+    const formattedResult = Array.from(dailyRevenue).map(([day, total]) => {
+      return { day, total };
+    });
+
+    return formattedResult;
   }
 
   // tính tổng số vé bán được theo tuyến trong khoảng thời gian a -> b

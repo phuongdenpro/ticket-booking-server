@@ -980,7 +980,7 @@ export class OrderService {
     const tripDetail: TripDetail =
       orderExist.orderDetails[0].ticketDetail.ticket.tripDetail;
     const departureTime = tripDetail.departureTime;
-    const timeDiff = moment(departureTime).diff(currentDate, 'hours');
+    const timeDiff = moment(departureTime).diff(currentDate, 'minutes');
     if (timeDiff <= 0) {
       throw new BadRequestException('ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE');
     }
