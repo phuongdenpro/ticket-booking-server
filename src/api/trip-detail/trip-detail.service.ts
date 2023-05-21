@@ -190,8 +190,8 @@ export class TripDetailService {
     }
 
     if (departureTime) {
-      const minTime = moment(departureTime).startOf('day').add(7, 'hour').toDate();
-      const maxTime = moment(departureTime).endOf('day').add(7, 'hour').toDate();
+      const minTime = moment(departureTime).startOf('day').toDate();
+      const maxTime = moment(departureTime).endOf('day').toDate();
       query
         .andWhere('q.departureTime >= :minTime', { minTime })
         .andWhere('q.departureTime <= :maxTime', { maxTime });
