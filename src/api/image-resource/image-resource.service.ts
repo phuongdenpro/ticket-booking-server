@@ -20,29 +20,31 @@ export class ImageResourceService {
     vehicleId?: string,
     stationId?: string,
   ) {
-    const newImage = new ImageResource();
-    newImage.url = imageResource.url;
-    if (imageResource.id) {
-      newImage.id = imageResource.id;
-    }
-    if (vehicleId) {
-      const vehicle = await this.dataSource
-        .getRepository(Vehicle)
-        .findOne({ where: { id: vehicleId } });
-      newImage.vehicle = vehicle;
-    }
-    if (stationId) {
-      const station = await this.dataSource
-        .getRepository(Station)
-        .findOne({ where: { id: stationId } });
-      newImage.station = station;
-    }
-    if (!vehicleId && !stationId) {
-      throw new BadRequestException('INVALID_IMAGE_RESOURCE');
-    }
-    newImage.createdBy = userId;
+    if (imageResource?.url) {
+      const newImage = new ImageResource();
+      newImage.url = imageResource.url;
+      if (imageResource.id) {
+        newImage.id = imageResource.id;
+      }
+      if (vehicleId) {
+        const vehicle = await this.dataSource
+          .getRepository(Vehicle)
+          .findOne({ where: { id: vehicleId } });
+        newImage.vehicle = vehicle;
+      }
+      if (stationId) {
+        const station = await this.dataSource
+          .getRepository(Station)
+          .findOne({ where: { id: stationId } });
+        newImage.station = station;
+      }
+      if (!vehicleId && !stationId) {
+        throw new BadRequestException('INVALID_IMAGE_RESOURCE');
+      }
+      newImage.createdBy = userId;
 
-    return await this.imageResourceRepository.save(newImage);
+      return await this.imageResourceRepository.save(newImage);
+    }
   }
 
   async findImageResourcesByStationId(stationId: string, options?: any) {

@@ -116,11 +116,11 @@ export class PromotionService {
       });
     }
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       query.andWhere(`q.startDate >= :startDate`, { startDate: newStartDate });
     }
     if (endDate) {
-      const newEndDate = moment(endDate).endOf('day').toDate();
+      const newEndDate = moment(endDate).endOf('day').add(7, 'hour').toDate();
       query.andWhere(`q.endDate <= :endDate`, { endDate: newEndDate });
     }
     switch (status) {
@@ -189,8 +189,8 @@ export class PromotionService {
     if (!startDate) {
       throw new BadRequestException('START_DATE_IS_REQUIRED');
     }
-    const currentDate = moment().startOf('day').toDate();
-    const newStartDate = moment(startDate).startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
+    const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
     if (newStartDate <= currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
@@ -199,7 +199,7 @@ export class PromotionService {
     if (!endDate) {
       throw new BadRequestException('END_DATE_IS_REQUIRED');
     }
-    const newEndDate = moment(endDate).startOf('day').toDate();
+    const newEndDate = moment(endDate).startOf('day').add(7, 'hour').toDate();
     if (newStartDate > newEndDate) {
       throw new BadRequestException('START_DATE_MUST_BE_LESS_THAN_END_DATE');
     }
@@ -250,7 +250,7 @@ export class PromotionService {
     if (!promotion) {
       throw new NotFoundException('PROMOTION_NOT_FOUND');
     }
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (promotion.endDate < currentDate) {
       throw new BadRequestException('PROMOTION_HAS_EXPIRED');
     }
@@ -292,7 +292,7 @@ export class PromotionService {
     }
 
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       if (newStartDate.getTime() === promotion.startDate.getTime()) {
         if (
           promotion.status === PromotionStatusEnum.ACTIVE &&
@@ -316,7 +316,7 @@ export class PromotionService {
       }
     }
     if (endDate) {
-      const newEndDate = moment(endDate).startOf('day').toDate();
+      const newEndDate = moment(endDate).startOf('day').add(7, 'hour').toDate();
       if (newEndDate.getTime() === promotion.startDate.getTime()) {
         if (endDate < currentDate) {
           throw new BadRequestException(
@@ -363,7 +363,7 @@ export class PromotionService {
     if (!promotion) {
       throw new NotFoundException('PROMOTION_NOT_FOUND');
     }
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (promotion.endDate < currentDate) {
       throw new BadRequestException('PROMOTION_HAS_EXPIRED');
     }
@@ -411,7 +411,7 @@ export class PromotionService {
             message: 'Không tìm thấy chương trình khuyến mãi',
           };
         }
-        const currentDate = moment().startOf('day').toDate();
+        const currentDate = moment().startOf('day').add(7, 'hour').toDate();
         if (promotion.endDate < currentDate) {
           return {
             id: type === DeleteDtoTypeEnum.ID ? data : undefined,

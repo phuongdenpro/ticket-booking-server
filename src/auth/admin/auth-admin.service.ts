@@ -138,11 +138,14 @@ export class AuthAdminService {
     if (!isPasswordMatches) {
       throw new BadRequestException('INVALID_USERNAME_OR_PASSWORD');
     }
+    if (!staffExist.isActive && !staffExist.isFirstLogin) {
+      throw new BadRequestException('USER_NOT_ACTIVE')
+    }
 
     const queryRunner = this.dataSource.createQueryRunner();
     try {
       await queryRunner.startTransaction();
-
+      
       const tokens = await this.authService.createTokens(
         staffExist,
         RoleEnum.STAFF,
@@ -153,6 +156,10 @@ export class AuthAdminService {
         accessToken: tokens.access_token,
         lastLogin: new Date(),
       });
+      if (staffExist.isFirstLogin) {
+        staffExist.isFirstLogin = false;
+        await this.dataSource.getRepository(Staff).save(staffExist)
+      }
 
       await queryRunner.commitTransaction();
 
@@ -193,10 +200,13 @@ export class AuthAdminService {
   }
 
   async sendOtp(dto: SendOtpDto) {
-    const { oldEmail: email, phone: phone } = dto;
+    const { oldEmail, newEmail, phone } = dto;
+    if (!oldEmail && !phone) {
+      throw new BadRequestException('EMAIL_OR_PHONE_REQUIRED');
+    }
     let staff: Staff;
-    if (email) {
-      staff = await this.adminService.findOneByEmail(email);
+    if (oldEmail) {
+      staff = await this.adminService.findOneByEmail(oldEmail);
     } else if (phone) {
       staff = await this.adminService.findOneByPhone(phone);
     } else {
@@ -217,14 +227,26 @@ export class AuthAdminService {
     if (!saveCustomer) {
       throw new BadRequestException('SEND_OTP_FAILED');
     }
-    if (email) {
-      await this.authService.sendEmailCodeOtp(email, otpCode, otpExpiredTime);
+    if (oldEmail || newEmail) {
+      await this.authService.sendEmailCodeOtp(
+        newEmail || oldEmail,
+        otpCode,
+        otpExpiredTime,
+      );
     } else {
-      await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      if (newEmail) {
+        await this.authService.sendEmailCodeOtp(
+          newEmail,
+          otpCode,
+          otpExpiredTime,
+        );
+      } else {
+        await this.authService.sendPhoneCodeOtp(phone, otpCode);
+      }
     }
 
     return {
-      customer: {
+      staff: {
         id: staff.id,
       },
       message: 'Gửi mã OTP thành công',

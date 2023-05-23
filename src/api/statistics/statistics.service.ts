@@ -21,6 +21,7 @@ import {
 } from './dto';
 import * as moment from 'moment';
 import { Pagination } from './../../decorator';
+moment().locale('vi');
 
 @Injectable()
 export class StatisticsService {
@@ -145,11 +146,19 @@ export class StatisticsService {
     // week, month
     const { type, limit } = dto;
     let startDate;
-    const endDate = moment().endOf('day').toDate();
+    const endDate = moment().endOf('day').add(7, 'hour').toDate();
     if (type === 'week' || !type) {
-      startDate = moment().subtract(7, 'days').startOf('day').toDate();
+      startDate = moment()
+        .subtract(7, 'days')
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
     } else if (type === 'month') {
-      startDate = moment().subtract(30, 'days').startOf('day').toDate();
+      startDate = moment()
+        .subtract(30, 'days')
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
     }
 
     const topCustomersDto = new RevenueStatisticsDto();
@@ -173,15 +182,37 @@ export class StatisticsService {
       numOrDate = 30;
     }
 
-    const revenueByDay = await this.orderRepository
+    const result = await this.orderRepository
       .createQueryBuilder('q')
-      .select(['DATE(q.createdAt) as day', 'SUM(q.finalTotal) as total'])
+      .select(['q.createdAt as day', 'SUM(q.finalTotal) as total'])
       .where(`q.createdAt >= DATE_SUB(NOW(), INTERVAL ${numOrDate} DAY)`)
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
       .groupBy('day')
       .getRawMany();
 
-    return revenueByDay;
+    // Sử dụng `reduce` để tính tổng doanh thu từng ngày
+    const dailyRevenue = result.reduce((accumulator, item) => {
+      const day = new Date(item.day);
+      day.setHours(day.getHours() + 7); // Cộng 7 giờ vào giá trị day
+      const formattedDay = day.toISOString().split('T')[0];
+      const total = item.total;
+
+      if (accumulator.has(formattedDay)) {
+        const currentTotal = accumulator.get(formattedDay);
+        accumulator.set(formattedDay, currentTotal + total);
+      } else {
+        accumulator.set(formattedDay, total);
+      }
+
+      return accumulator;
+    }, new Map());
+
+    // Chuyển đổi dữ liệu từ Map thành mảng với định dạng giống result
+    const formattedResult = Array.from(dailyRevenue).map(([day, total]) => {
+      return { day, total };
+    });
+
+    return formattedResult;
   }
 
   // tính tổng số vé bán được theo tuyến trong khoảng thời gian a -> b
@@ -191,17 +222,27 @@ export class StatisticsService {
   ) {
     const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
-      ? moment(startDate).startOf('day').toDate()
-      : moment().subtract(7, 'days').startOf('day').toDate();
+      ? moment(startDate).startOf('day').add(7, 'hour').toDate()
+      : moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     const newEndDate = endDate
-      ? moment(endDate).endOf('day').toDate()
-      : moment().endOf('day').toDate();
-
-    let newKeywords;
-    let subQuery;
+      ? moment(endDate).endOf('day').add(7, 'hour').toDate()
+      : moment().endOf('day').add(7, 'hour').toDate();
+    const queryBuilder = await this.orderRepository
+      .createQueryBuilder('q')
+      .innerJoin('q.orderDetails', 'od')
+      .innerJoin('od.ticketDetail', 'td')
+      .innerJoin('td.ticket', 't')
+      .innerJoin('t.tripDetail', 'trd')
+      .innerJoin('trd.trip', 'tr')
+      .innerJoin('tr.fromStation', 'fs')
+      .innerJoin('tr.toStation', 'ts')
+      .where('q.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      });
     if (keyword) {
-      newKeywords = keyword.trim();
-      subQuery = this.orderRepository
+      const newKeywords = keyword.trim();
+      const subQuery = this.orderRepository
         .createQueryBuilder('q2')
         .innerJoin('q2.orderDetails', 'od2')
         .innerJoin('od2.ticketDetail', 'td2')
@@ -213,40 +254,6 @@ export class StatisticsService {
         .orWhere('tr2.note LIKE :note', { note: `%${newKeywords}%` })
         .select('tr2.id')
         .getQuery();
-    }
-
-    const queryBuilder = await this.orderRepository
-      .createQueryBuilder('q')
-      .innerJoin('q.orderDetails', 'od')
-      .innerJoin('od.ticketDetail', 'td')
-      .innerJoin('td.ticket', 't')
-      .innerJoin('t.tripDetail', 'trd')
-      .innerJoin('trd.trip', 'tr')
-      .innerJoin('tr.fromStation', 'fs')
-      .innerJoin('tr.toStation', 'ts')
-      .select([
-        'tr.id as id',
-        'tr.code as code',
-        'tr.name as name',
-        'tr.startDate as startDate',
-        'tr.endDate as endDate',
-        'tr.status as status',
-        'COUNT(t.id) as totalTickets',
-        'sum(q.total) as totalRevenue',
-        'sum(q.finalTotal) as finalTotalRevenue',
-        'sum(q.total - q.finalTotal) as totalDiscount',
-        'fs.id as fromStationId',
-        'fs.code as fromStationCode',
-        'fs.name as fromStationName',
-        'ts.id as toStationId',
-        'ts.code as toStationCode',
-        'ts.name as toStationName',
-      ])
-      .where('q.createdAt BETWEEN :startDate AND :endDate', {
-        startDate: newStartDate,
-        endDate: newEndDate,
-      });
-    if (keyword) {
       queryBuilder.andWhere('tr.id IN (' + subQuery + ')', {
         code: `%${newKeywords}%`,
         name: `%${newKeywords}%`,
@@ -254,38 +261,90 @@ export class StatisticsService {
       });
     }
     queryBuilder
+      .select([
+        'tr.id as id',
+        'tr.code as code',
+        'tr.name as name',
+        'tr.startDate as startDate',
+        'tr.endDate as endDate',
+        'tr.status as status',
+        'fs.id as fromStationId',
+        'fs.code as fromStationCode',
+        'fs.name as fromStationName',
+        'ts.id as toStationId',
+        'ts.code as toStationCode',
+        'ts.name as toStationName',
+      ])
       .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
       .andWhere('td.deletedAt IS NULL')
       .andWhere('t.deletedAt IS NULL')
       .andWhere('trd.deletedAt IS NULL')
       .groupBy('tr.id')
-      .orderBy('totalTickets', 'DESC')
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10);
-
     const result = await queryBuilder.getRawMany();
-    return result.map((item) => ({
-      id: item.id,
-      code: item.code,
-      name: item.name,
-      startDate: item.startDate,
-      endDate: item.endDate,
-      status: item.status,
-      totalTickets: parseInt(item.totalTickets),
-      totalRevenue: parseFloat(item.totalRevenue),
-      finalTotalRevenue: parseFloat(item.finalTotalRevenue),
-      totalDiscount: parseFloat(item.totalDiscount),
-      fromStation: {
-        id: item['fromStationId'],
-        code: item['fromStationCode'],
-        name: item['fromStationName'],
-      },
-      toStation: {
-        id: item['toStationId'],
-        code: item['toStationCode'],
-        name: item['toStationName'],
-      },
-    }));
+
+    const order = await this.orderRepository
+      .createQueryBuilder('q')
+      .where('q.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+      .groupBy('q.tripCode')
+      .select([
+        'sum(q.total) as totalRevenue',
+        'sum(q.finalTotal) as finalTotalRevenue',
+        'sum(q.total - q.finalTotal) as totalDiscount',
+        'q.tripCode as tripCode',
+      ])
+      .getRawMany();
+
+    const totalTickets = await this.orderRepository
+      .createQueryBuilder('q')
+      .innerJoin('q.orderDetails', 'od')
+      .where('q.createdAt BETWEEN :startDate AND :endDate', {
+        startDate: newStartDate,
+        endDate: newEndDate,
+      })
+      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+      .groupBy('q.tripCode')
+      .select(['COUNT(od.id) as totalTickets', 'q.tripCode as tripCode'])
+      .getRawMany();
+
+    // mapping result, totalTickets, order
+    const data = result.map((item) => {
+      const revenue = order.find(
+        (orderItem) => orderItem.tripCode === item.code,
+      );
+      const total = totalTickets.find(
+        (ticketsItem) => ticketsItem.tripCode === item.code,
+      );
+
+      return {
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        startDate: item.startDate,
+        endDate: item.endDate,
+        status: item.status,
+        totalTickets: total ? total.totalTickets : 0,
+        totalRevenue: revenue ? revenue.totalRevenue : 0,
+        finalTotalRevenue: revenue ? revenue.finalTotalRevenue : 0,
+        totalDiscount: revenue ? revenue.totalDiscount : 0,
+        fromStation: {
+          id: item['fromStationId'],
+          code: item['fromStationCode'],
+          name: item['fromStationName'],
+        },
+        toStation: {
+          id: item['toStationId'],
+          code: item['toStationCode'],
+          name: item['toStationName'],
+        },
+      };
+    });
+    return data;
   }
 
   // tính doanh thu theo khách hàng trong khoảng thời gian a -> b
@@ -296,11 +355,11 @@ export class StatisticsService {
     // week, month
     const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
-      ? moment(startDate).startOf('day').toDate()
-      : moment().subtract(7, 'days').startOf('day').toDate();
+      ? moment(startDate).startOf('day').add(7, 'hour').toDate()
+      : moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     const newEndDate = endDate
-      ? moment(endDate).endOf('day').toDate()
-      : moment().endOf('day').toDate();
+      ? moment(endDate).endOf('day').add(7, 'hour').toDate()
+      : moment().endOf('day').add(7, 'hour').toDate();
 
     let subQuery;
     let newKeywords;
@@ -384,7 +443,6 @@ export class StatisticsService {
         numberOfOrders: Number(numberOfOrders),
       };
     });
-
     return result;
   }
 
@@ -396,11 +454,11 @@ export class StatisticsService {
     // week, month
     const { keyword, startDate, endDate } = dto;
     const newStartDate = startDate
-      ? moment(startDate).startOf('day').toDate()
-      : moment().subtract(7, 'days').startOf('day').toDate();
+      ? moment(startDate).startOf('day').add(7, 'hour').toDate()
+      : moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     const newEndDate = endDate
-      ? moment(endDate).endOf('day').toDate()
-      : moment().endOf('day').toDate();
+      ? moment(endDate).endOf('day').add(7, 'hour').toDate()
+      : moment().endOf('day').add(7, 'hour').toDate();
 
     let subQuery;
     let newKeywords;
@@ -488,11 +546,11 @@ export class StatisticsService {
   ) {
     const { startDate, endDate, keyword } = dto;
     const newStartDate = startDate
-      ? moment(startDate).startOf('day').toDate()
-      : moment().subtract(7, 'days').startOf('day').toDate();
+      ? moment(startDate).startOf('day').add(7, 'hour').toDate()
+      : moment().subtract(7, 'days').startOf('day').add(7, 'hour').toDate();
     const newEndDate = endDate
-      ? moment(endDate).endOf('day').toDate()
-      : moment().endOf('day').toDate();
+      ? moment(endDate).endOf('day').add(7, 'hour').toDate()
+      : moment().endOf('day').add(7, 'hour').toDate();
 
     let subQuery;
     let newKeywords;

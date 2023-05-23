@@ -121,6 +121,8 @@ export class UserService {
     const passwordHash = await this.authService.hashData(newPassword);
     customer.password = passwordHash;
     customer.updatedBy = customer.id;
+    customer.otpCode = null;
+    customer.otpExpired = null;
     customer.refreshToken = null;
     customer.accessToken = null;
     const saveCustomer = await this.customerRepository.save(customer);
@@ -128,6 +130,9 @@ export class UserService {
     delete saveCustomer.updatedBy;
     delete saveCustomer.refreshToken;
     delete saveCustomer.accessToken;
+    delete saveCustomer.otpCode;
+    delete saveCustomer.otpExpired;
+    delete saveCustomer.noteStatus;
 
     return saveCustomer;
   }

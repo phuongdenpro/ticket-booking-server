@@ -1,14 +1,12 @@
 import { CheckStatusZaloPayPaymentDto } from './../payment/dto';
 import { OrderStatusEnum, PaymentMethodEnum } from './../../enums';
-import { DataSource, IsNull, Not, Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { CronjobOrderPaymentDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Order, PaymentHistory } from './../../database/entities';
-import * as moment from 'moment';
 import { PaymentService } from '../payment/payment.service';
-moment.locale('vi');
 
 @Injectable()
 export class CronjobService {
@@ -31,39 +29,32 @@ export class CronjobService {
       const orderCodes = await this.orderRepository
         .createQueryBuilder('q')
         .where('q.status = :status', { status: OrderStatusEnum.UNPAID })
-        .select(['q.code'])
+        .select(['q.code', 'q.paymentMethod'])
         .getMany();
-
+      
       if (orderCodes.length <= 0) {
         console.log('No order need to cronjob');
       } else {
-        const orderCodesInPH = await this.dataSource
-          .getRepository(PaymentHistory)
-          .createQueryBuilder('q')
-          .where('q.orderCode IN (:...orderCodes)', {
-            orderCodes: orderCodes.map((item) => item.code),
-          })
-          .andWhere('q.transId IS NOT NULL')
-          .andWhere('q.createAppTime IS NOT NULL')
-          .select(['q.orderCode'])
-          .getMany();
-        if (orderCodesInPH.length > 0) {
-          const userId = await this.configService.get('ADMIN_ID');
-          const cronjob = await orderCodes.map(async (item) => {
-            const { code } = item;
-            const dto = new CheckStatusZaloPayPaymentDto();
-            dto.orderCode = code;
-            dto.paymentMethod = PaymentMethodEnum.ZALOPAY;
-            const order = await this.paymentService.checkStatusZaloPay(
-              dto,
-              userId,
-            );
-            return order;
-          });
-          await Promise.all(cronjob);
-        } else {
-          console.log('No order need to cronjob');
-        }
+        const userId = await this.configService.get('ADMIN_ID');
+        const cronjob = await orderCodes.map(async (item) => {
+          const { code, paymentMethod } = item;
+          const dto = new CheckStatusZaloPayPaymentDto();
+          dto.orderCode = code;
+          switch (paymentMethod) {
+            case PaymentMethodEnum.ZALOPAY:
+              dto.paymentMethod = PaymentMethodEnum.ZALOPAY;
+              break;
+            default:
+              dto.paymentMethod = undefined;
+              break;
+          }
+          const order = await this.paymentService.checkStatusZaloPay(
+            dto,
+            userId,
+          );
+          return order;
+        });
+        await Promise.all(cronjob);
       }
     } catch (error) {
       console.log(error);

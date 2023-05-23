@@ -23,7 +23,9 @@ const transform = <T>(data?: T): Response<T> => {
   const statusCode = HttpStatus.OK;
   let message = HttpStatus[HttpStatus.OK];
   const code = MESS_CODE.SUCCESS;
-
+  if (data?.['isText']) {
+    return data['file'];
+  }
   if (typeof data === 'string') {
     return { statusCode, message: data, code };
   }

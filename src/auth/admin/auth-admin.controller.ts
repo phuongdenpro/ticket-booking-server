@@ -18,13 +18,13 @@ import { SendOtpDto } from '../customer/dto';
 export class AuthAdminController {
   constructor(private adminService: AuthAdminService) {}
 
-  @Post('register')
-  @HttpCode(HttpStatus.CREATED)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async register(@CurrentUser() user, @Body() dto: AdminRegisterDto) {
-    return this.adminService.register(user?.['id'], dto);
-  }
+  // @Post('register')
+  // @HttpCode(HttpStatus.CREATED)
+  // @UseGuards(JwtAuthGuard)
+  // @ApiBearerAuth()
+  // async register(@CurrentUser() user, @Body() dto: AdminRegisterDto) {
+  //   return this.adminService.register(user?.['id'], dto);
+  // }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)

@@ -4,12 +4,14 @@ import {
   OrderDetail,
   TicketDetail,
   Customer,
+  PromotionHistory,
 } from './../../database/entities';
 import { CheckStatusZaloPayPaymentDto } from './dto';
 import {
   OrderStatusEnum,
   PaymentHistoryStatusEnum,
   PaymentMethodEnum,
+  PromotionHistoryTypeEnum,
   SortEnum,
   TicketStatusEnum,
   UpdatePayHTypeDtoEnum,
@@ -34,7 +36,9 @@ import {
   CreatePaymentHistoryDto,
   UpdatePaymentHistoryDto,
 } from '../payment-history/dto';
-moment.locale('vi');
+import { CreatePromotionHistoryDto } from '../promotion-history/dto';
+import { UpdateOrderDto } from '../order/dto';
+import { PromotionHistoryService } from '../promotion-history/promotion-history.service';
 
 @Injectable()
 export class PaymentService {
@@ -44,6 +48,7 @@ export class PaymentService {
     private readonly customerService: CustomerService,
     private readonly adminService: AdminService,
     private readonly paymentHService: PaymentHistoryService,
+    private readonly promotionHistoryService: PromotionHistoryService,
     private dataSource: DataSource,
     private configService: ConfigService,
   ) {}
@@ -187,6 +192,7 @@ export class PaymentService {
         callback_url: this.configService.get('CALLBACK_URL'),
         mac: '',
       };
+
       const data =
         config.app_id +
         '|' +
@@ -275,111 +281,235 @@ export class PaymentService {
       const paymentHistory = await this.paymentHService.findPaymentHByOrderCode(
         orderCode,
       );
-      if (!paymentHistory) {
-        throw new BadRequestException('PAYMENT_HISTORY_NOT_FOUND');
-      }
-      switch (orderExist.status) {
-        case OrderStatusEnum.PAID:
-          throw new BadRequestException('ORDER_ALREADY_PAID');
-        case OrderStatusEnum.CANCEL:
-          throw new BadRequestException('ORDER_ALREADY_CANCEL');
-        case OrderStatusEnum.RETURNED:
-          throw new BadRequestException('ORDER_ALREADY_RETURNED');
-        default:
-          break;
-      }
-      if (paymentMethod !== PaymentMethodEnum.ZALOPAY) {
-        throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
-      }
-      orderExist.updatedBy = userId;
-      if (!paymentHistory.transId || !paymentHistory.createAppTime) {
-        throw new BadRequestException('TRANSACTION_ID_REQUIRED');
-      }
-      const config = {
-        app_id: this.configService.get('ZALO_PAY_APP_ID'),
-        key1: this.configService.get('ZALO_PAY_KEY_1'),
-        key2: this.configService.get('ZALO_PAY_KEY_2'),
-        endpoint: this.configService.get('ZALO_PAY_ENDPOINT_QUERY'),
-      };
-      const postData = {
-        app_id: config.app_id,
-        app_trans_id: paymentHistory.transId,
-      };
-      const data = `${postData.app_id}|${postData.app_trans_id}|${config.key1}`;
-      postData['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
 
-      const postConfig = {
-        method: 'post',
-        url: config.endpoint,
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        data: qs.stringify(postData),
-      };
-      let flag = 0;
-      const logData = {
-        orderCode,
-        paymentMethod,
-        transId: paymentHistory.transId,
-        createAppTime: paymentHistory.createAppTime,
-      };
-      console.log('check payment: ', logData);
+      if (paymentHistory) {
+        switch (orderExist.status) {
+          case OrderStatusEnum.PAID:
+            throw new BadRequestException('ORDER_ALREADY_PAID');
+          case OrderStatusEnum.CANCEL:
+            throw new BadRequestException('ORDER_ALREADY_CANCEL');
+          case OrderStatusEnum.RETURNED:
+            throw new BadRequestException('ORDER_ALREADY_RETURNED');
+          default:
+            break;
+        }
+        if (paymentMethod !== PaymentMethodEnum.ZALOPAY) {
+          throw new BadRequestException('PAYMENT_METHOD_NOT_FOUND');
+        }
+        orderExist.updatedBy = userId;
+        if (!paymentHistory.transId || !paymentHistory.createAppTime) {
+          throw new BadRequestException('TRANSACTION_ID_REQUIRED');
+        }
+        const config = {
+          app_id: this.configService.get('ZALO_PAY_APP_ID'),
+          key1: this.configService.get('ZALO_PAY_KEY_1'),
+          key2: this.configService.get('ZALO_PAY_KEY_2'),
+          endpoint: this.configService.get('ZALO_PAY_ENDPOINT_QUERY'),
+        };
+        const postData = {
+          app_id: config.app_id,
+          app_trans_id: paymentHistory.transId,
+        };
+        const data = `${postData.app_id}|${postData.app_trans_id}|${config.key1}`;
+        postData['mac'] = CryptoJS.HmacSHA256(data, config.key1).toString();
 
-      await axios(postConfig).then(async (response) => {
-        console.log('return_code: ', response.data.return_code);
-        if (response.data.return_code === 1) {
-          orderExist.paymentMethod = paymentMethod;
-          orderExist.status = OrderStatusEnum.PAID;
-          orderExist.note = 'Thanh toán thành công';
-          const dtoPH = new UpdatePaymentHistoryDto();
-          dtoPH.status = PaymentHistoryStatusEnum.SUCCESS;
-          dtoPH.paymentMethod = paymentMethod;
-          dtoPH.zaloTransId = response.data.zp_trans_id;
-          dtoPH.paymentTime = new Date(response.data.server_time);
-          dtoPH.type = UpdatePayHTypeDtoEnum.UPDATE;
-          dtoPH.amount = orderExist.finalTotal;
-          await this.paymentHService.updatePaymentHistoryByOrderCode(
-            orderCode,
-            dtoPH,
-          );
-          saveOrder = await this.orderRepository.save(orderExist);
-          flag = 1;
-        } else if (
-          Date.now() > Number(paymentHistory.createAppTime) + 15 * 60 * 1000 ||
-          response.data.return_code === 2
-        ) {
-          orderExist.note = 'Thanh toán thất bại';
-          saveOrder = await this.orderRepository.save(orderExist);
-          flag = 0;
+        const postConfig = {
+          method: 'post',
+          url: config.endpoint,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          data: qs.stringify(postData),
+        };
+        let flag = 0;
+        const logData = {
+          orderCode,
+          paymentMethod,
+          transId: paymentHistory.transId,
+          createAppTime: paymentHistory.createAppTime,
+        };
+        console.log('check payment: ', logData);
+
+        await axios(postConfig).then(async (response) => {
+          console.log('return_code: ', response.data.return_code);
+          if (response.data.return_code === 1) {
+            orderExist.paymentMethod = paymentMethod;
+            orderExist.status = OrderStatusEnum.PAID;
+            orderExist.note = 'Thanh toán thành công';
+            const dtoPH = new UpdatePaymentHistoryDto();
+            dtoPH.status = PaymentHistoryStatusEnum.SUCCESS;
+            dtoPH.paymentMethod = paymentMethod;
+            dtoPH.zaloTransId = response.data.zp_trans_id;
+            dtoPH.paymentTime = new Date(response.data.server_time);
+            dtoPH.type = UpdatePayHTypeDtoEnum.UPDATE;
+            dtoPH.amount = orderExist.finalTotal;
+            await this.paymentHService.updatePaymentHistoryByOrderCode(
+              orderCode,
+              dtoPH,
+            );
+            saveOrder = await this.orderRepository.save(orderExist);
+            flag = 1;
+          } else if (
+            Date.now() >
+            Number(paymentHistory.createAppTime) + 20 * 60 * 1000
+          ) {
+            orderExist.note = 'Thanh toán thất bại vì quá thời gian';
+            saveOrder = await this.orderRepository.save(orderExist);
+            flag = 0;
+            const dtoPH = new UpdatePaymentHistoryDto();
+            dtoPH.status = PaymentHistoryStatusEnum.FAILED;
+            await this.paymentHService.updatePaymentHistoryByOrderCode(orderCode, dtoPH);
+            await this.cancelOrderByCode(userId, orderCode);
+            throw new BadRequestException('PAYMENT_FAIL');
+          } else if (response.data.return_code === 2) {
+            orderExist.note = 'Thanh toán thất bại';
+            saveOrder = await this.orderRepository.save(orderExist);
+            flag = 0;
+            const dtoPH = new UpdatePaymentHistoryDto();
+            dtoPH.status = PaymentHistoryStatusEnum.FAILED;
+            await this.paymentHService.updatePaymentHistoryByOrderCode(orderCode, dtoPH);
+            await this.cancelOrderByCode(userId, orderCode);
+            throw new BadRequestException('PAYMENT_FAIL');
+          } else if (response.data.return_code === 3) {
+            orderExist.note = 'ZaloPay đang xử lý thanh toán';
+            flag = 2;
+            saveOrder = await this.orderRepository.save(orderExist);
+            throw new BadRequestException('PAYMENT_NOT_COMPLETE');
+          }
+        });
+
+        if (flag === 0) {
           throw new BadRequestException('PAYMENT_FAIL');
-        } else if (response.data.return_code === 3) {
-          orderExist.note = 'ZaloPay đang xử lý thanh toán';
-          flag = 2;
-          saveOrder = await this.orderRepository.save(orderExist);
+        } else if (flag === 2) {
           throw new BadRequestException('PAYMENT_NOT_COMPLETE');
         }
-      });
-
-      if (flag === 0) {
-        throw new BadRequestException('PAYMENT_FAIL');
-      } else if (flag === 2) {
-        throw new BadRequestException('PAYMENT_NOT_COMPLETE');
+        const orderDetails: OrderDetail[] = orderExist.orderDetails;
+        const ticketDetails = orderDetails.map(async (orderDetail) => {
+          let ticketDetail: TicketDetail = orderDetail.ticketDetail;
+          ticketDetail.status = TicketStatusEnum.SOLD;
+          ticketDetail = await this.dataSource
+            .getRepository(TicketDetail)
+            .save(ticketDetail);
+          delete ticketDetail.deletedAt;
+          return ticketDetail;
+        });
+        await Promise.all(ticketDetails);
+      } else {
+        const currentDate = moment().toDate();
+        const createDate = moment(orderExist.createdAt)
+          .add(20, 'minutes')
+          .toDate();
+        if (currentDate > createDate) {
+          console.log('cancel order: ' + orderCode);
+          orderExist.note = 'Không thanh toán tự động huỷ';
+          saveOrder = await this.orderRepository.save(orderExist);
+          await this.cancelOrderByCode(userId, orderCode);
+        }
       }
-      const orderDetails: OrderDetail[] = orderExist.orderDetails;
-      const ticketDetails = orderDetails.map(async (orderDetail) => {
-        let ticketDetail: TicketDetail = orderDetail.ticketDetail;
-        ticketDetail.status = TicketStatusEnum.SOLD;
-        ticketDetail = await this.dataSource
-          .getRepository(TicketDetail)
-          .save(ticketDetail);
-        delete ticketDetail.deletedAt;
-        return ticketDetail;
-      });
-      await Promise.all(ticketDetails);
       saveOrder = await this.findOneOrderByCode(orderCode);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
     return saveOrder;
+  }
+
+  private async cancelOrderByCode(userId: string, code: string) {
+    if (!userId) {
+      throw new UnauthorizedException('UNAUTHORIZED');
+    }
+    const admin = await this.adminService.findOneById(userId);
+    const customer = await this.customerService.findOneById(userId);
+    if (
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
+    ) {
+      throw new BadRequestException('USER_NOT_ACTIVE');
+    }
+
+    if (!code) {
+      throw new BadRequestException('CODE_REQUIRED');
+    }
+    let order = await this.findOneOrderByCode(code);
+    if (!order) {
+      throw new BadRequestException('ORDER_NOT_FOUND');
+    }
+    if (customer) {
+      if (order.customer.id !== customer.id) {
+        throw new BadRequestException('ORDER_NOT_BELONG_TO_USER');
+      }
+      order.updatedBy = customer.id;
+    } else {
+      order.updatedBy = admin.id;
+    }
+    switch (order.status) {
+      case OrderStatusEnum.CANCEL:
+        throw new BadRequestException('ORDER_ALREADY_CANCEL');
+        break;
+      case OrderStatusEnum.RETURNED:
+        throw new BadRequestException('ORDER_ALREADY_RETURNED');
+        break;
+      case OrderStatusEnum.PAID:
+        if (customer) {
+          throw new BadRequestException('ORDER_NOT_CANCELLED');
+        }
+        break;
+      default:
+        break;
+    }
+    const promotionHistories: PromotionHistory[] = order.promotionHistories;
+    const ticketDetails: TicketDetail[] = order.orderDetails.map(
+      (orderDetail) => orderDetail.ticketDetail,
+    );
+    let saveTicketDetails;
+    const queryTickerDetail = this.dataSource
+      .getRepository(TicketDetail)
+      .manager.connection.createQueryRunner();
+    await queryTickerDetail.connect();
+    await queryTickerDetail.startTransaction();
+
+    const queryOrder =
+      this.orderRepository.manager.connection.createQueryRunner();
+    await queryOrder.connect();
+    await queryOrder.startTransaction();
+    try {
+      if (order.status === OrderStatusEnum.PAID) {
+        throw new BadRequestException('ORDER_ALREADY_PAID');
+      }
+      order.status = OrderStatusEnum.CANCEL;
+      if (promotionHistories && promotionHistories.length > 0) {
+        const destroyPromotionHistories = promotionHistories.map(
+          async (promotionHistory) => {
+            const dto = new CreatePromotionHistoryDto();
+            dto.promotionLineCode = promotionHistory.promotionLineCode;
+            dto.orderCode = promotionHistory.orderCode;
+            dto.type = PromotionHistoryTypeEnum.CANCEL;
+            return await this.promotionHistoryService.createPromotionHistory(
+              dto,
+              userId,
+            );
+          },
+        );
+        await Promise.all(destroyPromotionHistories);
+      }
+      saveTicketDetails = ticketDetails.map((ticketDetail) => {
+        ticketDetail.status = TicketStatusEnum.NON_SOLD;
+        return ticketDetail;
+      });
+
+      await queryTickerDetail.manager.save(saveTicketDetails);
+      await queryTickerDetail.commitTransaction();
+
+      await queryOrder.manager.save(order);
+      await queryOrder.commitTransaction();
+      const saveOrder = await this.findOneOrderByCode(order.code);
+      await queryTickerDetail.release();
+      await queryOrder.release();
+
+      return saveOrder;
+    } catch (error) {
+      await queryTickerDetail.rollbackTransaction();
+      await queryOrder.rollbackTransaction();
+      throw new BadRequestException(error.message);
+    }
   }
 }

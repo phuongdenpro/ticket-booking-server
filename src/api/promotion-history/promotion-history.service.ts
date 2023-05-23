@@ -358,7 +358,7 @@ export class PromotionHistoryService {
         if (!promotionHistoryExist) {
           throw new BadRequestException('PROMOTION_HISTORY_NOT_FOUND');
         }
-        promotionHistory.amount = promotionHistoryExist.amount;
+        promotionHistory.amount = promotionHistoryExist.amount * -1;
         promotionHistory.quantity = promotionHistoryExist.quantity;
         promotionHistoryExist.note = PromotionHistoryTypeEnum.CANCEL;
         promotionHistory.type = type;
@@ -380,12 +380,15 @@ export class PromotionHistoryService {
       delete savedPromotionHistory.deletedAt;
       delete savedPromotionHistory.order;
       delete savedPromotionHistory.promotionLine;
+      
       return savedPromotionHistory;
     } catch (error) {
       await queryRunnerPL.rollbackTransaction();
       await queryRunnerPH.rollbackTransaction();
       throw new BadRequestException(error.message);
     } finally {
+      await queryRunnerPL.release()
+      await queryRunnerPH.release()
     }
   }
 }

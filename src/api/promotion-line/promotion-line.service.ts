@@ -326,11 +326,11 @@ export class PromotionLineService {
       query.andWhere('p.code = :promotionCode', { promotionCode });
     }
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       query.andWhere('q.startDate >= :startDate', { startDate: newStartDate });
     }
     if (endDate) {
-      const newEndDate = moment(endDate).endOf('day').toDate();
+      const newEndDate = moment(endDate).endOf('day').add(7, 'hour').toDate();
       query.andWhere('q.endDate <= :endDate', { endDate: newEndDate });
     }
     switch (type) {
@@ -395,9 +395,9 @@ export class PromotionLineService {
     const { startDate, endDate, minPurchaseAmount, minQuantityBuy, tripCode } =
       dto;
 
-    const currentDate = moment().startOf('day').toDate();
-    const newStartDate = moment(startDate).startOf('day').toDate();
-    const newEndDate = moment(endDate).startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
+    const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+    const newEndDate = moment(endDate).startOf('day').add(7, 'hour').toDate();
     const query = await this.promotionLineRepository
       .createQueryBuilder('pl')
       .where('pl.startDate <= :startDate', {
@@ -594,7 +594,7 @@ export class PromotionLineService {
       }
       promotionLine.promotion = promotion;
 
-      const currentDate = moment().startOf('day').toDate();
+      const currentDate = moment().startOf('day').add(7, 'hour').toDate();
       if (promotion.endDate < currentDate) {
         throw new BadRequestException('PROMOTION_HAS_EXPIRED');
       }
@@ -636,7 +636,7 @@ export class PromotionLineService {
       if (!startDate) {
         promotionLine.startDate = promotion.startDate;
       } else {
-        const newStartDate = moment(startDate).startOf('day').toDate();
+        const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
         if (newStartDate <= currentDate) {
           throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
         }
@@ -657,7 +657,7 @@ export class PromotionLineService {
       if (!endDate) {
         promotionLine.endDate = promotion.endDate;
       } else {
-        const newEndDate = moment(endDate).startOf('day').toDate();
+        const newEndDate = moment(endDate).startOf('day').add(7, 'hour').toDate();
         if (newEndDate < currentDate) {
           throw new BadRequestException(
             'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
@@ -811,7 +811,7 @@ export class PromotionLineService {
     }
 
     const promotion: Promotion = promotionLine.promotion;
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (promotion.endDate < currentDate) {
       throw new BadRequestException('PROMOTION_HAS_EXPIRED');
     }
@@ -869,7 +869,7 @@ export class PromotionLineService {
     }
     // validate start date
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       if (newStartDate <= currentDate) {
         throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
       }
@@ -902,8 +902,8 @@ export class PromotionLineService {
     }
     // validate end date
     if (endDate) {
-      const newEndDate = moment(endDate).startOf('day').toDate();
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newEndDate = moment(endDate).startOf('day').add(7, 'hour').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       if (newEndDate < currentDate) {
         throw new BadRequestException(
           'END_DATE_MUST_BE_GREATER_THAN_OR_EQUAL_TO_NOW',
@@ -1015,7 +1015,7 @@ export class PromotionLineService {
       });
     }
     const promotion: Promotion = promotionLine.promotion;
-    const currentDate = moment().startOf('day').toDate();
+    const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (promotion.endDate < currentDate) {
       throw new BadRequestException('PROMOTION_HAS_EXPIRED');
     }
@@ -1084,7 +1084,7 @@ export class PromotionLineService {
           };
         }
 
-        const currentDate = moment().startOf('day').toDate();
+        const currentDate = moment().startOf('day').add(7, 'hour').toDate();
         if (promotionLine.promotion.endDate < currentDate) {
           throw new BadRequestException('PROMOTION_HAS_EXPIRED');
         }

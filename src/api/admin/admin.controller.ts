@@ -13,8 +13,12 @@ import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { CurrentUser, Roles } from './../../decorator';
 import { JwtAuthGuard } from './../../auth/guards';
-import { AdminResetPasswordDto, AdminUpdatePasswordDto } from './dto';
-import { ConfirmAccountDto } from '../user/dto';
+import {
+  AdminResetPasswordDto,
+  AdminUpdateDto,
+  AdminUpdatePasswordDto,
+  ConfirmAccountAdminDto,
+} from './dto';
 
 @Controller('admin')
 @ApiTags('Admin')
@@ -30,6 +34,15 @@ export class AdminController {
     return this.adminService.profile(user?.id);
   }
 
+  @Patch('update-profile')
+  @Roles(RoleEnum.STAFF)
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  async updateProfile(@Body() dto: AdminUpdateDto, @CurrentUser() user) {
+    return this.adminService.updateProfile(dto, user?.id);
+  }
+
   @Patch('password')
   @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
@@ -43,20 +56,14 @@ export class AdminController {
   }
 
   @Patch('reset-password')
-  @Roles(RoleEnum.STAFF)
   @HttpCode(HttpStatus.OK)
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth()
-  async updateResetPassword(
-    @CurrentUser() user,
-    @Body() dto: AdminResetPasswordDto,
-  ) {
+  async updateResetPassword(@Body() dto: AdminResetPasswordDto) {
     return this.adminService.resetPassword(dto);
   }
 
   @Post('active')
   @HttpCode(HttpStatus.OK)
-  async confirmAccount(@Body() dto: ConfirmAccountDto) {
+  async confirmAccount(@Body() dto: ConfirmAccountAdminDto) {
     return this.adminService.confirmAccount(dto);
   }
 }

@@ -106,7 +106,7 @@ export class AuthCustomerService {
       if (birthday) {
         user.birthday = birthday;
       } else {
-        user.birthday = new Date('01-01-1970');
+        user.birthday = moment('1977-01-01').startOf('day').add(7, 'hour').toDate();
       }
       user.status = UserStatusEnum.INACTIVATE;
       user.otpCode = otpCode;

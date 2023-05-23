@@ -11,8 +11,9 @@ import { DataSource } from 'typeorm';
 import { JwtPayload } from './interfaces';
 import { Customer, Staff } from '../database/entities';
 import { Twilio } from 'twilio';
-import * as nodemailer from 'nodemailer';
 import { templateHtml } from './../utils';
+import * as nodemailer from 'nodemailer';
+import axios from 'axios';
 
 @Injectable()
 export class AuthService {
@@ -144,24 +145,101 @@ export class AuthService {
   }
 
   async sendEmailCodeOtp(email: string, otp: string, otpExpireMinute) {
-    const fromEmail = this.configService.get('EMAIL');
-    const companyName = this.configService.get('COMPANY_NAME');
-    const transporter = nodemailer.createTransport({
-      host: this.configService.get('SMTP_HOST'),
-      port: this.configService.get('SMTP_PORT'),
-      secure: false,
-      auth: {
-        user: fromEmail,
-        pass: this.configService.get('EMAIL_PASSWORD'),
-      },
-    });
+    // cách 1
+    // try {
+    // const fromEmail = this.configService.get('EMAIL');
+    // const transporter = nodemailer.createTransport({
+    //   host: this.configService.get('SMTP_HOST'),
+    //   port: this.configService.get('SMTP_PORT'),
+    //   secure: false,
+    //   auth: {
+    //     user: fromEmail,
+    //     pass: this.configService.get('EMAIL_PASSWORD'),
+    //   },
+    // });
 
-    const options = {
-      from: fromEmail,
-      to: email,
-      subject: `${companyName} - Mã OTP xác nhận`,
-      html: templateHtml(otp, otpExpireMinute),
-    };
-    await transporter.sendMail(options);
+    // const companyName = this.configService.get('COMPANY_NAME');
+    // const options = {
+    //   from: fromEmail,
+    //   to: email,
+    //   subject: `${companyName} - Mã OTP xác nhận`,
+    //   html: templateHtml(otp, otpExpireMinute),
+    // };
+    // await transporter.sendMail(options);
+    // } catch (error) {
+    //   console.log(error.message);
+    //   throw new BadRequestException('SEND_EMAIL_FAILED');
+    // }
+
+    // cách 2
+    try {
+      const companyName = this.configService.get('COMPANY_NAME');
+      const serverSendMail = this.configService.get('URL_SEND_MAIL_SERVER');
+      await axios.post(
+        serverSendMail,
+        {
+          email,
+          subject: `${companyName} - Mã OTP xác nhận`,
+          otp,
+          optTime: otpExpireMinute,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    } catch (error) {
+      console.log(error.message);
+      throw new BadRequestException('SEND_EMAIL_FAILED');
+    }
+  }
+
+  async sendPasswordToEmail(email: string, password: string) {
+    // try {
+    // const fromEmail = this.configService.get('EMAIL');
+    // const transporter = nodemailer.createTransport({
+    //   host: this.configService.get('SMTP_HOST'),
+    //   port: this.configService.get('SMTP_PORT'),
+    //   secure: false,
+    //   auth: {
+    //     user: fromEmail,
+    //     pass: this.configService.get('EMAIL_PASSWORD'),
+    //   },
+    // });
+    // const companyName = this.configService.get('COMPANY_NAME');
+    // const options = {
+    //   from: `"${companyName}" <${fromEmail}>`,
+    //   to: email,
+    //   subject: `${companyName} - Mật khẩu tài khoản admin của bạn`,
+    //   html: templateHtml(null, null, password),
+    // };
+    // await transporter.sendMail(options);
+    // } catch (error) {
+    //   console.log(error.message);
+    //   throw new BadRequestException('SEND_EMAIL_FAILED');
+    // }
+
+    // cách 2
+    try {
+      const companyName = this.configService.get('COMPANY_NAME');
+      const serverSendMail = this.configService.get('URL_SEND_MAIL_SERVER');
+      await axios.post(
+        serverSendMail,
+        {
+          email,
+          subject: `${companyName} - Mật khẩu tài khoản admin của bạn`,
+          password,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+    } catch (error) {
+      console.log(error.message);
+      throw new BadRequestException('SEND_EMAIL_FAILED');
+    }
   }
 }

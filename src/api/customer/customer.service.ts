@@ -25,6 +25,7 @@ import { AddCustomerDto, RemoveCustomerDto } from '../customer-group/dto';
 import { EMAIL_REGEX, PHONE_REGEX, generateCustomerCode } from './../../utils';
 import * as bcrypt from 'bcrypt';
 import * as moment from 'moment';
+moment.locale('vi');
 
 @Injectable()
 export class CustomerService {
@@ -234,11 +235,10 @@ export class CustomerService {
         .orWhere('q2.fullAddress LIKE :fullAddress', {
           fullAddress: `%${newKeywords}%`,
         })
-        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .select('q2.id')
         .getQuery();
 
-      query.andWhere(`q.id in (${subQuery})`, {
+      query.andWhere(`u.id in (${subQuery})`, {
         fullName: `%${newKeywords}%`,
         email: `%${newKeywords}%`,
         phone: `%${newKeywords}%`,
@@ -250,7 +250,6 @@ export class CustomerService {
     if (status) {
       query.andWhere('u.status = :status', { status });
     }
-    const total = await query.clone().getCount();
 
     const dataResult = await query
       .leftJoinAndSelect('u.customerGroup', 'cg')
@@ -261,6 +260,7 @@ export class CustomerService {
       .addOrderBy('u.email', SortEnum.ASC)
       .select(this.selectFieldsWithQ)
       .getMany();
+    const total = await query.clone().getCount();
 
     return { dataResult, pagination, total };
   }
@@ -357,20 +357,16 @@ export class CustomerService {
     }
     switch (gender) {
       case GenderEnum.MALE:
-        oldCustomer.gender = GenderEnum.MALE;
-        break;
       case GenderEnum.FEMALE:
-        oldCustomer.gender = GenderEnum.FEMALE;
-        break;
       case GenderEnum.OTHER:
-        oldCustomer.gender = GenderEnum.OTHER;
+        oldCustomer.gender = gender;
         break;
       default:
         oldCustomer.gender = GenderEnum.OTHER;
         break;
     }
     if (birthDate) {
-      oldCustomer.birthday = birthDate;
+      oldCustomer.birthday = moment(birthDate).startOf('day').add(7, 'hour').toDate();
     }
     if (wardId) {
       const ward = await this.dataSource.getRepository(Ward).findOne({
@@ -399,6 +395,9 @@ export class CustomerService {
     const province = district.province;
     oldCustomer.fullAddress = `${oldCustomer.address}, ${oldCustomer.ward.name}, ${district.name}, ${province.name}`;
     if (email) {
+      if (!email.match(EMAIL_REGEX)) {
+        throw new BadRequestException('INVALID_EMAIL');
+      }
       if (oldCustomer.email !== email) {
         const userExist = await this.findOneByEmail(email);
         if (userExist) {
@@ -508,7 +507,7 @@ export class CustomerService {
       }
       customer.birthday = birthday;
     } else {
-      customer.birthday = moment().startOf('day').toDate();
+      customer.birthday = moment().startOf('day').add(7, 'hour').toDate();
     }
 
     if (email) {
@@ -650,7 +649,7 @@ export class CustomerService {
       }
     }
     if (birthday) {
-      customer.birthday = birthday;
+      customer.birthday = moment(birthday).startOf('day').add(7, 'hour').toDate();
     }
     let customerGroupExist;
     if (customerGroupId) {

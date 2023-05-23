@@ -144,79 +144,79 @@ export class WardController {
   }
 
   // crawl data
-  @Get('crawl2')
-  @HttpCode(HttpStatus.OK)
-  async crawlData2(@GetPagination() pagination?: Pagination) {
-    const districts = await this.dataSource.getRepository(District).find({
-      order: {
-        code: 'ASC',
-      },
-      skip: pagination.skip,
-      take: pagination.take,
-    });
-    districts.forEach(async (element) => {
-      const url = `https://provinces.open-api.vn/api/d/${element.code}?depth=2`;
-      const response = await axios.get(url);
+  // @Get('crawl2')
+  // @HttpCode(HttpStatus.OK)
+  // async crawlData2(@GetPagination() pagination?: Pagination) {
+  //   const districts = await this.dataSource.getRepository(District).find({
+  //     order: {
+  //       code: 'ASC',
+  //     },
+  //     skip: pagination.skip,
+  //     take: pagination.take,
+  //   });
+  //   districts.forEach(async (element) => {
+  //     const url = `https://provinces.open-api.vn/api/d/${element.code}?depth=2`;
+  //     const response = await axios.get(url);
 
-      response.data.wards.forEach(async (e) => {
-        // const dto = new SaveWardDto();
-        // dto.name = e.name;
-        // dto.code = e.code;
-        // dto.type = e.division_type;
-        // dto.codename = e.codename;
-        // dto.districtCode = element.code;
-        // await this.wardService.createWard(
-        //   dto,
-        //   '08926136-26d8-4176-827e-060cc7e6285d',
-        // );
-        if (e.code) {
-          const w = await this.wardService.findOneByCode(e.code);
-          if (!w) {
-            const ward = new Ward();
-            ward.name = e.name;
-            ward.code = e.code;
-            ward.type = e.division_type;
-            ward.codename = e.codename;
-            ward.districtCode = element.code;
-            ward.district = element;
-            ward.createdBy = '08926136-26d8-4176-827e-060cc7e6285d';
-            await this.dataSource.getRepository(Ward).save(ward);
-          }
-        }
-      });
-    });
-  }
+  //     response.data.wards.forEach(async (e) => {
+  //       // const dto = new SaveWardDto();
+  //       // dto.name = e.name;
+  //       // dto.code = e.code;
+  //       // dto.type = e.division_type;
+  //       // dto.codename = e.codename;
+  //       // dto.districtCode = element.code;
+  //       // await this.wardService.createWard(
+  //       //   dto,
+  //       //   '08926136-26d8-4176-827e-060cc7e6285d',
+  //       // );
+  //       if (e.code) {
+  //         const w = await this.wardService.findOneByCode(e.code);
+  //         if (!w) {
+  //           const ward = new Ward();
+  //           ward.name = e.name;
+  //           ward.code = e.code;
+  //           ward.type = e.division_type;
+  //           ward.codename = e.codename;
+  //           ward.districtCode = element.code;
+  //           ward.district = element;
+  //           ward.createdBy = '08926136-26d8-4176-827e-060cc7e6285d';
+  //           await this.dataSource.getRepository(Ward).save(ward);
+  //         }
+  //       }
+  //     });
+  //   });
+  // }
 
-  @Get('crawl')
-  @HttpCode(HttpStatus.OK)
-  async crawlData(@GetPagination() pagination?: Pagination) {
-    const districts = await this.dataSource.getRepository(District).find({
-      order: {
-        code: 'ASC',
-      },
-      skip: pagination.skip,
-      take: pagination.take,
-    });
-    districts.forEach(async (district) => {
-      console.log(district.code);
-      const url = `https://provinces.open-api.vn/api/d/${district.code}?depth=2`;
-      const response = await axios.get(url);
-      response.data.wards.forEach(async (ward) => {
-        const oldWard = await this.wardService.findOneByCode(ward.code);
-        console.log(ward.codename);
-        if (!oldWard) {
-          const dto = new SaveWardDto();
-          dto.name = ward.name;
-          dto.code = ward.code;
-          dto.type = ward.division_type;
-          dto.codename = ward.codename;
-          dto.districtCode = district.code;
-          const saveWard = await this.wardService.createWard(
-            dto,
-            '08926136-26d8-4176-827e-060cc7e6285d',
-          );
-        }
-      });
-    });
-  }
+  // @Get('crawl')
+  // @HttpCode(HttpStatus.OK)
+  // async crawlData(@GetPagination() pagination?: Pagination) {
+  //   const districts = await this.dataSource.getRepository(District).find({
+  //     order: {
+  //       code: 'ASC',
+  //     },
+  //     skip: pagination.skip,
+  //     take: pagination.take,
+  //   });
+  //   districts.forEach(async (district) => {
+  //     console.log(district.code);
+  //     const url = `https://provinces.open-api.vn/api/d/${district.code}?depth=2`;
+  //     const response = await axios.get(url);
+  //     response.data.wards.forEach(async (ward) => {
+  //       const oldWard = await this.wardService.findOneByCode(ward.code);
+  //       console.log(ward.codename);
+  //       if (!oldWard) {
+  //         const dto = new SaveWardDto();
+  //         dto.name = ward.name;
+  //         dto.code = ward.code;
+  //         dto.type = ward.division_type;
+  //         dto.codename = ward.codename;
+  //         dto.districtCode = district.code;
+  //         const saveWard = await this.wardService.createWard(
+  //           dto,
+  //           '08926136-26d8-4176-827e-060cc7e6285d',
+  //         );
+  //       }
+  //     });
+  //   });
+  // }
 }

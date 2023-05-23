@@ -416,11 +416,11 @@ export class OrderService {
     }
 
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').toDate();
+      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
       query.andWhere('q.createdAt >= :newStartDate', { newStartDate });
     }
     if (endDate) {
-      const newEndDate = moment(endDate).endOf('day').toDate();
+      const newEndDate = moment(endDate).endOf('day').add(7, 'hour').toDate();
       query.andWhere('q.createdAt <= :newEndDate', { newEndDate });
     }
 
@@ -613,7 +613,6 @@ export class OrderService {
       customer = customerCreator;
     }
 
-
     // check trip detail
     const tripDetail = await this.tripDetailService.getTripDetailByCode(
       tripDetailCode,
@@ -623,7 +622,7 @@ export class OrderService {
     );
     const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
     const currentDatePlus1Hours = new Date(
-      moment().add(1, 'hours').format('YYYY-MM-DD HH:mm'),
+      moment(currentDate).add(1, 'hours').format('YYYY-MM-DD HH:mm'),
     );
     if (currentDate >= tripDetail.departureTime) {
       throw new BadRequestException('TRIP_DETAIL_HAS_PASSED');
@@ -640,6 +639,7 @@ export class OrderService {
     }
 
     const order = new Order();
+    order.tripCode = tripDetail.trip.code;
     order.note = note;
     order.customer = customer;
     if (customerCreator) {
@@ -794,14 +794,9 @@ export class OrderService {
     }
     const admin = await this.adminService.findOneById(userId);
     const customer = await this.customerService.findOneById(userId);
-    if (customer) {
-      throw new BadRequestException('ORDER_NOT_CANCELLED');
-    }
-
     if (
-      // (customer && customer.status === UserStatusEnum.INACTIVATE) ||
-      admin &&
-      !admin.isActive
+      (customer && customer.status === UserStatusEnum.INACTIVATE) ||
+      (admin && !admin.isActive)
     ) {
       throw new BadRequestException('USER_NOT_ACTIVE');
     }
@@ -833,6 +828,11 @@ export class OrderService {
       case OrderStatusEnum.RETURNED:
         throw new BadRequestException('ORDER_ALREADY_RETURNED');
         break;
+      case OrderStatusEnum.PAID:
+        if (customer) {
+          throw new BadRequestException('ORDER_NOT_CANCELLED');
+        }
+        break;
       default:
         break;
     }
@@ -847,6 +847,11 @@ export class OrderService {
       this.ticketDetailRepository.manager.connection.createQueryRunner();
     await queryTickerDetail.connect();
     await queryTickerDetail.startTransaction();
+
+    const queryOrder =
+      this.orderRepository.manager.connection.createQueryRunner();
+    await queryOrder.connect();
+    await queryOrder.startTransaction();
     try {
       switch (status) {
         case OrderUpdateStatusCustomerEnum.CANCEL:
@@ -878,8 +883,6 @@ export class OrderService {
           if (order.status === OrderStatusEnum.UNPAID) {
             throw new BadRequestException('ORDER_NOT_PAID');
           }
-          order.status = OrderStatusEnum.RETURNED;
-
           const currentDate = new Date(moment().format('YYYY-MM-DD HH:mm'));
           const tripDetail: TripDetail =
             order.orderDetails[0].ticketDetail.ticket.tripDetail;
@@ -914,17 +917,24 @@ export class OrderService {
             ticketDetail.status = TicketStatusEnum.NON_SOLD;
             return ticketDetail;
           });
+          order.status = OrderStatusEnum.RETURNED;
           break;
         default:
           break;
       }
       await queryTickerDetail.manager.save(saveTicketDetails);
       await queryTickerDetail.commitTransaction();
+      
+      await queryOrder.manager.save(order);
+      await queryOrder.commitTransaction();
+      const saveOrder = await this.findOneOrderByCode(order.code);
+      await queryTickerDetail.release();
+      await queryOrder.release();
 
-      const saveOrder = await this.orderRepository.save(order);
       return saveOrder;
     } catch (error) {
       await queryTickerDetail.rollbackTransaction();
+      await queryOrder.rollbackTransaction();
       throw new BadRequestException(error.message);
     }
   }
@@ -970,7 +980,7 @@ export class OrderService {
     const tripDetail: TripDetail =
       orderExist.orderDetails[0].ticketDetail.ticket.tripDetail;
     const departureTime = tripDetail.departureTime;
-    const timeDiff = moment(departureTime).diff(currentDate, 'hours');
+    const timeDiff = moment(departureTime).diff(currentDate, 'minutes');
     if (timeDiff <= 0) {
       throw new BadRequestException('ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE');
     }
@@ -1111,7 +1121,7 @@ export class OrderService {
       orderDetail.ticketDetail = ticketDetail;
       // get price detail
       const ticketDetailId = ticketDetail.id;
-      const currentDate = moment().startOf('day').toDate();
+      const currentDate = moment().startOf('day').add(7, 'hour').toDate();
 
       const { dataResult } =
         await this.priceListService.findPriceDetailForBooking({
@@ -1333,6 +1343,7 @@ export class OrderService {
         break;
     }
     const orderRefundExist = await this.findOneOrderRefundByCode(orderCode);
+
     if (orderRefundExist) {
       throw new BadRequestException('ORDER_IS_RETURNED', {
         description: `Đơn hàng đã được trả lại có mã là ${orderRefundExist.code}`,
