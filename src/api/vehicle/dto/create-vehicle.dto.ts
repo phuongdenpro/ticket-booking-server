@@ -28,7 +28,6 @@ export class CreateVehicleDto {
   name: string;
 
   @ApiProperty({ example: 'Xe giường nằm Limousine số 1, 34 chỗ, phòng đôi' })
-  // @IsNotEmpty({ message: 'DESCRIPTION_IS_REQUIRED' })
   @IsString({ message: 'DESCRIPTION_IS_STRING' })
   @Length(0, 1000, { message: 'DESCRIPTION_BETWEEN_1_1000_CHARACTERS' })
   @IsOptional()

@@ -16,19 +16,44 @@ export class PromotionDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'quantity_buy', type: 'int', nullable: false })
+  @Column({
+    name: 'quantity_buy',
+    type: 'int',
+    nullable: false,
+    unsigned: true,
+  })
   quantityBuy: number;
 
-  @Column({ name: 'purchase_amount', type: 'double', nullable: true })
+  @Column({
+    name: 'purchase_amount',
+    type: 'double',
+    nullable: true,
+    unsigned: true,
+  })
   purchaseAmount: number;
 
-  @Column({ name: 'reduction_amount', type: 'double', nullable: true })
+  @Column({
+    name: 'reduction_amount',
+    type: 'double',
+    nullable: true,
+    unsigned: true,
+  })
   reductionAmount: number;
 
-  @Column({ name: 'percent_discount', type: 'double', nullable: true })
+  @Column({
+    name: 'percent_discount',
+    type: 'double',
+    nullable: true,
+    unsigned: true,
+  })
   percentDiscount: number;
 
-  @Column({ name: 'maximum_reduction_amount', type: 'double', nullable: true })
+  @Column({
+    name: 'maximum_reduction_amount',
+    type: 'double',
+    nullable: true,
+    unsigned: true,
+  })
   maxReductionAmount: number;
 
   @Column({ name: 'promotion_line_code', type: 'varchar', nullable: false })

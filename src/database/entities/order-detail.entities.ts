@@ -16,7 +16,13 @@ export class OrderDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'total', type: 'double', nullable: true, default: 0.0 })
+  @Column({
+    name: 'total',
+    type: 'double',
+    nullable: true,
+    default: 0.0,
+    unsigned: true,
+  })
   total: number;
 
   @Column({ name: 'note', type: 'text' })

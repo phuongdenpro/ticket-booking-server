@@ -1,17 +1,17 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsDate, IsEnum, IsOptional, IsString } from 'class-validator';
-import { TripDetailStatusEnum } from './../../../enums';
+import { TripDetailStatusEnum } from '../../../enums';
 
-export class UpdateTripDetailDto {
+export class UpdateTripDetailForTripDto {
   @ApiPropertyOptional({ example: '2023-02-12' })
   @IsOptional()
   @IsDate({ message: 'INVALID_DATE' })
   departureTime: Date;
 
-  // @ApiPropertyOptional({ example: 5 })
-  // @IsOptional()
+  @ApiPropertyOptional({ example: 5 })
+  @IsOptional()
   // @IsDate({ context: { errorCode: 400, description: 'INVALID_DATE' } })
-  // travelHours: number;
+  travelHours: number;
 
   @ApiPropertyOptional({
     example: TripDetailStatusEnum.NOT_SOLD_OUT,

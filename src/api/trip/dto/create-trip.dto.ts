@@ -7,6 +7,7 @@ import {
   IsEnum,
   Length,
   IsDate,
+  IsNumber,
 } from 'class-validator';
 
 export class CreateTripDto {
@@ -39,6 +40,14 @@ export class CreateTripDto {
   @IsDate({ message: 'END_DATE_IS_DATE' })
   @IsOptional()
   endDate: Date;
+
+  @ApiProperty({ example: 5 })
+  @IsNotEmpty({ message: 'TRAVEL_HOURS_IS_REQUIRED' })
+  @IsNumber(
+    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 1 },
+    { message: 'TRAVEL_HOURS_IS_NUMBER' },
+  )
+  travelHours: number;
 
   @ApiProperty({ example: 'd7d44845-b906-4a3c-be7b-232cc555f019' })
   @IsString({ message: 'FROM_STATION_ID_IS_REQUIRED' })

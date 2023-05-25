@@ -20,7 +20,13 @@ export class PriceDetail {
   @Column({ name: 'code', type: 'varchar', length: 100, nullable: false })
   code: string;
 
-  @Column({ name: 'price', type: 'double', nullable: false, default: 0.0 })
+  @Column({
+    name: 'price',
+    type: 'double',
+    nullable: false,
+    default: 0.0,
+    unsigned: true,
+  })
   price: number;
 
   @Column({ name: 'seat_type', type: 'varchar', length: 100, nullable: false })

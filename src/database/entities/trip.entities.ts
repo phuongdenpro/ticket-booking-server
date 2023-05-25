@@ -32,6 +32,15 @@ export class Trip {
   @Column({ name: 'end_date', type: 'timestamp', nullable: true })
   endDate: Date;
 
+  @Column({
+    name: 'travel_hours',
+    type: 'int',
+    nullable: false,
+    default: 1,
+    unsigned: true,
+  })
+  travelHours: number;
+
   @Column({ name: 'status', type: 'varchar', length: 100, default: false })
   status: ActiveStatusEnum;
 

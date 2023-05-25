@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Staff, Trip, TripDetail, Vehicle } from './../../database/entities';
 import {
   DataSource,
+  EntityManager,
   LessThanOrEqual,
   MoreThanOrEqual,
   Repository,
@@ -18,6 +19,7 @@ import {
   UpdateTripDetailDto,
   FilterTripDetailDto,
   BusScheduleDto,
+  UpdateTripDetailForTripDto,
 } from './dto';
 import {
   DeleteDtoTypeEnum,
@@ -113,6 +115,7 @@ export class TripDetailService {
           note: true,
           startDate: true,
           endDate: true,
+          travelHours: true,
           status: true,
           fromStation: {
             id: true,
@@ -247,7 +250,6 @@ export class TripDetailService {
     const {
       code,
       departureTime,
-      expectedTime,
       status,
       tripId,
       tripCode,
@@ -302,7 +304,11 @@ export class TripDetailService {
     if (!departureTime) {
       throw new BadRequestException('DEPARTURE_TIME_REQUIRED');
     }
-    const tomorrowDate = moment().add(1, 'days').startOf('day').add(7, 'hour').toDate();
+    const tomorrowDate = moment()
+      .add(1, 'days')
+      .startOf('day')
+      .add(7, 'hour')
+      .toDate();
 
     if (departureTime < tomorrowDate) {
       throw new BadRequestException(
@@ -319,25 +325,14 @@ export class TripDetailService {
         'DEPARTURE_DATE_LESS_THAN_OR_EQUAL_TO_TRIP_END_DATE',
       );
     }
-    tripDetail.departureTime = departureTime;
+    tripDetail.departureTime = moment(departureTime).startOf('minute').toDate();
 
-    if (!expectedTime) {
-      throw new BadRequestException('EXPECTED_TIME_REQUIRED');
-    }
-    const expectedDate = new Date(
-      moment(departureTime).add(2, 'hours').format('YYYY-MM-DD HH:mm'),
-    );
-    if (expectedTime < expectedDate) {
-      throw new BadRequestException(
-        'EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_DEPARTURE_DATE_PLUS_2_HOURS',
-      );
-    }
-    if (expectedTime < trip.startDate) {
-      throw new BadRequestException(
-        'EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE',
-      );
-    }
+    const expectedTime = moment(departureTime)
+      .add(trip.travelHours, 'hours')
+      .startOf('minute')
+      .toDate();
     tripDetail.expectedTime = expectedTime;
+    tripDetail.travelHours = trip.travelHours;
 
     // check status
     switch (status) {
@@ -415,12 +410,13 @@ export class TripDetailService {
   }
 
   async updateTripDetailByIdOrCode(
-    dto: UpdateTripDetailDto,
+    dto: UpdateTripDetailDto | UpdateTripDetailForTripDto,
     userId: string,
     id?: string,
     code?: string,
+    manager?: EntityManager,
   ) {
-    const { status, vehicleId, departureTime, expectedTime, vehicleCode } = dto;
+    const { status, vehicleId, departureTime, vehicleCode } = dto;
 
     let tripDetail: TripDetail;
     if (!id && !code) {
@@ -448,52 +444,68 @@ export class TripDetailService {
       throw new BadRequestException('TRIP_DETAIL_HAS_ENDED_NOT_UPDATE');
     }
 
-    const currentDatePlus15M = new Date(
-      moment().add(15, 'minutes').format('YYYY-MM-DD HH:mm'),
+    const currentDatePlus2H = new Date(
+      moment().add(2, 'hours').format('YYYY-MM-DD HH:mm'),
     );
     if (departureTime) {
-      if (departureTime < currentDatePlus15M) {
-        throw new BadRequestException(
-          'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_CURRENT_DATE_PLUS_15_MINUTES',
-        );
-      }
-      if (departureTime < trip.startDate) {
-        throw new BadRequestException(
-          'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE',
-        );
-      }
-      if (departureTime > trip.endDate) {
-        throw new BadRequestException(
-          'DEPARTURE_DATE_LESS_THAN_OR_EQUAL_TO_TRIP_END_DATE',
-        );
-      }
-      if (
-        (expectedTime && departureTime >= expectedTime) ||
-        (!expectedTime && departureTime >= tripDetail.expectedTime)
-      ) {
-        throw new BadRequestException(
-          'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
-        );
-      }
-      tripDetail.departureTime = departureTime;
-    }
-    if (expectedTime) {
-      const departureTime2 = departureTime || tripDetail.departureTime;
-      const expectedDate = new Date(
-        moment(departureTime2).add(2, 'hours').format('YYYY-MM-DD HH:mm'),
+      const timeDiff = moment(departureTime).diff(
+        tripDetail.departureTime,
+        'minute',
       );
-      if (expectedTime < expectedDate) {
-        throw new BadRequestException(
-          'EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_DEPARTURE_DATE_PLUS_2_HOURS',
-        );
+      if (timeDiff != 0) {
+        if (departureTime < currentDatePlus2H) {
+          throw new BadRequestException(
+            'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_CURRENT_DATE_PLUS_2_HOURS',
+          );
+        }
+        if (departureTime < trip.startDate) {
+          throw new BadRequestException(
+            'DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE',
+          );
+        }
+        if (departureTime > trip.endDate) {
+          throw new BadRequestException(
+            'DEPARTURE_DATE_LESS_THAN_OR_EQUAL_TO_TRIP_END_DATE',
+          );
+        }
+        if (departureTime >= tripDetail.expectedTime) {
+          throw new BadRequestException(
+            'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
+          );
+        }
+        tripDetail.departureTime = moment(departureTime)
+          .startOf('minute')
+          .toDate();
+        if (trip?.travelHours) {
+          const currentDate = moment().toDate();
+          const timeDiff = moment(tripDetail.departureTime).diff(
+            currentDate,
+            'hours',
+          );
+          if (timeDiff >= 2) {
+            tripDetail.travelHours = trip.travelHours;
+            tripDetail.expectedTime = moment(tripDetail.departureTime)
+              .add(tripDetail.travelHours, 'hours')
+              .startOf('minute')
+              .toDate();
+          }
+        }
       }
-      if (expectedTime < trip.startDate) {
-        throw new BadRequestException(
-          'EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_TRIP_START_DATE',
-        );
-      }
-      tripDetail.expectedTime = expectedTime;
     }
+    const { travelHours } = dto as UpdateTripDetailForTripDto;
+    if (travelHours) {
+      if (travelHours < 1) {
+        throw new BadRequestException('TRAVEL_HOURS_GREATER_THAN_1');
+      }
+      if (travelHours !== trip.travelHours) {
+        tripDetail.travelHours = travelHours;
+        tripDetail.expectedTime = moment(tripDetail.departureTime)
+          .add(travelHours, 'hours')
+          .startOf('minute')
+          .toDate();
+      }
+    }
+
     switch (status) {
       case TripDetailStatusEnum.NOT_SOLD_OUT:
       case TripDetailStatusEnum.SOLD_OUT:
@@ -531,8 +543,16 @@ export class TripDetailService {
       throw new UnauthorizedException('USER_NOT_ACTIVE');
     }
     tripDetail.updatedBy = adminExist.id;
-
-    const saveTripDetail = await this.tripDetailRepository.save(tripDetail);
+    let saveTripDetail;
+    if (manager) {
+      try {
+        saveTripDetail = await manager.save(tripDetail);
+      } catch (error) {
+        throw new BadRequestException('UPDATE_TRIP_DETAIL_FAILED');
+      }
+    } else {
+      saveTripDetail = await this.tripDetailRepository.save(tripDetail);
+    }
     const vehicle: Vehicle = tripDetail.vehicle;
     return {
       id: saveTripDetail.id,
@@ -690,7 +710,10 @@ export class TripDetailService {
     if (startDate > endDate) {
       throw new BadRequestException('START_DATE_MUST_BE_BEFORE_END_DATE');
     }
-    const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+    const newStartDate = moment(startDate)
+      .startOf('day')
+      .add(7, 'hour')
+      .toDate();
     const newEndDate = moment(endDate).endOf('day').add(7, 'hour').toDate();
     // startDate not more than 7 days from endDate
     if (moment(newEndDate).diff(moment(newStartDate), 'days') > 7) {

@@ -23,12 +23,12 @@ export class CreateTripDetailDto {
   @IsDate({ message: 'INVALID_DATE' })
   departureTime: Date;
 
-  @ApiProperty({
-    example: moment().add(10, 'hours').format('YYYY-MM-DD HH:mm'),
-  })
-  @IsNotEmpty({ message: 'EXPECTED_TIME_REQUIRED' })
-  @IsDate({ context: { errorCode: 400, description: 'INVALID_DATE' } })
-  expectedTime: Date;
+  // @ApiProperty({
+  //   example: moment().add(10, 'hours').format('YYYY-MM-DD HH:mm'),
+  // })
+  // @IsNotEmpty({ message: 'EXPECTED_TIME_REQUIRED' })
+  // @IsDate({ context: { errorCode: 400, description: 'INVALID_DATE' } })
+  // expectedTime: Date;
 
   @ApiPropertyOptional({
     example: TripDetailStatusEnum.NOT_SOLD_OUT,

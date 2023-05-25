@@ -38,10 +38,10 @@ export class Vehicle {
   })
   licensePlate: string;
 
-  @Column({ name: 'floor_number', type: 'int', nullable: true, default: 1 })
+  @Column({ name: 'floor_number', type: 'int', nullable: true, default: 1, unsigned: true })
   floorNumber: number;
 
-  @Column({ name: 'total_seat', type: 'int', nullable: true, default: 1 })
+  @Column({ name: 'total_seat', type: 'int', nullable: true, default: 1, unsigned: true })
   totalSeat: number;
 
   @Column({ name: 'created_by', type: 'varchar', nullable: true })

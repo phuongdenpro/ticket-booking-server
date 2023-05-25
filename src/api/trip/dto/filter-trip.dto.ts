@@ -1,6 +1,6 @@
 import { SortEnum, ActiveStatusEnum } from './../../../enums';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsDate, IsEnum } from 'class-validator';
+import { IsString, IsOptional, IsDate, IsEnum, IsNumber } from 'class-validator';
 
 export class FilterTripDto {
   @ApiPropertyOptional({
@@ -19,6 +19,22 @@ export class FilterTripDto {
   @IsDate({ message: 'TRIP_END_DATE_INVALID' })
   @IsOptional()
   endDate: Date;
+
+  @ApiPropertyOptional({ example: 5 })
+  @IsNumber(
+    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 1 },
+    { message: 'MIN_TRAVEL_HOURS_IS_NUMBER' },
+  )
+  @IsOptional()
+  minTravelHours: number;
+
+  @ApiPropertyOptional({ example: 5 })
+  @IsNumber(
+    { allowInfinity: false, allowNaN: false, maxDecimalPlaces: 1 },
+    { message: 'MAX_TRAVEL_HOURS_IS_NUMBER' },
+  )
+  @IsOptional()
+  maxTravelHours: number;
 
   @ApiPropertyOptional({
     example: ActiveStatusEnum.ACTIVE,

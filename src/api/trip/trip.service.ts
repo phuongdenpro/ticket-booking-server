@@ -10,11 +10,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Staff, Station, Trip } from './../../database/entities';
-import { DataSource, Repository } from 'typeorm';
+import { Staff, Station, Trip, TripDetail } from './../../database/entities';
+import { DataSource, MoreThanOrEqual, Repository } from 'typeorm';
 import { SortEnum, DeleteDtoTypeEnum, ActiveStatusEnum } from './../../enums';
 import { Pagination } from './../../decorator';
 import * as moment from 'moment';
+import { TripDetailService } from '../trip-detail/trip-detail.service';
+import { UpdateTripDetailForTripDto } from '../trip-detail/dto';
 // moment.locale('vi');
 
 @Injectable()
@@ -22,6 +24,7 @@ export class TripService {
   constructor(
     @InjectRepository(Trip)
     private readonly tripRepository: Repository<Trip>,
+    private readonly tripDetailService: TripDetailService,
     private dataSource: DataSource,
   ) {}
 
@@ -79,6 +82,9 @@ export class TripService {
   }
 
   async findOneTripById(id: string, options?: any) {
+    if (!id) {
+      throw new BadRequestException('TRIP_ID_REQUIRED');
+    }
     if (options) {
       options.where = { id, ...options.where };
     } else {
@@ -88,6 +94,9 @@ export class TripService {
   }
 
   async findOneTripByCode(code: string, options?: any) {
+    if (!code) {
+      throw new BadRequestException('TRIP_CODES_IS_REQUIRED');
+    }
     if (options) {
       options.where = { code, ...options.where };
     } else {
@@ -111,6 +120,7 @@ export class TripService {
       note,
       startDate,
       endDate,
+      travelHours,
       fromStationId,
       toStationId,
       status,
@@ -140,7 +150,10 @@ export class TripService {
     trip.note = note;
     // check start date
     const currentDate = moment().startOf('day').add(7, 'hour').toDate();
-    const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+    const newStartDate = moment(startDate)
+      .startOf('day')
+      .add(7, 'hour')
+      .toDate();
     if (newStartDate <= currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
@@ -157,6 +170,16 @@ export class TripService {
       );
     }
     trip.endDate = newEndDate;
+
+    if (!travelHours) {
+      throw new BadRequestException('TRAVEL_HOURS_IS_REQUIRED');
+    }
+    if (travelHours < 1) {
+      throw new BadRequestException(
+        'TRAVEL_HOURS_MUST_BE_GREATER_THAN_OR_EQUAL_TO_ONE',
+      );
+    }
+    trip.travelHours = travelHours;
     // check from station
     const fromStation = await this.dataSource
       .getRepository(Station)
@@ -213,6 +236,8 @@ export class TripService {
       status,
       startDate,
       endDate,
+      minTravelHours,
+      maxTravelHours,
       toStationCode,
       fromStationCode,
       sort,
@@ -226,18 +251,19 @@ export class TripService {
         .select('q.id')
         .where('q.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q.name LIKE :name', { name: `%${newKeywords}%` })
-        .orWhere('q.note LIKE :note', { note: `%${newKeywords}%` })
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {
         code: `%${newKeywords}%`,
         name: `%${newKeywords}%`,
-        note: `%${newKeywords}%`,
       });
     }
 
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+      const newStartDate = moment(startDate)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       query.andWhere('q.startDate >= :startDate', { startDate: newStartDate });
     }
     if (endDate) {
@@ -255,6 +281,12 @@ export class TripService {
     }
     if (toStationCode) {
       query.andWhere('ts.code = :toStationCode', { toStationCode });
+    }
+    if (minTravelHours) {
+      query.andWhere('q.travelHours >= :minTravelHours', { minTravelHours });
+    }
+    if (maxTravelHours) {
+      query.andWhere('q.travelHours <= :maxTravelHours', { maxTravelHours });
     }
     switch (status) {
       case ActiveStatusEnum.ACTIVE:
@@ -307,6 +339,7 @@ export class TripService {
       note,
       startDate,
       endDate,
+      travelHours,
       fromStationId,
       toStationId,
       status,
@@ -342,8 +375,14 @@ export class TripService {
 
     const currentDate = moment().startOf('day').add(7, 'hour').toDate();
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
-      const oldStartDate = moment(trip.startDate).startOf('day').add(7, 'hour').toDate();
+      const newStartDate = moment(startDate)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
+      const oldStartDate = moment(trip.startDate)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       if (newStartDate.getTime() !== oldStartDate.getTime()) {
         if (newStartDate <= currentDate) {
           throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
@@ -361,7 +400,10 @@ export class TripService {
     }
     if (endDate) {
       const newEndDate = moment(endDate).startOf('day').add(7, 'hour').toDate();
-      const oldEndDate = moment(trip.endDate).startOf('day').add(7, 'hour').toDate();
+      const oldEndDate = moment(trip.endDate)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       if (newEndDate.getTime() !== oldEndDate.getTime()) {
         if (newEndDate < currentDate) {
           throw new BadRequestException(
@@ -380,44 +422,107 @@ export class TripService {
       }
     }
 
-    if (fromStationId) {
-      const fromStation = await this.dataSource
-        .getRepository(Station)
-        .findOne({ where: { id: fromStationId } });
-      if (!fromStation) {
-        throw new BadRequestException('FROM_STATION_NOT_FOUND');
-      }
-      trip.fromStation = fromStation;
-    }
-    if (toStationId) {
-      const toStation = await this.dataSource
-        .getRepository(Station)
-        .findOne({ where: { id: toStationId } });
-      if (!toStation) {
-        throw new BadRequestException('TO_STATION_NOT_FOUND');
-      }
-      trip.toStation = toStation;
-    }
-    if (fromStationId === toStationId) {
-      throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
-    }
-    switch (status) {
-      case ActiveStatusEnum.ACTIVE:
-      case ActiveStatusEnum.INACTIVE:
-        trip.status = status;
-        break;
-      default:
-        break;
-    }
-    trip.updatedBy = adminExist.id;
+    const queryTrip =
+      this.tripRepository.manager.connection.createQueryRunner();
+    await queryTrip.connect();
+    await queryTrip.startTransaction();
+    let updateTrip: Trip;
 
-    const updateTrip = await this.tripRepository.save(trip);
+    const queryTripDetail = this.dataSource
+      .getRepository(TripDetail)
+      .manager.connection.createQueryRunner();
+    await queryTripDetail.connect();
+    await queryTripDetail.startTransaction();
+    try {
+      if (travelHours) {
+        if (travelHours < 1) {
+          throw new BadRequestException(
+            'TRAVEL_HOURS_MUST_BE_GREATER_THAN_OR_EQUAL_TO_ONE',
+          );
+        }
+        if (trip.travelHours !== travelHours) {
+          trip.travelHours = travelHours;
+          const tomorrow = moment().startOf('days').add(1, 'days').toDate();
+          console.log('trip.code', trip.code);
+          
+          const tripDetails = await this.findOneTripByCode(trip.code, {
+            relations: {
+              tripDetails: true,
+            },
+            where: {
+              tripDetails: {
+                departureTime: MoreThanOrEqual(tomorrow),
+              },
+            },
+          });
+          if (tripDetails && tripDetails.tripDetails.length > 0) {
+            const updateTripDetails = tripDetails.tripDetails.map(
+              async (tripDetail) => {
+                const dto = new UpdateTripDetailForTripDto();
+                dto.travelHours = travelHours;
+                await this.tripDetailService.updateTripDetailByIdOrCode(
+                  dto,
+                  userId,
+                  tripDetail.id,
+                  undefined,
+                  queryTripDetail.connection.createEntityManager(),
+                );
+              },
+            );
+            await Promise.all(updateTripDetails);
+          }
+        }
+      }
+      // throw new BadRequestException('TEST');
+      if (fromStationId) {
+        if (fromStationId === toStationId) {
+          throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
+        }
+        const fromStation = await this.dataSource
+          .getRepository(Station)
+          .findOne({ where: { id: fromStationId } });
+        if (!fromStation) {
+          throw new BadRequestException('FROM_STATION_NOT_FOUND');
+        }
+        trip.fromStation = fromStation;
+      }
+      if (toStationId) {
+        if (fromStationId === toStationId) {
+          throw new BadRequestException('FROM_STATION_AND_TO_STATION_IS_SAME');
+        }
+        const toStation = await this.dataSource
+          .getRepository(Station)
+          .findOne({ where: { id: toStationId } });
+        if (!toStation) {
+          throw new BadRequestException('TO_STATION_NOT_FOUND');
+        }
+        trip.toStation = toStation;
+      }
+      switch (status) {
+        case ActiveStatusEnum.ACTIVE:
+        case ActiveStatusEnum.INACTIVE:
+          trip.status = status;
+          break;
+        default:
+          break;
+      }
+      trip.updatedBy = adminExist.id;
+      updateTrip = await queryTrip.manager.save(trip);
+      await queryTrip.commitTransaction();
+    } catch (e) {
+      await queryTrip.rollbackTransaction();
+      throw new BadRequestException(e.message);
+    } finally {
+      await queryTrip.release();
+    }
+
     return {
       id: updateTrip.id,
       name: updateTrip.name,
       note: updateTrip.note,
       startDate: updateTrip.startDate,
       endDate: updateTrip.endDate,
+      travelHours: updateTrip.travelHours,
       isActive: updateTrip.status,
       createdBy: updateTrip.createdBy,
       updatedBy: updateTrip.updatedBy,
