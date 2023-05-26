@@ -1,6 +1,7 @@
 import {
   OrderStatusEnum,
   PromotionHistoryTypeEnum,
+  SortEnum,
   TicketStatusEnum,
 } from '../../enums';
 import {
@@ -562,15 +563,15 @@ export class StatisticsService {
       .where(`pl.startDate BETWEEN :startDate AND :endDate`, {
         startDate: newStartDate,
         endDate: newEndDate,
-      })
-      // .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
-      // .andWhere('ph.quantity > 0')
-      // .andWhere('ph.type not in (:type)', {
-      //   type: [
-      //     PromotionHistoryTypeEnum.CANCEL,
-      //     PromotionHistoryTypeEnum.REFUND,
-      //   ],
-      // });
+      });
+    // .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+    // .andWhere('ph.quantity > 0')
+    // .andWhere('ph.type not in (:type)', {
+    //   type: [
+    //     PromotionHistoryTypeEnum.CANCEL,
+    //     PromotionHistoryTypeEnum.REFUND,
+    //   ],
+    // });
     if (keyword) {
       newKeywords = keyword.trim();
       subQuery = this.pLineRepository
@@ -605,7 +606,7 @@ export class StatisticsService {
         'pd.maxReductionAmount as promotionDetail_maxReductionAmount',
       ])
       .groupBy('pl.id')
-      .orderBy('pl.id', 'DESC')
+      .orderBy('pl.startDate', SortEnum.DESC)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10);
 
