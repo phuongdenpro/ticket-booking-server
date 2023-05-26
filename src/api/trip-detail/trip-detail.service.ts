@@ -468,11 +468,6 @@ export class TripDetailService {
             'DEPARTURE_DATE_LESS_THAN_OR_EQUAL_TO_TRIP_END_DATE',
           );
         }
-        if (departureTime >= tripDetail.expectedTime) {
-          throw new BadRequestException(
-            'EXPECTED_DATE_GREATER_THAN_DEPARTURE_DATE',
-          );
-        }
         tripDetail.departureTime = moment(departureTime)
           .startOf('minute')
           .toDate();
