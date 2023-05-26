@@ -35,6 +35,7 @@ export class TripService {
     'q.note',
     'q.startDate',
     'q.endDate',
+    'q.travelHours',
     'q.createdBy',
     'q.updatedBy',
     'q.status',
@@ -301,9 +302,7 @@ export class TripService {
       .leftJoinAndSelect('q.fromStation', 'fs')
       .leftJoinAndSelect('q.toStation', 'ts')
       .select(this.tripSelectFieldsWithQ)
-      .orderBy('q.name', SortEnum.ASC)
-      .addOrderBy('q.code', SortEnum.ASC)
-      .addOrderBy('q.createdAt', sort || SortEnum.DESC)
+      .orderBy('q.createdAt', sort || SortEnum.DESC)
       .offset(pagination.skip)
       .limit(pagination.take)
       .getMany();
