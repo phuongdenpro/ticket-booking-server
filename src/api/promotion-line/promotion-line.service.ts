@@ -305,11 +305,11 @@ export class PromotionLineService {
         .orWhere('q2.couponCode LIKE :couponCode', {
           couponCode: `%${newKeywords}%`,
         })
-        .where('q2.title LIKE :title', { title: `%${newKeywords}%` })
-        .where('q2.description LIKE :description', {
+        .orWhere('q2.title LIKE :title', { title: `%${newKeywords}%` })
+        .orWhere('q2.description LIKE :description', {
           description: `%${newKeywords}%`,
         })
-        .where('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
         .select('q2.id')
         .getQuery();
 

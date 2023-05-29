@@ -150,13 +150,13 @@ export class CustomerGroupService {
       const newKeywords = keywords.trim();
       const subQuery = this.customerGroupRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
         .orWhere('q2.description LIKE :description', {
           description: `%${newKeywords}%`,
         })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

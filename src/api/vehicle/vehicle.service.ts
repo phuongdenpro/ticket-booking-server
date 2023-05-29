@@ -229,7 +229,6 @@ export class VehicleService {
       const newKeywords = keywords.trim();
       const subQuery = this.vehicleService
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.licensePlate LIKE :licensePlate', {
           licensePlate: `%${newKeywords}%`,
@@ -238,6 +237,7 @@ export class VehicleService {
         .where('q2.description LIKE :description', {
           description: `%${newKeywords}%`,
         })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {

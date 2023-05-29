@@ -367,9 +367,9 @@ export class OrderService {
       const newKeywords = keywords.trim();
       const subQuery = this.orderRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id IN (${subQuery})`, {

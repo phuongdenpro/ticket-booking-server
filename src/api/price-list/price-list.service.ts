@@ -291,10 +291,10 @@ export class PriceListService {
       const newKeywords = keywords.trim();
       const subQuery = this.priceListRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {
@@ -679,9 +679,9 @@ export class PriceListService {
       const newKeywords = keywords.trim();
       const subQuery = this.priceDetailRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {
