@@ -416,7 +416,7 @@ export const mappingTranslate = {
   TRIP_EXISTED_IN_PRICE_LIST:
     'Loại ghế của tuyến này đã tồn tại trong bảng giá đang hoạt động khác',
   // price details
-  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết bảng giá',
+  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy giá vé',
   PRICE_IS_NUMBER: 'Giá phải là số',
   MAX_PRICE_IS_NUMBER: 'Giá tối đa phải là số',
   MIN_PRICE_IS_NUMBER: 'Giá tối thiểu phải là số',

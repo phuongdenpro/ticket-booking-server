@@ -22,6 +22,7 @@ import {
   UpdateTripDetailForTripDto,
 } from './dto';
 import {
+  ActiveStatusEnum,
   DeleteDtoTypeEnum,
   SortEnum,
   TripDetailStatusEnum,
@@ -183,6 +184,7 @@ export class TripDetailService {
       fromProvinceCode,
       toProvinceCode,
       sort,
+      isPriceDetailExist,
     } = dto;
     const query = this.tripDetailRepository.createQueryBuilder('q');
 
@@ -231,9 +233,34 @@ export class TripDetailService {
         .leftJoinAndSelect('q.toProvince', 'tp')
         .andWhere('tp.code = :toProvinceCode', { toProvinceCode });
     }
+    query.leftJoinAndSelect('q.trip', 't');
+
+    if (isPriceDetailExist) {
+      const minTime = moment(departureTime).startOf('day').toDate();
+      const maxTime = moment(departureTime).endOf('day').toDate();
+
+      const subQuery = this.tripDetailRepository
+        .createQueryBuilder('q2')
+        .leftJoinAndSelect('q2.trip', 't2')
+        .leftJoinAndSelect('t2.priceDetails', 'pds2')
+        .leftJoinAndSelect('pds2.priceList', 'pl2')
+        .leftJoinAndSelect('q2.vehicle', 'v2')
+        .where('pl2.status = :plStatus', { plStatus: ActiveStatusEnum.ACTIVE })
+        .andWhere('pl2.startDate <= :now', { now: new Date() })
+        .andWhere('pl2.endDate >= :now', { now: new Date() })
+        .andWhere('v2.type = pds2.seatType')
+        .andWhere('q2.departureTime >= :minTime', { minTime })
+        .andWhere('q2.departureTime <= :maxTime', { maxTime })
+        .select('q2.id');
+      query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
+        plStatus: ActiveStatusEnum.ACTIVE,
+        now: new Date(),
+        minTime,
+        maxTime,
+      });
+    }
 
     const dataResult = await query
-      .leftJoinAndSelect('q.trip', 't')
       .select(this.tripDetailSelect)
       .orderBy('q.departureTime', sort || SortEnum.ASC)
       .addOrderBy('q.createdAt', SortEnum.ASC)
