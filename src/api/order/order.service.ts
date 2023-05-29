@@ -43,6 +43,7 @@ import {
   TicketStatusEnum,
   UserStatusEnum,
   PaymentHistoryStatusEnum,
+  ActiveStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -634,7 +635,7 @@ export class OrderService {
     }
     // check trip
     const trip = tripDetail.trip;
-    if (trip.startDate > currentDate || trip.endDate < currentDate) {
+    if (trip.status === ActiveStatusEnum.INACTIVE) {
       throw new BadRequestException('TRIP_NOT_ACTIVE');
     }
 
