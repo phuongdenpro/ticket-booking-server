@@ -417,7 +417,10 @@ export class OrderService {
     }
 
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+      const newStartDate = moment(startDate)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       query.andWhere('q.createdAt >= :newStartDate', { newStartDate });
     }
     if (endDate) {
@@ -925,7 +928,7 @@ export class OrderService {
       }
       await queryTickerDetail.manager.save(saveTicketDetails);
       await queryTickerDetail.commitTransaction();
-      
+
       await queryOrder.manager.save(order);
       await queryOrder.commitTransaction();
       const saveOrder = await this.findOneOrderByCode(order.code);
