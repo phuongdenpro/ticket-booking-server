@@ -212,13 +212,13 @@ export class PaymentHistoryService {
       const subQuery = await this.paymentHRepository
         .createQueryBuilder('q1')
         .leftJoinAndSelect('q1.order', 'order')
-        .select('q1.id')
         .where('LOWER(q1.code) LIKE LOWER(:code)', {
           code: `%${newKeywords}%`,
         })
         .orWhere('LOWER(q1.orderCode) LIKE LOWER(:orderCode)', {
           orderCode: `%${newKeywords}%`,
-        });
+        })
+        .select('q1.id');
       query.andWhere(`q.id IN (${subQuery.getQuery()})`);
     }
     if (minAmount) {
@@ -256,13 +256,19 @@ export class PaymentHistoryService {
         break;
     }
     if (fromDatePaymentTime) {
-      const newFromDate = moment(fromDatePaymentTime).startOf('day').add(7, 'hour').toDate();
+      const newFromDate = moment(fromDatePaymentTime)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       query.andWhere('q.paymentTime >= :fromDatePaymentTime', {
         fromDatePaymentTime: newFromDate,
       });
     }
     if (toDatePaymentTime) {
-      const newToDate = moment(toDatePaymentTime).startOf('day').add(7, 'hour').toDate();
+      const newToDate = moment(toDatePaymentTime)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       query.andWhere('q.paymentTime <= :toDatePaymentTime', {
         toDatePaymentTime: newToDate,
       });

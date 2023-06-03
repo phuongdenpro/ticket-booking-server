@@ -47,16 +47,40 @@ export class PromotionLine {
   @Column({ name: 'type', type: 'varchar', length: 200, nullable: false })
   type: PromotionTypeEnum;
 
-  @Column({ name: 'use_budget', type: 'double', nullable: false, default: 0 })
+  @Column({
+    name: 'use_budget',
+    type: 'double',
+    nullable: false,
+    default: 0,
+    unsigned: true,
+  })
   useBudget: number;
 
-  @Column({ name: 'max_budget', type: 'double', nullable: false, default: 1 })
+  @Column({
+    name: 'max_budget',
+    type: 'double',
+    nullable: false,
+    default: 1,
+    unsigned: true,
+  })
   maxBudget: number;
 
-  @Column({ name: 'use_quantity', type: 'double', nullable: false, default: 0 })
+  @Column({
+    name: 'use_quantity',
+    type: 'double',
+    nullable: false,
+    default: 0,
+    unsigned: true,
+  })
   useQuantity: number;
 
-  @Column({ name: 'max_quantity', type: 'int', nullable: false, default: 1 })
+  @Column({
+    name: 'max_quantity',
+    type: 'int',
+    nullable: false,
+    default: 1,
+    unsigned: true,
+  })
   maxQuantity: number;
 
   @Column({

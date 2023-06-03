@@ -1,6 +1,7 @@
 import {
   OrderStatusEnum,
   PromotionHistoryTypeEnum,
+  SortEnum,
   TicketStatusEnum,
 } from '../../enums';
 import {
@@ -554,23 +555,23 @@ export class StatisticsService {
 
     let subQuery;
     let newKeywords;
-    const query = this.orderRepository
-      .createQueryBuilder('q')
-      .leftJoinAndSelect('q.promotionHistories', 'ph')
-      .leftJoinAndSelect('ph.promotionLine', 'pl')
+    const query = this.pLineRepository
+      .createQueryBuilder('pl')
+      // .leftJoinAndSelect('ph.promotionLine', 'pl')
+      // .leftJoinAndSelect('pl.promotionHistory', 'ph')
       .leftJoinAndSelect('pl.promotionDetail', 'pd')
-      .where(`q.createdAt BETWEEN :startDate AND :endDate`, {
+      .where(`pl.startDate BETWEEN :startDate AND :endDate`, {
         startDate: newStartDate,
         endDate: newEndDate,
-      })
-      .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
-      .andWhere('ph.quantity > 0')
-      .andWhere('ph.type not in (:type)', {
-        type: [
-          PromotionHistoryTypeEnum.CANCEL,
-          PromotionHistoryTypeEnum.REFUND,
-        ],
       });
+    // .andWhere('q.status = :status', { status: OrderStatusEnum.PAID })
+    // .andWhere('ph.quantity > 0')
+    // .andWhere('ph.type not in (:type)', {
+    //   type: [
+    //     PromotionHistoryTypeEnum.CANCEL,
+    //     PromotionHistoryTypeEnum.REFUND,
+    //   ],
+    // });
     if (keyword) {
       newKeywords = keyword.trim();
       subQuery = this.pLineRepository
@@ -593,11 +594,10 @@ export class StatisticsService {
         'pl.applyAll as applyAll',
         'pl.useQuantity as useQuantity',
         'pl.maxQuantity as maxQuantity',
-        'SUM(ph.quantity) as totalUseQuantityInTime',
         'pl.useBudget as useBudget',
         'pl.maxBudget as maxBudget',
-        'SUM(ph.amount) * (-1) as totalUseBudgetInTime',
-        // promotionDetail
+        // 'SUM(ph.quantity) as totalUseQuantityInTime',
+        // 'SUM(ph.amount) * (-1) as totalUseBudgetInTime',
         'pd.id as promotionDetail_id',
         'pd.quantityBuy as promotionDetail_quantityBuy',
         'pd.purchaseAmount as promotionDetail_purchaseAmount',
@@ -606,7 +606,7 @@ export class StatisticsService {
         'pd.maxReductionAmount as promotionDetail_maxReductionAmount',
       ])
       .groupBy('pl.id')
-      .orderBy('pl.id', 'DESC')
+      .orderBy('pl.startDate', SortEnum.DESC)
       .offset(pagination.skip || 0)
       .limit(pagination.take || 10);
 

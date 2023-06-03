@@ -9,14 +9,14 @@ export class RevenueStatisticsDto {
   keyword: string;
 
   @ApiPropertyOptional({
-    example: moment().subtract(7, 'days').format('YYYY-MM-DD'),
+    example: moment().startOf('days').subtract(7, 'days').toDate(),
   })
   @IsDate({ message: 'START_DATE_IS_DATE' })
   @IsOptional()
   startDate: Date;
 
   @ApiPropertyOptional({
-    example: moment().format('YYYY-MM-DD'),
+    example: moment().startOf('days').toDate(),
   })
   @IsDate({ message: 'END_DATE_IS_DATE' })
   @IsOptional()

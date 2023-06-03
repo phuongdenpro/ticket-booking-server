@@ -9,7 +9,14 @@ import {
   UpdateDateColumn,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Customer, OrderDetail, OrderRefund, PromotionHistory, Staff, Trip } from '.';
+import {
+  Customer,
+  OrderDetail,
+  OrderRefund,
+  PromotionHistory,
+  Staff,
+  Trip,
+} from '.';
 import { PaymentHistory } from './payment-history.entities';
 
 @Entity({ name: 'order' })
@@ -23,13 +30,25 @@ export class Order {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({ name: 'total', type: 'double', nullable: true, default: 0.0 })
+  @Column({
+    name: 'total',
+    type: 'double',
+    nullable: true,
+    default: 0.0,
+    unsigned: true,
+  })
   total: number;
 
   @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })
   status: string;
 
-  @Column({ name: 'final_total', type: 'double', nullable: true, default: 0.0 })
+  @Column({
+    name: 'final_total',
+    type: 'double',
+    nullable: true,
+    default: 0.0,
+    unsigned: true,
+  })
   finalTotal: number;
 
   @Column({

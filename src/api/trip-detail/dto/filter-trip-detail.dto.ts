@@ -6,6 +6,7 @@ import {
   IsString,
   IsNumber,
   Min,
+  IsBoolean,
 } from 'class-validator';
 import { SortEnum, TripDetailStatusEnum } from './../../../enums';
 import * as moment from 'moment';
@@ -79,9 +80,15 @@ export class FilterTripDetailDto {
   @IsOptional()
   toProvinceCode: number;
 
+  @ApiPropertyOptional({ example: 0, enum: [0, 1] })
+  @IsEnum([0, 1], { message: 'IS_PRICE_DETAIL_EXIST_IS_ENUM' })
+  @IsOptional()
+  isPriceDetailExist: number;
+
   @ApiPropertyOptional({ example: SortEnum.ASC, enum: SortEnum })
   @IsString({ message: 'SORT_IS_STRING' })
   @IsEnum(SortEnum, { message: 'SORT_IS_ENUM' })
   @IsOptional()
   sort: SortEnum;
+
 }

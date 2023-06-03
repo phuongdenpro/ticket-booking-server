@@ -43,6 +43,7 @@ import {
   TicketStatusEnum,
   UserStatusEnum,
   PaymentHistoryStatusEnum,
+  ActiveStatusEnum,
 } from './../../enums';
 import { generateOrderCode } from './../../utils';
 import { CustomerService } from '../customer/customer.service';
@@ -367,9 +368,9 @@ export class OrderService {
       const newKeywords = keywords.trim();
       const subQuery = this.orderRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id IN (${subQuery})`, {
@@ -634,7 +635,7 @@ export class OrderService {
     }
     // check trip
     const trip = tripDetail.trip;
-    if (trip.startDate > currentDate || trip.endDate < currentDate) {
+    if (trip.status === ActiveStatusEnum.INACTIVE) {
       throw new BadRequestException('TRIP_NOT_ACTIVE');
     }
 

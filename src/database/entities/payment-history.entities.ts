@@ -24,7 +24,13 @@ export class PaymentHistory {
   @Column({ name: 'note', type: 'text' })
   note: string;
 
-  @Column({ name: 'amount', type: 'double', nullable: true, default: 0.0 })
+  @Column({
+    name: 'amount',
+    type: 'double',
+    nullable: true,
+    default: 0.0,
+    unsigned: true,
+  })
   amount: number;
 
   @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })

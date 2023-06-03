@@ -276,10 +276,19 @@ export const mappingTranslate = {
   END_DATE_IS_DATE: 'Ngày kết thúc phải là ngày',
   START_DATE_NOT_MORE_THAN_7_DAYS_FROM_END_DATE:
     'Ngày bắt đầu không được quá 7 ngày so với ngày kết thúc',
+  TRAVEL_HOURS_IS_REQUIRED: 'Thời gian di chuyển không được để trống',
+  TRAVEL_HOURS_IS_NUMBER: 'Thời gian di chuyển phải là số',
+  MIN_TRAVEL_HOURS_IS_NUMBER: 'Thời gian di chuyển tối thiểu phải là số',
+  MAX_TRAVEL_HOURS_IS_NUMBER: 'Thời gian di chuyển tối đa phải là số',
+  TRAVEL_HOURS_MUST_BE_GREATER_THAN_OR_EQUAL_TO_ONE:
+    'Thời gian di chuyển phải lớn hơn hoặc bằng 1',
+  TRAVEL_HOURS_TRIP_IS_ACTIVE:
+    'Tuyến xe đang hoạt động không thể thay đổi thời gian di chuyển của tuyến',
+  TRAVEL_HOURS_GREATER_THAN_1: 'Thời gian di chuyển phải lớn hơn 1 giờ',
 
   // trip detail
-  DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_CURRENT_DATE_PLUS_15_MINUTES:
-    'Thời gian khởi hành phải lớn hơn hoặc bằng hiện tại + 15 phút',
+  DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_CURRENT_DATE_PLUS_2_HOURS:
+    'Thời gian khởi hành phải lớn hơn hoặc bằng hiện tại + 2 giờ',
   DEPARTURE_DATE_GREATER_THAN_OR_EQUAL_TO_TOMORROW:
     'Thời gian khởi hành phải lớn hơn hoặc bằng ngày mai',
   EXPECTED_DATE_GREATER_THAN_OR_EQUAL_TO_DEPARTURE_DATE_PLUS_2_HOURS:
@@ -321,6 +330,7 @@ export const mappingTranslate = {
   TRIP_DETAIL_HAS_ENDED_NOT_DELETE: 'Chuyến xe đã khởi hành không thể xóa',
   VEHICLE_HAS_BEEN_USED_IN_OTHER_TRIP_DETAIL:
     'Xe đã được sử dụng trong chuyến khác',
+  UPDATE_TRIP_DETAIL_FAILED: 'Cập nhật thông tin chuyến xe thất bại',
 
   // vehicle
   VEHICLE_NOT_FOUND: 'Không tìm thấy xe',
@@ -406,7 +416,7 @@ export const mappingTranslate = {
   TRIP_EXISTED_IN_PRICE_LIST:
     'Loại ghế của tuyến này đã tồn tại trong bảng giá đang hoạt động khác',
   // price details
-  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy chi tiết bảng giá',
+  PRICE_DETAIL_NOT_FOUND: 'Không tìm thấy giá vé',
   PRICE_IS_NUMBER: 'Giá phải là số',
   MAX_PRICE_IS_NUMBER: 'Giá tối đa phải là số',
   MIN_PRICE_IS_NUMBER: 'Giá tối thiểu phải là số',
@@ -618,8 +628,10 @@ export const mappingTranslate = {
   ORDER_CODE_BETWEEN_1_100_CHARACTERS: 'Mã đơn hàng phải có từ 1-100 ký tự',
   ORDER_CANNOT_CANCEL_12H_BEFORE:
     'Không thể huỷ vé trước 12 tiếng so với giờ khởi hàng, hãy đến trực tiếp phòng vé để huỷ',
-  ORDER_CANNOT_CANCEL_AFTER_DEPARTURE: 'Không thể huỷ vé sau khi chuyến xe đã khởi hành',
-  ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE: 'Không thể thanh toán sau khi chuyến xe đã khởi hành',
+  ORDER_CANNOT_CANCEL_AFTER_DEPARTURE:
+    'Không thể huỷ vé sau khi chuyến xe đã khởi hành',
+  ORDER_CANNOT_PAYMENT_AFTER_DEPARTURE:
+    'Không thể thanh toán sau khi chuyến xe đã khởi hành',
 
   // promotion history
   PROMOTION_HISTORY_NOT_FOUND: 'Không tìm thấy lịch sử khuyến mãi',

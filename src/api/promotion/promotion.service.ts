@@ -99,13 +99,13 @@ export class PromotionService {
       const newKeywords = keywords.trim();
       const subQuery = this.promotionRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
         .orWhere(`q2.description LIKE :description`, {
           description: `%${keywords}%`,
         })
         .orWhere('q2.note LIKE :note', { note: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
 
       query.andWhere(`q.id in (${subQuery})`, {
@@ -116,7 +116,10 @@ export class PromotionService {
       });
     }
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+      const newStartDate = moment(startDate)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       query.andWhere(`q.startDate >= :startDate`, { startDate: newStartDate });
     }
     if (endDate) {
@@ -190,7 +193,10 @@ export class PromotionService {
       throw new BadRequestException('START_DATE_IS_REQUIRED');
     }
     const currentDate = moment().startOf('day').add(7, 'hour').toDate();
-    const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+    const newStartDate = moment(startDate)
+      .startOf('day')
+      .add(7, 'hour')
+      .toDate();
     if (newStartDate <= currentDate) {
       throw new BadRequestException('START_DATE_GREATER_THAN_NOW');
     }
@@ -292,7 +298,10 @@ export class PromotionService {
     }
 
     if (startDate) {
-      const newStartDate = moment(startDate).startOf('day').add(7, 'hour').toDate();
+      const newStartDate = moment(startDate)
+        .startOf('day')
+        .add(7, 'hour')
+        .toDate();
       if (newStartDate.getTime() === promotion.startDate.getTime()) {
         if (
           promotion.status === PromotionStatusEnum.ACTIVE &&

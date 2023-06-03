@@ -1,4 +1,11 @@
-import { OrderRefundDetail, Order, PromotionHistory, Customer, Staff, PaymentHistory } from '.';
+import {
+  OrderRefundDetail,
+  Order,
+  PromotionHistory,
+  Customer,
+  Staff,
+  PaymentHistory,
+} from '.';
 import {
   CreateDateColumn,
   UpdateDateColumn,
@@ -26,7 +33,13 @@ export class OrderRefund {
   @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })
   status: string;
 
-  @Column({ name: 'total', type: 'double', nullable: true, default: 0.0 })
+  @Column({
+    name: 'total',
+    type: 'double',
+    nullable: true,
+    default: 0.0,
+    unsigned: true,
+  })
   total: number;
 
   @Column({ name: 'order_code', type: 'varchar', length: 100, nullable: false })

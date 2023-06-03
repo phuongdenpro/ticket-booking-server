@@ -216,13 +216,12 @@ export class StationService {
         .createQueryBuilder('q2')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
-        .where('q2.address LIKE :address', { address: `%${newKeywords}%` })
-        .where('q2.fullAddress LIKE :fullAddress', {
+        .orWhere('q2.address LIKE :address', { address: `%${newKeywords}%` })
+        .orWhere('q2.fullAddress LIKE :fullAddress', {
           fullAddress: `%${newKeywords}%`,
         })
         .select('q2.id')
         .getQuery();
-
       query.andWhere(`q.id in (${subQuery})`, {
         code: `%${newKeywords}%`,
         name: `%${newKeywords}%`,

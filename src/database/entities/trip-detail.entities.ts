@@ -28,6 +28,15 @@ export class TripDetail {
   @Column({ name: 'status', type: 'varchar', length: 100, nullable: true })
   status: string;
 
+  @Column({
+    name: 'travel_hours',
+    type: 'int',
+    nullable: false,
+    default: 1,
+    unsigned: true,
+  })
+  travelHours: number;
+
   @Column({ name: 'created_by', type: 'varchar', nullable: false })
   createdBy: string;
 

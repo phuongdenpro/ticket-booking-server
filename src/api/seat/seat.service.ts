@@ -121,15 +121,12 @@ export class SeatService {
     const query = this.seatRepository.createQueryBuilder('q');
 
     if (keywords) {
-      query
-        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` });
       const newKeywords = keywords.trim();
       const subQuery = this.seatRepository
         .createQueryBuilder('q2')
-        .select('q2.id')
         .where('q2.code LIKE :code', { code: `%${newKeywords}%` })
         .orWhere('q2.name LIKE :name', { name: `%${newKeywords}%` })
+        .select('q2.id')
         .getQuery();
       query.andWhere(`q.id IN (${subQuery})`, {
         code: `%${newKeywords}%`,
@@ -175,15 +172,17 @@ export class SeatService {
     query.where('q.vehicle = :vehicleId', { vehicleId });
 
     if (keywords) {
-      query
-        .orWhere('q.code LIKE :keywords', { keywords: `%${keywords}%` })
-        .orWhere('q.name LIKE :keywords', { keywords: `%${keywords}%` });
+      const newKeywords = keywords.trim();
+      const subQuery = this.seatRepository
+        .createQueryBuilder('q2')
+        .where('q.code LIKE :code', { code: `%${newKeywords}%` })
+        .orWhere('q.name LIKE :name', { name: `%${newKeywords}%` })
+        .select('q2.id');
+      query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
+        code: `%${newKeywords}%`,
+        name: `%${newKeywords}%`,
+      });
     }
-    // if (status) {
-    //   query
-    //     .leftJoinAndSelect('q.ticketDetails', 'td')
-    //     .andWhere('td.status = :type', { type: status });
-    // }
     if (floor && floor > 0 && floor < 3) {
       query.andWhere('q.floor = :floor', { floor });
     }

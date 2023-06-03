@@ -16,7 +16,13 @@ export class OrderRefundDetail {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ name: 'total', type: 'double', nullable: true, default: 0.0 })
+  @Column({
+    name: 'total',
+    type: 'double',
+    nullable: true,
+    default: 0.0,
+    unsigned: true,
+  })
   total: number;
 
   @Column({ name: 'note', type: 'text' })
@@ -60,7 +66,10 @@ export class OrderRefundDetail {
   @JoinColumn({ name: 'order_refund_id', referencedColumnName: 'id' })
   orderRefund: OrderRefund;
 
-  @ManyToOne(() => TicketDetail, (ticketDetail) => ticketDetail.orderRefundDetails)
+  @ManyToOne(
+    () => TicketDetail,
+    (ticketDetail) => ticketDetail.orderRefundDetails,
+  )
   @JoinColumn({ name: 'ticket_detail_id', referencedColumnName: 'id' })
   ticketDetail: TicketDetail;
 
