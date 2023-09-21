@@ -238,6 +238,7 @@ export class TripDetailService {
     if (isPriceDetailExist) {
       const minTime = moment(departureTime).startOf('day').toDate();
       const maxTime = moment(departureTime).endOf('day').toDate();
+      const now = moment().startOf('day').toDate();
 
       const subQuery = this.tripDetailRepository
         .createQueryBuilder('q2')
@@ -246,15 +247,15 @@ export class TripDetailService {
         .leftJoinAndSelect('pds2.priceList', 'pl2')
         .leftJoinAndSelect('q2.vehicle', 'v2')
         .where('pl2.status = :plStatus', { plStatus: ActiveStatusEnum.ACTIVE })
-        .andWhere('pl2.startDate <= :now', { now: new Date() })
-        .andWhere('pl2.endDate >= :now', { now: new Date() })
+        .andWhere('pl2.startDate <= :now', { now })
+        .andWhere('pl2.endDate >= :now', { now })
         .andWhere('v2.type = pds2.seatType')
         .andWhere('q2.departureTime >= :minTime', { minTime })
         .andWhere('q2.departureTime <= :maxTime', { maxTime })
         .select('q2.id');
       query.andWhere(`q.id IN (${subQuery.getQuery()})`, {
         plStatus: ActiveStatusEnum.ACTIVE,
-        now: new Date(),
+        now,
         minTime,
         maxTime,
       });
